@@ -2,7 +2,7 @@
 
 Browser-Prototyp eines rundenbasierten Taktikspiels: Mai 1371, ein Lich erwacht im Hügelgrab am Wilseder Berg und zieht über eine Hex-Karte Norddeutschlands (echte Höhendaten) bis zum Brocken.
 
-**Online spielen:** https://frozenenenen.github.io/harmbringer_online/
+**Online spielen:** https://frozenenenen.github.io/Harmbringer_online/
 
 ## Lokal starten
 
