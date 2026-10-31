@@ -135,12 +135,12 @@ window.HARMBRINGER_DATA = {
     skelett:     { name: "Skelett-Speerträger", side: "undead", rank: "CANNON_FODDER", hp: 12, initiative: 4, move: 3, damage: 5, range: 1,
                    power: "PIERCE", counter: true, defense: "LIGHT", magicResist: 0, soulShield: 0,
                    sight: 3, hear: 2, smell: 1, size: 1, spectral: false, flying: false,
-                   commandPoints: 1, cost: { bones: 2 }, shape: "cone", color: "#d8d0b8",
+                   commandPoints: 1, cost: { bones: 120 }, shape: "cone", color: "#d8d0b8",
                    desc: "Sauberer Stich, gute Leichen." },
     schleuderer: { name: "Knochenschleuderer", side: "undead", rank: "WARRIOR", hp: 10, initiative: 4, move: 3, damage: 6, range: 4,
                    power: "BLUNT", counter: false, defense: "LIGHT", magicResist: 0, soulShield: 0,
                    sight: 5, hear: 2, smell: 1, size: 1, spectral: false, flying: false,
-                   commandPoints: 2, cost: { bones: 3 }, requiresKnowledge: 2, shape: "cylinder", color: "#bfb59a",
+                   commandPoints: 2, cost: { bones: 180 }, requiresKnowledge: 2, shape: "cylinder", color: "#bfb59a",
                    desc: "Fernkampf. Wirft Knochensplitter." },
     geist:       { name: "Geist", side: "undead", rank: "WARRIOR", hp: 10, initiative: 8, move: 5, damage: 8, range: 1,
                    power: "SOUL", counter: false, defense: "UNARMORED", magicResist: 4, soulShield: 6,
@@ -310,22 +310,23 @@ window.HARMBRINGER_DATA = {
   // ---------------------------------------------------------------------------
   // Campaign economy
   // ---------------------------------------------------------------------------
+  // Bone amounts are scaled x60 against the first proposal (30 bones per kill); costs scaled alike.
   economy: {
-    startResources: { corpses: 6, bones: 4, souls: 0, knowledge: 0 },
+    startResources: { corpses: 6, bones: 240, souls: 0, knowledge: 0 },
     startArmy: ["lich", "ghul", "ghul", "ghul", "skelett", "skelett"],
     commandLimitBase: 15,              // the Lich as leader grants this
     commandLimitPerMythicNode: 3,      // each conquered MYTHIC node raises the limit
     corpsesPerKill: 1,                 // multiplied by corpse quality, summed, rounded down at battle end
-    bonesPerKill: 0.5,                 // independent of quality, rounded down at battle end
+    bonesPerKill: 30,                  // independent of quality (a skeleton yields its bones either way)
     soulsPerSoulKill: 1,               // extra souls when the killing blow was SOUL damage
     travelTilesPerDay: 30,
     lichDeathDays: 3,                  // days lost when the Lich falls and returns to the phylactery
     // Loot for conquering a node, by type and size.
     nodeRewards: {
       MYTHIC:    { 16: { knowledge: 3, souls: 2, corpses: 1 }, 32: { knowledge: 4, souls: 3, corpses: 2 }, 64: { knowledge: 6, souls: 4, corpses: 3 } },
-      WORLDLY:   { 16: { corpses: 4, bones: 3 },             32: { corpses: 8, bones: 5 },             64: { corpses: 14, bones: 8 } },
+      WORLDLY:   { 16: { corpses: 4, bones: 180 },           32: { corpses: 8, bones: 300 },           64: { corpses: 14, bones: 480 } },
       CHRISTIAN: { 16: { corpses: 2 },                       32: { corpses: 3 },                       64: { corpses: 5 } },
-      VILLAGE:   { 16: { corpses: 2, bones: 1 } }
+      VILLAGE:   { 16: { corpses: 2, bones: 60 } }
     },
     // After a won battle every survivor regains this share of its max HP (rounded up).
     postBattleHealShare: 0.25

@@ -648,7 +648,8 @@ const Campaign = {
       owners: Object.fromEntries(DATA.nodes.map(n => [n.id, n.faction])),
       threat,
       battles: 0,
-      won: false
+      won: false,
+      econVersion: 2          // 2 = bone amounts scaled x60
     };
   },
   // Julian calendar (correct for 1371): every 4th year is a leap year.
@@ -755,6 +756,8 @@ const SaveGame = {
       if (!c || !Array.isArray(c.army) || !c.owners || !NODE_BY_ID[c.nodeId]) return null;
       // Fill in fields that may be missing in older saves.
       const fresh = Campaign.create();
+      // Saves from before the bone rescale (x60) get their bones converted once.
+      if ((c.econVersion || 1) < 2 && c.resources) { c.resources.bones = (c.resources.bones || 0) * 60; c.econVersion = 2; }
       return { ...fresh, ...c, resources: { ...fresh.resources, ...c.resources }, threat: { ...fresh.threat, ...c.threat },
         owners: { ...fresh.owners, ...c.owners } };   // new places added since the save keep their default owner
     } catch (e) { return null; }
