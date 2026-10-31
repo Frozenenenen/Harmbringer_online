@@ -137,6 +137,22 @@ window.HARMBRINGER_DATA = {
                    sight: 3, hear: 2, smell: 1, size: 1, spectral: false, flying: false,
                    commandPoints: 1, cost: { bones: 120 }, shape: "cone", color: "#d8d0b8",
                    desc: "Sauberer Stich, gute Leichen." },
+    // Base units without knowledge (first proposal): a ranged option, a fast flanker and a slow tank.
+    bogner:      { name: "Skelett-Bogenschütze", side: "undead", rank: "CANNON_FODDER", hp: 9, initiative: 4, move: 3, damage: 4, range: 4,
+                   power: "PIERCE", counter: false, defense: "LIGHT", magicResist: 0, soulShield: 0,
+                   sight: 5, hear: 2, smell: 1, size: 1, spectral: false, flying: false,
+                   commandPoints: 2, cost: { bones: 150 }, shape: "cylinder", color: "#ece4cc",
+                   desc: "Fernkampf ohne Wissen. Schwach, aber er trifft aus der Deckung." },
+    leichenhund: { name: "Leichenhund", side: "undead", rank: "CANNON_FODDER", hp: 10, initiative: 7, move: 5, damage: 4, range: 1,
+                   power: "PIERCE", corpseQuality: 0.5, counter: false, defense: "UNARMORED", magicResist: 0, soulShield: 0,
+                   sight: 4, hear: 4, smell: 6, size: 1, spectral: false, flying: false,
+                   commandPoints: 1, cost: { corpses: 1 }, shape: "box", color: "#5a4a3a",
+                   desc: "Schnell und früh am Zug. Erreicht Schützen hinter der Front." },
+    zombie:      { name: "Zombie", side: "undead", rank: "CANNON_FODDER", hp: 28, initiative: 2, move: 2, damage: 5, range: 1,
+                   power: "BLUNT", counter: true, defense: "UNARMORED", magicResist: 0, soulShield: 0,
+                   sight: 2, hear: 1, smell: 2, size: 2, spectral: false, flying: false,
+                   commandPoints: 2, cost: { corpses: 2 }, shape: "capsule", color: "#7f8f62",
+                   desc: "Langsam und zäh. Hält Türen und Engstellen." },
     schleuderer: { name: "Knochenschleuderer", side: "undead", rank: "WARRIOR", hp: 10, initiative: 4, move: 3, damage: 6, range: 4,
                    power: "BLUNT", counter: false, defense: "LIGHT", magicResist: 0, soulShield: 0,
                    sight: 5, hear: 2, smell: 1, size: 1, spectral: false, flying: false,
@@ -350,7 +366,8 @@ window.HARMBRINGER_DATA = {
     nodeRewards: {
       MYTHIC:    { 16: { knowledge: 3, souls: 2, corpses: 1 }, 32: { knowledge: 4, souls: 3, corpses: 2 }, 64: { knowledge: 6, souls: 4, corpses: 3 } },
       WORLDLY:   { 16: { corpses: 4, bones: 180 },           32: { corpses: 8, bones: 300 },           64: { corpses: 14, bones: 480 } },
-      CHRISTIAN: { 16: { corpses: 2 },                       32: { corpses: 3 },                       64: { corpses: 5 } },
+      // Monasteries keep books: conquering a christian place grants knowledge.
+      CHRISTIAN: { 16: { corpses: 2, knowledge: 1 },         32: { corpses: 3, knowledge: 2 },         64: { corpses: 5, knowledge: 3 } },
       VILLAGE:   { 16: { corpses: 2, bones: 60 } }
     },
     // After a won battle every survivor regains this share of its max HP (rounded up).

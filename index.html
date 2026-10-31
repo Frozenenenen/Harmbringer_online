@@ -2120,6 +2120,13 @@ const UI = {
     WorldView.refresh();
     this.renderInfo();
   },
+  // Fixed reward for conquering a place (kills add corpses, bones and souls on top).
+  rewardText(node) {
+    const r = (ECON.nodeRewards[node.type] || {})[node.size] || {};
+    const parts = Object.entries(r).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`);
+    if (node.type === 'MYTHIC') parts.push(`+${ECON.commandLimitPerMythicNode} Kommando`);
+    return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
+  },
   armyHtml() {
     return '<h3>Armee</h3><div class="armyList">' + game.campaign.army.map(a =>
       `<div>${DATA.units[a.type].name} <span class="small">${a.hp}/${DATA.units[a.type].hp}</span></div>`).join('') + '</div>';
@@ -2149,6 +2156,7 @@ const UI = {
           <tr><td>Reisezeit</td><td>${atNode ? 'Armee steht hier' : days + (days === 1 ? ' Tag' : ' Tage')}</td></tr>
           ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
           <tr><td>Besatzung</td><td>${garrison}</td></tr>
+          ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
         </table>
         ${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}
         <div class="buttons" id="nodeButtons"></div>`;
