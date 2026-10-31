@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmbringer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap">
+<style>
+  /* ---------------------------------------------------------------------------
+     Style: medieval woodcut. Parchment panels, dark brown ink, thin frames.
+     --------------------------------------------------------------------------- */
+  :root {
+    --parchment: #e9dfc4;
+    --parchment-dark: #d8caa6;
+    --ink: #2b2116;
+    --ink-soft: #5a4a36;
+    --bg: #5d5850;
+    --undead: #5a2d82;
+    --blood: #8a2f2f;
+    --gold: #c9a227;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink);
+    font-family: "IM Fell English", Georgia, "Times New Roman", serif; }
+  #app { position: fixed; inset: 0; }
+  #app canvas { display: block; }
+  #labels { position: absolute; inset: 0; pointer-events: none; }
+  .hidden { display: none !important; }
+
+  .panel { background: var(--parchment); border: 1px solid var(--ink); box-shadow: 0 0 0 3px var(--parchment), 0 0 0 4px var(--ink), 0 6px 18px rgba(0,0,0,.45); }
+  button { font-family: inherit; font-size: 15px; color: var(--ink); background: var(--parchment-dark);
+    border: 1px solid var(--ink); padding: 4px 12px; cursor: pointer; }
+  button:hover:not(:disabled) { background: #f4ecd6; }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--ink); color: var(--parchment); }
+  button.primary:hover:not(:disabled) { background: #4a3a28; }
+  h1, h2, h3 { margin: 0 0 8px; font-weight: normal; }
+  h2 { font-size: 24px; border-bottom: 1px solid var(--ink); padding-bottom: 4px; }
+  h3 { font-size: 17px; margin-top: 10px; }
+  .small { font-size: 13px; color: var(--ink-soft); }
+  .row { display: flex; justify-content: space-between; gap: 8px; }
+
+  /* Header (world map) */
+  #header { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 18px;
+    padding: 6px 14px; flex-wrap: wrap; z-index: 5; }
+  #header .res { display: flex; gap: 14px; flex-wrap: wrap; }
+  #header .res b { font-weight: normal; color: var(--undead); }
+  #threats { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+  .threat { font-size: 12px; min-width: 80px; }
+  .threat .bar { height: 6px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 1px; }
+  .threat .bar div { height: 100%; }
+  .threat.dead { opacity: .45; text-decoration: line-through; }
+
+  /* Info panel (right) */
+  #info { position: absolute; top: 70px; right: 14px; width: 300px; max-height: calc(100% - 130px); overflow: auto;
+    padding: 12px 14px; z-index: 5; }
+  #info table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  #info td { padding: 2px 0; vertical-align: top; }
+  #info td:first-child { color: var(--ink-soft); width: 45%; }
+  #info .buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+
+  /* Hint line (bottom) */
+  #hint { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 3px 14px; font-size: 13px;
+    white-space: nowrap; z-index: 5; }
+
+  /* Minimap (world) */
+  #minimap { position: absolute; left: 14px; bottom: 40px; padding: 4px; z-index: 5; }
+  #minimap canvas { width: 300px; height: 162px; display: block; cursor: crosshair; }
+  #minimap .stack { position: relative; width: 300px; height: 162px; }
+  #minimap .stack canvas { position: absolute; left: 0; top: 0; }
+
+  /* Battle UI */
+  #initBar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px 8px; z-index: 5; }
+  .initSlot { width: 74px; font-size: 11px; text-align: center; padding: 2px; border: 1px solid transparent; }
+  .initSlot.current { border-color: var(--gold); background: #f4ecd6; }
+  .initSlot .icon { width: 18px; height: 18px; margin: 0 auto 2px; border: 1px solid var(--ink); }
+  .initSlot .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hpbar { height: 5px; border: 1px solid var(--ink); background: #f4ecd6; }
+  .hpbar div { height: 100%; background: var(--blood); }
+  .hpbar.player div { background: var(--undead); }
+  #roundInfo { position: absolute; top: 78px; left: 50%; transform: translateX(-50%); padding: 2px 12px; font-size: 13px; z-index: 5; }
+  #unitCard { position: absolute; left: 14px; bottom: 40px; width: 270px; padding: 10px 12px; font-size: 14px; z-index: 5; }
+  #unitCard table { width: 100%; font-size: 13px; }
+  #battleLog { position: absolute; right: 14px; top: 110px; height: 230px; width: 280px; padding: 8px 10px; overflow: auto; font-size: 13px; z-index: 5; }
+  #battleLog p { margin: 0 0 3px; }
+  #battleLog .hit { color: var(--blood); }
+  #battleLog .good { color: var(--undead); }
+  #battleButtons { position: absolute; right: 14px; bottom: 40px; display: flex; gap: 6px; padding: 6px; z-index: 5; }
+
+  /* Modals */
+  .modal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(30,25,18,.55); z-index: 20; }
+  .modal .panel { max-width: 560px; width: calc(100% - 32px); max-height: calc(100% - 40px); overflow: auto; padding: 20px 26px; }
+  .modal p { line-height: 1.45; font-size: 17px; }
+  .modal .buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+  #loading .bar { height: 12px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 10px; }
+  #loading .bar div { height: 100%; width: 0; background: var(--undead); }
+  .recruitRow { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
+  .recruitRow.locked { opacity: .5; }
+  .armyList { font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+
+  /* Toast messages */
+  #toast { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); padding: 8px 18px; font-size: 17px; z-index: 15;
+    transition: opacity .4s; text-align: center; max-width: 80%; }
+
+  /* Debug overlay */
+  #debug { position: absolute; left: 14px; top: 120px; padding: 6px 10px; font: 12px/1.45 Consolas, monospace; background: rgba(233,223,196,.92);
+    border: 1px solid var(--ink); z-index: 6; white-space: pre; }
+
+  /* 3D labels (CSS2DRenderer) */
+  .nodeLabel { pointer-events: auto; cursor: pointer; font-size: 14px; color: var(--ink); background: rgba(233,223,196,.88);
+    border: 1px solid var(--ink); padding: 0 6px; white-space: nowrap; transform: translateY(-14px); }
+  .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
+  .nodeLabel.selected { outline: 2px solid var(--gold); }
+  .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
+  .dmgText { font-size: 22px; color: #a01818; text-shadow: 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; font-weight: bold; }
+  .dmgText.heal { color: #1f6a2a; }
+  #edgeTip { position: absolute; padding: 2px 8px; font-size: 13px; pointer-events: none; z-index: 7; }
+</style>
+<!-- Game data: classic scripts, loaded before the game module -->
+<script src="data/heightmap.js"></script>
+<script src="data/world_data.js"></script>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="labels"></div>
+
+<!-- World map UI -->
+<div id="header" class="panel hidden">
+  <div id="date" style="font-size:18px"></div>
+  <div class="res" id="resources"></div>
+  <div id="threats"></div>
+  <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
+</div>
+<div id="info" class="panel hidden"></div>
+<div id="minimap" class="panel hidden"><div class="stack"><canvas id="miniBase"></canvas><canvas id="miniOver"></canvas></div></div>
+<div id="hint" class="panel hidden"></div>
+
+<!-- Battle UI -->
+<div id="initBar" class="panel hidden"></div>
+<div id="roundInfo" class="panel hidden"></div>
+<div id="unitCard" class="panel hidden"></div>
+<div id="battleLog" class="panel hidden"></div>
+<div id="battleButtons" class="panel hidden">
+  <button id="btnEndTurn">Zug beenden</button>
+  <button id="btnRetreat">Rückzug</button>
+  <button id="btnEdges">Kanten anzeigen</button>
+</div>
+<div id="edgeTip" class="panel hidden"></div>
+
+<div id="toast" class="panel hidden"></div>
+<div id="debug" class="hidden"></div>
+
+<!-- Modals -->
+<div id="loading" class="modal"><div class="panel">
+  <h2>Harmbringer</h2>
+  <p id="loadingText">Lade Höhenkarte …</p>
+  <div class="bar"><div id="loadingBar"></div></div>
+</div></div>
+<div id="modal" class="modal hidden"><div class="panel" id="modalBody"></div></div>
+<script type="module">
+import * as THREE from 'three';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// =============================================================================
+// CONFIG
+// Reads the two data objects provided by the classic <script> tags. Every game
+// number used below comes from HARMBRINGER_DATA; nothing is duplicated here.
+// =============================================================================
+const DATA = window.HARMBRINGER_DATA;
+const HM = window.HARMBRINGER_HEIGHTMAP;
+if (!DATA || !HM) {
+  // Most common cause: index.html opened alone (chat preview, or directly inside the ZIP without extracting).
+  const missing = [!HM && 'data/heightmap.js', !DATA && 'data/world_data.js'].filter(Boolean).join(' und ');
+  document.getElementById('loadingText').innerHTML =
+    `<b>${missing} nicht gefunden.</b><br><br>index.html braucht den Ordner <b>data/</b> direkt daneben.<br>` +
+    `• ZIP zuerst entpacken (Rechtsklick → „Alle extrahieren“), nicht nur im Explorer öffnen.<br>` +
+    `• Dann im entpackten Ordner <b>harmbringer/index.html</b> doppelklicken.`;
+  throw new Error('Harmbringer data files missing');
+}
+const MAP = DATA.map;
+const HEX = DATA.hex;
+const CAM = DATA.camera;
+const ECON = DATA.economy;
+const THREAT = DATA.threat;
+const WIDTH = MAP.width, HEIGHT = MAP.height;
+const FLOOR_KEYS = Object.keys(DATA.floorTypes);               // index <-> key
+const FLOOR_INDEX = Object.fromEntries(FLOOR_KEYS.map((k, i) => [k, i]));
+const NODE_BY_ID = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
+const PHYLACTERY = DATA.nodes.find(n => n.type === 'PHYLACTERY');
+const ENEMY_FACTIONS = Object.keys(DATA.factions).filter(f => f !== 'UNDEAD');
+const NODE_TYPE_NAMES = { MYTHIC: 'Mythisch', WORLDLY: 'Weltlich', CHRISTIAN: 'Christlich', PHYLACTERY: 'Hügelgrab' };
+const EDGE_NAMES = { OPEN: 'Offen', COVER: 'Deckung (halber Schaden)', WALL: 'Mauer', WALL_DESTRUCTIBLE: 'Zerstörbare Mauer', WALL_TRANSPARENT: 'Durchsichtige Wand' };
+const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', knowledge: 'Wissen' };
+const REVEAL_DISTANCE = 120;           // tiles, from PROMPT section 7.1
+const TRAVEL_SECONDS = 2.5;            // animation length of a journey
+const STEP_SECONDS = 0.15;             // battle movement per tile
+const AI_PAUSE = 0.4;                  // pause between AI move and attack
+
+// The one global game object (besides the two data objects). Everything that
+// has state hangs off it, so it can also be inspected from the console.
+const game = window.game = {
+  mode: 'loading',          // loading | intro | world | travel | battle | modal | end
+  world: null,              // WorldData
+  campaign: null,           // campaign state (saved)
+  battle: null,             // active battle or null
+  view: {},                 // three.js objects
+  ui: {},
+  input: { keys: new Set(), mouse: new THREE.Vector2(), rmb: false, lastX: 0, lastY: 0, downX: 0, downY: 0 },
+  debug: false,
+  showEdges: true,
+  fps: 0
+};
+
+// =============================================================================
+// HexMath
+// Tested reference code from PROMPT.md section 4, taken over unchanged.
+// Flat-top hexes, odd-q offset layout: odd columns are shifted half a row south (+Z).
+// =============================================================================
+const R = HEX.circumradius;                   // center to corner
+const INRADIUS = R * Math.sqrt(3) / 2;        // center to edge midpoint
+const COL_SPACING = 1.5 * R;
+const ROW_SPACING = 2 * INRADIUS;
+
+// Direction order: 0=N, 1=NE, 2=SE, 3=S, 4=SW, 5=NW (N = -Z, clockwise seen from above)
+const OFFSETS_EVEN_Q = [[0,-1],[1,-1],[1,0],[0,1],[-1,0],[-1,-1]];
+const OFFSETS_ODD_Q  = [[0,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]];
+const opposite = d => (d + 3) % 6;
+
+function neighbor(q, r, d) {
+  const o = (q & 1) ? OFFSETS_ODD_Q[d] : OFFSETS_EVEN_Q[d];
+  return [q + o[0], r + o[1]];
+}
+// Tile center on the XZ plane (y comes from the heightmap).
+function hexToWorld(q, r) {
+  return { x: COL_SPACING * q, z: ROW_SPACING * r + ((q & 1) ? INRADIUS : 0) };
+}
+function offsetToCube(q, r) { const x = q, z = r - (q - (q & 1)) / 2; return [x, -x - z, z]; }
+function cubeToOffset(x, y, z) { return [x, z + (x - (x & 1)) / 2]; }
+function cubeRound(fx, fy, fz) {
+  let rx = Math.round(fx), ry = Math.round(fy), rz = Math.round(fz);
+  const dx = Math.abs(rx - fx), dy = Math.abs(ry - fy), dz = Math.abs(rz - fz);
+  if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+  return [rx, ry, rz];
+}
+function worldToHex(x, z) {
+  const fq = (2 / 3 * x) / R;
+  const fr = (-1 / 3 * x + Math.sqrt(3) / 3 * z) / R;   // axial r
+  const [cx, cy, cz] = cubeRound(fq, -fq - fr, fr);
+  return cubeToOffset(cx, cy, cz);
+}
+function hexDistance(q1, r1, q2, r2) {
+  const a = offsetToCube(q1, r1), b = offsetToCube(q2, r2);
+  return Math.max(Math.abs(a[0]-b[0]), Math.abs(a[1]-b[1]), Math.abs(a[2]-b[2]));
+}
+// Tiles on the straight line between two tiles, both ends included.
+function hexLine(q1, r1, q2, r2) {
+  const n = hexDistance(q1, r1, q2, r2);
+  const a = offsetToCube(q1, r1), b = offsetToCube(q2, r2), out = [];
+  for (let i = 0; i <= n; i++) {
+    const t = n === 0 ? 0 : i / n;
+    const c = cubeRound(a[0] + (b[0]-a[0])*t + 1e-6, a[1] + (b[1]-a[1])*t + 1e-6, a[2] + (b[2]-a[2])*t - 2e-6);
+    out.push(cubeToOffset(c[0], c[1], c[2]));
+  }
+  return out;
+}
+// Direction index from tile A to an adjacent tile B, or -1.
+function directionTo(q1, r1, q2, r2) {
+  for (let d = 0; d < 6; d++) { const [nq, nr] = neighbor(q1, r1, d); if (nq === q2 && nr === r2) return d; }
+  return -1;
+}
+// Unit vector on XZ from a tile center toward edge d.
+function edgeDirection(d) { const a = d * Math.PI / 3; return { x: Math.sin(a), z: -Math.cos(a) }; }
+
+// Small helpers built on top of the reference code.
+const inMap = (q, r) => q >= 0 && r >= 0 && q < WIDTH && r < HEIGHT;
+// Nearest hex direction (0..5) for an XZ vector (N = -Z, clockwise).
+function vectorToDirection(x, z) {
+  const a = Math.atan2(x, -z);                      // 0 = north, clockwise positive
+  return ((Math.round(a / (Math.PI / 3)) % 6) + 6) % 6;
+}
+
+// =============================================================================
+// Deterministic noise (PROMPT section 5.1, exact functions)
+// =============================================================================
+function hash2(q, r, seed) {
+  const h = Math.sin(q * 127.1 + r * 311.7 + seed * 74.7) * 43758.5453;
+  return h - Math.floor(h);                         // 0..1
+}
+function smoothstep01(t) { return t * t * (3 - 2 * t); }
+function valueNoise(q, r, cell, seed) {             // 0..1, smooth patches of about `cell` tiles
+  const x = q / cell, y = r / cell, gx = Math.floor(x), gy = Math.floor(y);
+  const fx = smoothstep01(x - gx), fy = smoothstep01(y - gy);
+  const a = hash2(gx, gy, seed), b = hash2(gx + 1, gy, seed);
+  const c = hash2(gx, gy + 1, seed), d = hash2(gx + 1, gy + 1, seed);
+  return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+}
+// Seed from a string (node id) for battlefield generation.
+function stringSeed(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 9973;
+  return h + 1;
+}
+// Deterministic pseudo-random sequence on top of hash2 (used for battlefield layout).
+function makeRng(seed) {
+  let i = 0;
+  return () => { i++; return hash2(i * 1.37, seed * 0.71 + i * 0.13, seed); };
+}
+
+// =============================================================================
+// WorldData
+// Decodes the heightmap once and precomputes height (Float32Array) and floor type
+// (Uint8Array) for all tiles. Access is always via tileIndex = r * width + q.
+// =============================================================================
+class WorldData {
+  constructor() {
+    this.gray = null;
+    this.height = new Float32Array(WIDTH * HEIGHT);
+    this.floor = new Uint8Array(WIDTH * HEIGHT);
+  }
+  static metersFromGray(g) { return g * MAP.metersPerGray + MAP.metersAtGrayZero; }
+  static heightFromGray(g) {
+    const s = g - MAP.seaLevelGray;
+    return Math.sign(s) * Math.sqrt(Math.abs(s)) * HEX.heightPerStep;   // top surface of the tile
+  }
+  // Floor rule for one tile (PROMPT section 5.1). bandIdx is precomputed per gray value.
+  static computeFloor(q, r, band) {
+    if (band.floor) return FLOOR_INDEX[band.floor];
+    let mix = band.mix;
+    if (band.heathMix) {
+      // Lueneburger Heide: soft region with a noisy edge. Euclidean tile distance
+      // (verified to reproduce reference/floor_preview.png exactly).
+      const hr = DATA.floorRules.heathRegion;
+      const d = Math.hypot(q - hr.q, r - hr.r) / hr.radius;
+      const t = Math.min(1, Math.max(0, (hr.fadeOut - d) / (hr.fadeOut - hr.fullUntil)));
+      const weight = smoothstep01(t);
+      if (valueNoise(q, r, hr.edgeNoiseCellSize, 4) < weight) mix = band.heathMix;
+    }
+    const n = valueNoise(q, r, DATA.floorRules.noiseCellSize, 1);
+    let sum = 0;
+    for (const e of mix) sum += e[1];
+    const x = n * sum;
+    let acc = 0;
+    for (const e of mix) { acc += e[1]; if (x < acc) return FLOOR_INDEX[e[0]]; }
+    return FLOOR_INDEX[mix[mix.length - 1][0]];
+  }
+  // Runs the precomputation in chunks so the loading bar can update.
+  async build(onProgress) {
+    const raw = atob(HM.data);
+    const gray = this.gray = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) gray[i] = raw.charCodeAt(i);
+    // Height and band only depend on the gray value -> lookup tables.
+    const heightLUT = new Float32Array(256), bandLUT = [];
+    for (let g = 0; g < 256; g++) {
+      heightLUT[g] = WorldData.heightFromGray(g);
+      const m = WorldData.metersFromGray(g);
+      bandLUT[g] = DATA.floorRules.bands.find(b => b.maxMeters >= m);
+    }
+    const rowsPerChunk = 60;
+    for (let r0 = 0; r0 < HEIGHT; r0 += rowsPerChunk) {
+      const r1 = Math.min(HEIGHT, r0 + rowsPerChunk);
+      for (let r = r0; r < r1; r++) {
+        for (let q = 0; q < WIDTH; q++) {
+          const i = r * WIDTH + q, g = gray[i];
+          this.height[i] = heightLUT[g];
+          this.floor[i] = WorldData.computeFloor(q, r, bandLUT[g]);
+        }
+      }
+      onProgress(r1 / HEIGHT);
+      await new Promise(res => setTimeout(res, 0));
+    }
+  }
+  idx(q, r) { return r * WIDTH + q; }
+  grayAt(q, r) { return inMap(q, r) ? this.gray[r * WIDTH + q] : 0; }
+  heightAt(q, r) { return inMap(q, r) ? this.height[r * WIDTH + q] : HEX.waterLevel; }
+  metersAt(q, r) { return WorldData.metersFromGray(this.grayAt(q, r)); }
+  levelAt(q, r) { return Math.round(this.heightAt(q, r)); }
+  floorKeyAt(q, r) { return inMap(q, r) ? FLOOR_KEYS[this.floor[r * WIDTH + q]] : 'DEEP_WATER'; }
+}
+
+// =============================================================================
+// TileRenderer
+// One InstancedMesh per floor type, all sharing one hex prism geometry. Only a
+// window of (2*radius+1)^2 tiles around the camera pivot is filled. A slot table
+// maps (mesh, instanceId) back to the tile index for picking.
+// =============================================================================
+class TileRenderer {
+  constructor(scene, world) {
+    this.world = world;
+    this.radius = DATA.streaming.radius;
+    this.capacity = (2 * this.radius + 1) ** 2;
+    this.center = [-9999, -9999];
+    this.locked = false;          // battle: window fixed on the node
+    this.floorOverride = null;    // battle: function (q, r) -> floor index or -1
+    this.dimOutside = null;       // battle: function (q, r) -> true when tile is outside the field
+    this.drawn = 0;
+    const geo = new THREE.CylinderGeometry(R * 0.98, R * 0.98, HEX.tileDepth, 6);
+    geo.rotateY(Math.PI / 6);     // corners on +-X (flat-top)
+    this.meshes = [];
+    this.slots = [];
+    const white = new THREE.Color(1, 1, 1);
+    FLOOR_KEYS.forEach((key, fi) => {
+      const mat = new THREE.MeshStandardMaterial({ color: DATA.floorTypes[key].color, roughness: 0.95, metalness: 0, flatShading: true });
+      const mesh = new THREE.InstancedMesh(geo, mat, this.capacity);
+      mesh.setColorAt(0, white);                     // allocates instanceColor
+      mesh.count = 0;
+      mesh.frustumCulled = false;                    // the window is always around the camera
+      mesh.userData.floorIndex = fi;
+      scene.add(mesh);
+      this.meshes.push(mesh);
+      this.slots.push(new Int32Array(this.capacity));
+    });
+  }
+  // Called each frame with the pivot tile; rebuilds when it changed.
+  update(q, r, force = false) {
+    if (this.locked && !force) return;
+    if (!force && q === this.center[0] && r === this.center[1]) return;
+    this.center = [q, r];
+    this.rebuild();
+  }
+  rebuild() {
+    const [cq, cr] = this.center, rad = this.radius, world = this.world;
+    const counts = new Int32Array(this.meshes.length);
+    let drawn = 0;
+    for (let r = cr - rad; r <= cr + rad; r++) {
+      if (r < 0 || r >= HEIGHT) continue;            // never draw outside the map
+      for (let q = cq - rad; q <= cq + rad; q++) {
+        if (q < 0 || q >= WIDTH) continue;
+        const ti = r * WIDTH + q;
+        let fi = world.floor[ti];
+        if (this.floorOverride) { const o = this.floorOverride(q, r); if (o >= 0) fi = o; }
+        const mesh = this.meshes[fi], slot = counts[fi]++;
+        this.slots[fi][slot] = ti;
+        // Matrix = translation * rotationY(k * 60deg), written directly (column-major).
+        const p = hexToWorld(q, r), y = world.height[ti] - HEX.tileDepth / 2;
+        const a = Math.floor(hash2(q, r, 2) * 6) * Math.PI / 3, c = Math.cos(a), s = Math.sin(a);
+        const m = mesh.instanceMatrix.array, o = slot * 16;
+        m[o] = c;  m[o+1] = 0; m[o+2] = -s; m[o+3] = 0;
+        m[o+4] = 0; m[o+5] = 1; m[o+6] = 0; m[o+7] = 0;
+        m[o+8] = s; m[o+9] = 0; m[o+10] = c; m[o+11] = 0;
+        m[o+12] = p.x; m[o+13] = y; m[o+14] = p.z; m[o+15] = 1;
+        // +-6 % brightness variation per tile, 50 % outside a battlefield.
+        let b = 1 + (hash2(q, r, 3) * 2 - 1) * 0.06;
+        if (this.dimOutside && this.dimOutside(q, r)) b *= 0.5;
+        const col = mesh.instanceColor.array, oc = slot * 3;
+        col[oc] = b; col[oc+1] = b; col[oc+2] = b;
+        drawn++;
+      }
+    }
+    this.meshes.forEach((mesh, fi) => {
+      mesh.count = counts[fi];
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.instanceColor.needsUpdate = true;
+      mesh.boundingSphere = null;                    // recomputed lazily for raycasting
+    });
+    this.drawn = drawn;
+  }
+  // Raycast against the tile meshes. Returns { q, r, point } or null.
+  pick(raycaster) {
+    const hits = raycaster.intersectObjects(this.meshes.filter(m => m.count > 0), false);
+    if (!hits.length) return null;
+    const h = hits[0], fi = h.object.userData.floorIndex;
+    const ti = this.slots[fi][h.instanceId];
+    return { q: ti % WIDTH, r: Math.floor(ti / WIDTH), point: h.point };
+  }
+}
+
+// Procedural normal map for the water plane (generated in JS, no image reading).
+function makeWaterNormalMap() {
+  const N = 128, data = new Uint8Array(N * N * 4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N * Math.PI * 2, v = y / N * Math.PI * 2;
+    const dx = 0.35 * Math.cos(u * 3 + v) + 0.2 * Math.cos(u * 7 - v * 2) + 0.1 * Math.cos(u * 2 + v * 5);
+    const dz = 0.35 * Math.cos(v * 3 - u) + 0.2 * Math.cos(v * 6 + u * 2) + 0.1 * Math.cos(v * 2 - u * 4);
+    const len = Math.hypot(dx, 1, dz), i = (y * N + x) * 4;
+    data[i] = (dx / len * 0.5 + 0.5) * 255; data[i+1] = (dz / len * 0.5 + 0.5) * 255; data[i+2] = (1 / len * 0.5 + 0.5) * 255; data[i+3] = 255;
+  }
+  const tex = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// =============================================================================
+// CameraController
+// Orbit camera around an invisible pivot on the terrain. WASD/arrows move the
+// pivot relative to the view direction, Q/E and RMB rotate, the wheel zooms.
+// =============================================================================
+class CameraController {
+  constructor(camera) {
+    this.camera = camera;
+    this.pivot = new THREE.Vector3();
+    this.yaw = 0;                              // 0 = camera south of the pivot, looking north
+    this.distance = CAM.startZoom;
+    this.pitch = CAM.pitchDegrees * Math.PI / 180;
+    this.bounds = null;                        // {minX, maxX, minZ, maxZ}
+    this.follow = null;                        // optional THREE.Object3D to follow (travel)
+    this.setMapBounds();
+  }
+  setMapBounds() {
+    this.bounds = { minX: 0, maxX: (WIDTH - 1) * COL_SPACING, minZ: 0, maxZ: (HEIGHT - 1) * ROW_SPACING + INRADIUS };
+  }
+  setFieldBounds(q0, r0, size) {
+    const a = hexToWorld(q0, r0), b = hexToWorld(q0 + size - 1, r0 + size - 1);
+    this.bounds = { minX: a.x, maxX: b.x, minZ: a.z, maxZ: b.z + INRADIUS };
+  }
+  lookAtTile(q, r, snap = true) {
+    const p = hexToWorld(q, r);
+    this.pivot.x = p.x; this.pivot.z = p.z;
+    if (snap) this.pivot.y = Math.max(game.world.heightAt(q, r), HEX.waterLevel);
+  }
+  pivotTile() { return worldToHex(this.pivot.x, this.pivot.z); }
+  update(dt, keys) {
+    // Movement relative to the view direction, XZ only.
+    let mx = 0, mz = 0;
+    if (keys.has('KeyW') || keys.has('ArrowUp')) mz += 1;
+    if (keys.has('KeyS') || keys.has('ArrowDown')) mz -= 1;
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1;
+    if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
+    if (keys.has('KeyQ')) this.yaw += CAM.rotateSpeed * dt;
+    if (keys.has('KeyE')) this.yaw -= CAM.rotateSpeed * dt;
+    if (this.follow) {
+      this.pivot.x = this.follow.position.x; this.pivot.z = this.follow.position.z;
+    } else if (mx || mz) {
+      const speed = CAM.moveSpeed * (this.distance / CAM.minZoom) * dt;
+      const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw);   // forward
+      const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);    // right
+      const len = Math.hypot(mx, mz);
+      this.pivot.x += (fx * mz + rx * mx) / len * speed;
+      this.pivot.z += (fz * mz + rz * mx) / len * speed;
+    }
+    // Keep the pivot inside the map (or the battlefield).
+    const b = this.bounds;
+    this.pivot.x = Math.min(b.maxX, Math.max(b.minX, this.pivot.x));
+    this.pivot.z = Math.min(b.maxZ, Math.max(b.minZ, this.pivot.z));
+    // Pivot height follows the terrain, damped; water level is the minimum.
+    const [q, r] = this.pivotTile();
+    const targetY = Math.max(game.world.heightAt(q, r), HEX.waterLevel);
+    this.pivot.y += (targetY - this.pivot.y) * Math.min(1, CAM.heightSmoothing * dt);
+    // Place the camera.
+    const h = Math.cos(this.pitch) * this.distance;
+    this.camera.position.set(
+      this.pivot.x + Math.sin(this.yaw) * h,
+      this.pivot.y + Math.sin(this.pitch) * this.distance,
+      this.pivot.z + Math.cos(this.yaw) * h);
+    this.camera.lookAt(this.pivot);
+  }
+  zoom(deltaY) {
+    this.distance *= Math.exp(deltaY * 0.0012);
+    this.distance = Math.min(CAM.maxZoom, Math.max(CAM.minZoom, this.distance));
+  }
+}
+
+// =============================================================================
+// Scene setup (view only)
+// =============================================================================
+const BG_COLOR = 0x6e675c;   // muted sepia gray, also the fog color
+function initScene() {
+  const v = game.view;
+  const app = document.getElementById('app');
+  v.renderer = new THREE.WebGLRenderer({ antialias: true });
+  v.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  v.renderer.setSize(window.innerWidth, window.innerHeight);
+  v.renderer.setClearColor(BG_COLOR);
+  app.appendChild(v.renderer.domElement);
+  v.labelRenderer = new CSS2DRenderer({ element: document.getElementById('labels') });
+  v.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+
+  v.scene = new THREE.Scene();
+  v.scene.background = new THREE.Color(BG_COLOR);
+  v.scene.fog = new THREE.FogExp2(BG_COLOR, 0.008);
+  v.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.5, 20000);
+
+  // Warm sun from the south-west plus a hemisphere fill light.
+  v.sun = new THREE.DirectionalLight(0xffe2b8, 1.9);
+  v.sun.position.set(-60, 90, 60);
+  v.scene.add(v.sun, v.sun.target);
+  v.scene.add(new THREE.HemisphereLight(0xe8dcc0, 0x3a3328, 1.1));
+
+  // Water plane over the whole map.
+  const w = WIDTH * COL_SPACING, h = HEIGHT * ROW_SPACING;
+  v.waterNormal = makeWaterNormalMap();
+  v.waterNormal.repeat.set(w / 40, h / 40);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+    new THREE.MeshStandardMaterial({ color: 0x1d4248, transparent: true, opacity: 0.7, roughness: 0.25, metalness: 0.15,
+      normalMap: v.waterNormal, normalScale: new THREE.Vector2(0.6, 0.6) }));
+  water.rotation.x = -Math.PI / 2;
+  water.position.set(w / 2 - COL_SPACING / 2, HEX.waterLevel, h / 2 - ROW_SPACING / 2);
+  v.scene.add(water);
+  v.water = water;
+
+  v.tiles = new TileRenderer(v.scene, game.world);
+  v.cam = new CameraController(v.camera);
+  v.raycaster = new THREE.Raycaster();
+  v.worldRoot = new THREE.Group();      // node pillars and army figure
+  v.battleRoot = new THREE.Group();     // battle-only objects
+  v.scene.add(v.worldRoot, v.battleRoot);
+
+  window.addEventListener('resize', () => {
+    v.camera.aspect = window.innerWidth / window.innerHeight;
+    v.camera.updateProjectionMatrix();
+    v.renderer.setSize(window.innerWidth, window.innerHeight);
+    v.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+// Simple tween system: every animation is a promise resolved by the render loop.
+const tweens = [];
+function tween(duration, fn) {
+  return new Promise(resolve => tweens.push({ t: 0, duration, fn, resolve }));
+}
+function updateTweens(dt) {
+  for (let i = tweens.length - 1; i >= 0; i--) {
+    const tw = tweens[i];
+    tw.t += dt;
+    const k = Math.min(1, tw.t / tw.duration);
+    tw.fn(k);
+    if (k >= 1) { tweens.splice(i, 1); tw.resolve(); }
+  }
+}
+const wait = s => tween(s, () => {});
+
+// =============================================================================
+// Campaign
+// World-map state: places, travel, time, threat, resources. Pure data plus a few
+// helpers; the view functions further below read from it.
+// =============================================================================
+const Campaign = {
+  create() {
+    const threat = {};
+    ENEMY_FACTIONS.forEach(f => threat[f] = 0);
+    return {
+      dayCount: 0,
+      resources: { ...ECON.startResources },
+      army: ECON.startArmy.map(type => ({ type, hp: DATA.units[type].hp })),
+      nodeId: PHYLACTERY.id,
+      prevNodeId: null,
+      owners: Object.fromEntries(DATA.nodes.map(n => [n.id, n.faction])),
+      threat,
+      battles: 0,
+      won: false
+    };
+  },
+  // Julian calendar (correct for 1371): every 4th year is a leap year.
+  dateOf(dayCount) {
+    let { year, month, day } = MAP.startDate;
+    const len = (y, m) => [31, (y % 4 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
+    for (let i = 0; i < dayCount; i++) {
+      day++;
+      if (day > len(year, month)) { day = 1; month++; if (month > 12) { month = 1; year++; } }
+    }
+    return { year, month, day };
+  },
+  dateString(dayCount) { const d = this.dateOf(dayCount); return `${d.day}. ${MONTHS[d.month - 1]} ${d.year}`; },
+  advanceDays(n) {
+    const c = game.campaign;
+    for (let i = 0; i < n; i++) {
+      c.dayCount++;
+      for (const f of ENEMY_FACTIONS) c.threat[f] -= c.threat[f] * THREAT.dailyDecay;
+    }
+  },
+  owner(node) { return game.campaign.owners[node.id]; },
+  isConquered(node) { return node.type !== 'PHYLACTERY' && this.owner(node) === 'UNDEAD'; },
+  isEnemy(node) { return this.owner(node) !== 'UNDEAD'; },
+  isLiving(faction) { return DATA.nodes.some(n => game.campaign.owners[n.id] === faction); },
+  armyNode() { return NODE_BY_ID[game.campaign.nodeId]; },
+  commandLimit() {
+    const mythic = DATA.nodes.filter(n => n.type === 'MYTHIC' && this.isConquered(n)).length;
+    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic;
+  },
+  commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
+  isRevealed(node) {
+    const a = this.armyNode();
+    if (hexDistance(node.q, node.r, a.q, a.r) <= REVEAL_DISTANCE) return true;
+    if (hexDistance(node.q, node.r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
+    return DATA.nodes.some(n => this.isConquered(n) && hexDistance(node.q, node.r, n.q, n.r) <= REVEAL_DISTANCE);
+  },
+  travelDays(from, to) { return Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / ECON.travelTilesPerDay); },
+  // Garrison incl. threat reinforcements: +1 of the most common unit per full reinforcementPer %.
+  garrisonFor(node) {
+    const list = [];
+    for (const [type, n] of Object.entries(node.garrison)) for (let i = 0; i < n; i++) list.push(type);
+    if (!list.length) return list;
+    const threat = game.campaign.threat[node.faction] || 0;
+    const extra = Math.floor(threat / THREAT.reinforcementPer);
+    let best = null, bestN = -1;
+    for (const [type, n] of Object.entries(node.garrison)) if (n > bestN) { best = type; bestN = n; }
+    for (let i = 0; i < extra; i++) list.push(best);
+    return list;
+  },
+  // Threat rises when a node is attacked.
+  registerAttack(node) {
+    const c = game.campaign;
+    for (const f of ENEMY_FACTIONS) {
+      if (!this.isLiving(f)) continue;
+      c.threat[f] = Math.min(100, c.threat[f] + (f === node.faction ? THREAT.attackOwnNode : THREAT.attackOtherFaction));
+    }
+  },
+  healAtPhylactery() {
+    if (game.campaign.nodeId !== PHYLACTERY.id) return;
+    for (const u of game.campaign.army) u.hp = DATA.units[u.type].hp;
+  },
+  addResources(res) {
+    for (const [k, v] of Object.entries(res)) game.campaign.resources[k] = (game.campaign.resources[k] || 0) + v;
+  }
+};
+
+// =============================================================================
+// Recruitment (Hügelgrab / phylactery)
+// =============================================================================
+const Recruitment = {
+  candidates() { return Object.entries(DATA.units).filter(([k, u]) => u.side === 'undead' && k !== 'lich'); },
+  // Returns null if recruitable, otherwise a German reason.
+  blocker(type) {
+    const u = DATA.units[type], c = game.campaign;
+    if (c.nodeId !== PHYLACTERY.id) return 'Nur im Hügelgrab';
+    if ((u.requiresKnowledge || 0) > c.resources.knowledge) return `Benötigt ${u.requiresKnowledge} Wissen`;
+    for (const [k, v] of Object.entries(u.cost || {})) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
+    if (Campaign.commandUsed() + u.commandPoints > Campaign.commandLimit()) return 'Kommandolimit erreicht';
+    return null;
+  },
+  recruit(type) {
+    if (this.blocker(type)) return false;
+    const u = DATA.units[type], c = game.campaign;
+    for (const [k, v] of Object.entries(u.cost || {})) c.resources[k] -= v;
+    c.army.push({ type, hp: u.hp });
+    SaveGame.save();
+    return true;
+  }
+};
+
+// =============================================================================
+// SaveGame (localStorage, key harmbringer_save_v1). All access in try/catch.
+// =============================================================================
+const SAVE_KEY = 'harmbringer_save_v1';
+const SaveGame = {
+  save() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.campaign)); } catch (e) { /* storage unavailable */ }
+  },
+  load() {
+    try {
+      const s = localStorage.getItem(SAVE_KEY);
+      if (!s) return null;
+      const c = JSON.parse(s);
+      if (!c || !Array.isArray(c.army) || !c.owners || !NODE_BY_ID[c.nodeId]) return null;
+      // Fill in fields that may be missing in older saves.
+      const fresh = Campaign.create();
+      return { ...fresh, ...c, resources: { ...fresh.resources, ...c.resources }, threat: { ...fresh.threat, ...c.threat } };
+    } catch (e) { return null; }
+  },
+  clear() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
+};
+
+// =============================================================================
+// World view: node pillars, labels, army figure, selection
+// =============================================================================
+const WorldView = {
+  init() {
+    const v = game.view;
+    const pillarGeo = new THREE.CylinderGeometry(0.7, 1.0, 1, 8);
+    pillarGeo.translate(0, 0.5, 0);            // base at y = 0, scaled in height
+    v.nodeViews = {};
+    for (const node of DATA.nodes) {
+      const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, fog: false, depthWrite: false });
+      const pillar = new THREE.Mesh(pillarGeo, mat);
+      const p = hexToWorld(node.q, node.r);
+      pillar.position.set(p.x, Math.max(game.world.heightAt(node.q, node.r), HEX.waterLevel), p.z);
+      pillar.userData.nodeId = node.id;
+      const el = document.createElement('div');
+      el.className = 'nodeLabel';
+      el.addEventListener('click', ev => { ev.stopPropagation(); if (game.mode === 'world') UI.selectNode(node.id); });
+      const label = new CSS2DObject(el);
+      pillar.add(label);
+      v.worldRoot.add(pillar);
+      v.nodeViews[node.id] = { pillar, label, el };
+    }
+    // Army figure: a violet Lich-like shape.
+    const fig = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.OctahedronGeometry(2.4), new THREE.MeshStandardMaterial({ color: 0x5a2d82, emissive: 0x2a0f45, roughness: 0.5, flatShading: true }));
+    body.scale.y = 1.6; body.position.y = 4.2;
+    const crown = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.25, 6, 12), new THREE.MeshStandardMaterial({ color: 0xc9a227, emissive: 0x3a2a00 }));
+    crown.rotation.x = Math.PI / 2; crown.position.y = 8.4;
+    fig.add(body, crown);
+    v.army = fig;
+    v.armyBody = body;
+    v.worldRoot.add(fig);
+    this.placeArmy();
+    this.refresh();
+  },
+  placeArmy() {
+    // Stands one tile south-east of the node so the pillar does not hide it.
+    const n = Campaign.armyNode(), [q, r] = neighbor(n.q, n.r, 2), p = hexToWorld(q, r);
+    game.view.army.position.set(p.x, Math.max(game.world.heightAt(q, r), HEX.waterLevel), p.z);
+  },
+  // Update pillar colors, heights and labels from the campaign state.
+  refresh() {
+    for (const node of DATA.nodes) {
+      const nv = game.view.nodeViews[node.id];
+      const revealed = Campaign.isRevealed(node);
+      const owner = Campaign.owner(node);
+      nv.pillar.scale.y = revealed ? 40 : 10;
+      nv.pillar.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
+      nv.el.textContent = revealed ? node.name : '?';
+      nv.el.classList.toggle('unknown', !revealed);
+      nv.el.classList.toggle('selected', UI.selectedNode === node.id);
+    }
+  },
+  setVisible(on) { game.view.worldRoot.visible = on; for (const id in game.view.nodeViews) game.view.nodeViews[id].label.visible = on; }
+};
+
+// Journey: the figure glides in a straight line, the camera follows.
+async function startTravel(target) {
+  const c = game.campaign, from = Campaign.armyNode();
+  if (target.id === from.id || game.mode !== 'world') return;
+  const days = Campaign.travelDays(from, target);
+  game.mode = 'travel';
+  UI.renderInfo();
+  const a = hexToWorld(...neighbor(from.q, from.r, 2)), b = hexToWorld(...neighbor(target.q, target.r, 2));
+  const fig = game.view.army, cam = game.view.cam;
+  cam.follow = fig;
+  await tween(TRAVEL_SECONDS, k => {
+    const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // ease in-out
+    fig.position.x = a.x + (b.x - a.x) * e;
+    fig.position.z = a.z + (b.z - a.z) * e;
+    const [q, r] = worldToHex(fig.position.x, fig.position.z);
+    fig.position.y = Math.max(game.world.heightAt(q, r), HEX.waterLevel);
+  });
+  cam.follow = null;
+  c.prevNodeId = from.id;
+  c.nodeId = target.id;
+  Campaign.advanceDays(days);
+  Campaign.healAtPhylactery();
+  game.mode = 'world';
+  WorldView.placeArmy();
+  WorldView.refresh();
+  UI.selectNode(target.id);
+  UI.updateHeader();
+  SaveGame.save();
+  if (target.id === PHYLACTERY.id) UI.toast('Im Hügelgrab: Die Untoten sind geheilt.');
+}
+
+// Minimap: full map drawn once from the precomputed floor colors (pixels are only
+// written, never read), plus an overlay with places, army and view window.
+const Minimap = {
+  init() {
+    // Downsampled by K: each minimap pixel is the average floor color of K x K tiles.
+    const K = this.K = 4, MW = Math.ceil(WIDTH / K), MH = Math.ceil(HEIGHT / K);
+    const base = document.getElementById('miniBase'), over = document.getElementById('miniOver');
+    base.width = over.width = MW; base.height = over.height = MH;
+    const ctx = base.getContext('2d'), img = ctx.createImageData(MW, MH);
+    const cols = FLOOR_KEYS.map(k => new THREE.Color(DATA.floorTypes[k].color));
+    const floor = game.world.floor;
+    for (let my = 0; my < MH; my++) for (let mx = 0; mx < MW; mx++) {
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let y = my * K; y < Math.min(HEIGHT, my * K + K); y++) for (let x = mx * K; x < Math.min(WIDTH, mx * K + K); x++) {
+        const c = cols[floor[y * WIDTH + x]]; r += c.r; g += c.g; b += c.b; n++;
+      }
+      const o = (my * MW + mx) * 4;
+      img.data[o] = r / n * 255; img.data[o+1] = g / n * 255; img.data[o+2] = b / n * 255; img.data[o+3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    this.ctx = over.getContext('2d');
+    over.addEventListener('pointerdown', ev => {
+      if (game.mode !== 'world') return;
+      const rect = over.getBoundingClientRect();
+      const q = Math.round((ev.clientX - rect.left) / rect.width * WIDTH);
+      const r = Math.round((ev.clientY - rect.top) / rect.height * HEIGHT);
+      game.view.cam.lookAtTile(Math.min(WIDTH - 1, Math.max(0, q)), Math.min(HEIGHT - 1, Math.max(0, r)));
+    });
+  },
+  draw() {
+    const ctx = this.ctx, K = this.K;
+    ctx.save();
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    ctx.scale(1 / K, 1 / K);                     // draw in tile coordinates
+    for (const node of DATA.nodes) {
+      const rev = Campaign.isRevealed(node);
+      ctx.fillStyle = rev ? DATA.factions[Campaign.owner(node)].color : '#888';
+      ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(node.q, node.r, rev ? 20 : 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    const [aq, ar] = worldToHex(game.view.army.position.x, game.view.army.position.z);
+    ctx.fillStyle = '#c9a227'; ctx.beginPath(); ctx.arc(aq, ar, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    const [pq, pr] = game.view.cam.pivotTile(), rad = DATA.streaming.radius;
+    ctx.strokeStyle = '#f4ecd6'; ctx.lineWidth = 4;
+    ctx.strokeRect(pq - rad, pr - rad, 2 * rad + 1, 2 * rad + 1);
+    ctx.restore();
+  }
+};
+
+// =============================================================================
+// Battlefield
+// Builds the size x size battle area from the real world tiles around a node
+// and adds buildings, fences, special grounds and edge types. Deterministic:
+// all randomness comes from hash2 with a seed derived from the node id.
+// =============================================================================
+const POWER_NAMES = { PIERCE: 'Stich', BLUNT: 'Wucht', SIEGE: 'Belagerung', FIRE: 'Feuer', POISON: 'Gift', ARCANE: 'Arkan',
+  SOUL: 'Seele', HOLY: 'Heilig', CHAOS: 'Chaos', HEAL: 'Heilung' };
+const DEFENSE_NAMES = { UNARMORED: 'Ungerüstet', LIGHT: 'Leicht', MEDIUM: 'Mittel', HEAVY: 'Schwer', FORTIFIED: 'Befestigt', DIVINE: 'Göttlich' };
+const BLOCKS_MELEE = new Set(['WALL', 'WALL_DESTRUCTIBLE', 'WALL_TRANSPARENT']);
+const BLOCKS_SIGHT = new Set(['WALL', 'WALL_DESTRUCTIBLE']);
+// PROMPT 8.5: a priest without wounded allies attacks with 3 HOLY damage.
+const PRIEST_ATTACK = { power: 'HOLY', damage: 3 };
+
+class Battlefield {
+  constructor(node) {
+    this.node = node;
+    this.size = node.size;
+    this.cq = node.q; this.cr = node.r;
+    this.q0 = node.q - node.size / 2;
+    this.r0 = node.r - node.size / 2;
+    this.seed = stringSeed(node.id);
+    this.rng = makeRng(this.seed);
+    this.tiles = new Array(this.size * this.size);
+    this.buildings = [];
+    const w = game.world;
+    for (let j = 0; j < this.size; j++) for (let i = 0; i < this.size; i++) {
+      const q = this.q0 + i, r = this.r0 + j;
+      const y = w.heightAt(q, r);
+      this.tiles[j * this.size + i] = inMap(q, r)
+        ? { q, r, floor: w.floorKeyAt(q, r), y, level: Math.round(y), edges: ['OPEN','OPEN','OPEN','OPEN','OPEN','OPEN'], unit: null, building: null }
+        : null;   // field corner outside the map (does not happen with the given nodes)
+    }
+    this.build();
+  }
+  get(q, r) {
+    const i = q - this.q0, j = r - this.r0;
+    if (i < 0 || j < 0 || i >= this.size || j >= this.size) return null;
+    return this.tiles[j * this.size + i];
+  }
+  contains(q, r) { return !!this.get(q, r); }
+  index(t) { return (t.r - this.r0) * this.size + (t.q - this.q0); }
+  neighborTile(t, d) { const [nq, nr] = neighbor(t.q, t.r, d); return this.get(nq, nr); }
+  isWater(t) { return !!DATA.floorTypes[t.floor].water; }
+  walkable(t) { return DATA.floorTypes[t.floor].moveCost !== null; }
+  tilesWithin(q, r, rad) {
+    const out = [];
+    for (const t of this.tiles) if (t && hexDistance(q, r, t.q, t.r) <= rad) out.push(t);
+    return out;
+  }
+  // Sets an edge on both sides (the tile and its neighbor across edge d).
+  setEdge(t, d, type) {
+    t.edges[d] = type;
+    const n = this.neighborTile(t, d);
+    if (n) n.edges[opposite(d)] = type;
+  }
+  randomTileWithin(rad) {
+    for (let k = 0; k < 50; k++) {
+      const q = this.cq + Math.round((this.rng() * 2 - 1) * rad), r = this.cr + Math.round((this.rng() * 2 - 1) * rad);
+      const t = this.get(q, r);
+      if (t && hexDistance(q, r, this.cq, this.cr) <= rad) return t;
+    }
+    return this.get(this.cq, this.cr);
+  }
+
+  build() {
+    const type = this.node.type, size = this.size;
+    if (type === 'WORLDLY') {
+      for (const t of this.tilesWithin(this.cq, this.cr, 3)) if (!this.isWater(t)) t.floor = 'COBBLESTONE';
+    }
+    if (type === 'WORLDLY' || type === 'CHRISTIAN') {
+      this.placeBuildings(3 * size / 16, Math.floor(size / 3), type === 'CHRISTIAN');
+      this.placeFences(size / 8);
+    }
+    if (type === 'MYTHIC') {
+      if (this.node.id === 'teufelsmoor')
+        for (const t of this.tilesWithin(this.cq, this.cr, 4)) if (!this.isWater(t)) t.floor = 'BOG';
+      for (const t of this.tilesWithin(this.cq, this.cr, 2)) if (!this.isWater(t)) t.floor = 'PAGAN_GROUND';
+      // Hünensteine: 6-10 single cover edges near the center.
+      const stones = 6 + Math.floor(this.rng() * 5);
+      let placed = 0;
+      for (let k = 0; k < 80 && placed < stones; k++) {
+        const t = this.randomTileWithin(4), d = Math.floor(this.rng() * 6), n = this.neighborTile(t, d);
+        if (!n || t.edges[d] !== 'OPEN' || this.isWater(t)) continue;
+        this.setEdge(t, d, 'COVER');
+        placed++;
+      }
+    }
+  }
+
+  // A building = anchor + neighbor in d + neighbor in d+1 (three tiles touching each other).
+  placeBuildings(count, innerRadius, christian) {
+    for (let attempt = 0; attempt < 400 && this.buildings.length < count; attempt++) {
+      const isChurch = christian && this.buildings.length === 0;
+      const anchor = this.randomTileWithin(isChurch && attempt < 80 ? 3 : innerRadius);
+      const d = Math.floor(this.rng() * 6);
+      const a = this.neighborTile(anchor, d), b = this.neighborTile(anchor, (d + 1) % 6);
+      if (!a || !b) continue;
+      const parts = [anchor, a, b];
+      if (parts.some(t => t.building !== null || this.isWater(t))) continue;
+      const levels = parts.map(t => t.level);
+      if (Math.max(...levels) - Math.min(...levels) >= 2) continue;
+      // Must not touch another building.
+      let touches = false;
+      for (const t of parts) for (let e = 0; e < 6; e++) {
+        const n = this.neighborTile(t, e);
+        if (n && n.building !== null) touches = true;
+      }
+      if (touches) continue;
+      // Outward edges and door candidates (a walkable tile outside the building).
+      const outward = [];
+      for (const t of parts) for (let e = 0; e < 6; e++) {
+        const n = this.neighborTile(t, e);
+        if (n && parts.includes(n)) continue;
+        outward.push({ t, e, n });
+      }
+      const doors = outward.filter(o => o.n && this.walkable(o.n) && !this.isWater(o.n) && Math.abs(o.n.level - o.t.level) < 2);
+      if (!doors.length) continue;
+      const door = doors[Math.floor(this.rng() * doors.length)];
+      const id = this.buildings.length;
+      for (const t of parts) { t.building = id; t.floor = 'STONE_FLOOR'; }
+      for (const o of outward) this.setEdge(o.t, o.e, 'WALL');
+      this.setEdge(door.t, door.e, 'OPEN');
+      this.buildings.push({ id, tiles: parts, church: isChurch, door });
+    }
+    if (christian && this.buildings.length) {
+      // Church: holy ground within radius 2; graveyard (radius 2) next to it.
+      const church = this.buildings[0].tiles[0];
+      const holy = new Set();
+      for (const t of this.tilesWithin(church.q, church.r, 2)) {
+        if (this.isWater(t) || (t.building !== null && t.building !== 0)) continue;
+        t.floor = 'HOLY_GROUND'; holy.add(t);
+      }
+      let best = null, bestScore = -1;
+      for (const c of this.tilesWithin(church.q, church.r, 5)) {
+        const d = hexDistance(c.q, c.r, church.q, church.r);
+        if (d < 4) continue;
+        const area = this.tilesWithin(c.q, c.r, 2);
+        const score = area.filter(t => !this.isWater(t) && t.building === null && !holy.has(t)).length + this.rng() * 0.5;
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+      if (best) for (const t of this.tilesWithin(best.q, best.r, 2))
+        if (!this.isWater(t) && t.building === null && !holy.has(t)) t.floor = 'GRAVEYARD_GROUND';
+    }
+  }
+
+  // Fences: lines of 4-6 tiles in direction d; edge (d+1)%6 becomes cover on both sides.
+  placeFences(count) {
+    for (let f = 0; f < count; f++) {
+      let t = this.randomTileWithin(this.size / 2 - 2);
+      const d = Math.floor(this.rng() * 6), len = 4 + Math.floor(this.rng() * 3), e = (d + 1) % 6;
+      for (let i = 0; i < len && t; i++) {
+        if (t.building !== null) break;
+        const n = this.neighborTile(t, e);
+        if (n && n.building === null && t.edges[e] === 'OPEN' && !this.isWater(t)) this.setEdge(t, e, 'COVER');
+        t = this.neighborTile(t, d);
+      }
+    }
+  }
+}
+
+// =============================================================================
+// Pathfinding
+// Dijkstra over the battlefield with the movement rules of PROMPT 8.4.
+// =============================================================================
+class MinHeap {
+  constructor() { this.a = []; }
+  push(cost, item) {
+    const a = this.a; a.push([cost, item]);
+    let i = a.length - 1;
+    while (i > 0) { const p = (i - 1) >> 1; if (a[p][0] <= a[i][0]) break; [a[p], a[i]] = [a[i], a[p]]; i = p; }
+  }
+  pop() {
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length) {
+      a[0] = last; let i = 0;
+      for (;;) {
+        const l = 2 * i + 1, r = l + 1; let m = i;
+        if (l < a.length && a[l][0] < a[m][0]) m = l;
+        if (r < a.length && a[r][0] < a[m][0]) m = r;
+        if (m === i) break; [a[m], a[i]] = [a[i], a[m]]; i = m;
+      }
+    }
+    return top;
+  }
+  get size() { return this.a.length; }
+}
+
+const Pathfinding = {
+  // Cost to step from A to B in direction d, or null if not allowed.
+  stepCost(field, unit, A, d, B) {
+    if (!B) return null;
+    const def = unit.def;
+    if (!def.spectral && (A.edges[d] !== 'OPEN' || B.edges[opposite(d)] !== 'OPEN')) return null;
+    if (!def.flying && Math.abs(A.level - B.level) >= 2) return null;
+    if (B.unit && B.unit !== unit && !def.flying) return null;     // flyers may pass over units
+    if (def.flying) return 1;
+    return DATA.floorTypes[B.floor].moveCost;                        // null = impassable
+  },
+  // Returns { cost: Map(index -> cost), prev: Map(index -> index) } up to maxCost.
+  search(field, unit, maxCost) {
+    const start = field.get(unit.q, unit.r);
+    const cost = new Map(), prev = new Map(), heap = new MinHeap();
+    const si = field.index(start);
+    cost.set(si, 0); heap.push(0, start);
+    while (heap.size) {
+      const [c, t] = heap.pop();
+      if (c > cost.get(field.index(t))) continue;
+      for (let d = 0; d < 6; d++) {
+        const n = field.neighborTile(t, d);
+        const sc = this.stepCost(field, unit, t, d, n);
+        if (sc === null || sc === undefined) continue;
+        const nc = c + sc;
+        if (nc > maxCost) continue;
+        const ni = field.index(n);
+        if (!cost.has(ni) || nc < cost.get(ni)) { cost.set(ni, nc); prev.set(ni, field.index(t)); heap.push(nc, n); }
+      }
+    }
+    return { cost, prev, start: si };
+  },
+  // Tiles the unit may end its move on (free tiles within its move points), incl. its own.
+  reachable(field, unit) {
+    const s = this.search(field, unit, unit.def.move);
+    const tiles = [];
+    for (const [i] of s.cost) { const t = field.tiles[i]; if (!t.unit || t.unit === unit) tiles.push(t); }
+    return { ...s, tiles };
+  },
+  path(field, search, target) {
+    const out = [];
+    let i = field.index(target);
+    if (!search.cost.has(i)) return null;
+    while (i !== undefined) { out.push(field.tiles[i]); if (i === search.start) break; i = search.prev.get(i); }
+    return out.reverse();
+  }
+};
+
+// =============================================================================
+// Combat rules (pure functions on data objects)
+// =============================================================================
+const Combat = {
+  // Damage formula, PROMPT 8.4 (exact order of operations).
+  damage(att, tgt, attLevel, tgtLevel, targetInCover) {
+    const pd = DATA.powerDefense;
+    let dmg = att.damage * pd[att.power][tgt.defense] / 100;
+    if (attLevel > tgtLevel) dmg *= 1.25;      // high ground
+    if (attLevel < tgtLevel) dmg *= 0.85;
+    if (targetInCover) dmg *= 0.5;
+    if (att.power === 'ARCANE' || att.power === 'CHAOS') dmg -= tgt.magicResist;
+    if (att.power === 'SOUL') dmg -= tgt.soulShield;
+    dmg = Math.round(dmg);
+    dmg = (pd[att.power][tgt.defense] === 0) ? 0 : Math.max(1, dmg);
+    return dmg;
+  },
+  // Attack profile: what a unit does against a given target.
+  profile(unit, target) {
+    const def = unit.def;
+    if (def.power === 'HEAL') return target.side === unit.side ? { power: 'HEAL', damage: def.damage } : PRIEST_ATTACK;
+    return { power: def.power, damage: def.damage };
+  },
+  edgeBetween(field, a, b) {
+    const d = directionTo(a.q, a.r, b.q, b.r);
+    if (d < 0) return null;
+    return [a.edges[d], b.edges[opposite(d)]];
+  },
+  // Line of sight from tile A to tile B (walls block, high ground in between blocks).
+  lineOfSight(field, A, B) {
+    const line = hexLine(A.q, A.r, B.q, B.r);
+    const maxLevel = Math.max(A.level, B.level) + 1;
+    let cover = false;
+    for (let i = 1; i < line.length; i++) {
+      const p = field.get(line[i - 1][0], line[i - 1][1]), c = field.get(line[i][0], line[i][1]);
+      if (!p || !c) continue;
+      const e = this.edgeBetween(field, p, c);
+      if (e && (BLOCKS_SIGHT.has(e[0]) || BLOCKS_SIGHT.has(e[1]))) return { clear: false };
+      if (i < line.length - 1 && c.level > maxLevel) return { clear: false };
+      if (i === line.length - 1 && e && (e[0] === 'COVER' || e[1] === 'COVER')) cover = true;
+    }
+    return { clear: true, cover };
+  },
+  // Can `unit`, standing on tile `from`, attack (or heal) `target`? Returns { ok, cover, dist }.
+  canAttack(field, unit, from, target) {
+    const tt = field.get(target.q, target.r);
+    if (!target.alive || target === unit) return { ok: false };
+    const healing = unit.def.power === 'HEAL' && target.side === unit.side;
+    if (target.side === unit.side && !healing) return { ok: false };
+    if (healing && target.hp >= target.maxHp) return { ok: false };
+    const dist = hexDistance(from.q, from.r, tt.q, tt.r);
+    let range = unit.def.range;
+    if (range > 1 && from.level - tt.level >= 2) range += 1;        // ranged high ground bonus
+    if (dist > range || dist < 1) return { ok: false };
+    if (dist === 1) {
+      const e = this.edgeBetween(field, from, tt);
+      if (e && (BLOCKS_MELEE.has(e[0]) || BLOCKS_MELEE.has(e[1]))) return { ok: false };
+      return { ok: true, cover: !!e && (e[0] === 'COVER' || e[1] === 'COVER'), dist, range };
+    }
+    const los = this.lineOfSight(field, from, tt);
+    if (!los.clear) return { ok: false };
+    return { ok: true, cover: los.cover, dist, range };
+  },
+  expected(field, unit, from, target, cover) {
+    const prof = this.profile(unit, target);
+    if (prof.power === 'HEAL') return Math.min(prof.damage, target.maxHp - target.hp);
+    return this.damage(prof, target.def, from.level, field.get(target.q, target.r).level, cover);
+  }
+};
+
+// =============================================================================
+// Battle view helpers (three.js objects for units, overlays and edges)
+// =============================================================================
+const BattleView = {
+  shapeGeometry(shape) {
+    let g;
+    switch (shape) {
+      case 'cone': g = new THREE.ConeGeometry(0.9, 2.4, 8); break;
+      case 'capsule': g = new THREE.CapsuleGeometry(0.7, 1.2, 4, 8); break;
+      case 'box': g = new THREE.BoxGeometry(1.5, 1.9, 1.5); break;
+      case 'sphere': g = new THREE.SphereGeometry(0.9, 14, 10); break;
+      case 'cylinder': g = new THREE.CylinderGeometry(0.7, 0.7, 2.2, 10); break;
+      default: g = new THREE.OctahedronGeometry(1.1); g.scale(1, 1.6, 1);
+    }
+    g.computeBoundingBox();
+    g.translate(0, -g.boundingBox.min.y, 0);      // stand on y = 0
+    return g;
+  },
+  init(field) {
+    const root = game.view.battleRoot;
+    // Overlays: flat hexagons (reach / targets / path / sight cones).
+    const geo = new THREE.CylinderGeometry(R * 0.86, R * 0.86, 0.1, 6);
+    geo.rotateY(Math.PI / 6);
+    const cap = field.size * field.size;
+    const mk = (opacity) => {
+      const m = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity, depthWrite: false }), cap);
+      m.setColorAt(0, new THREE.Color(1, 1, 1)); m.count = 0; m.frustumCulled = false; m.renderOrder = 2;
+      root.add(m); return m;
+    };
+    this.overlay = mk(0.5);
+    this.pathOverlay = mk(0.75);
+    this.coneOverlay = mk(0.22);
+    // Active unit ring.
+    this.ring = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.16, 6, 24), new THREE.MeshBasicMaterial({ color: 0xd8b030 }));
+    this.ring.rotation.x = Math.PI / 2; this.ring.visible = false;
+    root.add(this.ring);
+    this.buildEdges(field);
+  },
+  setOverlay(mesh, list) {
+    const m = mesh.instanceMatrix.array, c = mesh.instanceColor.array, col = new THREE.Color();
+    list.forEach((it, i) => {
+      const p = hexToWorld(it.t.q, it.t.r), o = i * 16;
+      m.fill(0, o, o + 16); m[o] = 1; m[o + 5] = 1; m[o + 10] = 1; m[o + 15] = 1;
+      m[o + 12] = p.x; m[o + 13] = it.t.y + 0.08 + (it.lift || 0); m[o + 14] = p.z;
+      col.set(it.color); c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b;
+    });
+    mesh.count = list.length;
+    mesh.instanceMatrix.needsUpdate = true; mesh.instanceColor.needsUpdate = true;
+  },
+  buildEdges(field) {
+    const root = game.view.battleRoot;
+    this.edgeMeshes = [];
+    this.optionalEdges = new THREE.Group();
+    root.add(this.optionalEdges);
+    const wallGeo = new THREE.BoxGeometry(R, 1.5, 0.3); wallGeo.translate(0, 0.75, 0);
+    const tri = new THREE.Shape([new THREE.Vector2(-0.35, 0), new THREE.Vector2(0.35, 0), new THREE.Vector2(0, 0.8)]);
+    const coverGeo = new THREE.ExtrudeGeometry(tri, { depth: R * 0.9, bevelEnabled: false });
+    coverGeo.translate(0, 0, -R * 0.45); coverGeo.rotateY(Math.PI / 2);
+    const mats = {
+      WALL: new THREE.MeshStandardMaterial({ color: 0x9a2a22, roughness: 0.8 }),
+      COVER: new THREE.MeshStandardMaterial({ color: 0xd8b830, roughness: 0.8 }),
+      WALL_DESTRUCTIBLE: new THREE.MeshStandardMaterial({ color: 0xd8742a, roughness: 0.8 }),
+      WALL_TRANSPARENT: new THREE.MeshStandardMaterial({ color: 0x4a7ad0, transparent: true, opacity: 0.45 })
+    };
+    for (const t of field.tiles) {
+      if (!t) continue;
+      for (let d = 0; d < 6; d++) {
+        const type = t.edges[d];
+        if (type === 'OPEN') continue;
+        const n = field.neighborTile(t, d);
+        if (n && n.edges[opposite(d)] === type && field.index(n) < field.index(t)) continue;   // draw shared edges once
+        const mesh = new THREE.Mesh(type === 'COVER' ? coverGeo : wallGeo, mats[type]);
+        const ed = edgeDirection(d), p = hexToWorld(t.q, t.r);
+        mesh.position.set(p.x + ed.x * INRADIUS, Math.max(t.y, n ? n.y : t.y), p.z + ed.z * INRADIUS);
+        mesh.rotation.y = -d * Math.PI / 3;
+        mesh.userData.edge = { type, q: t.q, r: t.r, d };
+        const isBuilding = t.building !== null || (n && n.building !== null);
+        (isBuilding ? game.view.battleRoot : this.optionalEdges).add(mesh);
+        this.edgeMeshes.push(mesh);
+      }
+    }
+    this.optionalEdges.visible = game.showEdges;
+  },
+  createUnit(u) {
+    const def = u.def, s = 1.0 + 0.35 * def.size;
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(this.shapeGeometry(def.shape),
+      new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.6, flatShading: true, transparent: def.spectral, opacity: def.spectral ? 0.75 : 1 }));
+    body.scale.setScalar(s);
+    body.position.y = 0.35 + (def.flying ? 1.2 : 0);
+    const pedColor = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
+    const ped = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 0.35, 6), new THREE.MeshStandardMaterial({ color: pedColor, roughness: 0.7 }));
+    ped.rotation.y = Math.PI / 6; ped.position.y = 0.17;
+    body.userData.unitId = ped.userData.unitId = u.id;
+    group.add(ped, body);
+    const el = document.createElement('div');
+    el.className = 'unitLabel';
+    el.innerHTML = `<div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
+    const label = new CSS2DObject(el);
+    label.position.y = body.position.y + 3.2 * s;
+    group.add(label);
+    game.view.battleRoot.add(group);
+    u.view = { group, body, el, label };
+    this.placeUnit(u);
+    this.updateHp(u);
+  },
+  placeUnit(u) {
+    const t = game.battle.field.get(u.q, u.r), p = hexToWorld(u.q, u.r);
+    u.view.group.position.set(p.x, t.y, p.z);
+  },
+  updateHp(u) {
+    u.view.el.firstChild.firstChild.style.width = Math.max(0, 100 * u.hp / u.maxHp) + '%';
+  },
+  floatText(u, text, heal) {
+    const el = document.createElement('div');
+    el.className = 'dmgText' + (heal ? ' heal' : '');
+    el.textContent = text;
+    const obj = new CSS2DObject(el);
+    const base = u.view.group.position.clone();
+    obj.position.copy(base).add(new THREE.Vector3(0, 4, 0));
+    game.view.battleRoot.add(obj);
+    tween(1.0, k => { obj.position.y = base.y + 4 + k * 3; el.style.opacity = String(1 - k * k); })
+      .then(() => removeWithLabels(obj));
+  },
+  // Melee lunge or projectile.
+  async attackAnim(att, tgt, ranged) {
+    const a = att.view.group.position.clone(), b = tgt.view.group.position.clone();
+    if (!ranged) {
+      await tween(0.25, k => { const f = Math.sin(k * Math.PI) * 0.45; att.view.group.position.lerpVectors(a, b, f); });
+      att.view.group.position.copy(a);
+      return;
+    }
+    const proj = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), new THREE.MeshBasicMaterial({ color: att.def.color }));
+    game.view.battleRoot.add(proj);
+    const dist = a.distanceTo(b);
+    await tween(Math.min(0.5, 0.15 + dist / 120), k => {
+      proj.position.lerpVectors(a, b, k);
+      proj.position.y += 2.5 + Math.sin(k * Math.PI) * dist * 0.15;
+    });
+    game.view.battleRoot.remove(proj);
+  },
+  removeUnit(u) {
+    const g = u.view.group;
+    u.view.label.visible = false;
+    tween(0.4, k => { g.scale.setScalar(1 - k * 0.9); }).then(() => removeWithLabels(g));
+  }
+};
+
+// Removes an object and makes sure CSS2D label elements inside it leave the DOM too.
+function removeWithLabels(obj) {
+  const labels = [];
+  obj.traverse(o => { if (o.isCSS2DObject) labels.push(o); });
+  for (const l of labels) { if (l.element.parentNode) l.element.parentNode.removeChild(l.element); }
+  if (obj.parent) obj.parent.remove(obj);
+}
+
+// =============================================================================
+// Stealth (PROMPT 9): facing, sight cones, hearing and smell.
+// =============================================================================
+const Stealth = {
+  inCone(enemy, tq, tr) {
+    const a = hexToWorld(enemy.q, enemy.r), b = hexToWorld(tq, tr);
+    const dir = vectorToDirection(b.x - a.x, b.z - a.z);
+    const diff = Math.min((dir - enemy.facing + 6) % 6, (enemy.facing - dir + 6) % 6);
+    return diff <= 1;
+  },
+  sees(field, enemy, tq, tr) {
+    const dist = hexDistance(enemy.q, enemy.r, tq, tr);
+    if (dist > enemy.def.sight || dist === 0 || !this.inCone(enemy, tq, tr)) return false;
+    return Combat.lineOfSight(field, field.get(enemy.q, enemy.r), field.get(tq, tr)).clear;
+  },
+  // Does `enemy` detect undead unit `u`? Returns the sense or null.
+  detects(field, enemy, u) {
+    const dist = hexDistance(enemy.q, enemy.r, u.q, u.r);
+    if (this.sees(field, enemy, u.q, u.r)) return 'Sicht';
+    if (dist <= enemy.def.hear && u.def.size >= 2 && u.movedThisTurn) return 'Gehör';
+    if (dist <= enemy.def.smell && !u.def.spectral) return 'Geruch';
+    return null;
+  },
+  check(battle, units) {
+    for (const e of battle.units) {
+      if (e.side !== 'enemy' || !e.alive) continue;
+      for (const u of units) {
+        if (!u.alive) continue;
+        const sense = this.detects(battle.field, e, u);
+        if (sense) return { enemy: e, unit: u, sense };
+      }
+    }
+    return null;
+  },
+  coneTiles(battle) {
+    const set = new Map();
+    for (const e of battle.units) {
+      if (e.side !== 'enemy' || !e.alive) continue;
+      for (const t of battle.field.tilesWithin(e.q, e.r, e.def.sight)) {
+        if (this.sees(battle.field, e, t.q, t.r)) set.set(battle.field.index(t), t);
+      }
+    }
+    return [...set.values()];
+  }
+};
+
+// =============================================================================
+// Battle
+// Initiative, turns, movement, attacks, round effects, victory and defeat.
+// Rules work on plain data objects; BattleView only mirrors them.
+// =============================================================================
+let unitIdCounter = 1;
+const Battle = {
+  start(node) {
+    const c = game.campaign;
+    Campaign.registerAttack(node);
+    const field = new Battlefield(node);
+    const origin = NODE_BY_ID[c.prevNodeId] && c.prevNodeId !== node.id ? NODE_BY_ID[c.prevNodeId] : PHYLACTERY;
+    const cpos = hexToWorld(node.q, node.r), opos = hexToWorld(origin.q, origin.r);
+    let dx = opos.x - cpos.x, dz = opos.z - cpos.z;
+    if (Math.hypot(dx, dz) < 1e-3) { dx = 0; dz = 1; }
+    const len = Math.hypot(dx, dz), dir = { x: dx / len, z: dz / len };
+    const b = game.battle = {
+      node, field, dir, units: [], log: [], round: 1, lastTick: null, current: null,
+      state: 'fight', busy: false, retreatPending: false, kills: [], reach: null, targets: [],
+      selected: null, hover: null, over: false
+    };
+    // Player army.
+    c.army.forEach(a => b.units.push(this.makeUnit(a.type, 'player', 'UNDEAD', a.hp)));
+    for (const type of Campaign.garrisonFor(node)) b.units.push(this.makeUnit(type, 'enemy', node.faction));
+    this.deploy(b);
+
+    // View: lock the tile window on the node, dim everything outside the field.
+    const tr = game.view.tiles;
+    tr.floorOverride = (q, r) => { const t = field.get(q, r); return t ? FLOOR_INDEX[t.floor] : -1; };
+    tr.dimOutside = (q, r) => !field.contains(q, r);
+    tr.locked = true;
+    tr.center = [node.q, node.r];
+    tr.rebuild();
+    WorldView.setVisible(false);
+    BattleView.init(field);
+    b.units.forEach(u => BattleView.createUnit(u));
+    const cam = game.view.cam;
+    cam.setFieldBounds(field.q0, field.r0, field.size);
+    const pl = b.units.filter(u => u.side === 'player');
+    const mq = Math.round((node.q + pl.reduce((s, u) => s + u.q, 0) / pl.length) / 2);
+    const mr = Math.round((node.r + pl.reduce((s, u) => s + u.r, 0) / pl.length) / 2);
+    cam.lookAtTile(mq, mr);
+    cam.yaw = Math.atan2(dir.x, dir.z);
+    cam.distance = Math.min(CAM.maxZoom, 25 + node.size * 1.4);
+    game.mode = 'battle';
+    UI.enterBattle();
+    this.log(`Angriff auf ${node.name}! (${b.units.filter(u => u.side === 'enemy').length} Verteidiger)`, 'hit');
+
+    // Stealth phase (PROMPT 9).
+    const base = vectorToDirection(dir.x, dir.z), rng = makeRng(field.seed + 17);
+    for (const u of b.units) if (u.side === 'enemy') u.facing = (base + Math.floor(rng() * 3) - 1 + 6) % 6;
+    const found = Stealth.check(b, b.units.filter(u => u.side === 'player'));
+    if (found) {
+      b.state = 'fight';
+      for (const u of b.units) if (u.side === 'enemy') u.nextTick -= 3;
+      UI.toast(`Entdeckt! ${found.enemy.def.name} bemerkt ${found.unit.def.name} (${found.sense}).`);
+      this.log(`Entdeckt durch ${found.sense}: Die Verteidiger handeln zuerst.`, 'hit');
+    } else {
+      b.state = 'stealth';
+      UI.toast('Der Wind steht günstig. Die Wachen haben euch nicht bemerkt.');
+      this.log('Schleich-Modus: Die Gegner haben euch nicht bemerkt. Ein Angriff aus dem Verborgenen ist ein Überraschungsangriff.', 'good');
+    }
+    this.refreshCones();
+    SaveGame.save();
+    this.nextTurn();
+  },
+  makeUnit(type, side, faction, hp) {
+    const def = DATA.units[type];
+    return { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, q: 0, r: 0,
+      nextTick: 10 - def.initiative, alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null };
+  },
+  // Deployment: player at the side facing the origin, enemies around the center.
+  deploy(b) {
+    const f = b.field, size = f.size, cpos = hexToWorld(f.cq, f.cr);
+    const canStand = (u, t) => t && !t.unit && (u.def.flying || f.walkable(t));
+    const players = b.units.filter(u => u.side === 'player');
+    const D = Math.min(size / 2 - 2, 12);
+    const free = f.tiles.filter(t => t && t.building === null && f.walkable(t) && !f.isWater(t));
+    const scored = free.map(t => {
+      const p = hexToWorld(t.q, t.r), vx = p.x - cpos.x, vz = p.z - cpos.z;
+      return { t, proj: (vx * b.dir.x + vz * b.dir.z) / ROW_SPACING, perp: Math.abs(vx * b.dir.z - vz * b.dir.x) / ROW_SPACING,
+        dist: hexDistance(t.q, t.r, f.cq, f.cr) };
+    });
+    let slack = 0, cands = [];
+    while (cands.length < players.length && slack < size) {
+      cands = scored.filter(s => s.dist <= D + slack && s.proj >= D - 2 - slack).sort((a, c) => a.perp - c.perp || c.proj - a.proj);
+      slack++;
+    }
+    for (const u of players) {
+      const s = cands.find(s => canStand(u, s.t));
+      const t = s ? s.t : free.find(t => canStand(u, t));
+      this.putUnit(u, t);
+    }
+    // Enemies within min(size/4, 8) of the center, preferably in buildings (max 2 per building).
+    const Re = Math.min(size / 4, 8);
+    const area = f.tilesWithin(f.cq, f.cr, Re).sort((a, c) => hash2(a.q, a.r, f.seed) - hash2(c.q, c.r, f.seed));
+    const ordered = [...area.filter(t => t.building !== null), ...area.filter(t => t.building === null)];
+    const perBuilding = {};
+    const enemies = b.units.filter(u => u.side === 'enemy').sort((a, c) => (c.def.rank === 'UNIQUE') - (a.def.rank === 'UNIQUE'));
+    for (const u of enemies) {
+      let t = null;
+      if (u.def.rank === 'UNIQUE') t = area.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
+      if (!t) t = ordered.find(x => canStand(u, x) && (x.building === null || (u.def.rank !== 'MACHINE' && (perBuilding[x.building] || 0) < 2)));
+      if (!t) t = f.tiles.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
+      if (t && t.building !== null) perBuilding[t.building] = (perBuilding[t.building] || 0) + 1;
+      this.putUnit(u, t);
+    }
+  },
+  putUnit(u, t) { u.q = t.q; u.r = t.r; t.unit = u; },
+  alive(side) { return game.battle.units.filter(u => u.alive && (!side || u.side === side)); },
+  log(text, cls) {
+    const b = game.battle;
+    b.log.push({ text, cls });
+    UI.appendLog(text, cls);
+  },
+  // Orders units by (nextTick, higher initiative, player first, id).
+  order(a, c) {
+    return a.nextTick - c.nextTick || c.def.initiative - a.def.initiative || (a.side === 'player' ? -1 : 1) - (c.side === 'player' ? -1 : 1) || a.id - c.id;
+  },
+  candidates() {
+    const b = game.battle;
+    return this.alive(b.state === 'stealth' ? 'player' : null);
+  },
+  // Predicts the next n turns for the initiative bar.
+  forecast(n) {
+    const sim = this.candidates().map(u => ({ u, nextTick: u.nextTick, def: u.def, side: u.side, id: u.id }));
+    const out = [];
+    for (let i = 0; i < n && sim.length; i++) {
+      sim.sort((a, c) => this.order(a, c));
+      out.push(sim[0].u);
+      sim[0].nextTick += Math.max(1, 10 - sim[0].def.initiative);
+    }
+    return out;
+  },
+  async nextTurn() {
+    const b = game.battle;
+    if (!b || b.over) return;
+    const list = this.candidates().sort((a, c) => this.order(a, c));
+    if (!list.length) return;
+    const u = list[0];
+    // Round boundaries: each time the tick passes a multiple of 10.
+    if (b.lastTick !== null) {
+      const rounds = Math.floor(u.nextTick / 10) - Math.floor(b.lastTick / 10);
+      for (let i = 0; i < rounds && !b.over; i++) this.endRound();
+      if (b.over) return;
+    }
+    b.lastTick = u.nextTick;
+    b.current = u;
+    b.selected = u;
+    u.hasMoved = false; u.hasAttacked = false; u.movedThisTurn = false;
+    if (u.side === 'player' && u.type === 'lich' && b.retreatPending) { this.finish('retreat'); return; }
+    UI.updateBattle();
+    if (u.side === 'player') {
+      this.computeOptions();
+    } else {
+      b.busy = true;
+      this.clearOptions();
+      await EnemyAI.takeTurn(u);
+      if (game.battle !== b) return;
+      b.busy = false;
+      if (!b.over) this.endTurn();
+    }
+  },
+  endRound() {
+    const b = game.battle;
+    b.round++;
+    this.log(`— Runde ${b.round} —`);
+    for (const u of this.alive('player')) {
+      const t = b.field.get(u.q, u.r), eff = DATA.floorTypes[t.floor].effect;
+      if (!eff) continue;
+      if (eff.damageUndeadPerRound) {
+        this.applyDamage(u, eff.damageUndeadPerRound, null, null);
+        this.log(`${u.def.name} brennt auf geweihtem Boden (−${eff.damageUndeadPerRound}).`, 'hit');
+      }
+      if (eff.healUndeadPerRound && u.hp < u.maxHp) {
+        const h = Math.min(eff.healUndeadPerRound, u.maxHp - u.hp);
+        u.hp += h; BattleView.updateHp(u); BattleView.floatText(u, '+' + h, true);
+        this.log(`${u.def.name} zieht Kraft aus der Friedhofserde (+${h}).`, 'good');
+      }
+    }
+  },
+  endTurn() {
+    const b = game.battle;
+    if (!b || b.over || b.busy) return;
+    const u = b.current;
+    u.nextTick += Math.max(1, 10 - u.def.initiative);
+    this.clearOptions();
+    setTimeout(() => this.nextTurn(), 30);
+  },
+  // Reach and attack targets for the active player unit.
+  computeOptions() {
+    const b = game.battle, u = b.current;
+    const from = b.field.get(u.q, u.r);
+    b.reach = u.hasMoved ? null : Pathfinding.reachable(b.field, u);
+    b.targets = u.hasAttacked ? [] : b.units.filter(t => Combat.canAttack(b.field, u, from, t).ok);
+    this.drawOptions();
+    UI.updateBattle();
+  },
+  clearOptions() {
+    const b = game.battle;
+    b.reach = null; b.targets = [];
+    BattleView.setOverlay(BattleView.overlay, []);
+    BattleView.setOverlay(BattleView.pathOverlay, []);
+  },
+  drawOptions() {
+    const b = game.battle, list = [];
+    if (b.reach) for (const t of b.reach.tiles) if (t.unit !== b.current) list.push({ t, color: '#3b6fd8' });
+    for (const u of b.targets) list.push({ t: b.field.get(u.q, u.r), color: u.side === b.current.side ? '#3fae4a' : '#d03030', lift: 0.02 });
+    BattleView.setOverlay(BattleView.overlay, list);
+  },
+  refreshCones() {
+    const b = game.battle;
+    BattleView.setOverlay(BattleView.coneOverlay, b.state === 'stealth' ? Stealth.coneTiles(b).map(t => ({ t, color: '#ff8a2a' })) : []);
+  },
+  // Animated movement along a path of tiles.
+  async moveAlong(u, path) {
+    const b = game.battle;
+    if (!path || path.length < 2) return;
+    b.field.get(u.q, u.r).unit = null;
+    const dest = path[path.length - 1];
+    dest.unit = u;
+    for (let i = 1; i < path.length; i++) {
+      const a = path[i - 1], c = path[i], pa = hexToWorld(a.q, a.r), pc = hexToWorld(c.q, c.r);
+      await tween(STEP_SECONDS, k => {
+        u.view.group.position.set(pa.x + (pc.x - pa.x) * k, a.y + (c.y - a.y) * k + Math.sin(k * Math.PI) * 0.4, pa.z + (pc.z - pa.z) * k);
+      });
+      if (game.battle !== b) return;            // battle was closed meanwhile
+    }
+    u.q = dest.q; u.r = dest.r;
+    u.movedThisTurn = true;
+    BattleView.placeUnit(u);
+  },
+  // Player clicks a reachable tile.
+  async playerMove(t) {
+    const b = game.battle, u = b.current;
+    const path = Pathfinding.path(b.field, b.reach, t);
+    b.busy = true;
+    this.clearOptions();
+    await this.moveAlong(u, path);
+    u.hasMoved = true;
+    b.busy = false;
+    if (b.state === 'stealth') {
+      const found = Stealth.check(b, [u]);
+      if (found) this.revealed(`${found.enemy.def.name} bemerkt ${u.def.name} (${found.sense})!`, -3, 'enemy');
+      this.refreshCones();
+    }
+    this.computeOptions();
+    if (!b.targets.length) { await wait(0.25); this.endTurn(); }
+  },
+  // Stealth ends: enemies get a fresh initiative start relative to now, then the bonus.
+  revealed(msg, bonus, who) {
+    const b = game.battle;
+    b.state = 'fight';
+    for (const u of this.alive('enemy')) u.nextTick = b.lastTick + Math.max(1, 10 - u.def.initiative);
+    for (const u of this.alive(who === 'enemy' ? 'enemy' : 'player')) u.nextTick += bonus;
+    UI.toast(msg);
+    this.log(msg, who === 'enemy' ? 'hit' : 'good');
+    this.refreshCones();
+    UI.updateBattle();
+  },
+  async playerAttack(target) {
+    const b = game.battle, u = b.current;
+    b.busy = true;
+    this.clearOptions();
+    const surprise = b.state === 'stealth' && target.side !== u.side;
+    await this.performAttack(u, target, surprise);
+    u.hasAttacked = true;
+    b.busy = false;
+    if (b.over) return;
+    if (surprise) this.revealed('Überraschungsangriff! Die Untoten sind im Vorteil.', -5, 'player');
+    this.endTurn();
+  },
+  applyDamage(target, dmg, killer, power) {
+    target.hp -= dmg;
+    BattleView.updateHp(target);
+    BattleView.floatText(target, '−' + dmg);
+    if (target.hp <= 0) this.kill(target, killer, power);
+  },
+  async performAttack(att, target, surprise = false) {
+    const b = game.battle, f = b.field;
+    const from = f.get(att.q, att.r), tt = f.get(target.q, target.r);
+    const chk = Combat.canAttack(f, att, from, target);
+    if (!chk.ok) return;
+    const prof = Combat.profile(att, target);
+    await BattleView.attackAnim(att, target, chk.dist > 1);
+    if (game.battle !== b || b.over) return;
+    if (prof.power === 'HEAL') {
+      const h = Math.min(prof.damage, target.maxHp - target.hp);
+      target.hp += h; BattleView.updateHp(target); BattleView.floatText(target, '+' + h, true);
+      this.log(`${att.def.name} heilt ${target.def.name} (+${h}).`);
+      return;
+    }
+    const dmg = Combat.damage(prof, target.def, from.level, tt.level, chk.cover);
+    this.log(`${att.def.name} trifft ${target.def.name}: ${dmg} Schaden${chk.cover ? ' (Deckung)' : ''}${surprise ? ' – Überraschung!' : ''}.`, att.side === 'player' ? 'good' : 'hit');
+    this.applyDamage(target, dmg, att, prof.power);
+    if (b.over) return;
+    // Counter: surviving melee targets with counter strike back once at 50 %.
+    if (target.alive && chk.dist === 1 && target.def.counter) {
+      const back = Combat.canAttack(f, target, tt, att);
+      if (back.ok) {
+        await wait(0.15);
+        const cprof = Combat.profile(target, att);
+        const full = Combat.damage(cprof, att.def, tt.level, from.level, back.cover);
+        const cd = full === 0 ? 0 : Math.max(1, Math.round(full * 0.5));
+        await BattleView.attackAnim(target, att, false);
+        this.log(`${target.def.name} kontert: ${cd} Schaden.`, target.side === 'player' ? 'good' : 'hit');
+        this.applyDamage(att, cd, target, cprof.power);
+      }
+    }
+  },
+  kill(u, killer, power) {
+    const b = game.battle;
+    if (!u.alive) return;
+    u.alive = false;
+    b.field.get(u.q, u.r).unit = null;
+    BattleView.removeUnit(u);
+    this.log(`${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
+    if (u.side === 'enemy' && killer && killer.side === 'player') {
+      const quality = killer.def.corpseQuality ?? DATA.corpseQuality[power] ?? 0;
+      b.kills.push({ quality, soul: power === 'SOUL' });
+    }
+    if (u.side === 'player' && u.type === 'lich') { this.finish('defeat'); return; }
+    if (!this.alive('enemy').length) this.finish('victory');
+  },
+  retreat() {
+    const b = game.battle;
+    if (!b || b.over || b.retreatPending) return;
+    b.retreatPending = true;
+    this.log('Rückzug befohlen. Er gelingt zu Beginn des nächsten Zugs des Lichs.', 'hit');
+    UI.toast('Rückzug befohlen – zu Beginn des nächsten Lich-Zugs.');
+  },
+  // Battle ends: victory, defeat or retreat. Updates the campaign and shows a summary.
+  finish(result) {
+    const b = game.battle, c = game.campaign, node = b.node;
+    if (b.over) return;
+    b.over = true;
+    c.battles++;
+    let html = '';
+    if (result === 'victory') {
+      const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0));
+      const bones = Math.floor(b.kills.length * ECON.bonesPerKill);
+      const souls = b.kills.filter(k => k.soul).length * ECON.soulsPerSoulKill;
+      const reward = (ECON.nodeRewards[node.type] || {})[node.size] || {};
+      const loot = { corpses, bones, souls };
+      for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
+      Campaign.addResources(loot);
+      c.owners[node.id] = 'UNDEAD';
+      c.army = this.alive('player').map(u => ({ type: u.type, hp: u.hp }));
+      const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${v} ${RESOURCE_NAMES[k]}</li>`).join('');
+      html = `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>
+        <h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>`;
+      if (node.finale) c.won = true;
+    } else if (result === 'defeat') {
+      c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
+      c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
+      Campaign.advanceDays(ECON.lichDeathDays);
+      html = `<h2>Der Lich fällt</h2><p>Die Armee zerfällt zu Staub. ${ECON.lichDeathDays} Tage später erwacht der Lich erneut im Hügelgrab am Wilseder Berg.</p>`;
+    } else {
+      const lich = this.alive('player').find(u => u.type === 'lich');
+      c.army = [{ type: 'lich', hp: lich ? lich.hp : DATA.units.lich.hp }];
+      c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
+      Campaign.advanceDays(1);
+      html = `<h2>Rückzug</h2><p>Der Lich entweicht in die Nacht und kehrt nach einem Tag ins Hügelgrab zurück. Seine Diener bleiben zurück. Keine Beute.</p>`;
+    }
+    Campaign.healAtPhylactery();
+    SaveGame.save();
+    setTimeout(() => {
+      UI.modal(html, [{ label: 'Weiter', primary: true, action: () => { this.exit(); if (c.won) UI.showEnd(); } }]);
+    }, 700);
+  },
+  // Back to the world map.
+  exit() {
+    const tr = game.view.tiles;
+    const root = game.view.battleRoot;
+    while (root.children.length) removeWithLabels(root.children[0]);
+    game.battle = null;
+    tr.floorOverride = null; tr.dimOutside = null; tr.locked = false;
+    game.view.cam.setMapBounds();
+    const n = Campaign.armyNode();
+    game.view.cam.lookAtTile(n.q, n.r);
+    game.view.cam.distance = CAM.startZoom;
+    tr.update(n.q, n.r, true);
+    WorldView.setVisible(true);
+    WorldView.placeArmy();
+    WorldView.refresh();
+    game.mode = 'world';
+    UI.enterWorld();
+    UI.selectNode(n.id);
+  }
+};
+
+// =============================================================================
+// EnemyAI (PROMPT 8.5)
+// =============================================================================
+const EnemyAI = {
+  async takeTurn(u) {
+    const b = game.battle, f = b.field;
+    const here = f.get(u.q, u.r);
+    const isBallista = u.type === 'balliste';
+    const canMove = !isBallista || u.idleTurns >= 2;
+    const reach = Pathfinding.reachable(f, u);
+    const spots = canMove ? reach.tiles : [here];
+    await wait(0.2);
+    if (game.battle !== b) return;
+
+    // 1. Priests heal the wounded ally with the largest deficit.
+    if (u.def.power === 'HEAL') {
+      let best = null;
+      for (const t of spots) for (const a of this.allies(u)) {
+        if (a === u || a.hp >= a.maxHp) continue;
+        if (!Combat.canAttack(f, u, t, a).ok) continue;
+        const score = (a.maxHp - a.hp) * 10 - hexDistance(t.q, t.r, here.q, here.r) * 0.5;
+        if (!best || score > best.score) best = { t, a, score };
+      }
+      if (best) { await this.execute(u, reach, best.t, best.a); return; }
+    }
+    // 2. Score every reachable tile by its best attack.
+    let best = null;
+    for (const t of spots) {
+      for (const p of Battle.alive('player')) {
+        const chk = Combat.canAttack(f, u, t, p);
+        if (!chk.ok) continue;
+        const dmg = Combat.expected(f, u, t, p, chk.cover);
+        let score = dmg + (dmg >= p.hp ? 30 : 0) + (p.type === 'lich' ? 15 : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
+        if (u.def.range > 1) {
+          if (chk.dist >= chk.range) score += 3;                       // stay at maximum range
+          if (Combat.lineOfSight(f, f.get(p.q, p.r), t).cover) score += 3;  // in cover against the target
+          if (chk.dist === 1) score -= 4;
+        }
+        if (!best || score > best.score) best = { t, p, score };
+      }
+    }
+    if (best) { u.idleTurns = 0; await this.execute(u, reach, best.t, best.p); return; }
+    // 3. No attack: walk toward the nearest undead unit.
+    u.idleTurns++;
+    if (!canMove && !(isBallista && u.idleTurns >= 2)) return;
+    const dest = this.approach(u, reach);
+    if (dest && dest !== here) await Battle.moveAlong(u, Pathfinding.path(f, reach, dest));
+  },
+  allies(u) { return Battle.alive(u.side); },
+  async execute(u, reach, tile, target) {
+    const b = game.battle, f = b.field;
+    if (tile !== f.get(u.q, u.r)) {
+      await Battle.moveAlong(u, Pathfinding.path(f, reach, tile));
+      await wait(AI_PAUSE);
+    }
+    if (game.battle === b && !b.over) await Battle.performAttack(u, target);
+  },
+  // Furthest tile along the shortest path to the nearest undead that the unit can reach this turn.
+  approach(u, reach) {
+    const f = game.battle.field;
+    const full = Pathfinding.search(f, u, 9999);
+    const goals = new Set();
+    for (const p of Battle.alive('player')) for (let d = 0; d < 6; d++) {
+      const n = f.neighborTile(f.get(p.q, p.r), d);
+      if (n && (!n.unit || n.unit === u)) goals.add(f.index(n));
+    }
+    let bestGoal = null, bestCost = Infinity;
+    for (const g of goals) { const c = full.cost.get(g); if (c !== undefined && c < bestCost) { bestCost = c; bestGoal = g; } }
+    if (bestGoal !== null) {
+      const path = Pathfinding.path(f, full, f.tiles[bestGoal]);
+      let dest = null;
+      for (const t of path) {
+        const c = full.cost.get(f.index(t));
+        if (c > u.def.move) break;
+        if (!t.unit || t.unit === u) dest = t;
+      }
+      if (dest) return dest;
+    }
+    // Fallback: the reachable tile closest to any undead.
+    let best = null, bd = Infinity;
+    for (const t of reach.tiles) for (const p of Battle.alive('player')) {
+      const d = hexDistance(t.q, t.r, p.q, p.r);
+      if (d < bd) { bd = d; best = t; }
+    }
+    return best;
+  }
+};
+
+// =============================================================================
+// UI (DOM panels; reads game state, sends player intents to Campaign/Battle)
+// =============================================================================
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const UI = {
+  selectedNode: null,
+  toastTimer: null,
+  show(id, on) { $(id).classList.toggle('hidden', !on); },
+  toast(text, seconds = 3.5) {
+    const t = $('toast');
+    t.textContent = text; t.classList.remove('hidden'); t.style.opacity = '1';
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.classList.add('hidden'), 400); }, seconds * 1000);
+  },
+  modal(html, buttons) {
+    $('modalBody').innerHTML = html + '<div class="buttons"></div>';
+    const box = $('modalBody').querySelector('.buttons');
+    for (const b of buttons) {
+      const el = document.createElement('button');
+      el.textContent = b.label; if (b.primary) el.className = 'primary';
+      el.onclick = () => { if (!b.keepOpen) this.closeModal(); b.action && b.action(); };
+      box.appendChild(el);
+    }
+    this.show('modal', true);
+  },
+  closeModal() { this.show('modal', false); },
+
+  // ---- World map ----------------------------------------------------------
+  enterWorld() {
+    ['header', 'info', 'minimap', 'hint'].forEach(id => this.show(id, true));
+    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
+    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen · Mausrad: Zoom · Linksklick: auswählen · F3: Debug';
+    this.updateHeader();
+    this.renderInfo();
+  },
+  updateHeader() {
+    const c = game.campaign;
+    $('date').textContent = Campaign.dateString(c.dayCount);
+    const r = c.resources;
+    $('resources').innerHTML = `<span>Leichen <b>${r.corpses}</b></span><span>Knochen <b>${r.bones}</b></span>
+      <span>Seelen <b>${r.souls}</b></span><span>Wissen <b>${r.knowledge}</b></span>
+      <span>Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
+    $('threats').innerHTML = ENEMY_FACTIONS.map(f => {
+      const v = Math.round(c.threat[f]), living = Campaign.isLiving(f);
+      return `<div class="threat ${living ? '' : 'dead'}" title="Bedrohung ${DATA.factions[f].name}: ${v} %">${DATA.factions[f].name} ${v} %
+        <div class="bar"><div style="width:${v}%;background:${DATA.factions[f].color}"></div></div></div>`;
+    }).join('');
+  },
+  selectNode(id) {
+    this.selectedNode = id;
+    this.selectedTile = null;
+    WorldView.refresh();
+    this.renderInfo();
+  },
+  armyHtml() {
+    return '<h3>Armee</h3><div class="armyList">' + game.campaign.army.map(a =>
+      `<div>${DATA.units[a.type].name} <span class="small">${a.hp}/${DATA.units[a.type].hp}</span></div>`).join('') + '</div>';
+  },
+  renderInfo() {
+    const el = $('info'), c = game.campaign, here = Campaign.armyNode();
+    if (game.mode !== 'world' && game.mode !== 'travel') return;
+    let html = '';
+    const node = this.selectedNode && NODE_BY_ID[this.selectedNode];
+    if (node && Campaign.isRevealed(node)) {
+      const owner = Campaign.owner(node), atNode = here.id === node.id;
+      const days = Campaign.travelDays(here, node);
+      const enemy = Campaign.isEnemy(node);
+      let garrison;
+      if (!enemy) garrison = '—';
+      else if (node.type === 'CHRISTIAN' && !atNode) garrison = '<i>Verhüllt – Späher sehen nichts</i>';
+      else {
+        const counts = {};
+        for (const t of Campaign.garrisonFor(node)) counts[t] = (counts[t] || 0) + 1;
+        garrison = Object.entries(counts).map(([t, n]) => `${n}× ${DATA.units[t].name}`).join('<br>');
+      }
+      html += `<h2>${esc(node.name)}</h2>
+        <table>
+          <tr><td>Typ</td><td>${NODE_TYPE_NAMES[node.type]}</td></tr>
+          <tr><td>Fraktion</td><td>${DATA.factions[owner].name}${owner !== node.faction ? ` <span class="small">(einst ${DATA.factions[node.faction].name})</span>` : ''}</td></tr>
+          <tr><td>Kampffeld</td><td>${node.size} × ${node.size}</td></tr>
+          <tr><td>Reisezeit</td><td>${atNode ? 'Armee steht hier' : days + (days === 1 ? ' Tag' : ' Tage')}</td></tr>
+          ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
+          <tr><td>Besatzung</td><td>${garrison}</td></tr>
+        </table>
+        ${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}
+        <div class="buttons" id="nodeButtons"></div>`;
+    } else if (node) {
+      html += `<h2>Unbekannter Ort</h2><p class="small">Zu weit entfernt. Orte werden sichtbar, wenn die Armee, das Hügelgrab oder ein eroberter Ort höchstens ${REVEAL_DISTANCE} Felder entfernt ist.</p>`;
+    } else if (this.selectedTile) {
+      const [q, r] = this.selectedTile, w = game.world;
+      html += `<h2>Gelände</h2><table>
+        <tr><td>Feld</td><td>${q}, ${r}</td></tr>
+        <tr><td>Boden</td><td>${DATA.floorTypes[w.floorKeyAt(q, r)].name}</td></tr>
+        <tr><td>Höhe</td><td>${w.metersAt(q, r).toFixed(0)} m (Stufe ${w.levelAt(q, r)})</td></tr></table>`;
+    } else {
+      html += `<h2>${esc(here.name)}</h2><p class="small">Wähle einen Ort auf der Karte oder in der Übersicht unten links.</p>`;
+    }
+    html += this.armyHtml();
+    el.innerHTML = html;
+    const bx = $('nodeButtons');
+    if (bx && node) {
+      const add = (label, fn, primary, disabled) => {
+        const b = document.createElement('button');
+        b.textContent = label; if (primary) b.className = 'primary'; b.disabled = !!disabled || game.mode !== 'world';
+        b.onclick = fn; bx.appendChild(b);
+      };
+      if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
+      else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
+      if (here.id === node.id && node.type === 'PHYLACTERY') add('Rekrutieren', () => this.openRecruit(), true);
+    }
+  },
+  openRecruit() {
+    const c = game.campaign;
+    const rows = Recruitment.candidates().map(([type, u]) => {
+      const block = Recruitment.blocker(type);
+      const cost = Object.entries(u.cost || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
+      const locked = (u.requiresKnowledge || 0) > c.resources.knowledge;
+      return `<div class="recruitRow ${locked ? 'locked' : ''}">
+        <div><b>${u.name}</b> <span class="small">· ${u.commandPoints} Kommando · Kosten: ${cost}${u.requiresKnowledge ? ` · benötigt ${u.requiresKnowledge} Wissen` : ''}</span><br>
+        <span class="small">LP ${u.hp} · Ini ${u.initiative} · Bew ${u.move} · Schaden ${u.damage} ${POWER_NAMES[u.power]} · Reichweite ${u.range} · Rüstung ${DEFENSE_NAMES[u.defense]}</span><br>
+        <span class="small"><i>${esc(u.desc || '')}</i></span></div>
+        <div><button data-type="${type}" ${block ? 'disabled' : ''} title="${block || ''}">Rekrutieren</button><div class="small">${block || ''}</div></div></div>`;
+    }).join('');
+    const r = c.resources;
+    this.modal(`<h2>Hügelgrab – Rekrutieren</h2>
+      <p class="small">Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge} · Kommando ${Campaign.commandUsed()} / ${Campaign.commandLimit()}</p>
+      ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
+    $('modalBody').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => {
+      if (Recruitment.recruit(b.dataset.type)) { this.toast(`${DATA.units[b.dataset.type].name} erhebt sich aus dem Grab.`); this.updateHeader(); this.renderInfo(); this.openRecruit(); }
+    });
+  },
+  showEnd() {
+    const c = game.campaign;
+    const conquered = DATA.nodes.filter(n => Campaign.isConquered(n)).length;
+    game.mode = 'end';
+    this.modal(`<h2>Der Brocken ist gefallen</h2>
+      <p>Auf dem mächtigsten Ley-Knoten Norddeutschlands schweigt der Hexensabbat. Der Lich trinkt die Kraft der Walpurgisnacht, und über das Land legt sich ein langer Schatten.</p>
+      <table><tr><td>Vergangene Tage</td><td>${c.dayCount}</td></tr><tr><td>Kämpfe</td><td>${c.battles}</td></tr>
+      <tr><td>Eroberte Orte</td><td>${conquered} von ${DATA.nodes.length - 1}</td></tr><tr><td>Datum</td><td>${Campaign.dateString(c.dayCount)}</td></tr></table>`,
+      [{ label: 'Neues Spiel', primary: true, action: () => newGame() }, { label: 'Weiter umherziehen', action: () => { game.mode = 'world'; } }]);
+  },
+
+  // ---- Battle -------------------------------------------------------------
+  enterBattle() {
+    ['header', 'info', 'minimap'].forEach(id => this.show(id, false));
+    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'hint'].forEach(id => this.show(id, true));
+    $('battleLog').innerHTML = '';
+    $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Leertaste: Zug beenden · R: Rückzug · T: Kanten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
+    $('btnEdges').textContent = game.showEdges ? 'Kanten ausblenden' : 'Kanten anzeigen';
+  },
+  appendLog(text, cls) {
+    const p = document.createElement('p');
+    if (cls) p.className = cls;
+    p.textContent = text;
+    $('battleLog').appendChild(p);
+    $('battleLog').scrollTop = 1e9;
+  },
+  updateBattle() {
+    const b = game.battle;
+    if (!b) return;
+    const list = Battle.forecast(10);
+    $('initBar').innerHTML = list.map((u, i) => {
+      const border = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
+      return `<div class="initSlot ${i === 0 ? 'current' : ''}"><div class="icon" style="background:${u.def.color};outline:2px solid ${border}"></div>
+        <div class="nm">${esc(u.def.name)}</div><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div></div>`;
+    }).join('');
+    const cur = b.current;
+    const who = !cur ? '' : cur.side === 'player' ? `Am Zug: ${cur.def.name}` : `Gegner am Zug: ${cur.def.name}`;
+    $('roundInfo').textContent = `Runde ${b.round} · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}${who}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
+    this.renderUnitCard(b.selected || cur);
+    const myTurn = cur && cur.side === 'player' && !b.busy && !b.over;
+    $('btnEndTurn').disabled = !myTurn;
+    $('btnRetreat').disabled = b.retreatPending || b.over;
+    if (cur && cur.alive) {
+      BattleView.ring.visible = true;
+      BattleView.ring.position.copy(cur.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
+    }
+  },
+  renderUnitCard(u) {
+    if (!u) return;
+    const d = u.def, b = game.battle, t = b.field.get(u.q, u.r);
+    const flags = [d.flying && 'fliegt', d.spectral && 'spektral', d.counter && 'Konter'].filter(Boolean).join(', ');
+    $('unitCard').innerHTML = `<h3 style="margin-top:0">${esc(d.name)} <span class="small">(${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name})</span></h3>
+      <div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
+      <table><tr><td>Lebenspunkte</td><td>${Math.max(0, u.hp)} / ${u.maxHp}</td><td>Initiative</td><td>${d.initiative}</td></tr>
+      <tr><td>Bewegung</td><td>${d.move}</td><td>Reichweite</td><td>${d.range}</td></tr>
+      <tr><td>Schaden</td><td colspan="3">${d.damage} ${POWER_NAMES[d.power]} (${d.power})</td></tr>
+      <tr><td>Rüstung</td><td colspan="3">${DEFENSE_NAMES[d.defense]} (${d.defense})</td></tr>
+      <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${d.soulShield}</td></tr>
+      <tr><td>Sinne</td><td colspan="3">Sicht ${d.sight} · Gehör ${d.hear} · Geruch ${d.smell}</td></tr>
+      ${flags ? `<tr><td>Eigenschaften</td><td colspan="3">${flags}</td></tr>` : ''}
+      <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}</td></tr></table>`;
+  }
+};
+
+// =============================================================================
+// Input
+// =============================================================================
+function setMouse(ev) {
+  game.input.mouse.set(ev.clientX / window.innerWidth * 2 - 1, -(ev.clientY / window.innerHeight) * 2 + 1);
+  game.view.raycaster.setFromCamera(game.input.mouse, game.view.camera);
+}
+function pickUnit() {
+  const b = game.battle;
+  const meshes = [];
+  for (const u of b.units) if (u.alive) u.view.group.traverse(o => { if (o.isMesh) meshes.push(o); });
+  const hit = game.view.raycaster.intersectObjects(meshes, false)[0];
+  return hit ? b.units.find(u => u.id === hit.object.userData.unitId) : null;
+}
+function onLeftClick(ev) {
+  setMouse(ev);
+  if (game.mode === 'world') {
+    const pillars = Object.values(game.view.nodeViews).map(v => v.pillar);
+    const hit = game.view.raycaster.intersectObjects(pillars, false)[0];
+    if (hit) { UI.selectNode(hit.object.userData.nodeId); return; }
+    const t = game.view.tiles.pick(game.view.raycaster);
+    if (t) {
+      const near = DATA.nodes.find(n => n.q === t.q && n.r === t.r);
+      if (near) { UI.selectNode(near.id); return; }
+      UI.selectedNode = null; UI.selectedTile = [t.q, t.r]; WorldView.refresh(); UI.renderInfo();
+    }
+    return;
+  }
+  if (game.mode !== 'battle') return;
+  const b = game.battle;
+  if (!b || b.over) return;
+  const unit = pickUnit();
+  let tile = null;
+  if (unit) tile = b.field.get(unit.q, unit.r);
+  else { const p = game.view.tiles.pick(game.view.raycaster); if (p) tile = b.field.get(p.q, p.r); }
+  if (!tile) return;
+  const cur = b.current, myTurn = cur && cur.side === 'player' && !b.busy;
+  if (myTurn && tile.unit && b.targets.includes(tile.unit)) { Battle.playerAttack(tile.unit); return; }
+  if (myTurn && !tile.unit && b.reach && b.reach.tiles.includes(tile)) { Battle.playerMove(tile); return; }
+  if (tile.unit) { b.selected = tile.unit; UI.renderUnitCard(tile.unit); }
+}
+function onHover(ev) {
+  if (game.mode !== 'battle' || !game.battle) { $('edgeTip').classList.add('hidden'); return; }
+  setMouse(ev);
+  const b = game.battle;
+  // Edge tooltip.
+  const visibleEdges = BattleView.edgeMeshes.filter(m => m.parent && (m.parent !== BattleView.optionalEdges || BattleView.optionalEdges.visible));
+  const eh = game.view.raycaster.intersectObjects(visibleEdges, false)[0];
+  const tip = $('edgeTip');
+  if (eh) {
+    const e = eh.object.userData.edge;
+    tip.textContent = `Kante: ${EDGE_NAMES[e.type]} (${e.type})`;
+    tip.style.left = ev.clientX + 14 + 'px'; tip.style.top = ev.clientY + 10 + 'px';
+    tip.classList.remove('hidden');
+  } else tip.classList.add('hidden');
+  // Path preview.
+  if (!b.reach || b.busy || !b.current || b.current.side !== 'player') { BattleView.setOverlay(BattleView.pathOverlay, []); return; }
+  const p = game.view.tiles.pick(game.view.raycaster);
+  const t = p && b.field.get(p.q, p.r);
+  if (t && b.reach.tiles.includes(t) && !t.unit) {
+    const path = Pathfinding.path(b.field, b.reach, t) || [];
+    BattleView.setOverlay(BattleView.pathOverlay, path.slice(1).map(x => ({ t: x, color: '#f0d870', lift: 0.03 })));
+  } else BattleView.setOverlay(BattleView.pathOverlay, []);
+}
+function initInput() {
+  const canvas = game.view.renderer.domElement, inp = game.input;
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  canvas.addEventListener('pointerdown', e => {
+    inp.downX = e.clientX; inp.downY = e.clientY;
+    if (e.button === 2) { inp.rmb = true; inp.lastX = e.clientX; }
+  });
+  window.addEventListener('pointerup', e => {
+    if (e.button === 2) inp.rmb = false;
+    if (e.button === 0 && e.target === canvas && Math.hypot(e.clientX - inp.downX, e.clientY - inp.downY) < 6) onLeftClick(e);
+  });
+  window.addEventListener('pointermove', e => {
+    if (inp.rmb) { game.view.cam.yaw -= (e.clientX - inp.lastX) * 0.006; inp.lastX = e.clientX; }
+    if (e.target === canvas) onHover(e);
+  });
+  canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
+  window.addEventListener('keydown', e => {
+    if (e.code === 'F3') { e.preventDefault(); game.debug = !game.debug; UI.show('debug', game.debug); return; }
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+    inp.keys.add(e.code);
+    if (game.mode === 'battle') {
+      if (e.code === 'Space') { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); }
+      if (e.code === 'KeyR') Battle.retreat();
+      if (e.code === 'KeyT') toggleEdges();
+    }
+    if (e.code === 'Escape' && game.mode === 'world') { UI.selectedNode = null; UI.selectedTile = null; WorldView.refresh(); UI.renderInfo(); }
+  });
+  window.addEventListener('keyup', e => inp.keys.delete(e.code));
+  window.addEventListener('blur', () => inp.keys.clear());
+  $('btnEndTurn').onclick = () => { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); };
+  $('btnRetreat').onclick = () => Battle.retreat();
+  $('btnEdges').onclick = () => toggleEdges();
+  $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
+    [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
+}
+function toggleEdges() {
+  game.showEdges = !game.showEdges;
+  if (BattleView.optionalEdges) BattleView.optionalEdges.visible = game.showEdges;
+  $('btnEdges').textContent = game.showEdges ? 'Kanten ausblenden' : 'Kanten anzeigen';
+}
+
+// =============================================================================
+// Debug overlay (F3)
+// =============================================================================
+const Debug = {
+  update() {
+    if (!game.debug) return;
+    const cam = game.view.cam, [q, r] = cam.pivotTile(), w = game.world;
+    const g = w.grayAt(q, r);
+    $('debug').textContent =
+      `FPS        ${game.fps.toFixed(0)}\n` +
+      `Pivot      (${q}, ${r})\n` +
+      `Grauwert   ${g}\n` +
+      `Meter      ${WorldData.metersFromGray(g).toFixed(1)} m\n` +
+      `Spielhöhe  ${w.heightAt(q, r).toFixed(3)} (Stufe ${w.levelAt(q, r)})\n` +
+      `Bodentyp   ${game.battle && game.battle.field.get(q, r) ? game.battle.field.get(q, r).floor : w.floorKeyAt(q, r)}\n` +
+      `Tiles      ${game.view.tiles.drawn}\n` +
+      `Zoom       ${cam.distance.toFixed(0)}\n` +
+      `Modus      ${game.mode}`;
+  }
+};
+
+// =============================================================================
+// Main loop and start-up
+// =============================================================================
+let lastTime = performance.now(), fpsAcc = 0, fpsFrames = 0, miniAcc = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  lastTime = now;
+  fpsAcc += dt; fpsFrames++;
+  if (fpsAcc >= 0.5) { game.fps = fpsFrames / fpsAcc; fpsAcc = 0; fpsFrames = 0; }
+  const v = game.view;
+  const keys = (game.mode === 'world' || game.mode === 'battle' || game.mode === 'travel' || game.mode === 'end') ? game.input.keys : new Set();
+  v.cam.update(dt, keys);
+  const [pq, pr] = v.cam.pivotTile();
+  v.tiles.update(pq, pr);
+  updateTweens(dt);
+  // Fog: dense enough that the edge of the tile window disappears.
+  v.scene.fog.density = 1.35 / (v.cam.distance + 160);
+  v.sun.position.set(v.cam.pivot.x - 60, v.cam.pivot.y + 90, v.cam.pivot.z + 60);
+  v.sun.target.position.copy(v.cam.pivot);
+  v.waterNormal.offset.x = now * 0.00002; v.waterNormal.offset.y = now * 0.000013;
+  if (v.armyBody && game.mode !== 'battle') { v.armyBody.rotation.y = now * 0.0008; v.armyBody.position.y = 4.2 + Math.sin(now * 0.002) * 0.4; }
+  if (game.battle && BattleView.ring && game.battle.current && game.battle.current.alive) {
+    BattleView.ring.position.copy(game.battle.current.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
+  }
+  miniAcc += dt;
+  if (miniAcc > 0.25 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Minimap.draw(); }
+  Debug.update();
+  v.renderer.render(v.scene, v.camera);
+  v.labelRenderer.render(v.scene, v.camera);
+}
+
+function newGame() {
+  SaveGame.clear();
+  if (game.battle) Battle.exit();
+  game.campaign = Campaign.create();
+  game.mode = 'world';
+  UI.closeModal();
+  WorldView.placeArmy();
+  game.view.cam.lookAtTile(PHYLACTERY.q, PHYLACTERY.r);
+  game.view.cam.distance = CAM.startZoom;
+  game.view.cam.yaw = 0;
+  UI.enterWorld();
+  UI.selectNode(PHYLACTERY.id);
+  SaveGame.save();
+}
+
+function showIntro() {
+  const saved = SaveGame.load();
+  game.mode = 'intro';
+  const buttons = [];
+  if (saved) buttons.push({ label: 'Fortsetzen', action: () => startGame(saved) });
+  buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); } });
+  UI.modal(`<h2>Harmbringer</h2>
+    <p>Mai 1371. Unter dem Wilseder Berg, in einem Hügelgrab aus der Bronzezeit, öffnet ein Toter die Augen.
+    Jahrhunderte lang hat der Lich geschlafen, nun ruft ihn der Hunger der Ley-Linien.</p>
+    <p>Über die Heide ziehen Bauern, Mönche und Hansekaufleute, und keiner von ihnen ahnt, was sich unter ihren Füßen regt.
+    Erhebe die Toten, nimm Dorf um Dorf und Kloster um Kloster, bis der Brocken dir gehört.</p>
+    ${saved ? `<p class="small">Gespeicherter Stand: ${Campaign.dateString(saved.dayCount)}, ${saved.army.length} Untote.</p>` : ''}`, buttons);
+}
+
+function startGame(campaign) {
+  game.campaign = campaign;
+  game.mode = 'world';
+  const n = Campaign.armyNode();
+  WorldView.placeArmy();
+  game.view.cam.lookAtTile(n.q, n.r);
+  UI.enterWorld();
+  UI.selectNode(n.id);
+  SaveGame.save();
+}
+
+async function boot() {
+  const bar = $('loadingBar'), text = $('loadingText');
+  game.world = new WorldData();
+  const t0 = performance.now();
+  text.textContent = 'Berechne Höhen und Bodentypen für 1.567.680 Felder …';
+  await game.world.build(p => { bar.style.width = (p * 100).toFixed(0) + '%'; });
+  game.loadMs = performance.now() - t0;
+  text.textContent = 'Errichte die Welt …';
+  await new Promise(r => setTimeout(r, 0));
+  initScene();
+  game.campaign = Campaign.create();      // placeholder until the intro choice
+  WorldView.init();
+  Minimap.init();
+  initInput();
+  game.view.cam.lookAtTile(PHYLACTERY.q, PHYLACTERY.r);
+  game.view.tiles.update(PHYLACTERY.q, PHYLACTERY.r, true);
+  UI.show('loading', false);
+  requestAnimationFrame(frame);
+  showIntro();
+}
+
+// Exposed for console testing only (the acceptance checks in PROMPT 14).
+game.api = { hexToWorld, hexDistance, neighbor, worldToHex, Combat, Campaign, Battle, Recruitment, SaveGame, startTravel, UI, NODE_BY_ID, Pathfinding, Stealth };
+boot().catch(err => {
+  console.error(err);
+  $('loadingText').textContent = 'Fehler beim Laden: ' + err.message;
+});
+</script>
+</body>
+</html>
