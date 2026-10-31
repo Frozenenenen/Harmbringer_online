@@ -68,9 +68,10 @@
 
   /* Minimap (world) */
   #minimap { position: absolute; left: 14px; bottom: 40px; padding: 4px; z-index: 5; }
-  #minimap canvas { width: 300px; height: 162px; display: block; cursor: crosshair; }
-  #minimap .stack { position: relative; width: 300px; height: 162px; }
-  #minimap .stack canvas { position: absolute; left: 0; top: 0; }
+  #minimap canvas { width: 340px; height: 200px; display: block; cursor: crosshair; }
+  #minimap .zoom { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 3px; }
+  #minimap .zoom button { width: 26px; height: 26px; padding: 0; font-size: 17px; line-height: 1; }
+  #minimap .zoomLabel { position: absolute; left: 8px; top: 8px; font-size: 12px; padding: 0 5px; background: rgba(233,223,196,.85); border: 1px solid var(--ink); }
 
   /* Battle UI */
   #initBar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px 8px; z-index: 5; }
@@ -141,7 +142,9 @@
   <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
 </div>
 <div id="info" class="panel hidden"></div>
-<div id="minimap" class="panel hidden"><div class="stack"><canvas id="miniBase"></canvas><canvas id="miniOver"></canvas></div></div>
+<div id="minimap" class="panel hidden"><canvas id="miniMap" title="Klick: Kamera dorthin · Mausrad: Zoom"></canvas>
+  <div class="zoom"><button id="miniIn" title="Hineinzoomen">+</button><button id="miniOut" title="Herauszoomen">−</button></div>
+  <div class="zoomLabel" id="miniZoom">1×</div></div>
 <div id="hint" class="panel hidden"></div>
 
 <!-- Battle UI -->
@@ -867,50 +870,114 @@ async function startTravel(target) {
 // Minimap: full map drawn once from the precomputed floor colors (pixels are only
 // written, never read), plus an overlay with places, army and view window.
 const Minimap = {
+  ZOOMS: [1, 2, 4, 8, 16],
+  zoomIdx: 2,                  // start at 4x around the camera
+  W: 340, H: 200,              // CSS size; the canvas uses twice the resolution
   init() {
-    // Downsampled by K: each minimap pixel is the average floor color of K x K tiles.
-    const K = this.K = 4, MW = Math.ceil(WIDTH / K), MH = Math.ceil(HEIGHT / K);
-    const base = document.getElementById('miniBase'), over = document.getElementById('miniOver');
-    base.width = over.width = MW; base.height = over.height = MH;
-    const ctx = base.getContext('2d'), img = ctx.createImageData(MW, MH);
-    const cols = FLOOR_KEYS.map(k => new THREE.Color(DATA.floorTypes[k].color));
+    // Plain sRGB components 0..1 from the hex strings (THREE.Color would convert to linear).
+    const hex = h => ({ r: parseInt(h.slice(1, 3), 16) / 255, g: parseInt(h.slice(3, 5), 16) / 255, b: parseInt(h.slice(5, 7), 16) / 255 });
+    const cols = FLOOR_KEYS.map(k => hex(DATA.floorTypes[k].color));
     const floor = game.world.floor;
+    // Full-resolution map (1 pixel = 1 tile) for close zoom levels; pixels are only written.
+    const full = this.full = document.createElement('canvas');
+    full.width = WIDTH; full.height = HEIGHT;
+    const fctx = full.getContext('2d'), img = fctx.createImageData(WIDTH, HEIGHT);
+    for (let i = 0; i < floor.length; i++) {
+      const c = cols[floor[i]], o = i * 4;
+      img.data[o] = c.r * 255; img.data[o+1] = c.g * 255; img.data[o+2] = c.b * 255; img.data[o+3] = 255;
+    }
+    fctx.putImageData(img, 0, 0);
+    // Averaged 4x4 version for the overview (avoids noisy downscaling).
+    const K = 4, MW = Math.ceil(WIDTH / K), MH = Math.ceil(HEIGHT / K);
+    const small = this.small = document.createElement('canvas');
+    small.width = MW; small.height = MH;
+    const sctx = small.getContext('2d'), simg = sctx.createImageData(MW, MH);
     for (let my = 0; my < MH; my++) for (let mx = 0; mx < MW; mx++) {
       let r = 0, g = 0, b = 0, n = 0;
       for (let y = my * K; y < Math.min(HEIGHT, my * K + K); y++) for (let x = mx * K; x < Math.min(WIDTH, mx * K + K); x++) {
         const c = cols[floor[y * WIDTH + x]]; r += c.r; g += c.g; b += c.b; n++;
       }
       const o = (my * MW + mx) * 4;
-      img.data[o] = r / n * 255; img.data[o+1] = g / n * 255; img.data[o+2] = b / n * 255; img.data[o+3] = 255;
+      simg.data[o] = r / n * 255; simg.data[o+1] = g / n * 255; simg.data[o+2] = b / n * 255; simg.data[o+3] = 255;
     }
-    ctx.putImageData(img, 0, 0);
-    this.ctx = over.getContext('2d');
-    over.addEventListener('pointerdown', ev => {
+    sctx.putImageData(simg, 0, 0);
+    const cv = this.canvas = document.getElementById('miniMap');
+    cv.width = this.W * 2; cv.height = this.H * 2;
+    this.ctx = cv.getContext('2d');
+    cv.addEventListener('pointerdown', ev => {
       if (game.mode !== 'world') return;
-      const rect = over.getBoundingClientRect();
-      const q = Math.round((ev.clientX - rect.left) / rect.width * WIDTH);
-      const r = Math.round((ev.clientY - rect.top) / rect.height * HEIGHT);
-      game.view.cam.lookAtTile(Math.min(WIDTH - 1, Math.max(0, q)), Math.min(HEIGHT - 1, Math.max(0, r)));
+      const rect = cv.getBoundingClientRect();
+      const [q, r] = this.toTile((ev.clientX - rect.left) / rect.width * cv.width, (ev.clientY - rect.top) / rect.height * cv.height);
+      game.view.cam.lookAtTile(Math.min(WIDTH - 1, Math.max(0, Math.round(q))), Math.min(HEIGHT - 1, Math.max(0, Math.round(r))));
+      this.draw();
     });
+    cv.addEventListener('wheel', ev => { ev.preventDefault(); this.zoom(ev.deltaY < 0 ? 1 : -1); }, { passive: false });
+    document.getElementById('miniIn').onclick = () => this.zoom(1);
+    document.getElementById('miniOut').onclick = () => this.zoom(-1);
   },
+  zoom(step) {
+    this.zoomIdx = Math.min(this.ZOOMS.length - 1, Math.max(0, this.zoomIdx + step));
+    document.getElementById('miniZoom').textContent = this.ZOOMS[this.zoomIdx] + '×';
+    this.draw();
+  },
+  // Visible window in tile coordinates, centered on the camera pivot and kept inside the map.
+  view() {
+    const z = this.ZOOMS[this.zoomIdx], cw = this.canvas.width, ch = this.canvas.height;
+    // Tiles per canvas pixel: at 1x the whole map fits (letterboxed to the canvas aspect).
+    const scale = Math.max(WIDTH / cw, HEIGHT / ch) / z;
+    const vw = cw * scale, vh = ch * scale;
+    const [pq, pr] = game.view.cam.pivotTile();
+    const x0 = vw >= WIDTH ? (WIDTH - vw) / 2 : Math.min(WIDTH - vw, Math.max(0, pq - vw / 2));
+    const y0 = vh >= HEIGHT ? (HEIGHT - vh) / 2 : Math.min(HEIGHT - vh, Math.max(0, pr - vh / 2));
+    return { x0, y0, scale, z };
+  },
+  toTile(px, py) { const v = this.view(); return [v.x0 + px * v.scale, v.y0 + py * v.scale]; },
   draw() {
-    const ctx = this.ctx, K = this.K;
-    ctx.save();
-    ctx.clearRect(0, 0, WIDTH, HEIGHT);
-    ctx.scale(1 / K, 1 / K);                     // draw in tile coordinates
+    const ctx = this.ctx, cv = this.canvas, v = this.view();
+    const sx = q => (q - v.x0) / v.scale, sy = r => (r - v.y0) / v.scale;
+    ctx.fillStyle = '#22364f'; ctx.fillRect(0, 0, cv.width, cv.height);
+    // Base map: averaged overview when far out, crisp tiles when close.
+    const useFull = v.z >= 4, src = useFull ? this.full : this.small, k = useFull ? 1 : 4;
+    ctx.imageSmoothingEnabled = !useFull;
+    ctx.drawImage(src, 0, 0, src.width, src.height, sx(0), sy(0), src.width * k / v.scale, src.height * k / v.scale);
+    // Places: dots, names when zoomed in.
+    ctx.font = '22px "IM Fell English", Georgia, serif';
+    ctx.textAlign = 'center';
     for (const node of DATA.nodes) {
-      const rev = Campaign.isRevealed(node);
+      const x = sx(node.q), y = sy(node.r);
+      if (x < -40 || y < -40 || x > cv.width + 40 || y > cv.height + 40) continue;
+      const rev = Campaign.isRevealed(node), village = node.type === 'VILLAGE';
+      const rad = (village ? 4 : 7) * (v.z >= 4 ? 1.4 : 1);
       ctx.fillStyle = rev ? DATA.factions[Campaign.owner(node)].color : '#888';
-      ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 3;
-      const rad = node.type === 'VILLAGE' ? (rev ? 11 : 8) : (rev ? 20 : 13);
-      ctx.beginPath(); ctx.arc(node.q, node.r, rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      if (rev && (village ? v.z >= 8 : v.z >= 2)) {
+        ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(233,223,196,.9)'; ctx.fillStyle = '#2b2116';
+        ctx.strokeText(node.name, x, y - rad - 6); ctx.fillText(node.name, x, y - rad - 6);
+      }
     }
+    // Army and the visible tile window.
     const [aq, ar] = worldToHex(game.view.army.position.x, game.view.army.position.z);
-    ctx.fillStyle = '#c9a227'; ctx.beginPath(); ctx.arc(aq, ar, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    const [pq, pr] = game.view.cam.pivotTile(), rad = DATA.streaming.radius;
-    ctx.strokeStyle = '#f4ecd6'; ctx.lineWidth = 4;
-    ctx.strokeRect(pq - rad, pr - rad, 2 * rad + 1, 2 * rad + 1);
-    ctx.restore();
+    ctx.fillStyle = '#c9a227'; ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(sx(aq), sy(ar), 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // Camera: an open view cone from the camera position toward the pivot, opening by the
+    // horizontal field of view, so the viewing direction is visible at any zoom.
+    const cam = game.view.cam, camera = game.view.camera;
+    const [pq, pr] = cam.pivotTile();
+    const fx = -Math.sin(cam.yaw) / COL_SPACING, fz = -Math.cos(cam.yaw) / ROW_SPACING;   // forward in tile units
+    const flen = Math.hypot(fx, fz), dx = fx / flen, dy = fz / flen;
+    const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
+    const px = sx(pq), py = sy(pr), back = 22, len = 64;
+    const ax = px - dx * back, ay = py - dy * back;                 // apex behind the pivot
+    const rot = (x, y, a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
+    const [lx, ly] = rot(dx, dy, -half), [rx, ry] = rot(dx, dy, half);
+    ctx.lineJoin = 'round';
+    for (const [w, c] of [[6, 'rgba(43,33,22,.85)'], [3, '#f4ecd6']]) {
+      ctx.strokeStyle = c; ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(ax + lx * len, ay + ly * len); ctx.lineTo(ax, ay); ctx.lineTo(ax + rx * len, ay + ry * len); ctx.stroke();
+    }
+    ctx.fillStyle = '#f4ecd6'; ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 };
 
@@ -981,17 +1048,17 @@ class Battlefield {
 
   build() {
     const type = this.node.type, size = this.size;
+    const set = DATA.buildingSets[type];
     if (type === 'WORLDLY') {
       for (const t of this.tilesWithin(this.cq, this.cr, 3)) if (!this.isWater(t)) t.floor = 'COBBLESTONE';
+      if (size >= set.cityWallMinSize) this.placeCityWall(set.cityWallRadius, set.gates);
     }
-    if (type === 'WORLDLY' || type === 'CHRISTIAN') {
-      this.placeBuildings(3 * size / 16, Math.floor(size / 3), type === 'CHRISTIAN');
-      this.placeFences(size / 8);
-    }
-    if (type === 'VILLAGE') {
-      // A few farmsteads and fences, no paved square.
-      this.placeBuildings(DATA.village.buildings, Math.floor(size / 3), false);
-      this.placeFences(DATA.village.fences);
+    if (set) {
+      const count = set.count ?? set.countPer16 * size / 16;
+      const fences = set.fences ?? set.fencesPer16 * size / 16;
+      this.placeBuildings(set, count, Math.floor(size / 3));
+      if (type === 'CHRISTIAN') this.consecrate(set);
+      this.placeFences(fences);
     }
     if (type === 'MYTHIC') {
       if (this.node.id === 'teufelsmoor')
@@ -1009,60 +1076,129 @@ class Battlefield {
     }
   }
 
-  // A building = anchor + neighbor in d + neighbor in d+1 (three tiles touching each other).
-  placeBuildings(count, innerRadius, christian) {
-    for (let attempt = 0; attempt < 400 && this.buildings.length < count; attempt++) {
-      const isChurch = christian && this.buildings.length === 0;
-      const anchor = this.randomTileWithin(isChurch && attempt < 80 ? 3 : innerRadius);
-      const d = Math.floor(this.rng() * 6);
-      const a = this.neighborTile(anchor, d), b = this.neighborTile(anchor, (d + 1) % 6);
-      if (!a || !b) continue;
-      const parts = [anchor, a, b];
-      if (parts.some(t => t.building !== null || this.isWater(t))) continue;
-      const levels = parts.map(t => t.level);
-      if (Math.max(...levels) - Math.min(...levels) >= 2) continue;
-      // Must not touch another building.
-      let touches = false;
-      for (const t of parts) for (let e = 0; e < 6; e++) {
-        const n = this.neighborTile(t, e);
-        if (n && n.building !== null) touches = true;
-      }
-      if (touches) continue;
-      // Outward edges and door candidates (a walkable tile outside the building).
-      const outward = [];
-      for (const t of parts) for (let e = 0; e < 6; e++) {
-        const n = this.neighborTile(t, e);
-        if (n && parts.includes(n)) continue;
-        outward.push({ t, e, n });
-      }
-      const doors = outward.filter(o => o.n && this.walkable(o.n) && !this.isWater(o.n) && Math.abs(o.n.level - o.t.level) < 2);
-      if (!doors.length) continue;
-      const door = doors[Math.floor(this.rng() * doors.length)];
-      const id = this.buildings.length;
-      for (const t of parts) { t.building = id; t.floor = 'STONE_FLOOR'; }
-      for (const o of outward) this.setEdge(o.t, o.e, 'WALL');
-      this.setEdge(door.t, door.e, 'OPEN');
-      this.buildings.push({ id, tiles: parts, church: isChurch, door });
+  // Weighted pick from a [key, weight] list.
+  pickWeighted(mix) {
+    const sum = mix.reduce((s, e) => s + e[1], 0);
+    let x = this.rng() * sum;
+    for (const [k, w] of mix) { x -= w; if (x < 0) return k; }
+    return mix[mix.length - 1][0];
+  }
+
+  // Tiles of a building template at an anchor, rotated by rot * 60 degrees (null if off the field).
+  shapeTiles(tpl, anchor, rot) {
+    const out = [];
+    for (const path of tpl.tiles) {
+      let q = anchor.q, r = anchor.r;
+      for (const d of path) [q, r] = neighbor(q, r, (d + rot) % 6);
+      const t = this.get(q, r);
+      if (!t || out.includes(t)) return null;
+      out.push(t);
     }
-    if (christian && this.buildings.length) {
-      // Church: holy ground within radius 2; graveyard (radius 2) next to it.
-      const church = this.buildings[0].tiles[0];
-      const holy = new Set();
-      for (const t of this.tilesWithin(church.q, church.r, 2)) {
-        if (this.isWater(t) || (t.building !== null && t.building !== 0)) continue;
-        t.floor = 'HOLY_GROUND'; holy.add(t);
-      }
-      let best = null, bestScore = -1;
-      for (const c of this.tilesWithin(church.q, church.r, 5)) {
-        const d = hexDistance(c.q, c.r, church.q, church.r);
-        if (d < 4) continue;
-        const area = this.tilesWithin(c.q, c.r, 2);
-        const score = area.filter(t => !this.isWater(t) && t.building === null && !holy.has(t)).length + this.rng() * 0.5;
-        if (score > bestScore) { bestScore = score; best = c; }
-      }
-      if (best) for (const t of this.tilesWithin(best.q, best.r, 2))
-        if (!this.isWater(t) && t.building === null && !holy.has(t)) t.floor = 'GRAVEYARD_GROUND';
+    return out;
+  }
+
+  // Tries to place one building of the given template. Returns true on success.
+  tryBuilding(key, radius) {
+    const tpl = DATA.buildings[key];
+    const anchor = this.randomTileWithin(radius), rot = Math.floor(this.rng() * 6);
+    const parts = this.shapeTiles(tpl, anchor, rot);
+    if (!parts) return false;
+    if (parts.some(t => t.building !== null || this.isWater(t))) return false;
+    const levels = parts.map(t => t.level);
+    if (Math.max(...levels) - Math.min(...levels) >= 2) return false;
+    // Must not touch another building, and no wall (e.g. the city wall) may run through it.
+    for (const t of parts) for (let e = 0; e < 6; e++) {
+      const n = this.neighborTile(t, e);
+      if (n && n.building !== null) return false;
+      if (n && parts.includes(n) && t.edges[e] !== 'OPEN') return false;
     }
+    // Outward edges and door candidates (a walkable tile outside the building).
+    const outward = [];
+    for (const t of parts) for (let e = 0; e < 6; e++) {
+      const n = this.neighborTile(t, e);
+      if (n && parts.includes(n)) continue;
+      outward.push({ t, e, n });
+    }
+    const candidates = outward.filter(o => o.n && o.t.edges[o.e] === 'OPEN' && this.walkable(o.n) && !this.isWater(o.n) && Math.abs(o.n.level - o.t.level) < 2);
+    if (candidates.length < tpl.doors) return false;
+    // Doors: spread over different tiles where possible.
+    const doors = [];
+    for (let i = 0; i < tpl.doors; i++) {
+      const pool = candidates.filter(c => !doors.includes(c) && !doors.some(d => d.t === c.t));
+      const from = pool.length ? pool : candidates.filter(c => !doors.includes(c));
+      doors.push(from[Math.floor(this.rng() * from.length)]);
+    }
+    const id = this.buildings.length;
+    for (const t of parts) { t.building = id; t.floor = tpl.floor; }
+    const wall = tpl.wall || 'WALL';
+    for (const o of outward) if (!doors.includes(o)) this.setEdge(o.t, o.e, wall);
+    for (const d of doors) this.setEdge(d.t, d.e, 'OPEN');
+    // Windows: some outer walls become transparent.
+    const walls = outward.filter(o => !doors.includes(o) && o.n && o.t.edges[o.e] === 'WALL');
+    for (let i = 0; i < (tpl.windows || 0) && walls.length; i++) {
+      const w = walls.splice(Math.floor(this.rng() * walls.length), 1)[0];
+      this.setEdge(w.t, w.e, 'WALL_TRANSPARENT');
+    }
+    this.buildings.push({ id, key, name: tpl.name, tiles: parts, doors });
+    return true;
+  }
+
+  placeBuildings(set, count, innerRadius) {
+    // The "first" building (the church) is tried close to the center first.
+    if (set.first) {
+      let ok = false;
+      for (let a = 0; a < 120 && !ok; a++) ok = this.tryBuilding(set.first, a < 60 ? 3 : innerRadius);
+    }
+    let fails = 0;
+    while (this.buildings.length < count && fails < 30) {
+      const key = this.pickWeighted(set.mix);
+      let ok = false;
+      for (let a = 0; a < 25 && !ok; a++) ok = this.tryBuilding(key, innerRadius);
+      if (!ok) fails++;
+    }
+  }
+
+  // Christian places: holy ground around the church, graveyard next to it.
+  consecrate(set) {
+    const church = this.buildings.find(b => b.key === set.first);
+    if (!church) return;
+    const c0 = church.tiles[0], holy = new Set();
+    for (const t of this.tilesWithin(c0.q, c0.r, set.holyRadius)) {
+      if (this.isWater(t) || (t.building !== null && t.building !== church.id)) continue;
+      t.floor = 'HOLY_GROUND'; holy.add(t);
+    }
+    let best = null, bestScore = -1;
+    for (const c of this.tilesWithin(c0.q, c0.r, set.holyRadius + set.graveyardRadius + 2)) {
+      if (hexDistance(c.q, c.r, c0.q, c0.r) < set.holyRadius + set.graveyardRadius) continue;
+      const area = this.tilesWithin(c.q, c.r, set.graveyardRadius);
+      const score = area.filter(t => !this.isWater(t) && t.building === null && !holy.has(t)).length + this.rng() * 0.5;
+      if (score > bestScore) { bestScore = score; best = c; }
+    }
+    if (best) for (const t of this.tilesWithin(best.q, best.r, set.graveyardRadius))
+      if (!this.isWater(t) && t.building === null && !holy.has(t)) t.floor = 'GRAVEYARD_GROUND';
+  }
+
+  // City wall: a ring of walls at the given hex radius with evenly spaced open gates.
+  placeCityWall(radius, gates) {
+    const cpos = hexToWorld(this.cq, this.cr), offset = this.rng() * Math.PI * 2;
+    const halfGate = 1.6 / radius;                 // about one tile to each side of the gate center
+    for (const t of this.tiles) {
+      if (!t || hexDistance(t.q, t.r, this.cq, this.cr) !== radius) continue;
+      const p = hexToWorld(t.q, t.r);
+      const ang = Math.atan2(p.x - cpos.x, p.z - cpos.z);
+      let inGate = false;
+      for (let g = 0; g < gates; g++) {
+        const ga = offset + g * Math.PI * 2 / gates;
+        const diff = Math.abs(Math.atan2(Math.sin(ang - ga), Math.cos(ang - ga)));
+        if (diff < halfGate) inGate = true;
+      }
+      if (inGate || this.isWater(t)) continue;
+      for (let d = 0; d < 6; d++) {
+        const n = this.neighborTile(t, d);
+        if (n && !this.isWater(n) && hexDistance(n.q, n.r, this.cq, this.cr) === radius + 1) this.setEdge(t, d, 'WALL');
+      }
+    }
+    this.cityWall = radius;
   }
 
   // Fences: lines of 4-6 tiles in direction d; edge (d+1)%6 becomes cover on both sides.
@@ -1109,17 +1245,18 @@ class MinHeap {
 
 const Pathfinding = {
   // Cost to step from A to B in direction d, or null if not allowed.
-  stepCost(field, unit, A, d, B) {
+  stepCost(field, unit, A, d, B, ignoreUnits = false) {
     if (!B) return null;
     const def = unit.def;
     if (!def.spectral && (A.edges[d] !== 'OPEN' || B.edges[opposite(d)] !== 'OPEN')) return null;
     if (!def.flying && Math.abs(A.level - B.level) >= 2) return null;
-    if (B.unit && B.unit !== unit && !def.flying) return null;     // flyers may pass over units
+    if (B.unit && B.unit !== unit && !def.flying && !ignoreUnits) return null;     // flyers may pass over units
     if (def.flying) return 1;
     return DATA.floorTypes[B.floor].moveCost;                        // null = impassable
   },
   // Returns { cost: Map(index -> cost), prev: Map(index -> index) } up to maxCost.
-  search(field, unit, maxCost) {
+  // ignoreUnits: plan through occupied tiles (used by the AI to queue behind allies).
+  search(field, unit, maxCost, ignoreUnits = false) {
     const start = field.get(unit.q, unit.r);
     const cost = new Map(), prev = new Map(), heap = new MinHeap();
     const si = field.index(start);
@@ -1129,7 +1266,7 @@ const Pathfinding = {
       if (c > cost.get(field.index(t))) continue;
       for (let d = 0; d < 6; d++) {
         const n = field.neighborTile(t, d);
-        const sc = this.stepCost(field, unit, t, d, n);
+        const sc = this.stepCost(field, unit, t, d, n, ignoreUnits);
         if (sc === null || sc === undefined) continue;
         const nc = c + sc;
         if (nc > maxCost) continue;
@@ -1301,8 +1438,9 @@ const BattleView = {
         mesh.position.set(p.x + ed.x * INRADIUS, Math.max(t.y, n ? n.y : t.y), p.z + ed.z * INRADIUS);
         mesh.rotation.y = -d * Math.PI / 3;
         mesh.userData.edge = { type, q: t.q, r: t.r, d };
-        const isBuilding = t.building !== null || (n && n.building !== null);
-        (isBuilding ? game.view.battleRoot : this.optionalEdges).add(mesh);
+        // Walls (buildings, city wall) are always shown; fences and stones only with the edge display.
+        const alwaysShown = type !== 'COVER' || t.building !== null || (n && n.building !== null);
+        (alwaysShown ? game.view.battleRoot : this.optionalEdges).add(mesh);
         this.edgeMeshes.push(mesh);
       }
     }
@@ -1885,23 +2023,37 @@ const EnemyAI = {
   // Furthest tile along the shortest path to the nearest undead that the unit can reach this turn.
   approach(u, reach) {
     const f = game.battle.field;
-    const full = Pathfinding.search(f, u, 9999);
-    const goals = new Set();
-    for (const p of Battle.alive('player')) for (let d = 0; d < 6; d++) {
-      const n = f.neighborTile(f.get(p.q, p.r), d);
-      if (n && (!n.unit || n.unit === u)) goals.add(f.index(n));
-    }
-    let bestGoal = null, bestCost = Infinity;
-    for (const g of goals) { const c = full.cost.get(g); if (c !== undefined && c < bestCost) { bestCost = c; bestGoal = g; } }
-    if (bestGoal !== null) {
-      const path = Pathfinding.path(f, full, f.tiles[bestGoal]);
-      let dest = null;
-      for (const t of path) {
-        const c = full.cost.get(f.index(t));
-        if (c > u.def.move) break;
-        if (!t.unit || t.unit === u) dest = t;
+    const targets = Battle.alive('player');
+    // Goals: free tiles from which an attack is actually possible (not merely adjacent,
+    // which would include tiles behind a wall, e.g. inside a house next to the target).
+    const goalsOf = search => {
+      let best = null, bestCost = Infinity;
+      for (const [i, c] of search.cost) {
+        const t = f.tiles[i];
+        if ((t.unit && t.unit !== u) || c >= bestCost) continue;
+        if (targets.some(p => Combat.canAttack(f, u, t, p).ok)) { best = t; bestCost = c; }
       }
-      if (dest) return dest;
+      return best;
+    };
+    // First try with units blocking; if allies block the only way out (a door), plan through
+    // them and walk up to the first occupied tile, so the unit queues behind its ally.
+    for (const ignoreUnits of [false, true]) {
+      const full = Pathfinding.search(f, u, 9999, ignoreUnits);
+      const goal = goalsOf(full);
+      if (!goal) continue;
+      const path = Pathfinding.path(f, full, goal);
+      let dest = null, cost = 0;
+      for (let i = 0; i < path.length; i++) {
+        const t = path[i];
+        if (i > 0) {
+          const d = directionTo(path[i - 1].q, path[i - 1].r, t.q, t.r);
+          cost += Pathfinding.stepCost(f, u, path[i - 1], d, t, true);
+        }
+        if (cost > u.def.move) break;
+        if (t.unit && t.unit !== u) { if (u.def.flying) continue; break; }
+        dest = t;
+      }
+      if (dest && dest !== f.get(u.q, u.r)) return dest;
     }
     // Fallback: the reachable tile closest to any undead.
     let best = null, bd = Infinity;
@@ -1945,7 +2097,7 @@ const UI = {
   enterWorld() {
     ['header', 'info', 'minimap', 'hint'].forEach(id => this.show(id, true));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
-    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen · Mausrad: Zoom · Linksklick: auswählen · F3: Debug';
+    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen · Mausrad: Zoom · Linksklick: auswählen · Maus über Feld: Boden · F3: Debug';
     this.updateHeader();
     this.renderInfo();
   },
@@ -2061,7 +2213,7 @@ const UI = {
     ['header', 'info', 'minimap'].forEach(id => this.show(id, false));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'hint'].forEach(id => this.show(id, true));
     $('battleLog').innerHTML = '';
-    $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Leertaste: Zug beenden · R: Rückzug · T: Kanten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
+    $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Maus über Feld: Boden und Bewegungskosten · Leertaste: Zug beenden · R: Rückzug · T: Kanten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
     $('btnEdges').textContent = game.showEdges ? 'Kanten ausblenden' : 'Kanten anzeigen';
   },
   appendLog(text, cls) {
@@ -2105,7 +2257,7 @@ const UI = {
       <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${d.soulShield}</td></tr>
       <tr><td>Sinne</td><td colspan="3">Sicht ${d.sight} · Gehör ${d.hear} · Geruch ${d.smell}</td></tr>
       ${flags ? `<tr><td>Eigenschaften</td><td colspan="3">${flags}</td></tr>` : ''}
-      <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}</td></tr></table>`;
+      <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</td></tr></table>`;
   }
 };
 
@@ -2150,24 +2302,64 @@ function onLeftClick(ev) {
   if (myTurn && !tile.unit && b.reach && b.reach.tiles.includes(tile)) { Battle.playerMove(tile); return; }
   if (tile.unit) { b.selected = tile.unit; UI.renderUnitCard(tile.unit); }
 }
+// Tooltip near the mouse (edges and ground).
+function showTip(ev, html) {
+  const tip = $('edgeTip');
+  tip.innerHTML = html;
+  tip.style.left = ev.clientX + 16 + 'px'; tip.style.top = ev.clientY + 12 + 'px';
+  tip.classList.remove('hidden');
+}
+// Ground description for the tooltip; `unit` (optional) is the active unit for movement costs.
+function groundTip(floorKey, level, extra) {
+  const ft = DATA.floorTypes[floorKey];
+  const cost = ft.moveCost === null ? 'nicht begehbar' : `Bewegung kostet ${ft.moveCost}`;
+  let html = `<b>${ft.name}</b> · ${cost} · Stufe ${level}`;
+  if (ft.effect && ft.effect.damageUndeadPerRound) html += `<br>Untote verlieren ${ft.effect.damageUndeadPerRound} LP pro Runde`;
+  if (ft.effect && ft.effect.healUndeadPerRound) html += `<br>Untote heilen ${ft.effect.healUndeadPerRound} LP pro Runde`;
+  return html + (extra || '');
+}
+let lastWorldHover = 0;
 function onHover(ev) {
-  if (game.mode !== 'battle' || !game.battle) { $('edgeTip').classList.add('hidden'); return; }
+  const tip = $('edgeTip');
+  if (game.input.rmb || (game.mode !== 'battle' && game.mode !== 'world')) { tip.classList.add('hidden'); return; }
   setMouse(ev);
+  if (game.mode === 'world') {
+    // Throttled: ground info on the world map.
+    const now = performance.now();
+    if (now - lastWorldHover < 60) return;
+    lastWorldHover = now;
+    const p = game.view.tiles.pick(game.view.raycaster);
+    if (!p) { tip.classList.add('hidden'); return; }
+    const w = game.world;
+    showTip(ev, groundTip(w.floorKeyAt(p.q, p.r), w.levelAt(p.q, p.r), `<br><span class="small">${w.metersAt(p.q, p.r).toFixed(0)} m über dem Meer</span>`));
+    return;
+  }
   const b = game.battle;
-  // Edge tooltip.
+  if (!b) { tip.classList.add('hidden'); return; }
+  // Edge tooltip has priority.
   const visibleEdges = BattleView.edgeMeshes.filter(m => m.parent && (m.parent !== BattleView.optionalEdges || BattleView.optionalEdges.visible));
   const eh = game.view.raycaster.intersectObjects(visibleEdges, false)[0];
-  const tip = $('edgeTip');
-  if (eh) {
-    const e = eh.object.userData.edge;
-    tip.textContent = `Kante: ${EDGE_NAMES[e.type]} (${e.type})`;
-    tip.style.left = ev.clientX + 14 + 'px'; tip.style.top = ev.clientY + 10 + 'px';
-    tip.classList.remove('hidden');
-  } else tip.classList.add('hidden');
-  // Path preview.
-  if (!b.reach || b.busy || !b.current || b.current.side !== 'player') { BattleView.setOverlay(BattleView.pathOverlay, []); return; }
   const p = game.view.tiles.pick(game.view.raycaster);
   const t = p && b.field.get(p.q, p.r);
+  const cur = b.current, myTurn = b.reach && !b.busy && cur && cur.side === 'player';
+  if (eh) {
+    const e = eh.object.userData.edge;
+    showTip(ev, `Kante: <b>${EDGE_NAMES[e.type]}</b> (${e.type})`);
+  } else if (t) {
+    let extra = '';
+    if (t.building !== null) extra += `<br>${b.field.buildings[t.building].name}`;
+    if (myTurn && !t.unit) {
+      const c = b.reach.cost.get(b.field.index(t));
+      if (b.reach.tiles.includes(t)) extra += `<br>Weg: ${c} von ${cur.def.move} Bewegungspunkten`;
+      else extra += '<br><i>außer Reichweite</i>';
+      if (cur.def.flying) extra += ' <span class="small">(fliegt: jedes Feld kostet 1)</span>';
+    }
+    showTip(ev, groundTip(t.floor, t.level, extra));
+  } else if (p) {
+    showTip(ev, groundTip(game.world.floorKeyAt(p.q, p.r), game.world.levelAt(p.q, p.r), '<br><i>außerhalb des Kampffelds</i>'));
+  } else tip.classList.add('hidden');
+  // Path preview.
+  if (!myTurn) { BattleView.setOverlay(BattleView.pathOverlay, []); return; }
   if (t && b.reach.tiles.includes(t) && !t.unit) {
     const path = Pathfinding.path(b.field, b.reach, t) || [];
     BattleView.setOverlay(BattleView.pathOverlay, path.slice(1).map(x => ({ t: x, color: '#f0d870', lift: 0.03 })));
@@ -2186,7 +2378,7 @@ function initInput() {
   });
   window.addEventListener('pointermove', e => {
     if (inp.rmb) { game.view.cam.yaw -= (e.clientX - inp.lastX) * 0.006; inp.lastX = e.clientX; }
-    if (e.target === canvas) onHover(e);
+    if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
   window.addEventListener('keydown', e => {
@@ -2262,7 +2454,7 @@ function frame(now) {
     BattleView.ring.position.copy(game.battle.current.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
   }
   miniAcc += dt;
-  if (miniAcc > 0.25 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Minimap.draw(); WorldView.updateLabels(); }
+  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Minimap.draw(); WorldView.updateLabels(); }
   Debug.update();
   v.renderer.render(v.scene, v.camera);
   v.labelRenderer.render(v.scene, v.camera);
@@ -2330,7 +2522,7 @@ async function boot() {
 }
 
 // Exposed for console testing only (the acceptance checks in PROMPT 14).
-game.api = { hexToWorld, hexDistance, neighbor, worldToHex, Combat, Campaign, Battle, Recruitment, SaveGame, startTravel, UI, NODE_BY_ID, Pathfinding, Stealth };
+game.api = { hexToWorld, hexDistance, neighbor, worldToHex, Combat, Campaign, Battle, Recruitment, SaveGame, startTravel, UI, NODE_BY_ID, Pathfinding, Stealth, EnemyAI, Minimap };
 boot().catch(err => {
   console.error(err);
   $('loadingText').textContent = 'Fehler beim Laden: ' + err.message;

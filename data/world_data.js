@@ -304,8 +304,33 @@ window.HARMBRINGER_DATA = {
     { id: "nienburg", name: "Nienburg", q: 493, r: 523, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
   ],
 
-  // Battlefield layout for villages: fewer buildings and fences than a town.
-  village: { buildings: 2, fences: 1 },
+  // ---------------------------------------------------------------------------
+  // Buildings on battlefields (first proposal).
+  // tiles: each tile is a path of direction steps from the anchor (0=N, 1=NE, 2=SE, 3=S, 4=SW, 5=NW);
+  //        [] is the anchor itself. The whole shape is rotated by a random multiple of 60 degrees.
+  // floor: floor type inside. doors: open edges to the outside. windows: outer walls that become
+  // WALL_TRANSPARENT (block movement and melee, not sight or missiles). wall: edge type of the outer walls.
+  // ---------------------------------------------------------------------------
+  buildings: {
+    hut:       { name: "Kate",        tiles: [[]],                                   floor: "WOOD_FLOOR",  doors: 1, windows: 0 },
+    house:     { name: "Haus",        tiles: [[], [0], [1]],                         floor: "STONE_FLOOR", doors: 1, windows: 1 },
+    longhouse: { name: "Langhaus",    tiles: [[], [0], [0, 0], [0, 0, 0]],           floor: "WOOD_FLOOR",  doors: 2, windows: 0 },
+    manor:     { name: "Gutshof",     tiles: [[], [0], [1], [0, 1]],                 floor: "STONE_FLOOR", doors: 1, windows: 2 },
+    hall:      { name: "Gildehalle",  tiles: [[], [0], [0, 0], [0, 0, 2], [0, 0, 2, 2]], floor: "STONE_FLOOR", doors: 2, windows: 2 },
+    tower:     { name: "Wachturm",    tiles: [[]],                                   floor: "STONE_FLOOR", doors: 1, windows: 0, wall: "WALL_TRANSPARENT" },
+    chapel:    { name: "Kapelle",     tiles: [[], [0]],                              floor: "STONE_FLOOR", doors: 1, windows: 1 },
+    church:    { name: "Kirche",      tiles: [[], [0], [1], [2], [3], [4], [5]],     floor: "STONE_FLOOR", doors: 2, windows: 2 }
+  },
+  // Which buildings appear where. count = fixed number, countPer16 = per 16 tiles of field edge.
+  // first: placed before the random mix. mix: [building, weight].
+  buildingSets: {
+    VILLAGE:   { count: 2, fences: 1, mix: [["hut", 3], ["house", 3], ["longhouse", 2], ["chapel", 1]] },
+    WORLDLY:   { countPer16: 3, fencesPer16: 2, mix: [["house", 4], ["longhouse", 2], ["manor", 2], ["hall", 2], ["tower", 1], ["hut", 1]],
+                 // Fields of at least this size get a city wall: a ring at cityWallRadius tiles with open gates.
+                 cityWallMinSize: 32, cityWallRadius: 9, gates: 4 },
+    CHRISTIAN: { countPer16: 3, fencesPer16: 2, first: "church", mix: [["house", 3], ["hut", 2], ["longhouse", 1], ["chapel", 1]],
+                 holyRadius: 3, graveyardRadius: 2 }
+  },
 
   // ---------------------------------------------------------------------------
   // Campaign economy
