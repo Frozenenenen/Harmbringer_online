@@ -110,6 +110,7 @@
   /* 3D labels (CSS2DRenderer) */
   .nodeLabel { pointer-events: auto; cursor: pointer; font-size: 14px; color: var(--ink); background: rgba(233,223,196,.88);
     border: 1px solid var(--ink); padding: 0 6px; white-space: nowrap; transform: translateY(-14px); }
+  .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
@@ -194,11 +195,12 @@ const FLOOR_INDEX = Object.fromEntries(FLOOR_KEYS.map((k, i) => [k, i]));
 const NODE_BY_ID = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
 const PHYLACTERY = DATA.nodes.find(n => n.type === 'PHYLACTERY');
 const ENEMY_FACTIONS = Object.keys(DATA.factions).filter(f => f !== 'UNDEAD');
-const NODE_TYPE_NAMES = { MYTHIC: 'Mythisch', WORLDLY: 'Weltlich', CHRISTIAN: 'Christlich', PHYLACTERY: 'Hügelgrab' };
+const NODE_TYPE_NAMES = { MYTHIC: 'Mythisch', WORLDLY: 'Weltlich', CHRISTIAN: 'Christlich', PHYLACTERY: 'Hügelgrab', VILLAGE: 'Dorf' };
 const EDGE_NAMES = { OPEN: 'Offen', COVER: 'Deckung (halber Schaden)', WALL: 'Mauer', WALL_DESTRUCTIBLE: 'Zerstörbare Mauer', WALL_TRANSPARENT: 'Durchsichtige Wand' };
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', knowledge: 'Wissen' };
 const REVEAL_DISTANCE = 120;           // tiles, from PROMPT section 7.1
+const VILLAGE_LABEL_DISTANCE = 60;     // village names only show near the camera, to keep the map readable
 const TRAVEL_SECONDS = 2.5;            // animation length of a journey
 const STEP_SECONDS = 0.15;             // battle movement per tile
 const AI_PAUSE = 0.4;                  // pause between AI move and attack
@@ -699,7 +701,7 @@ const Campaign = {
     const c = game.campaign;
     for (const f of ENEMY_FACTIONS) {
       if (!this.isLiving(f)) continue;
-      c.threat[f] = Math.min(100, c.threat[f] + (f === node.faction ? THREAT.attackOwnNode : THREAT.attackOtherFaction));
+      c.threat[f] = Math.min(100, c.threat[f] + (f !== node.faction ? THREAT.attackOtherFaction : node.type === 'VILLAGE' ? THREAT.attackOwnVillage : THREAT.attackOwnNode));
     }
   },
   healAtPhylactery() {
@@ -751,7 +753,8 @@ const SaveGame = {
       if (!c || !Array.isArray(c.army) || !c.owners || !NODE_BY_ID[c.nodeId]) return null;
       // Fill in fields that may be missing in older saves.
       const fresh = Campaign.create();
-      return { ...fresh, ...c, resources: { ...fresh.resources, ...c.resources }, threat: { ...fresh.threat, ...c.threat } };
+      return { ...fresh, ...c, resources: { ...fresh.resources, ...c.resources }, threat: { ...fresh.threat, ...c.threat },
+        owners: { ...fresh.owners, ...c.owners } };   // new places added since the save keep their default owner
     } catch (e) { return null; }
   },
   clear() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
@@ -804,14 +807,25 @@ const WorldView = {
       const nv = game.view.nodeViews[node.id];
       const revealed = Campaign.isRevealed(node);
       const owner = Campaign.owner(node);
-      nv.pillar.scale.y = revealed ? 40 : 10;
+      const village = node.type === 'VILLAGE';
+      nv.pillar.scale.set(village ? 0.6 : 1, revealed ? (village ? 18 : 40) : 10, village ? 0.6 : 1);
+      nv.el.classList.toggle('village', village);
       nv.pillar.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
       nv.el.textContent = revealed ? node.name : '?';
       nv.el.classList.toggle('unknown', !revealed);
       nv.el.classList.toggle('selected', UI.selectedNode === node.id);
     }
   },
-  setVisible(on) { game.view.worldRoot.visible = on; for (const id in game.view.nodeViews) game.view.nodeViews[id].label.visible = on; }
+  setVisible(on) { game.view.worldRoot.visible = on; for (const id in game.view.nodeViews) game.view.nodeViews[id].label.visible = on; if (on) this.updateLabels(); },
+  // Village labels only near the camera pivot (or when selected); larger places always show.
+  updateLabels() {
+    const [pq, pr] = game.view.cam.pivotTile();
+    for (const node of DATA.nodes) {
+      if (node.type !== 'VILLAGE') continue;
+      game.view.nodeViews[node.id].label.visible = UI.selectedNode === node.id ||
+        hexDistance(node.q, node.r, pq, pr) <= VILLAGE_LABEL_DISTANCE;
+    }
+  }
 };
 
 // Journey: the figure glides in a straight line, the camera follows.
@@ -883,7 +897,8 @@ const Minimap = {
       const rev = Campaign.isRevealed(node);
       ctx.fillStyle = rev ? DATA.factions[Campaign.owner(node)].color : '#888';
       ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(node.q, node.r, rev ? 20 : 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      const rad = node.type === 'VILLAGE' ? (rev ? 11 : 8) : (rev ? 20 : 13);
+      ctx.beginPath(); ctx.arc(node.q, node.r, rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     }
     const [aq, ar] = worldToHex(game.view.army.position.x, game.view.army.position.z);
     ctx.fillStyle = '#c9a227'; ctx.beginPath(); ctx.arc(aq, ar, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -967,6 +982,11 @@ class Battlefield {
     if (type === 'WORLDLY' || type === 'CHRISTIAN') {
       this.placeBuildings(3 * size / 16, Math.floor(size / 3), type === 'CHRISTIAN');
       this.placeFences(size / 8);
+    }
+    if (type === 'VILLAGE') {
+      // A few farmsteads and fences, no paved square.
+      this.placeBuildings(DATA.village.buildings, Math.floor(size / 3), false);
+      this.placeFences(DATA.village.fences);
     }
     if (type === 'MYTHIC') {
       if (this.node.id === 'teufelsmoor')
@@ -1749,10 +1769,17 @@ const Battle = {
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       Campaign.addResources(loot);
       c.owners[node.id] = 'UNDEAD';
-      c.army = this.alive('player').map(u => ({ type: u.type, hp: u.hp }));
+      // Survivors recover part of their strength after a won battle.
+      let healed = 0;
+      c.army = this.alive('player').map(u => {
+        const hp = Math.min(u.maxHp, u.hp + Math.ceil(u.maxHp * ECON.postBattleHealShare));
+        healed += hp - u.hp;
+        return { type: u.type, hp };
+      });
       const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${v} ${RESOURCE_NAMES[k]}</li>`).join('');
       html = `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>
-        <h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>`;
+        <h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>
+        <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(ECON.postBattleHealShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>`;
       if (node.finale) c.won = true;
     } else if (result === 'defeat') {
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
@@ -2230,7 +2257,7 @@ function frame(now) {
     BattleView.ring.position.copy(game.battle.current.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
   }
   miniAcc += dt;
-  if (miniAcc > 0.25 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Minimap.draw(); }
+  if (miniAcc > 0.25 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Minimap.draw(); WorldView.updateLabels(); }
   Debug.update();
   v.renderer.render(v.scene, v.camera);
   v.labelRenderer.render(v.scene, v.camera);

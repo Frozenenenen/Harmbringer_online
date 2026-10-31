@@ -4,6 +4,10 @@ Browser-Prototyp eines rundenbasierten Taktikspiels: Mai 1371, ein Lich erwacht 
 
 **Online spielen:** https://frozenenenen.github.io/Harmbringer_online/
 
+## Orte
+
+19 größere Orte (Städte, Klöster, mythische Stätten) und 48 Dörfer dazwischen. Dörfer haben ein kleines Kampffeld mit zwei Höfen, 2–3 Verteidiger, wenig Beute und erhöhen die Bedrohung ihrer Fraktion nur um 10 % statt 25 %. Nach einem Sieg heilen die Überlebenden um 25 % ihrer Lebenspunkte; voll geheilt wird weiterhin im Hügelgrab.
+
 ## Lokal starten
 
 Repo herunterladen, entpacken, `index.html` doppelklicken. Der Ordner `data/` muss direkt neben `index.html` liegen. Three.js r160 wird beim Start von jsDelivr geladen.
