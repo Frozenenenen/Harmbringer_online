@@ -25,7 +25,9 @@
     font-family: "IM Fell English", Georgia, "Times New Roman", serif; }
   #app { position: fixed; inset: 0; }
   #app canvas { display: block; }
-  #labels { position: absolute; inset: 0; pointer-events: none; }
+  /* z-index makes this a stacking context: CSS2DRenderer sets z-index on every label,
+     which must never rise above the UI panels and modals. */
+  #labels { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
   .hidden { display: none !important; }
 
   .panel { background: var(--parchment); border: 1px solid var(--ink); box-shadow: 0 0 0 3px var(--parchment), 0 0 0 4px var(--ink), 0 6px 18px rgba(0,0,0,.45); }
