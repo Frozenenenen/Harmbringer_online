@@ -1,0 +1,570 @@
+<title>MythosTactics Weltkarte</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Vollbild-Karte, rechts oben eine einklappbare Werkbank mit Kennwerten und Reglern, unten links die Steuerhilfe.
+   Bewusst nur dunkel: Die Karte selbst bestimmt das Bild, die Bedienung tritt zurück. */
+:root {
+  color-scheme: dark;
+  --ink: #15120f;          /* Grund hinter der Karte */
+  --panel: rgba(27, 23, 19, .88);
+  --line: #3a3229;
+  --bone: #ebe3d1;
+  --bone-dim: #a89d88;
+  --heather: #a784bd;
+  --font-display: "UnifrakturMaguntia", Georgia, serif;
+  --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--ink); color: var(--bone); font-family: var(--font-body); overflow: hidden; }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#gl.drag { cursor: grabbing; }
+#labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.lbl { position: absolute; transform: translate(-50%, -100%); white-space: nowrap; font-size: 13px; text-shadow: 0 1px 2px #000, 0 0 6px #000; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.lbl i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid #14110e; background: var(--bone); }
+.lbl.enc i { background: #8be09a; border-radius: 2px; transform: rotate(45deg); }
+.lbl.pan i { background: #e2b84a; width: 12px; height: 12px; }
+.lbl small { font-size: 11px; color: var(--bone-dim); }
+
+.hud { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+  width: min(320px, calc(100vw - 24px)); background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  backdrop-filter: blur(6px); padding: 12px 14px; display: grid; gap: 10px; max-height: calc(100% - 24px); overflow: auto; }
+.hud header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.hud h1 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; margin: 0; line-height: 1; }
+.hud button.fold { font: inherit; font-size: .8rem; color: var(--bone-dim); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+.stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .82rem; }
+.stats dt { color: var(--bone-dim); }
+.stats dd { margin: 0; font-family: var(--font-data); font-size: .76rem; font-variant-numeric: tabular-nums; text-align: right; }
+.ctl { display: grid; gap: 8px; }
+.ctl label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: .82rem; align-items: center; }
+.ctl label input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--heather); }
+.ctl label output { font-family: var(--font-data); font-size: .74rem; color: var(--bone-dim); }
+.ctl .row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tg { font: inherit; font-size: .82rem; color: var(--bone); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.tg[aria-pressed="true"] { border-color: var(--heather); background: rgba(167,132,189,.18); }
+.tg:focus-visible, .hud button:focus-visible, input:focus-visible { outline: 2px solid var(--heather); outline-offset: 2px; }
+.legend { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-size: .78rem; }
+.legend span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.note { font-size: .76rem; color: var(--bone-dim); margin: 0; line-height: 1.4; }
+.hud.folded > :not(header) { display: none; }
+.help { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: .78rem; color: var(--bone-dim); max-width: calc(100vw - 24px); }
+.help b { color: var(--bone); font-weight: 500; }
+#cursor { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-family: var(--font-data); font-size: .74rem; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--ink); font-size: 1.1rem; color: var(--bone-dim); }
+#loading.err { color: #e98b7a; padding: 24px; text-align: center; }
+@media (max-width: 560px) { .help { display: none; } }
+</style>
+
+<canvas id="gl"></canvas>
+<div id="labels"></div>
+<div id="cursor">Zeiger über der Karte</div>
+<aside class="hud" id="hud">
+  <header><h1>Weltkarte</h1><button class="fold" id="fold" aria-expanded="true">Einklappen</button></header>
+  <dl class="stats" id="stats"></dl>
+  <div class="ctl">
+    <label for="exag">Überhöhung <output id="exagV"></output><input type="range" id="exag" min="1" max="30" step="1" value="12"></label>
+    <label for="rad">Übergangsradius um jeden Höhenpunkt <output id="radV"></output><input type="range" id="rad" min="0.55" max="1.6" step="0.05" value="1.0"></label>
+    <label for="tile">Texturgröße <output id="tileV"></output><input type="range" id="tile" min="0.15" max="2" step="0.05" value="0.6"></label>
+    <div class="row">
+      <button class="tg" id="tgGrid" aria-pressed="false">Gitter zeigen</button>
+      <button class="tg" id="tgNoise" aria-pressed="true">Unregelmäßige Ränder</button>
+      <button class="tg" id="tgTex" aria-pressed="true">Texturen</button>
+      <button class="tg" id="tgLabels" aria-pressed="true">Orte</button>
+    </div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="note" id="srcNote"></p>
+</aside>
+<div class="help"><b>Ziehen</b> verschieben · <b>Rechts ziehen</b> / <b>Q E</b> drehen · <b>R F</b> neigen · <b>Rad</b> zoomen · <b>WASD</b> bewegen</div>
+<div id="loading">Lade Höhenkarte …</div>
+
+<script>
+"use strict";
+/* ================= Kleine Mathe-Helfer (Spaltenmatrizen wie WebGL) ================= */
+const M4 = {
+  persp(fov, a, n, f) { const t = 1 / Math.tan(fov / 2), nf = 1 / (n - f);
+    return [t/a,0,0,0, 0,t,0,0, 0,0,(f+n)*nf,-1, 0,0,2*f*n*nf,0]; },
+  lookAt(e, c, u) {
+    let z = norm(sub(e, c)), x = norm(cross(u, z)), y = cross(z, x);
+    return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -dot(x,e),-dot(y,e),-dot(z,e),1]; },
+  mul(a, b) { const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+    let s = 0; for (let k = 0; k < 4; k++) s += a[k*4+r] * b[c*4+k]; o[c*4+r] = s; } return o; },
+  inv(m) { const [a00,a01,a02,a03,a10,a11,a12,a13,a20,a21,a22,a23,a30,a31,a32,a33] = m;
+    const b00=a00*a11-a01*a10,b01=a00*a12-a02*a10,b02=a00*a13-a03*a10,b03=a01*a12-a02*a11,b04=a01*a13-a03*a11,b05=a02*a13-a03*a12,
+          b06=a20*a31-a21*a30,b07=a20*a32-a22*a30,b08=a20*a33-a23*a30,b09=a21*a32-a22*a31,b10=a21*a33-a23*a31,b11=a22*a33-a23*a32;
+    const d = 1/(b00*b11-b01*b10+b02*b09+b03*b08-b04*b07+b05*b06);
+    return [(a11*b11-a12*b10+a13*b09)*d,(a02*b10-a01*b11-a03*b09)*d,(a31*b05-a32*b04+a33*b03)*d,(a22*b04-a21*b05-a23*b03)*d,
+            (a12*b08-a10*b11-a13*b07)*d,(a00*b11-a02*b08+a03*b07)*d,(a32*b02-a30*b05-a33*b01)*d,(a20*b05-a22*b02+a23*b01)*d,
+            (a10*b10-a11*b08+a13*b06)*d,(a01*b08-a00*b10-a03*b06)*d,(a30*b04-a31*b02+a33*b00)*d,(a21*b02-a20*b04-a23*b00)*d,
+            (a11*b07-a10*b09-a12*b06)*d,(a00*b09-a01*b07+a02*b06)*d,(a31*b01-a30*b03-a32*b00)*d,(a20*b03-a21*b01+a22*b00)*d]; },
+  xf(m, v) { const o = [0,0,0,0]; for (let r = 0; r < 4; r++) o[r] = m[r]*v[0]+m[4+r]*v[1]+m[8+r]*v[2]+m[12+r]*v[3]; return o; }
+};
+const sub = (a,b) => [a[0]-b[0],a[1]-b[1],a[2]-b[2]], dot = (a,b) => a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const norm = a => { const l = Math.hypot(...a) || 1; return [a[0]/l,a[1]/l,a[2]/l]; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ================= UTM 32N -> Breite/Länge (Krüger), für die Zeiger-Anzeige ================= */
+const UTM = (() => { const f = 1/298.257222101, n = f/(2-f), A = 6378137/(1+n)*(1+n*n/4+n**4/64), k0 = 0.9996;
+  const be = [n/2-2*n*n/3+37*n**3/96-n**4/360, n*n/48+n**3/15-437*n**4/1440, 17*n**3/480-37*n**4/840, 4397*n**4/161280];
+  const de = [2*n-2*n*n/3-2*n**3+116*n**4/45, 7*n*n/3-8*n**3/5-227*n**4/45, 56*n**3/15-136*n**4/35, 4279*n**4/630];
+  return (E, N) => { const xi = N/(k0*A), eta = (E-500000)/(k0*A); let x = xi, e = eta;
+    be.forEach((b, i) => { const j = 2*(i+1); x -= b*Math.sin(j*xi)*Math.cosh(j*eta); e -= b*Math.cos(j*xi)*Math.sinh(j*eta); });
+    const chi = Math.asin(Math.sin(x)/Math.cosh(e)); let phi = chi; de.forEach((d, i) => phi += d*Math.sin(2*(i+1)*chi));
+    return [phi*180/Math.PI, 9 + Math.atan2(Math.sinh(e), Math.cos(x))*180/Math.PI]; }; })();
+
+/* ================= Shader ================= */
+const VS_TERRAIN = `#version 300 es
+precision highp float; precision highp int;
+layout(location=0) in vec2 aGrid;               // Gitterkoordinate 0..N-1
+uniform mat4 uViewProj;
+uniform vec2 uOrigin;                           // Weltposition (Höhenpunkte) von Gitter (0,0)
+uniform float uStep;                            // Abstand der Vertices in Höhenpunkten (1,2,4,...)
+uniform int uLod;                               // = log2(uStep): Mip-Stufe der Höhenkarte
+uniform highp sampler2D uHeight;               // R32F, Meter, mit eigener Mip-Kette
+uniform float uYScale;                          // Meter -> Welt-Y
+uniform vec2 uMapSize;
+out vec3 vWorld; out vec3 vNormal; out vec2 vGrid; out float vHm;
+float hAt(vec2 p) {                             // Höhe in Metern an Weltposition p (nur Gitterpunkte)
+  p = clamp(p, vec2(0.0), uMapSize - 1.0);      // außerhalb: Randhöhe fortsetzen (keine Wand)
+  ivec2 s = textureSize(uHeight, uLod);
+  ivec2 c = clamp(ivec2(p) >> uLod, ivec2(0), s - 1);
+  return texelFetch(uHeight, c, uLod).r;
+}
+void main() {
+  vec2 p = uOrigin + aGrid * uStep;
+  float h = hAt(p);
+  float hx = hAt(p + vec2(uStep, 0.0)) - hAt(p - vec2(uStep, 0.0));
+  float hz = hAt(p + vec2(0.0, uStep)) - hAt(p - vec2(0.0, uStep));
+  vNormal = normalize(vec3(-hx * uYScale, 2.0 * uStep, -hz * uYScale));
+  vHm = h;
+  vWorld = vec3(p.x, h * uYScale, p.y);
+  vGrid = aGrid;
+  gl_Position = uViewProj * vec4(vWorld, 1.0);
+}`;
+
+const FS_TERRAIN = `#version 300 es
+precision highp float; precision highp int;
+in vec3 vWorld; in vec3 vNormal; in vec2 vGrid; in float vHm;
+uniform highp usampler2D uType;                 // Bodentyp-ID pro Höhenpunkt
+uniform sampler2D uColorMap;                    // Durchschnittsfarbe pro Höhenpunkt (für die Ferne, mit Mipmaps)
+uniform highp sampler2DArray uTex;             // Bodentexturen aus dem Godot-Projekt
+uniform vec2 uMapSize; uniform vec3 uCam; uniform vec3 uSun; uniform float uFogDist;
+uniform float uRadius; uniform float uTile; uniform float uNoise; uniform float uShowGrid; uniform float uUseTex;
+uniform float uStep;
+out vec4 outColor;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+  return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
+void main() {
+  vec2 p = vWorld.xz;
+  vec2 uvMap = (p + 0.5) / uMapSize;
+  vec4 cmap = texture(uColorMap, uvMap);
+  vec3 coarse = cmap.rgb;
+  vec3 col = coarse;
+  float fw = max(fwidth(p.x), fwidth(p.y));          // Höhenpunkte pro Bildschirmpixel
+  float detail = uUseTex * (1.0 - smoothstep(0.35, 1.1, fw));
+  if (detail > 0.0) {
+    // Jeder Höhenpunkt strahlt seine Textur in einem Kreis aus, zum Rand hin durchsichtiger.
+    // Überlappen sich Kreise, entsteht der Übergang. Rauschen verschiebt die Kreise leicht -> keine Raster-Muster.
+    vec2 q = p + uNoise * (vec2(vnoise(p * 1.7), vnoise(p * 1.7 + 19.3)) - 0.5) * 0.9;
+    vec2 base = floor(q + 0.5);
+    vec3 acc = vec3(0.0); float wsum = 0.0;
+    vec2 uv = p * uTile;
+    for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) {
+      vec2 c = base + vec2(dx, dy);
+      float d = length(q - c);
+      float w = clamp(1.0 - d / uRadius, 0.0, 1.0);
+      w = w * w * (3.0 - 2.0 * w);                    // weicher Rand
+      if (w <= 0.0) continue;
+      ivec2 ci = clamp(ivec2(c), ivec2(0), ivec2(uMapSize) - 1);
+      uint id = texelFetch(uType, ci, 0).r;
+      if (id == 255u) continue;                       // keine Daten
+      acc += w * texture(uTex, vec3(uv, float(id))).rgb; wsum += w;
+    }
+    if (wsum > 0.0) col = mix(coarse, acc / wsum, detail);
+  }
+  // Steilhänge: Fels (Ebene 8) unabhängig vom Bodentyp
+  float rock = smoothstep(0.80, 0.62, vNormal.y);
+  if (rock > 0.0) col = mix(col, uUseTex > 0.5 ? texture(uTex, vec3(p * uTile, 8.0)).rgb : vec3(0.47,0.45,0.42), rock);
+  // Strategiekarte: Gelände leicht entsättigt (gesättigte Farben gehören Einheiten und Markern)
+  float l = dot(col, vec3(0.299, 0.587, 0.114)); col = mix(vec3(l), col, 0.82);
+  // Licht
+  vec3 n = normalize(vNormal);
+  float diff = max(dot(n, uSun), 0.0);
+  col *= 0.42 + 0.78 * diff;
+  // Vertex-Gitter sichtbar machen (zeigt Zoom-abhängige Auflösung)
+  if (uShowGrid > 0.5) { vec2 g = abs(fract(vGrid + 0.5) - 0.5) / max(fwidth(vGrid), 1e-4);
+    col = mix(col, vec3(0.95, 0.85, 0.55), (1.0 - clamp(min(g.x, g.y), 0.0, 1.0)) * 0.6); }
+  // Außerhalb der Karte oder ohne Daten: dunkler Kartenrand
+  vec2 outside = max(max(-p, p - (uMapSize - 1.0)), 0.0);
+  float edge = max(smoothstep(0.0, 2.0 * uStep + 4.0, length(outside)), smoothstep(0.6, 0.1, cmap.a));
+  col = mix(col, vec3(0.11, 0.095, 0.08), edge);
+  // Dunst zum Horizont
+  float dist = length(vWorld - uCam);
+  col = mix(col, vec3(0.62, 0.66, 0.70), smoothstep(uFogDist * 0.55, uFogDist, dist) * 0.85);
+  outColor = vec4(col, 1.0);
+}`;
+
+const VS_WATER = `#version 300 es
+precision highp float;
+layout(location=0) in vec2 aGrid;
+uniform mat4 uViewProj; uniform vec2 uOrigin; uniform float uStep;
+out vec2 vP;
+void main() { vec2 p = uOrigin + aGrid * uStep; vP = p; gl_Position = uViewProj * vec4(p.x, 0.0, p.y, 1.0); }`;
+
+const FS_WATER = `#version 300 es
+precision highp float;
+in vec2 vP;
+uniform highp sampler2D uHeight; uniform vec2 uMapSize; uniform float uTime;
+uniform sampler2D uWater; uniform sampler2D uWaterN; uniform sampler2D uColorMap; uniform vec3 uCam; uniform vec3 uSun; uniform float uFogDist; uniform float uStep;
+out vec4 outColor;
+void main() {
+  vec2 pc = clamp(vP, vec2(0.0), uMapSize - 1.001);
+  ivec2 i0 = ivec2(floor(pc)); vec2 f = fract(pc);       // bilinear -> weiche Küstenlinie statt Treppen
+  float h = mix(mix(texelFetch(uHeight, i0, 0).r, texelFetch(uHeight, i0 + ivec2(1, 0), 0).r, f.x),
+                mix(texelFetch(uHeight, i0 + ivec2(0, 1), 0).r, texelFetch(uHeight, i0 + ivec2(1, 1), 0).r, f.x), f.y);
+  vec2 outside = max(max(-vP, vP - (uMapSize - 1.0)), 0.0);
+  float depth = -h;                                  // Meeresspiegel = 0 m
+  if (depth <= 0.0) discard;
+  vec2 uv = vP * 0.35;
+  vec3 nA = texture(uWaterN, uv + vec2(0.02, 0.01) * uTime).xyz * 2.0 - 1.0;
+  vec3 nB = texture(uWaterN, uv * 0.7 - vec2(0.013, 0.02) * uTime).xyz * 2.0 - 1.0;
+  vec3 n = normalize(vec3(nA.x + nB.x, 6.0, nA.y + nB.y));
+  vec3 base = texture(uWater, uv * 0.5 + vec2(0.01, 0.0) * uTime).rgb;
+  vec3 deep = vec3(0.10, 0.20, 0.27), shallow = vec3(0.24, 0.38, 0.40);
+  vec3 col = mix(shallow, deep, smoothstep(0.0, 25.0, depth)) * 0.65 + base * 0.35;
+  vec3 v = normalize(uCam - vec3(vP.x, 0.0, vP.y));
+  float spec = pow(max(dot(reflect(-uSun, n), v), 0.0), 140.0);
+  col += spec * 0.22;
+  float nodata = smoothstep(0.6, 0.1, texture(uColorMap, (vP + 0.5) / uMapSize).a);
+  col = mix(col, vec3(0.11, 0.095, 0.08), max(nodata, smoothstep(0.0, 2.0 * uStep + 4.0, length(outside))));
+  float a = max(smoothstep(0.0, 2.5, depth) * 0.88 + 0.06, nodata);
+  float dist = length(vec3(vP.x, 0.0, vP.y) - uCam);
+  col = mix(col, vec3(0.62, 0.66, 0.70), smoothstep(uFogDist * 0.55, uFogDist, dist) * 0.85);
+  outColor = vec4(col, a);
+}`;
+
+/* ================= Setup ================= */
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl2", { antialias: true });
+const loading = document.getElementById("loading");
+function fail(msg) { loading.textContent = msg; loading.classList.add("err"); loading.hidden = false; throw new Error(msg); }
+if (!gl) fail("Dieser Browser unterstützt kein WebGL2. Bitte einen aktuellen Chrome, Edge oder Firefox verwenden.");
+
+function prog(vs, fs) {
+  const mk = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) fail("Shader-Fehler: " + gl.getShaderInfoLog(sh)); return sh; };
+  const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) fail("Link-Fehler: " + gl.getProgramInfoLog(p));
+  const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+  return { p, u };
+}
+
+// Gitter: N x N Vertices, wird jedes Bild an Position und Abstand angepasst (kein Neubau)
+const N = 257;
+function buildGrid() {
+  const v = new Float32Array(N * N * 2); let k = 0;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { v[k++] = i; v[k++] = j; }
+  const idx = new Uint32Array((N - 1) * (N - 1) * 6); k = 0;
+  for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
+    const a = j * N + i, b = a + 1, c = a + N, d = c + 1;
+    idx[k++] = a; idx[k++] = c; idx[k++] = b; idx[k++] = b; idx[k++] = c; idx[k++] = d;
+  }
+  const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  return { vao, count: idx.length };
+}
+
+async function loadImage(url) {
+  const r = await fetch(url); if (!r.ok) throw new Error(url + ": " + r.status);
+  return createImageBitmap(await r.blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+}
+
+let MAP, W, H, HM, TYPES, texH, texType, texColor, texArr, texWater, texWaterN, terrainP, waterP, grid;
+const LOD_MAX = 8;
+
+async function init() {
+  MAP = await (await fetch("worldmap/map.json")).json();
+  W = MAP.width; H = MAP.height;
+  // Höhe + Typ aus terrain.png (R/G = 16 Bit Höhe, B = Typ)
+  const bmp = await loadImage("worldmap/terrain.png");
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(bmp, 0, 0);
+  const px = cx.getImageData(0, 0, W, H).data;
+  HM = new Float32Array(W * H); TYPES = new Uint8Array(W * H);
+  const span = MAP.h_max - MAP.h_min;
+  for (let i = 0; i < W * H; i++) { HM[i] = MAP.h_min + ((px[i*4] << 8) | px[i*4+1]) / 65535 * span; TYPES[i] = px[i*4+2]; }
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  // Höhen: R32F mit eigener Mip-Kette (Mittelwert 2x2), damit grobe Gitter keine Spitzen "verpassen"
+  texH = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texH);
+  let lw = W, lh = H, lvl = HM;
+  for (let l = 0; l <= LOD_MAX; l++) {
+    gl.texImage2D(gl.TEXTURE_2D, l, gl.R32F, lw, lh, 0, gl.RED, gl.FLOAT, lvl);
+    const nw = Math.max(1, lw >> 1), nh = Math.max(1, lh >> 1), nx = new Float32Array(nw * nh);
+    for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
+      const x0 = Math.min(2*x, lw-1), x1 = Math.min(2*x+1, lw-1), y0 = Math.min(2*y, lh-1), y1 = Math.min(2*y+1, lh-1);
+      nx[y*nw+x] = (lvl[y0*lw+x0] + lvl[y0*lw+x1] + lvl[y1*lw+x0] + lvl[y1*lw+x1]) / 4;
+    }
+    lw = nw; lh = nh; lvl = nx;
+  }
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, LOD_MAX);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  texType = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texType);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, W, H, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, TYPES);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  // Farbkarte für die Ferne: Durchschnittsfarbe der Textur je Bodentyp
+  const cm = new Uint8Array(W * H * 4), avg = MAP.types.map(t => t.avg);
+  for (let i = 0; i < W * H; i++) {               // Alpha = 0 markiert "keine Daten" (wird weich gefiltert)
+    const a = avg[TYPES[i]] || [28, 24, 20]; cm[i*4] = a[0]; cm[i*4+1] = a[1]; cm[i*4+2] = a[2]; cm[i*4+3] = TYPES[i] === 255 ? 0 : 255; }
+  texColor = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texColor);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, cm);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  // Bodentexturen als Textur-Array
+  loading.textContent = "Lade Bodentexturen …";
+  const imgs = await Promise.all(MAP.types.map(t => loadImage(`worldmap/tex_${t.id}.jpg`)));
+  texArr = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D_ARRAY, texArr);
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, 512, 512, imgs.length, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  imgs.forEach((im, i) => gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, 512, 512, 1, gl.RGBA, gl.UNSIGNED_BYTE, im));
+  gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  const an = gl.getExtension("EXT_texture_filter_anisotropic");
+  if (an) gl.texParameterf(gl.TEXTURE_2D_ARRAY, an.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(an.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+
+  const tex2 = im => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, im); gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); return t; };
+  const [wi, wn] = await Promise.all([loadImage("worldmap/water.jpg"), loadImage("worldmap/water_normal.jpg")]);
+  texWater = tex2(wi); texWaterN = tex2(wn);
+
+  terrainP = prog(VS_TERRAIN, FS_TERRAIN); waterP = prog(VS_WATER, FS_WATER); grid = buildGrid();
+  buildUI(); loading.hidden = true;
+  requestAnimationFrame(frame);
+}
+
+/* ================= Kamera ================= */
+const start = { x: 777, z: 819 };
+const cam = { x: start.x, z: start.z, y: 0, yaw: 0.35, pitch: 0.95, dist: 90 };
+try { Object.assign(cam, JSON.parse(localStorage.getItem("wm-cam") || "{}")); } catch (e) {}
+const opt = { exag: 12, radius: 1.0, tile: 0.6, grid: false, noise: true, tex: true, labels: true };
+try { Object.assign(opt, JSON.parse(localStorage.getItem("wm-opt") || "{}")); } catch (e) {}
+const DIST_MIN = 4, DIST_MAX = 2600, PITCH_MIN = 0.35, PITCH_MAX = 1.5;
+
+function heightAt(x, z) {     // bilinear, Meter
+  if (!HM) return 0;
+  x = clamp(x, 0, W - 1.001); z = clamp(z, 0, H - 1.001);
+  const x0 = Math.floor(x), z0 = Math.floor(z), fx = x - x0, fz = z - z0, i = z0 * W + x0;
+  return (HM[i]*(1-fx)+HM[i+1]*fx)*(1-fz) + (HM[i+W]*(1-fx)+HM[i+W+1]*fx)*fz;
+}
+const yScale = () => opt.exag / MAP.res_m;
+
+let VP, eye, fogDist, view = { origin: [0, 0], step: 1, lod: 0, half: 0 };
+function updateCamera() {
+  cam.x = clamp(cam.x, 0, W); cam.z = clamp(cam.z, 0, H);
+  cam.dist = clamp(cam.dist, DIST_MIN, DIST_MAX); cam.pitch = clamp(cam.pitch, PITCH_MIN, PITCH_MAX);
+  const ty = Math.max(0, heightAt(cam.x, cam.z)) * yScale();
+  cam.y += (ty - cam.y) * 0.2;
+  const tgt = [cam.x, cam.y, cam.z];
+  eye = [cam.x + Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.dist, cam.y + Math.sin(cam.pitch) * cam.dist,
+         cam.z + Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.dist];
+  const asp = canvas.width / canvas.height;
+  const P = M4.persp(0.9, asp, cam.dist * 0.01, cam.dist * 30 + 500), V = M4.lookAt(eye, tgt, [0, 1, 0]);
+  VP = M4.mul(P, V);
+  // Sichtbaren Boden bestimmen: Bildschirmecken auf die Ebene y = cam.y projizieren
+  const inv = M4.inv(VP); let r = 0;
+  for (const [nx, ny] of [[-1,-1],[1,-1],[-1,1],[1,1],[0,1],[-1,0],[1,0]]) {
+    const a = M4.xf(inv, [nx, ny, -1, 1]), b = M4.xf(inv, [nx, ny, 1, 1]);
+    const p0 = [a[0]/a[3], a[1]/a[3], a[2]/a[3]], p1 = [b[0]/b[3], b[1]/b[3], b[2]/b[3]], d = sub(p1, p0);
+    let t = d[1] < -1e-6 ? (cam.y - p0[1]) / d[1] : Infinity;
+    const far = cam.dist * 6;
+    let hx, hz;
+    if (!isFinite(t) || t < 0) { const dn = norm([d[0], 0, d[2]]); hx = cam.x + dn[0] * far; hz = cam.z + dn[2] * far; }
+    else { hx = p0[0] + d[0] * t; hz = p0[2] + d[2] * t; }
+    r = Math.max(r, Math.hypot(hx - cam.x, hz - cam.z));
+  }
+  r = Math.min(r, cam.dist * 6);
+  const half = r * 1.15 + 8;                         // etwas größer als sichtbar
+  const step = clamp(2 ** Math.ceil(Math.log2((2 * half) / (N - 1))), 1, 2 ** LOD_MAX);
+  const snap = step * 2;                             // auf Vielfache einrasten -> kein "Schwimmen"
+  view = { step, lod: Math.round(Math.log2(step)), half,
+           origin: [Math.floor((cam.x - half) / snap) * snap, Math.floor((cam.z - half) / snap) * snap] };
+  // Gitter mittig halten, falls Einrasten es verschoben hat
+  const span = (N - 1) * step;
+  if (view.origin[0] + span < cam.x + half) view.origin[0] += snap;
+  if (view.origin[1] + span < cam.z + half) view.origin[1] += snap;
+  fogDist = Math.min(half * 1.05 + cam.dist, cam.dist * 7);
+}
+
+/* ================= Zeichnen ================= */
+let last = performance.now(), fps = 60, tStart = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; fps = fps * 0.95 + (1 / Math.max(dt, 1e-3)) * 0.05;
+  keys(dt);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  gl.viewport(0, 0, w, h);
+  updateCamera();
+  gl.clearColor(0.62, 0.66, 0.70, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK); gl.frontFace(gl.CCW);
+  const sun = norm([-0.45, 0.75, -0.35]);
+
+  gl.useProgram(terrainP.p); const u = terrainP.u;
+  gl.uniformMatrix4fv(u.uViewProj, false, VP);
+  gl.uniform2f(u.uOrigin, view.origin[0], view.origin[1]); gl.uniform1f(u.uStep, view.step); gl.uniform1i(u.uLod, view.lod);
+  gl.uniform1f(u.uYScale, yScale()); gl.uniform2f(u.uMapSize, W, H);
+  gl.uniform3fv(u.uCam, eye); gl.uniform3fv(u.uSun, sun); gl.uniform1f(u.uFogDist, fogDist);
+  gl.uniform1f(u.uRadius, opt.radius); gl.uniform1f(u.uTile, opt.tile); gl.uniform1f(u.uNoise, opt.noise ? 1 : 0);
+  gl.uniform1f(u.uShowGrid, opt.grid ? 1 : 0); gl.uniform1f(u.uUseTex, opt.tex ? 1 : 0);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texH); gl.uniform1i(u.uHeight, 0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texType); gl.uniform1i(u.uType, 1);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, texColor); gl.uniform1i(u.uColorMap, 2);
+  gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D_ARRAY, texArr); gl.uniform1i(u.uTex, 3);
+  gl.bindVertexArray(grid.vao); gl.drawElements(gl.TRIANGLES, grid.count, gl.UNSIGNED_INT, 0);
+
+  gl.useProgram(waterP.p); const w2 = waterP.u;
+  gl.uniformMatrix4fv(w2.uViewProj, false, VP); gl.uniform2f(w2.uOrigin, view.origin[0], view.origin[1]); gl.uniform1f(w2.uStep, view.step);
+  gl.uniform2f(w2.uMapSize, W, H); gl.uniform1f(w2.uTime, (now - tStart) / 1000);
+  gl.uniform3fv(w2.uCam, eye); gl.uniform3fv(w2.uSun, sun); gl.uniform1f(w2.uFogDist, fogDist);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texH); gl.uniform1i(w2.uHeight, 0);
+  gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, texWater); gl.uniform1i(w2.uWater, 4);
+  gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, texWaterN); gl.uniform1i(w2.uWaterN, 5);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, texColor); gl.uniform1i(w2.uColorMap, 2);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+  gl.drawElements(gl.TRIANGLES, grid.count, gl.UNSIGNED_INT, 0);
+  gl.depthMask(true); gl.disable(gl.BLEND); gl.bindVertexArray(null);
+
+  labels(); stats(now);
+  requestAnimationFrame(frame);
+}
+
+/* ================= Orte als Beschriftung ================= */
+const labelEls = [];
+function buildLabels() {
+  const box = document.getElementById("labels");
+  const add = (cls, name, sub, p) => { const d = document.createElement("div"); d.className = "lbl " + cls;
+    d.innerHTML = `<span>${name}</span>${sub ? `<small>${sub}</small>` : ""}<i></i>`; box.appendChild(d); labelEls.push({ d, p }); };
+  const encNames = new Set(MAP.encounters.map(e => e.name));
+  MAP.places.filter(pl => !encNames.has(pl.name)).forEach(pl => add("", pl.name, "", pl.p));
+  MAP.encounters.forEach(e => add(e.pantheon ? "enc pan" : "enc", e.name, e.pantheon ? "Pantheon" : `Phase ${e.phase}`, e.p));
+  labelEls.sort((a, b) => (b.d.classList.contains("pan") - a.d.classList.contains("pan")) || (b.d.classList.contains("enc") - a.d.classList.contains("enc")));
+}
+function labels() {
+  const show = opt.labels, cw = canvas.clientWidth, ch = canvas.clientHeight, taken = [];
+  for (const L of labelEls) {
+    if (!show) { L.d.hidden = true; continue; }
+    const y = Math.max(0, heightAt(L.p[0], L.p[1])) * yScale();
+    const c = M4.xf(VP, [L.p[0], y, L.p[1], 1]);
+    if (c[3] <= 0) { L.d.hidden = true; continue; }
+    const sx = (c[0] / c[3] * 0.5 + 0.5) * cw, sy = (1 - (c[1] / c[3] * 0.5 + 0.5)) * ch;
+    const vis = sx > -80 && sx < cw + 80 && sy > -20 && sy < ch + 40 && c[2] / c[3] < 1;
+    const box = [sx - 60, sy - 34, sx + 60, sy];       // grobe Fläche der Beschriftung
+    const free = vis && !taken.some(b => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3]);
+    L.d.hidden = !free; if (free) { taken.push(box); L.d.style.left = sx + "px"; L.d.style.top = sy + "px"; }
+  }
+}
+
+/* ================= Anzeigen ================= */
+let lastStats = 0;
+function stats(now) {
+  if (now - lastStats < 250) return; lastStats = now;
+  const km = v => (v * MAP.res_m / 1000).toFixed(v * MAP.res_m < 10000 ? 1 : 0);
+  document.getElementById("stats").innerHTML = [
+    ["Vertex-Abstand", `${view.step} Höhenpunkt${view.step > 1 ? "e" : ""} · ${km(view.step)} km`],
+    ["Gitter", `${N} × ${N} Vertices`],
+    ["Abgedeckt", `${km((N - 1) * view.step)} km breit`],
+    ["Sichtbar (Radius)", `${km(view.half)} km`],
+    ["Bilder/s", fps.toFixed(0)],
+  ].map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("");
+}
+function buildUI() {
+  const hex = a => `rgb(${a[0]},${a[1]},${a[2]})`;
+  document.getElementById("legend").innerHTML = MAP.types.map(t => `<span title="${t.info}"><i style="background:${hex(t.avg)}"></i>${t.info.split(",")[0]}</span>`).join("");
+  document.getElementById("srcNote").textContent = "Datenstand: " + MAP.source + ".";
+  const bind = (id, key, fmt) => { const el = document.getElementById(id), out = document.getElementById(id + "V");
+    el.value = opt[key]; out.textContent = fmt(opt[key]);
+    el.addEventListener("input", () => { opt[key] = +el.value; out.textContent = fmt(opt[key]); save(); }); };
+  bind("exag", "exag", v => "×" + v);
+  bind("rad", "radius", v => v.toFixed(2) + " Punkte");
+  bind("tile", "tile", v => (1 / v * MAP.res_m / 1000).toFixed(2) + " km je Kachel");
+  const tg = (id, key) => { const el = document.getElementById(id); el.setAttribute("aria-pressed", opt[key]);
+    el.addEventListener("click", () => { opt[key] = !opt[key]; el.setAttribute("aria-pressed", opt[key]); save(); }); };
+  tg("tgGrid", "grid"); tg("tgNoise", "noise"); tg("tgTex", "tex"); tg("tgLabels", "labels");
+  const hud = document.getElementById("hud"), fold = document.getElementById("fold");
+  fold.addEventListener("click", () => { const f = hud.classList.toggle("folded"); fold.textContent = f ? "Ausklappen" : "Einklappen"; fold.setAttribute("aria-expanded", !f); });
+  if (window.innerWidth < 560) fold.click();
+  buildLabels();
+}
+function save() { try { localStorage.setItem("wm-opt", JSON.stringify(opt)); localStorage.setItem("wm-cam", JSON.stringify({ x: cam.x, z: cam.z, yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist })); } catch (e) {} }
+setInterval(save, 2000);
+
+/* ================= Eingabe ================= */
+const down = new Set();
+addEventListener("keydown", e => { if (e.target.tagName !== "INPUT") down.add(e.key.toLowerCase()); });
+addEventListener("keyup", e => down.delete(e.key.toLowerCase()));
+addEventListener("blur", () => down.clear());
+function keys(dt) {
+  let mx = 0, mz = 0;
+  if (down.has("w") || down.has("arrowup")) mz -= 1; if (down.has("s") || down.has("arrowdown")) mz += 1;
+  if (down.has("a") || down.has("arrowleft")) mx -= 1; if (down.has("d") || down.has("arrowright")) mx += 1;
+  if (mx || mz) pan(mx * cam.dist * 0.9 * dt, mz * cam.dist * 0.9 * dt);
+  if (down.has("q")) cam.yaw += 1.6 * dt; if (down.has("e")) cam.yaw -= 1.6 * dt;
+  if (down.has("r")) cam.pitch += 0.9 * dt; if (down.has("f")) cam.pitch -= 0.9 * dt;
+}
+function pan(dx, dz) {    // in Bildschirmrichtung
+  const c = Math.cos(cam.yaw), s = Math.sin(cam.yaw);
+  cam.x += dx * c + dz * s; cam.z += -dx * s + dz * c;
+}
+const ptrs = new Map(); let pinch0 = null;
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener("pointerdown", e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, b: e.button, shift: e.shiftKey }); canvas.classList.add("drag");
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: cam.dist, ang: Math.atan2(b.y - a.y, b.x - a.x), yaw: cam.yaw }; } });
+canvas.addEventListener("pointermove", e => {
+  hover(e);
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()];
+    cam.dist = pinch0.dist * pinch0.d / Math.max(10, Math.hypot(a.x - b.x, a.y - b.y));
+    cam.yaw = pinch0.yaw - (Math.atan2(b.y - a.y, b.x - a.x) - pinch0.ang); return; }
+  if (p.b === 2 || p.shift) { cam.yaw -= dx * 0.005; cam.pitch += dy * 0.004; }
+  else { const k = cam.dist / canvas.clientHeight * 1.2; pan(-dx * k, -dy * k / Math.max(0.35, Math.sin(cam.pitch))); }
+});
+const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = null; if (!ptrs.size) canvas.classList.remove("drag"); };
+canvas.addEventListener("pointerup", up); canvas.addEventListener("pointercancel", up);
+canvas.addEventListener("wheel", e => { e.preventDefault(); cam.dist *= Math.exp(e.deltaY * 0.0012); }, { passive: false });
+
+// Zeiger: Bodenpunkt unter der Maus (Strahl gegen das Gelände, schrittweise)
+function hover(e) {
+  if (!VP) return;
+  const r = canvas.getBoundingClientRect(), nx = (e.clientX - r.left) / r.width * 2 - 1, ny = 1 - (e.clientY - r.top) / r.height * 2;
+  const inv = M4.inv(VP), a = M4.xf(inv, [nx, ny, -1, 1]), b = M4.xf(inv, [nx, ny, 1, 1]);
+  const p0 = [a[0]/a[3], a[1]/a[3], a[2]/a[3]], d = norm(sub([b[0]/b[3], b[1]/b[3], b[2]/b[3]], p0));
+  let t = 0, hit = null; const stepL = Math.max(0.25, cam.dist / 400);
+  for (let i = 0; i < 3000; i++) { const x = p0[0] + d[0]*t, y = p0[1] + d[1]*t, z = p0[2] + d[2]*t;
+    if (y <= Math.max(0, heightAt(x, z)) * yScale()) { hit = [x, z]; break; } t += stepL; }
+  const el = document.getElementById("cursor");
+  if (!hit || hit[0] < 0 || hit[1] < 0 || hit[0] > W - 1 || hit[1] > H - 1) { el.textContent = "außerhalb der Karte"; return; }
+  const E = MAP.utm.e_min + hit[0] * MAP.res_m, Nn = MAP.utm.n_max - hit[1] * MAP.res_m, [la, lo] = UTM(E, Nn);
+  const hm = heightAt(hit[0], hit[1]), ty = MAP.types[TYPES[Math.round(hit[1]) * W + Math.round(hit[0])]];
+  el.textContent = `${la.toFixed(3)}° N  ${lo.toFixed(3)}° O  ·  ${hm.toFixed(0)} m  ·  ${hm < 0 ? "Meer" : ty.info.split(",")[0]}`;
+}
+
+init().catch(e => fail("Karte konnte nicht geladen werden: " + e.message));
+</script>
