@@ -2,10 +2,10 @@ Name,BuildingName,Level,CostCorpses,CostBones,CostSouls,CostEnergy,BuildDays,Req
 Phylactery_1,Phylakterium,1,0,0,0,0,0,,,(),0,Start. Lager 50 L / 50 K / 10 S. Lich-Rückkehr nach Tod: 3 Tage
 Phylactery_2,Phylakterium,2,20,20,5,0,3,Phylactery_1,,(),0,Lager 100/100/20. Rückkehr 2 Tage
 Phylactery_3,Phylakterium,3,40,40,10,10,5,Phylactery_2,,(),0,Lager 200/200/40. Rückkehr 1 Tag. Zweite Expedition möglich
-BoneWorkshop_1,Knochenwerkstatt,1,0,0,0,0,0,,,"(""Skeleton"")",0,Start. Auskochen: 1 Leiche → 2 Knochen
+BoneWorkshop_1,Knochenwerkstatt,1,0,0,0,0,0,,,"(""Skeleton"",""SkeletonArcher"",""BoneSlinger"")",0,Start. Auskochen: 1 Leiche → 2 Knochen. Schleuderer erst mit Spielwissen 2
 BoneWorkshop_2,Knochenwerkstatt,2,10,10,0,0,2,BoneWorkshop_1,Know_Crossbow,"(""BoneArcher"")",0,Knochenschützen
 BoneWorkshop_3,Knochenwerkstatt,3,20,30,2,0,4,BoneWorkshop_2,,"(""Ballista"")",0,Belagerung
-CorpsePit_1,Leichengrube,1,0,0,0,0,0,,,"(""Zombie"",""Ghoul"")",0,Start
+CorpsePit_1,Leichengrube,1,0,0,0,0,0,,,"(""Zombie"",""Ghoul"",""CorpseHound"")",0,Start
 CorpsePit_2,Leichengrube,2,15,10,0,0,2,CorpsePit_1,Know_Bog,"(""BogCorpse"")",0,Moorleichen
 CorpsePit_3,Leichengrube,3,30,20,5,0,4,CorpsePit_2,,"(""FleshGiant"")",0,Fleischriesen
 SoulKennel_1,Seelenzwinger,1,10,10,3,0,2,,,"(""Ghost"")",5,Kommando-Limit 15 → 20

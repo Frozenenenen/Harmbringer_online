@@ -1254,6 +1254,16 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Grabdruidin | Undead | Warrior / Caster | 2 | 14 | 5 | 6 | 3 | 7 | 4 | Arcane | Light | 5 / 2 | 4/3/4 | 1/3 | – | -3 | 1L 1K 1S |
 | Knochenschütze | Undead | CannonFodder / Ranged | 2 | 10 | 0 | 4 | 3 | 8 | 5 | Pierce | Light | 0 / 0 | 5/2/0 | 2/1 | – | -2 | 3K |
 | Totenjäger | Undead | Warrior / Scout | 3 | 22 | 3 | 7 | 6 | 9 | 1 | Pierce | Light | 2 / 0 | 5/4/3 | 3/3 | – | -4 | 3L 2K 1S |
+| Skelett-Bogenschütze | Undead | CannonFodder / Ranged | 1 | 9 | 0 | 4 | 3 | 4 | 4 | Pierce | Light | 0 / 0 | 5/2/1 | 1/1 | – | -2 | 3K |
+| Leichenhund | Undead | CannonFodder / Scout | 1 | 10 | 0 | 7 | 5 | 4 | 1 | Rend | Unarmored | 0 / 0 | 4/4/6 | 1/3 | – | -1 | 1L |
+| Knochenschleuderer | Undead | Warrior / Ranged | 1 | 10 | 0 | 4 | 3 | 6 | 4 | Blunt | Light | 0 / 0 | 5/2/1 | 1/1 | – | -2 | 3K |
+| Stadtwache | Hanse | Warrior / Melee | 2 | 18 | 0 | 5 | 3 | 6 | 1 | Pierce | Medium | 0 / 0 | 5/3/2 | 2/2 | – | +0 | – |
+| Ritter | Guelphs | Warrior / Tank | 2 | 30 | 0 | 6 | 4 | 9 | 1 | Pierce | Heavy | 1 / 1 | 5/2/2 | 3/2 | – | +0 | – |
+| Stadtballiste | Hanse | Machine / Siege | 3 | 25 | 0 | 2 | 1 | 20 | 6 | Siege | Fortified | 0 / 0 | 6/3/1 | 4/1 | – | +0 | – |
+| Mönch | Clergy | Warrior / Caster | 1 | 12 | 0 | 5 | 3 | 6 | 3 | Holy | Unarmored | 3 / 3 | 5/4/3 | 1/1 | – | +0 | – |
+| Priester | Clergy | Warrior / Support | 1 | 16 | 0 | 4 | 3 | 6 | 3 | Heal | Unarmored | 4 / 4 | 5/4/3 | 1/1 | – | +0 | – |
+| Rattenfänger | Witches | Unique / Caster | 2 | 35 | 0 | 8 | 4 | 9 | 4 | Arcane | Light | 5 / 3 | 7/7/3 | 2/1 | – | +0 | – |
+| Hexenkönigin vom Brocken | Witches | Unique / Caster | 3 | 90 | 0 | 8 | 4 | 14 | 4 | Chaos | Divine | 6 / 6 | 8/8/8 | 2/2 | Flug | +0 | – |
 <!--GEN:UNITS:END-->
 
 **Neue Lich-Einheiten in Kürze:**
@@ -2374,10 +2384,10 @@ Beantwortet die offene Frage „Welche Gebäude-Typen in der Basis konkret?". St
 | Phylakterium | 1 | Start | – | – | – | Start. Lager 50 L / 50 K / 10 S. Lich-Rückkehr nach Tod: 3 Tage |
 | Phylakterium | 2 | 20L 20K 5S | 3 | Phylakterium 1 | – | Lager 100/100/20. Rückkehr 2 Tage |
 | Phylakterium | 3 | 40L 40K 10S 10E | 5 | Phylakterium 2 | – | Lager 200/200/40. Rückkehr 1 Tag. Zweite Expedition möglich |
-| Knochenwerkstatt | 1 | Start | – | – | Skelett | Start. Auskochen: 1 Leiche → 2 Knochen |
+| Knochenwerkstatt | 1 | Start | – | – | Skelett, Skelett-Bogenschütze, Knochenschleuderer | Start. Auskochen: 1 Leiche → 2 Knochen. Schleuderer erst mit Spielwissen 2 |
 | Knochenwerkstatt | 2 | 10L 10K | 2 | Knochenwerkstatt 1 + Armbrust-Handwerk | Knochenschütze | Knochenschützen |
 | Knochenwerkstatt | 3 | 20L 30K 2S | 4 | Knochenwerkstatt 2 | Balliste | Belagerung |
-| Leichengrube | 1 | Start | – | – | Zombie, Ghul | Start |
+| Leichengrube | 1 | Start | – | – | Zombie, Ghul, Leichenhund | Start |
 | Leichengrube | 2 | 15L 10K | 2 | Leichengrube 1 + Moorwissen | Moorleiche | Moorleichen |
 | Leichengrube | 3 | 30L 20K 5S | 4 | Leichengrube 2 | Fleischriese | Fleischriesen |
 | Seelenzwinger | 1 | 10L 10K 3S | 2 | – | Geist | Kommando-Limit 15 → 20 |
@@ -2677,7 +2687,7 @@ Nixen und verwandte Wassergeister können an allen größeren Flüssen vorkommen
 - Zerstörte Wände temporär speichern (Dictionary mit Zerstörungstag, lazy Heilung nach n Tagen)
 
 **Einheiten-Visualisierung (neu):**
-- `world_data.js` aus den CSVs erzeugen (Einheiten mit Role, Faction, MaxEnergy, NoiseLevel, ScentLevel, Abilities; Fähigkeiten; Paletten)
+- ~~`world_data.js` aus den CSVs erzeugen~~ erledigt (Einheiten, Schadensmatrix, Leichenqualität, Regeln). Offen: Fähigkeiten und Paletten im Spiel nutzen
 - `DT_UnitVisuals` anlegen (Modell, Icons, Animationen je Einheit)
 - Einheiten-Material mit Primär/Akzent/Leucht-Parametern aus `DT_FactionPalettes`
 - Sockel-Mesh (glatt / gezackt / gestrichelt) + Sockel-Zustände (aktiv, ausgewählt, gezogen)
@@ -2782,9 +2792,12 @@ Globale Werte (z. B. Hex-Größe) liegen an einer Stelle. Breite und Höhe des S
 
 ### Spielwerte
 
-Die CSV-Tabellen in `design/data/` sind der **Planungsstand** und Quelle der Wahrheit fürs Balancing. Das Spiel liest `data/world_data.js`.
+Die CSV-Tabellen in `design/data/` sind die Quelle der Wahrheit. Das Spiel liest `data/world_data.js`; `gen_data.py` schreibt dort die Bereiche zwischen `// <GEN:UNITS>` und `// <GEN:RULES>`:
 
-**Offen:** `world_data.js` stammt aus dem One-Shot-Paket und hat teils eigene Werte (z. B. Ghul mit `BLUNT` statt `Rend`). Nächster Schritt: `gen_data.py` erzeugt zusätzlich den Einheiten- und Fähigkeiten-Teil von `world_data.js`, damit beide nicht auseinanderlaufen.
+- **Einheiten:** Die Liste `GAME_UNITS` ordnet jeder Spiel-Kennung (`ghul`, `ritter` …) eine Design-Zeile zu und ergänzt Platzhalter-Form, Farbe und Wissens-Voraussetzung. Knochenkosten zählt das Spiel 60-fach.
+- **Regeln:** Schadensmatrix (inkl. Reißen), Leichenqualität je Schadensart, Initiative `2520 / Ini` (eine Runde = 1008 Ticks), MagicResist prozentual, SoulShield als Pool, der jeden Schaden zuerst schluckt und sich im Kampf nicht erneuert.
+
+Fraktionen, Orte, Gebäude und Wirtschaft in `world_data.js` sind weiterhin von Hand gepflegt. Die zehn Einheiten, die es bisher nur im Spiel gab (z. B. Ritter, Stadtwache, Priester, Hexenkönigin), stehen jetzt mit ihren bisherigen Werten in den CSVs.
 
 | Datei | Inhalt |
 |-|-|
@@ -2806,7 +2819,7 @@ Erste Spalte `Name` = Zeilenname, über den Tabellen aufeinander verweisen (z. B
 - `geo.py`, `worldmap.py`, `build_webmap.py` – Projektion und Daten der Weltkarte
 - `build_gallery.py` – baut das Einheitenbuch aus den CSVs
 
-Generierte Bereiche sind mit `<!--GEN:…:BEGIN/END-->` markiert – dort nicht von Hand editieren. **Workflow:** Werte im Generator ändern, `python tools/gen_data.py` ausführen, dann sind CSV und Dokument synchron.
+Generierte Bereiche sind mit `<!--GEN:…:BEGIN/END-->` markiert – dort nicht von Hand editieren. **Workflow:** Werte im Generator ändern, `python tools/gen_data.py` ausführen, dann sind CSV, Dokument und `data/world_data.js` synchron.
 
 ### Ereignisse (geplant)
 

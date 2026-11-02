@@ -988,12 +988,17 @@ const Minimap = {
 // all randomness comes from hash2 with a seed derived from the node id.
 // =============================================================================
 const POWER_NAMES = { PIERCE: 'Stich', BLUNT: 'Wucht', SIEGE: 'Belagerung', FIRE: 'Feuer', POISON: 'Gift', ARCANE: 'Arkan',
-  SOUL: 'Seele', HOLY: 'Heilig', CHAOS: 'Chaos', HEAL: 'Heilung' };
+  REND: 'Reißen', SOUL: 'Seele', HOLY: 'Heilig', CHAOS: 'Chaos', HEAL: 'Heilung' };
 const DEFENSE_NAMES = { UNARMORED: 'Ungerüstet', LIGHT: 'Leicht', MEDIUM: 'Mittel', HEAVY: 'Schwer', FORTIFIED: 'Befestigt', DIVINE: 'Göttlich' };
 const BLOCKS_MELEE = new Set(['WALL', 'WALL_DESTRUCTIBLE', 'WALL_TRANSPARENT']);
 const BLOCKS_SIGHT = new Set(['WALL', 'WALL_DESTRUCTIBLE']);
 // PROMPT 8.5: a priest without wounded allies attacks with 3 HOLY damage.
 const PRIEST_ATTACK = { power: 'HOLY', damage: 3 };
+const RULES = DATA.rules;
+// Ticks a unit waits after its turn: linear in initiative (2520 / ini).
+const turnTicks = def => Math.round(RULES.tickBase / def.initiative);
+// Old bonus values were in units of 1/10 round; scale them to ticks.
+const roundFrac = x => Math.round(x * RULES.roundTicks / 10);
 
 class Battlefield {
   constructor(node) {
@@ -1303,8 +1308,9 @@ const Combat = {
     if (attLevel > tgtLevel) dmg *= 1.25;      // high ground
     if (attLevel < tgtLevel) dmg *= 0.85;
     if (targetInCover) dmg *= 0.5;
-    if (att.power === 'ARCANE' || att.power === 'CHAOS') dmg -= tgt.magicResist;
-    if (att.power === 'SOUL') dmg -= tgt.soulShield;
+    // Magic resist reduces magic power types by a percentage (rules block in world_data.js).
+    // soulShield is no longer subtracted here: it is a pool consumed in Battle.applyDamage.
+    if (RULES.magicPowers.includes(att.power)) dmg *= 1 - Math.min(RULES.mrCap, tgt.magicResist * RULES.mrPerPoint);
     dmg = Math.round(dmg);
     dmg = (pd[att.power][tgt.defense] === 0) ? 0 : Math.max(1, dmg);
     return dmg;
@@ -1619,7 +1625,7 @@ const Battle = {
     const found = Stealth.check(b, b.units.filter(u => u.side === 'player'));
     if (found) {
       b.state = 'fight';
-      for (const u of b.units) if (u.side === 'enemy') u.nextTick -= 3;
+      for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(3);
       UI.toast(`Entdeckt! ${found.enemy.def.name} bemerkt ${found.unit.def.name} (${found.sense}).`);
       this.log(`Entdeckt durch ${found.sense}: Die Verteidiger handeln zuerst.`, 'hit');
     } else {
@@ -1634,7 +1640,7 @@ const Battle = {
   makeUnit(type, side, faction, hp) {
     const def = DATA.units[type];
     return { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, q: 0, r: 0,
-      nextTick: 10 - def.initiative, alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null };
+      shield: def.soulShield || 0, nextTick: turnTicks(def), alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null };
   },
   // Deployment: player at the side facing the origin, enemies around the center.
   deploy(b) {
@@ -1695,7 +1701,7 @@ const Battle = {
     for (let i = 0; i < n && sim.length; i++) {
       sim.sort((a, c) => this.order(a, c));
       out.push(sim[0].u);
-      sim[0].nextTick += Math.max(1, 10 - sim[0].def.initiative);
+      sim[0].nextTick += turnTicks(sim[0].def);
     }
     return out;
   },
@@ -1705,9 +1711,9 @@ const Battle = {
     const list = this.candidates().sort((a, c) => this.order(a, c));
     if (!list.length) return;
     const u = list[0];
-    // Round boundaries: each time the tick passes a multiple of 10.
+    // Round boundaries: each time the tick passes a multiple of roundTicks.
     if (b.lastTick !== null) {
-      const rounds = Math.floor(u.nextTick / 10) - Math.floor(b.lastTick / 10);
+      const rounds = Math.floor(u.nextTick / RULES.roundTicks) - Math.floor(b.lastTick / RULES.roundTicks);
       for (let i = 0; i < rounds && !b.over; i++) this.endRound();
       if (b.over) return;
     }
@@ -1750,7 +1756,7 @@ const Battle = {
     const b = game.battle;
     if (!b || b.over || b.busy) return;
     const u = b.current;
-    u.nextTick += Math.max(1, 10 - u.def.initiative);
+    u.nextTick += turnTicks(u.def);
     this.clearOptions();
     setTimeout(() => this.nextTurn(), 30);
   },
@@ -1818,8 +1824,8 @@ const Battle = {
   revealed(msg, bonus, who) {
     const b = game.battle;
     b.state = 'fight';
-    for (const u of this.alive('enemy')) u.nextTick = b.lastTick + Math.max(1, 10 - u.def.initiative);
-    for (const u of this.alive(who === 'enemy' ? 'enemy' : 'player')) u.nextTick += bonus;
+    for (const u of this.alive('enemy')) u.nextTick = b.lastTick + turnTicks(u.def);
+    for (const u of this.alive(who === 'enemy' ? 'enemy' : 'player')) u.nextTick += roundFrac(bonus);
     UI.toast(msg);
     this.log(msg, who === 'enemy' ? 'hit' : 'good');
     this.refreshCones();
@@ -1838,9 +1844,12 @@ const Battle = {
     this.endTurn();
   },
   applyDamage(target, dmg, killer, power) {
-    target.hp -= dmg;
+    // Soul shield pool absorbs any damage first and does not regenerate during the battle.
+    const absorbed = Math.min(target.shield || 0, dmg);
+    target.shield = (target.shield || 0) - absorbed;
+    target.hp -= dmg - absorbed;
     BattleView.updateHp(target);
-    BattleView.floatText(target, '−' + dmg);
+    BattleView.floatText(target, absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg);
     if (target.hp <= 0) this.kill(target, killer, power);
   },
   async performAttack(att, target, surprise = false) {
@@ -1883,7 +1892,7 @@ const Battle = {
     BattleView.removeUnit(u);
     this.log(`${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
     if (u.side === 'enemy' && killer && killer.side === 'player') {
-      const quality = killer.def.corpseQuality ?? DATA.corpseQuality[power] ?? 0;
+      const quality = DATA.corpseQuality[power] ?? 0;
       b.kills.push({ quality, soul: power === 'SOUL' });
     }
     if (u.side === 'player' && u.type === 'lich') { this.finish('defeat'); return; }
@@ -2262,7 +2271,7 @@ const UI = {
       <tr><td>Bewegung</td><td>${d.move}</td><td>Reichweite</td><td>${d.range}</td></tr>
       <tr><td>Schaden</td><td colspan="3">${d.damage} ${POWER_NAMES[d.power]} (${d.power})</td></tr>
       <tr><td>Rüstung</td><td colspan="3">${DEFENSE_NAMES[d.defense]} (${d.defense})</td></tr>
-      <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${d.soulShield}</td></tr>
+      <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${u.shield ?? d.soulShield} / ${d.soulShield}</td></tr>
       <tr><td>Sinne</td><td colspan="3">Sicht ${d.sight} · Gehör ${d.hear} · Geruch ${d.smell}</td></tr>
       ${flags ? `<tr><td>Eigenschaften</td><td colspan="3">${flags}</td></tr>` : ''}
       <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</td></tr></table>`;
