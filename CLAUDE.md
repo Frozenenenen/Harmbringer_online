@@ -26,7 +26,7 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 - Nach Änderungen an Einheiten: `python tools/build_gallery.py`. Karten-Daten: `python tools/build_webmap.py --assets <Ordner mit Textures/ und Maps/>`.
 - `data/world_data.js` (Spiel) ist noch nicht mit `design/data/*.csv` synchron – beim Ändern von Werten beides im Blick haben.
 - Spieltexte und Dokumentation auf Deutsch, Code-Kommentare auf Englisch.
-- Änderungen auf einem eigenen Branch mit Pull Request, nicht direkt auf `main`.
+- Änderungen **direkt auf `main` committen und pushen** – ohne Branch und Pull Request. Das Spiel spielt aktuell nur Kevin, GitHub Pages darf sofort den neuen Stand zeigen.
 
 ## Getroffene Entscheidungen (Auszug)
 
