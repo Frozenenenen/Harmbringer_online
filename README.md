@@ -8,6 +8,18 @@ Browser-Prototyp eines rundenbasierten Taktikspiels: Mai 1371, ein Lich erwacht 
 
 19 größere Orte (Städte, Klöster, mythische Stätten) und 48 Dörfer dazwischen. Dörfer haben ein kleines Kampffeld mit zwei Höfen, 2–3 Verteidiger, wenig Beute und erhöhen die Bedrohung ihrer Fraktion nur um 10 % statt 25 %. Nach einem Sieg heilen die Überlebenden um 25 % ihrer Lebenspunkte; voll geheilt wird weiterhin im Hügelgrab.
 
+## Design, Werkzeuge und Prototypen
+
+| Pfad | Inhalt |
+| --- | --- |
+| `design/design_notes.md` | Design-Dokument: Mechaniken, Einheiten, Visualisierung, Kampagne, Weltkarte |
+| `design/data/` | Spielwerte als CSV (Einheiten, Fähigkeiten, Gebäude, Wissen, Begegnungen, Paletten, Schadensmatrix) |
+| `tools/` | Python-Werkzeuge: `gen_data.py` erzeugt CSVs und Tabellen im Design-Dokument, `sim.py` / `encounter_check.py` rechnen Balancing und Kampfdauer, `build_webmap.py` baut die Weltkarten-Daten |
+| `prototypes/worldmap/` | Weltkarte im Browser (WebGL2): Gelände nur im Sichtbereich, Auflösung nach Zoom, weiche Bodentexturen. Online: `/prototypes/worldmap/` |
+| `prototypes/einheitenbuch/` | Alle Einheiten mit Lesbarkeits-Prüfung (Graustufen, Unschärfe, Nacht, Token). Online: `/prototypes/einheitenbuch/` |
+
+Die Weltkarte lädt ihre Daten per `fetch` und läuft deshalb nur über einen Webserver oder GitHub Pages, nicht per Doppelklick.
+
 ## Lokal starten
 
 Repo herunterladen, entpacken, `index.html` doppelklicken. Der Ordner `data/` muss direkt neben `index.html` liegen. Three.js r160 wird beim Start von jsDelivr geladen.

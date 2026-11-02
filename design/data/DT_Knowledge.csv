@@ -1,0 +1,9 @@
+Name,KnowledgeName,SourceUnit,KillsRequired,UnlocksUnits,UnlocksBuildings,Description
+Know_Crossbow,Armbrust-Handwerk,Crossbowman,8,"(""BoneArcher"")","(""BoneWorkshop_2"")",
+Know_Bog,Moorwissen,BogSpirit,5,"(""BogCorpse"")","(""CorpsePit_2"")",
+Know_Wisp,Irrlicht-Bann,WillOWisp,8,"(""DeathLight"")","(""SoulKennel_2"")",
+Know_Sister,Verkehrte Weihe,HeathSister,5,"(""FallenSister"")",(),
+Know_Druidess,Grabhüter-Riten,Druidess,5,"(""GraveDruidess"")",(),
+Know_WildHunt,Wilde Jagd,Wode,1,"(""DeathHunter"")",(),Legt zusätzlich das Ahnen-Grab eines bronzezeitlichen Reiterfürsten frei
+Know_DwarfForge,Zwergenschmiede,DwarfKing,1,(),"(""BoneForge_1"")",Plus 1 heidnisches Artefakt
+Know_HeathQueen,Herz der Heide,HeathQueen,1,(),"(""HeathAltar_1"")","Region assimiliert, Ley-Knoten Wilseder Berg (nach Portalbau)"

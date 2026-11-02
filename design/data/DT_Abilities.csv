@@ -1,0 +1,37 @@
+Name,AbilityName,Trigger,Target,Pattern,AreaSize,Range,Effect,PowerType,Value,Status,Duration,EnergyCost,Cooldown,RequiresCorpse,ConditionFloors,Description
+LichSoulDrain,Seelenentzug,Active,Enemy,SinglePoint,0,3,Damage,Soul,8,None,0,3,1,False,(),8 Seelenschaden; Lich heilt sich um den angerichteten Schaden
+LichRetreat,Rückzug,Active,Self,SinglePoint,0,0,Teleport,Arcane,0,Marked,1,0,0,False,(),Lich verlässt nach 1 Runde das Feld; in der Rückzugsrunde Marked
+SkeletonReassemble,Wiederzusammensetzen,OnDeath,Self,SinglePoint,0,0,Heal,Heal,5,None,0,0,0,False,(),Einmal pro Kampf mit 5 HP wieder aufstehen; nicht nach Blunt- oder Holy-Tod
+ZombieInfect,Seuchenbiss,OnDamageDealt,Enemy,SinglePoint,0,1,ApplyStatus,Poison,2,Poisoned,2,0,0,False,(),Getroffenes Ziel wird vergiftet
+GhoulCorpseEater,Leichenfresser,Active,Ground,SinglePoint,0,1,Heal,Heal,8,None,0,0,2,True,(),"Frisst angrenzende Leiche: +8 HP, die Leiche ist als Beute verloren"
+DeathKnightShieldWall,Schildwall,Active,Ally,Radius,1,0,ApplyStatus,Blunt,5,Shielded,1,2,2,False,(),Todesritter und Nachbarn erhalten Schild 5 bis zum nächsten Zug
+NecroRaiseDead,Totenruf,Active,Ground,SinglePoint,0,3,Summon,Soul,1,None,0,4,2,True,(),"Verbraucht Leiche auf Zielfeld, erzeugt 1 Skelett"
+FleshGiantCrush,Zermalmen,Active,Enemy,Cone,1,1,Damage,Blunt,10,Stunned,1,3,2,False,(),"Trifft 3 Felder im Kegel, betäubt"
+PeasantMob,Rottenmut,OnTurnStart,Self,SinglePoint,0,0,ApplyStatus,Pierce,0,Enhanced,1,0,0,False,(),"Enhanced, wenn mind. 2 Bauern angrenzen"
+CrossbowPavise,Setzschild,Passive,Self,SinglePoint,0,0,ModifyTerrain,Pierce,0,None,0,0,0,False,(),Wenn nicht bewegt: Kante zur Angriffsrichtung zählt als Cover
+ClericCenser,Weihrauch,Active,AllEnemies,Radius,1,0,Damage,Holy,4,None,0,2,1,False,(),4 Holy-Schaden an alle angrenzenden Feinde
+SisterHolyWater,Weihwasser,Active,Ally,SinglePoint,0,2,Heal,Heal,6,None,0,2,0,False,(),Heilt Verbündeten um 6 HP
+SisterConsecrate,Geweihter Boden,Active,Ground,Radius,1,2,ModifyTerrain,Holy,2,None,3,3,3,False,(),Felder werden 3 Runden HolyGround: 2 Holy-Schaden pro Runde an Untote
+WitchHex,Hexenschuss,Active,Enemy,SinglePoint,0,4,ApplyStatus,Arcane,0,Marked,2,2,1,False,(),Ziel nimmt 2 Züge lang +25 % Schaden
+DruidMistletoe,Mistelsegen,Active,Ally,SinglePoint,0,3,ApplyStatus,Heal,3,Regeneration,3,2,1,False,(),Verbündeter regeneriert 3 HP pro Zug
+DruidessGraveRest,Grabesruhe,Active,Enemy,SinglePoint,0,4,ApplyStatus,Arcane,0,Cursed,2,3,2,False,(),Nur gegen Untote: -25 % Schaden
+DruidessEarthBind,Erdbindung,Active,Ground,SinglePoint,0,3,ModifyTerrain,Arcane,0,None,2,2,3,False,(),"Feld wird 2 Runden unpassierbar, Kanten ringsum Cover"
+MoorGrip,Moorgriff,Active,Enemy,SinglePoint,0,1,ApplyStatus,Blunt,0,Slowed,2,2,1,False,(),Slowed 2 Züge; auf Mud/Swamp/Bog zusätzlich Stunned 1 Zug
+FromThePeat,Aus dem Torf,OnTurnStart,Self,SinglePoint,0,0,ApplyStatus,Blunt,4,Shielded,1,0,0,False,"(""Mud"",""Swamp"",""Bog"")",Auf Moorboden zu Zugbeginn Schild 4
+WispConfusion,Verwirrung,Passive,AllEnemies,Ring,1,0,ApplyStatus,Arcane,0,Confused,1,0,0,False,(),Feinde auf Nachbarfeldern bewegen sich zufällig
+WispFalseLight,Falsches Licht,OnDeath,Ground,SinglePoint,0,0,Summon,Arcane,1,None,1,0,0,False,(),"Trugbild für 1 Runde, zieht Angriffe auf sich"
+HoundPack,Meute,OnTurnStart,Self,SinglePoint,0,0,ApplyStatus,Rend,0,Enhanced,1,0,0,False,(),"Enhanced, wenn ein anderer Schwarzer Hund angrenzt"
+WodeWildHunt,Wilde Jagd,Active,Ground,SinglePoint,0,2,Summon,Soul,2,None,0,5,4,False,(),Beschwört 2 Schwarze Hunde
+WodeRideThrough,Durchreiten,Active,Enemy,Line,3,3,Damage,Pierce,12,None,0,3,2,False,(),"Reitet 3 Felder in Linie, trifft alle darauf, endet am Linienende"
+WodeHorn,Jagdhorn,Active,AllAllies,Radius,3,0,ApplyStatus,Arcane,0,Hasted,2,2,3,False,(),Verbündete im Radius 3 werden beschleunigt
+DwarfKingForge,Runenschmiede,Active,Ally,SinglePoint,0,1,ApplyStatus,Blunt,8,Shielded,2,2,1,False,(),Verbündeter erhält Schild 8
+DwarfKingTreasureCurse,Schatzfluch,OnDamageTaken,Enemy,SinglePoint,0,0,ApplyStatus,Arcane,0,Cursed,2,0,0,False,(),"Wer den Zwergenkönig trifft, wird verflucht"
+DwarfKingStoneSkin,Steinhaut,OnTurnStart,Self,SinglePoint,0,0,ApplyStatus,Blunt,4,Shielded,1,0,0,False,"(""StoneFloor"",""CellarFloor"",""RawStone"")",Auf Steinboden zu Zugbeginn Schild 4
+HeathQueenLeyBond,Ley-Bund,Passive,Self,SinglePoint,0,0,ApplyStatus,Arcane,10,Shielded,0,0,0,False,(),Kampfbeginn: +10 SoulShield pro lebendem Randmitglied des Heide-Pantheons
+HeathQueenBloom,Heideblüte,Active,AllAllies,Radius,2,0,Heal,Heal,6,None,0,4,2,False,(),Heilt alle Verbündeten im Radius 2 um 6 HP
+HeathQueenThorns,Dornenkrone,Active,Ground,Radius,1,4,ModifyTerrain,Pierce,3,Slowed,3,4,3,False,(),Dornen-Gelände 3 Runden: Slowed und 3 Pierce-Schaden pro Runde für Feinde darauf
+BogCorpseMire,Moorheilung,OnTurnStart,Self,SinglePoint,0,0,Heal,Heal,3,None,0,0,0,False,"(""Mud"",""Swamp"",""Bog"")",Heilt sich auf Moorboden zu Zugbeginn um 3 HP
+DeathLightConfusion,Totenirrlicht,Passive,AllEnemies,Ring,2,0,ApplyStatus,Arcane,0,Confused,1,0,0,False,(),Lebende Feinde im Umkreis 2 bewegen sich zufällig
+FallenSisterGraveWater,Grabwasser,Active,Ally,SinglePoint,0,2,Heal,Soul,6,None,0,2,0,False,(),Heilt verbündeten Untoten um 6 HP
+GraveDruidessBind,Lebensbann,Active,Enemy,SinglePoint,0,4,ApplyStatus,Arcane,0,Cursed,2,3,2,False,(),Nur gegen Lebende: -25 % Schaden
+DeathHunterCharge,Todesritt,Active,Enemy,Line,2,2,Damage,Pierce,9,None,0,3,2,False,(),"Reitet 2 Felder in Linie, trifft alle darauf"

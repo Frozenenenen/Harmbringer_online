@@ -1,0 +1,18 @@
+Name,BuildingName,Level,CostCorpses,CostBones,CostSouls,CostEnergy,BuildDays,RequiresBuilding,RequiresKnowledge,Produces,CommandBonus,EffectText
+Phylactery_1,Phylakterium,1,0,0,0,0,0,,,(),0,Start. Lager 50 L / 50 K / 10 S. Lich-Rückkehr nach Tod: 3 Tage
+Phylactery_2,Phylakterium,2,20,20,5,0,3,Phylactery_1,,(),0,Lager 100/100/20. Rückkehr 2 Tage
+Phylactery_3,Phylakterium,3,40,40,10,10,5,Phylactery_2,,(),0,Lager 200/200/40. Rückkehr 1 Tag. Zweite Expedition möglich
+BoneWorkshop_1,Knochenwerkstatt,1,0,0,0,0,0,,,"(""Skeleton"")",0,Start. Auskochen: 1 Leiche → 2 Knochen
+BoneWorkshop_2,Knochenwerkstatt,2,10,10,0,0,2,BoneWorkshop_1,Know_Crossbow,"(""BoneArcher"")",0,Knochenschützen
+BoneWorkshop_3,Knochenwerkstatt,3,20,30,2,0,4,BoneWorkshop_2,,"(""Ballista"")",0,Belagerung
+CorpsePit_1,Leichengrube,1,0,0,0,0,0,,,"(""Zombie"",""Ghoul"")",0,Start
+CorpsePit_2,Leichengrube,2,15,10,0,0,2,CorpsePit_1,Know_Bog,"(""BogCorpse"")",0,Moorleichen
+CorpsePit_3,Leichengrube,3,30,20,5,0,4,CorpsePit_2,,"(""FleshGiant"")",0,Fleischriesen
+SoulKennel_1,Seelenzwinger,1,10,10,3,0,2,,,"(""Ghost"")",5,Kommando-Limit 15 → 20
+SoulKennel_2,Seelenzwinger,2,20,20,6,0,3,SoulKennel_1,Know_Wisp,"(""DeathLight"")",5,"Limit 25, Totenlichter"
+SoulKennel_3,Seelenzwinger,3,40,40,12,10,5,SoulKennel_2,,(),5,Limit 30
+DeadHall_1,Totenhalle,1,15,20,3,0,3,,,"(""DeathKnight"",""Necromancer"")",0,Kommandeure. 1 Ahne pro Expedition
+DeadHall_2,Totenhalle,2,25,30,6,0,4,DeadHall_1,,"(""FallenSister"",""GraveDruidess"",""DeathHunter"")",0,Untote Heide-Varianten (jeweils mit Wissen). 2 Ahnen pro Expedition
+KnowledgeAltar_1,Wissensaltar,1,5,5,0,0,1,,,(),0,Wandelt erbeutetes Wissen in Freischaltungen. Voraussetzung für alle untoten Varianten
+BoneForge_1,Knochenschmiede,1,20,30,4,0,3,BoneWorkshop_1,Know_DwarfForge,(),0,Todesritter +2 SoulShield dauerhaft
+HeathAltar_1,Heidealtar,1,30,20,10,10,5,KnowledgeAltar_1,Know_HeathQueen,(),0,Eigene Untote heilen auf Heather-Feldern 2 HP/Runde. Pantheon-Synergien der Heide

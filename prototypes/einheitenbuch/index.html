@@ -1,0 +1,441 @@
+<title>MythosTactics Einheitenbuch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Kriegstisch des Lichs – oben die Schlachtfeld-Probe als Arbeitsfläche, darunter das Einheitenbuch als Kartenraster.
+   Bewusst nur dunkel: Die Seite prüft Lesbarkeit auf dem dunklen Torf-Spielfeld, so wie es im Spiel aussieht. */
+:root {
+  color-scheme: dark;
+  --peat: #1b1713;        /* Seitengrund: Torf */
+  --peat-2: #241f1a;      /* Flächen */
+  --peat-3: #312a23;      /* Linien, Rahmen */
+  --bone: #ebe3d1;        /* Text */
+  --bone-dim: #a89d88;    /* Nebentext */
+  --heather: #a784bd;     /* UI-Akzent: Heidekraut */
+  --heather-dim: #5a4566;
+  --hp: #d9cfb8;
+  --shield: #6fa8ff;
+  --font-display: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
+  --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--peat); }
+body {
+  background: var(--peat); color: var(--bone); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 40px; }
+header { display: grid; gap: 6px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1; margin: 0; letter-spacing: .01em; }
+.lede { color: var(--bone-dim); max-width: 68ch; margin: 0; }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; margin: 0; line-height: 1.1; text-wrap: balance; }
+.sub { color: var(--bone-dim); margin: 4px 0 0; max-width: 70ch; }
+section { display: grid; gap: 16px; }
+
+/* Bedienleiste */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; }
+.field { display: grid; gap: 4px; }
+.field label, .toggles .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--bone-dim); }
+select {
+  background: var(--peat-2); color: var(--bone); border: 1px solid var(--peat-3); border-radius: 6px;
+  padding: 7px 10px; font: inherit; font-size: .95rem; min-width: 0; max-width: 100%;
+}
+.toggles { display: grid; gap: 4px; }
+.toggle-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tg {
+  font: inherit; font-size: .9rem; color: var(--bone); background: var(--peat-2); border: 1px solid var(--peat-3);
+  border-radius: 999px; padding: 5px 12px; cursor: pointer;
+}
+.tg[aria-pressed="true"] { background: var(--heather-dim); border-color: var(--heather); }
+.tg:focus-visible, select:focus-visible, .chip:focus-visible, .card:focus-visible { outline: 2px solid var(--heather); outline-offset: 2px; }
+.tg small { color: var(--bone-dim); font-family: var(--font-data); font-size: .72rem; margin-left: 4px; }
+
+/* Schlachtfeld */
+.board { overflow-x: auto; border: 1px solid var(--peat-3); border-radius: 10px; background: #0f0d0b; }
+.board svg { display: block; }
+.scene-note { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .9rem; color: var(--bone-dim); }
+.scene-note b { color: var(--bone); font-weight: 500; }
+#scene.gray { filter: grayscale(1); }
+#scene.blur { filter: blur(3px); }
+#scene.gray.blur { filter: grayscale(1) blur(3px); }
+.night .ground { filter: brightness(.38) saturate(.7); }
+.night .body { filter: brightness(.55); }
+.hide-ov .ov { display: none; }
+
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 24px; font-size: .9rem; }
+.legend div { display: flex; gap: 10px; align-items: center; }
+.legend svg { flex: none; }
+
+/* Einheitenbuch */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; font-size: .88rem; color: var(--bone); background: transparent; border: 1px solid var(--peat-3);
+  border-radius: 999px; padding: 4px 11px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+}
+.chip[aria-pressed="true"] { border-color: var(--heather); background: var(--peat-2); }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.4); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.card {
+  background: var(--peat-2); border: 1px solid var(--peat-3); border-radius: 10px; padding: 12px 14px 14px;
+  display: grid; grid-template-rows: auto auto auto 1fr; gap: 8px; min-width: 0;
+}
+.card .fig { background: #3a372c; border-radius: 6px; height: 132px; display: grid; place-items: center; }
+.card h3 { margin: 0; font-size: 1.12rem; font-weight: 700; line-height: 1.2; }
+.meta { font-size: .85rem; color: var(--bone-dim); }
+.meta .fac { display: inline-flex; align-items: center; gap: 5px; }
+.meta .fac i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; font-family: var(--font-data); font-size: .78rem; }
+.stats div { background: #1a1612; border-radius: 4px; padding: 3px 6px; display: grid; }
+.stats span { color: var(--bone-dim); font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; font-family: var(--font-body); }
+.stats b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.abil { font-size: .85rem; color: var(--bone-dim); align-self: end; }
+.abil b { color: var(--bone); font-weight: 500; }
+.count { font-family: var(--font-data); font-size: .8rem; color: var(--bone-dim); }
+
+.check { counter-reset: c; display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; max-width: 75ch; }
+.check li { display: grid; grid-template-columns: 2rem 1fr; gap: 8px; }
+.check li::before { counter-increment: c; content: counter(c); font-family: var(--font-data); color: var(--heather); }
+.check em { font-style: normal; color: var(--heather); }
+footer { color: var(--bone-dim); font-size: .85rem; }
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .15s; } .card:hover { border-color: var(--heather-dim); } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Einheitenbuch</h1>
+    <p class="lede">Alle 28 Einheiten von MythosTactics, gezeichnet nach den Lesbarkeitsregeln aus den Design-Notizen: Silhouette zeigt die Rolle, Farbe die Fraktion, der Sockel Freund oder Feind. Die Figuren sind Regel-Platzhalter, keine finale Kunst – sie zeigen, ob die Regeln allein schon tragen.</p>
+  </header>
+
+  <section aria-labelledby="h-probe">
+    <div>
+      <h2 id="h-probe">Schlachtfeld-Probe</h2>
+      <p class="sub">Eine Begegnung aus <code>DT_Encounters</code> gegen eine Armee-Stufe. Mit den Schaltern lassen sich die Prüfungen der Lesbarkeits-Checkliste direkt am Feld machen.</p>
+    </div>
+    <div class="controls">
+      <div class="field"><label for="encSel">Begegnung</label><select id="encSel"></select></div>
+      <div class="field"><label for="armySel">Eigene Armee</label><select id="armySel"></select></div>
+      <div class="toggles">
+        <span class="lbl">Prüfen</span>
+        <div class="toggle-row">
+          <button class="tg" id="tgGray" aria-pressed="false">Graustufen<small>1</small></button>
+          <button class="tg" id="tgBlur" aria-pressed="false">Unschärfe<small>2</small></button>
+          <button class="tg" id="tgNight" aria-pressed="false">Nacht<small>4</small></button>
+          <button class="tg" id="tgToken" aria-pressed="false">Token-Modus<small>5</small></button>
+          <button class="tg" id="tgOv" aria-pressed="true">Anzeigen über Einheiten</button>
+        </div>
+      </div>
+    </div>
+    <div class="board"><svg id="scene" role="img" aria-label="Hex-Schlachtfeld mit Einheiten"></svg></div>
+    <div class="scene-note" id="sceneNote"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section aria-labelledby="h-book">
+    <div>
+      <h2 id="h-book">Alle Einheiten</h2>
+      <p class="sub">Werte aus <code>DT_Units.csv</code>. Balken über der Figur: ein Segment je 5 HP, blau überlagert der Seelenschild.</p>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="count" id="count"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section aria-labelledby="h-check">
+    <h2 id="h-check">Lesbarkeits-Checkliste</h2>
+    <ol class="check">
+      <li><span>Graustufen: Ist die Rolle noch erkennbar? <em>Schalter „Graustufen“.</em></span></li>
+      <li><span>Unscharf: Ist die Fraktion noch erkennbar? <em>Schalter „Unschärfe“.</em></span></li>
+      <li><span>Neben drei anderen Einheiten derselben Fraktion unterscheidbar? <em>Im Einheitenbuch nach Fraktion filtern.</em></span></li>
+      <li><span>Nachts: Bleiben Sockel und Leuchten sichtbar, auch wenn Gelände und Körper dunkel werden? <em>Schalter „Nacht“.</em></span></li>
+      <li><span>Token-Modus: Ist das Symbol eindeutig? <em>Schalter „Token-Modus“.</em></span></li>
+      <li><span>Ist der höchste Punkt der Figur ihr Rollen-Merkmal – Stab, Banner, Bogen, Laterne?</span></li>
+    </ol>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const DATA = {"units": [{"id": "Lich", "name": "Lich", "rank": "Unique", "role": "Commander", "faction": "Undead", "hp": 40, "ss": 10, "ini": 6, "mv": 3, "dmg": 8, "rng": 3, "pt": "Soul", "mr": 8, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Seelenentzug", "Rückzug"], "def": "Unarmored"}, {"id": "Skeleton", "name": "Skelett", "rank": "CannonFodder", "role": "Melee", "faction": "Undead", "hp": 10, "ss": 0, "ini": 5, "mv": 3, "dmg": 5, "rng": 1, "pt": "Pierce", "mr": 0, "size": 1, "spectral": false, "flying": false, "cp": -1, "cost": [0, 2, 0], "abilities": ["Wiederzusammensetzen"], "def": "Light"}, {"id": "Zombie", "name": "Zombie", "rank": "CannonFodder", "role": "Melee", "faction": "Undead", "hp": 20, "ss": 0, "ini": 3, "mv": 2, "dmg": 6, "rng": 1, "pt": "Blunt", "mr": 0, "size": 2, "spectral": false, "flying": false, "cp": -1, "cost": [1, 0, 0], "abilities": ["Seuchenbiss"], "def": "Unarmored"}, {"id": "Ghoul", "name": "Ghul", "rank": "CannonFodder", "role": "Melee", "faction": "Undead", "hp": 18, "ss": 0, "ini": 5, "mv": 3, "dmg": 6, "rng": 1, "pt": "Rend", "mr": 1, "size": 2, "spectral": false, "flying": false, "cp": -2, "cost": [1, 0, 0], "abilities": ["Leichenfresser"], "def": "Unarmored"}, {"id": "DeathKnight", "name": "Todesritter", "rank": "Warrior", "role": "Tank", "faction": "Undead", "hp": 35, "ss": 3, "ini": 4, "mv": 3, "dmg": 10, "rng": 1, "pt": "Pierce", "mr": 3, "size": 2, "spectral": false, "flying": false, "cp": -4, "cost": [1, 3, 1], "abilities": ["Schildwall"], "def": "Heavy"}, {"id": "Ghost", "name": "Geist", "rank": "Warrior", "role": "Scout", "faction": "Undead", "hp": 10, "ss": 6, "ini": 8, "mv": 5, "dmg": 8, "rng": 1, "pt": "Soul", "mr": 4, "size": 1, "spectral": true, "flying": true, "cp": -3, "cost": [0, 0, 2], "abilities": [], "def": "Unarmored"}, {"id": "Ballista", "name": "Balliste", "rank": "Machine", "role": "Siege", "faction": "Undead", "hp": 25, "ss": 0, "ini": 2, "mv": 1, "dmg": 20, "rng": 6, "pt": "Siege", "mr": 0, "size": 3, "spectral": false, "flying": false, "cp": -5, "cost": [3, 5, 0], "abilities": [], "def": "Fortified"}, {"id": "Necromancer", "name": "Nekromant", "rank": "Commander", "role": "Caster", "faction": "Undead", "hp": 18, "ss": 4, "ini": 5, "mv": 3, "dmg": 6, "rng": 4, "pt": "Soul", "mr": 5, "size": 2, "spectral": false, "flying": false, "cp": 4, "cost": [2, 0, 2], "abilities": ["Totenruf"], "def": "Light"}, {"id": "FleshGiant", "name": "Fleischriese", "rank": "Warrior", "role": "Tank", "faction": "Undead", "hp": 70, "ss": 0, "ini": 2, "mv": 2, "dmg": 14, "rng": 1, "pt": "Blunt", "mr": 1, "size": 4, "spectral": false, "flying": false, "cp": -8, "cost": [15, 0, 0], "abilities": ["Zermalmen"], "def": "Medium"}, {"id": "Peasant", "name": "Bauer", "rank": "CannonFodder", "role": "Melee", "faction": "Hanse", "hp": 10, "ss": 0, "ini": 4, "mv": 3, "dmg": 4, "rng": 1, "pt": "Pierce", "mr": 0, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Rottenmut"], "def": "Unarmored"}, {"id": "Crossbowman", "name": "Lüneburger Armbrustschütze", "rank": "CannonFodder", "role": "Ranged", "faction": "Hanse", "hp": 15, "ss": 0, "ini": 4, "mv": 3, "dmg": 9, "rng": 5, "pt": "Pierce", "mr": 1, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Setzschild"], "def": "Medium"}, {"id": "Cleric", "name": "Kleriker", "rank": "Warrior", "role": "Support", "faction": "Clergy", "hp": 14, "ss": 6, "ini": 5, "mv": 3, "dmg": 4, "rng": 2, "pt": "Holy", "mr": 4, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Weihrauch"], "def": "Light"}, {"id": "HeathSister", "name": "Heideschwester", "rank": "Warrior", "role": "Support", "faction": "Clergy", "hp": 14, "ss": 6, "ini": 5, "mv": 3, "dmg": 4, "rng": 2, "pt": "Holy", "mr": 4, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Weihwasser", "Geweihter Boden"], "def": "Light"}, {"id": "Witch", "name": "Hexe", "rank": "Warrior", "role": "Caster", "faction": "Witches", "hp": 14, "ss": 2, "ini": 5, "mv": 3, "dmg": 7, "rng": 4, "pt": "Arcane", "mr": 5, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Hexenschuss"], "def": "Light"}, {"id": "Druid", "name": "Druide", "rank": "Warrior", "role": "Support", "faction": "Witches", "hp": 16, "ss": 3, "ini": 4, "mv": 3, "dmg": 5, "rng": 3, "pt": "Arcane", "mr": 5, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Mistelsegen"], "def": "Light"}, {"id": "Druidess", "name": "Hügelgrab-Druidin", "rank": "Warrior", "role": "Caster", "faction": "Witches", "hp": 16, "ss": 3, "ini": 6, "mv": 3, "dmg": 7, "rng": 4, "pt": "Arcane", "mr": 5, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Grabesruhe", "Erdbindung"], "def": "Light"}, {"id": "BogSpirit", "name": "Moorgeist", "rank": "Warrior", "role": "Tank", "faction": "HeathSpirits", "hp": 30, "ss": 2, "ini": 3, "mv": 2, "dmg": 8, "rng": 1, "pt": "Blunt", "mr": 3, "size": 3, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Moorgriff", "Aus dem Torf"], "def": "Unarmored"}, {"id": "WillOWisp", "name": "Irrlicht", "rank": "CannonFodder", "role": "Scout", "faction": "HeathSpirits", "hp": 6, "ss": 4, "ini": 9, "mv": 5, "dmg": 3, "rng": 1, "pt": "Arcane", "mr": 6, "size": 1, "spectral": true, "flying": true, "cp": 0, "cost": [0, 0, 0], "abilities": ["Verwirrung", "Falsches Licht"], "def": "Unarmored"}, {"id": "BlackHound", "name": "Schwarzer Hund", "rank": "CannonFodder", "role": "Scout", "faction": "HeathSpirits", "hp": 8, "ss": 2, "ini": 7, "mv": 5, "dmg": 4, "rng": 1, "pt": "Rend", "mr": 3, "size": 2, "spectral": true, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Meute"], "def": "Unarmored"}, {"id": "Wode", "name": "Der Wode", "rank": "Unique", "role": "Melee", "faction": "HeathSpirits", "hp": 55, "ss": 6, "ini": 8, "mv": 6, "dmg": 12, "rng": 1, "pt": "Pierce", "mr": 5, "size": 3, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Wilde Jagd", "Durchreiten", "Jagdhorn"], "def": "Divine"}, {"id": "DwarfKing", "name": "Hügelgrab-Zwergenkönig", "rank": "Unique", "role": "Tank", "faction": "HeathSpirits", "hp": 50, "ss": 4, "ini": 3, "mv": 2, "dmg": 11, "rng": 1, "pt": "Blunt", "mr": 6, "size": 2, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Runenschmiede", "Schatzfluch", "Steinhaut"], "def": "Divine"}, {"id": "HeathQueen", "name": "Die Heidekönigin", "rank": "Unique", "role": "Caster", "faction": "Witches", "hp": 60, "ss": 10, "ini": 6, "mv": 2, "dmg": 10, "rng": 4, "pt": "Arcane", "mr": 8, "size": 3, "spectral": false, "flying": false, "cp": 0, "cost": [0, 0, 0], "abilities": ["Ley-Bund", "Heideblüte", "Dornenkrone"], "def": "Divine"}, {"id": "BogCorpse", "name": "Moorleiche", "rank": "Warrior", "role": "Tank", "faction": "Undead", "hp": 28, "ss": 0, "ini": 3, "mv": 2, "dmg": 8, "rng": 1, "pt": "Blunt", "mr": 2, "size": 3, "spectral": false, "flying": false, "cp": -3, "cost": [3, 0, 0], "abilities": ["Moorgriff", "Moorheilung"], "def": "Unarmored"}, {"id": "DeathLight", "name": "Totenlicht", "rank": "CannonFodder", "role": "Scout", "faction": "Undead", "hp": 6, "ss": 2, "ini": 9, "mv": 5, "dmg": 3, "rng": 1, "pt": "Arcane", "mr": 6, "size": 1, "spectral": true, "flying": true, "cp": -1, "cost": [0, 0, 1], "abilities": ["Totenirrlicht"], "def": "Unarmored"}, {"id": "FallenSister", "name": "Gefallene Schwester", "rank": "Warrior", "role": "Support", "faction": "Undead", "hp": 14, "ss": 2, "ini": 5, "mv": 3, "dmg": 4, "rng": 2, "pt": "Soul", "mr": 4, "size": 2, "spectral": false, "flying": false, "cp": -2, "cost": [1, 0, 1], "abilities": ["Grabwasser"], "def": "Light"}, {"id": "GraveDruidess", "name": "Grabdruidin", "rank": "Warrior", "role": "Caster", "faction": "Undead", "hp": 14, "ss": 2, "ini": 6, "mv": 3, "dmg": 7, "rng": 4, "pt": "Arcane", "mr": 5, "size": 2, "spectral": false, "flying": false, "cp": -3, "cost": [1, 1, 1], "abilities": ["Lebensbann", "Erdbindung"], "def": "Light"}, {"id": "BoneArcher", "name": "Knochenschütze", "rank": "CannonFodder", "role": "Ranged", "faction": "Undead", "hp": 10, "ss": 0, "ini": 4, "mv": 3, "dmg": 8, "rng": 5, "pt": "Pierce", "mr": 0, "size": 2, "spectral": false, "flying": false, "cp": -2, "cost": [0, 3, 0], "abilities": ["Setzschild"], "def": "Light"}, {"id": "DeathHunter", "name": "Totenjäger", "rank": "Warrior", "role": "Scout", "faction": "Undead", "hp": 22, "ss": 0, "ini": 7, "mv": 6, "dmg": 9, "rng": 1, "pt": "Pierce", "mr": 2, "size": 3, "spectral": false, "flying": false, "cp": -4, "cost": [3, 2, 1], "abilities": ["Todesritt"], "def": "Light"}], "palettes": {"Undead": {"primary": "#D8D2C2", "accent": "#7A4A2A", "emissive": "#5CFF7A"}, "Hanse": {"primary": "#B3262B", "accent": "#EDE8DC", "emissive": null}, "Guelphs": {"primary": "#9E1B1B", "accent": "#D4A537", "emissive": null}, "Clergy": {"primary": "#E6E1D3", "accent": "#C9A24A", "emissive": "#FFC766"}, "Witches": {"primary": "#43364F", "accent": "#8A5BB0", "emissive": "#B88CFF"}, "WodanCult": {"primary": "#5B5F63", "accent": "#8A1C1C", "emissive": "#FFAA33"}, "Spreewald": {"primary": "#4E6B3A", "accent": "#C8B568", "emissive": "#40E0C8"}, "Wattenmeer": {"primary": "#6E6A60", "accent": "#2F4C6E", "emissive": "#4FE8FF"}, "HeathSpirits": {"primary": "#4A3626", "accent": "#8E5A9B", "emissive": "#F2EBA0"}}, "encounters": [{"id": "Enc_WilsedeFarm", "name": "Einzelhof bei Wilsede", "w": 8, "h": 8, "q": 9919, "r": 53177, "tod": "Night", "pantheon": false, "enemies": ["Peasant", "Peasant", "Peasant", "Peasant", "Crossbowman"], "notes": "Tutorial-Kampf. Bauern schlafen: Überraschung fast sicher"}, {"id": "Enc_BispingenChapel", "name": "Alte Kirche Bispingen", "w": 12, "h": 10, "q": 9998, "r": 53081, "tod": "Evening", "pantheon": false, "enemies": ["Peasant", "Peasant", "Peasant", "Crossbowman", "Crossbowman", "HeathSister", "HeathSister"], "notes": "Feldsteinkirche, erbaut 1353. Kirchhof liefert Bonus-Knochen. Geweihter Boden um die Kirche"}, {"id": "Enc_Pietzmoor", "name": "Pietzmoor bei Schneverdingen", "w": 10, "h": 10, "q": 9832, "r": 53119, "tod": "Morning", "pantheon": false, "enemies": ["BogSpirit", "WillOWisp", "WillOWisp", "WillOWisp", "Druidess"], "notes": "Morgennebel, Moorboden. Keine Stealth-Phase: Irrlichter sehen alles. Moorleichen im Torf: +3 Leichen"}, {"id": "Enc_Wode", "name": "Die Wilde Jagd", "w": 14, "h": 8, "q": 9715, "r": 52923, "tod": "Night", "pantheon": true, "enemies": ["Wode", "BlackHound", "BlackHound", "BlackHound", "BlackHound"], "notes": "Pantheon. Immer nachts. Offene Heide ohne Deckung. 4 Hunde = 2 Start + 2 beschworen (Simulation kennt keine Beschwörung). Gefallene Jagdpferde: +6 Leichen"}, {"id": "Enc_DwarfKing", "name": "Hügelgrab des Zwergenkönigs", "w": 10, "h": 10, "q": 9844, "r": 52985, "tod": "Night", "pantheon": true, "enemies": ["DwarfKing", "Druidess", "Druidess", "WillOWisp", "WillOWisp", "WillOWisp"], "notes": "Pantheon. Grabkammern, StoneFloor. Keine Stealth-Phase. Grabbeigaben: +15 Knochen"}, {"id": "Enc_HeathQueen", "name": "Wilseder Berg", "w": 12, "h": 12, "q": 9932, "r": 53164, "tod": "Day", "pantheon": true, "enemies": ["HeathQueen", "BogSpirit", "BogSpirit", "WillOWisp", "WillOWisp", "WillOWisp", "Druidess"], "notes": "Pantheon-Finale der Region. Ley-Bund: +10 SoulShield pro lebendem Randmitglied. Phase 2 ab 50 % HP"}], "armies": {"Start (13/15 KP)": ["Lich", "Skeleton", "Skeleton", "Skeleton", "Skeleton", "Skeleton", "Skeleton", "Ghoul", "Ghoul", "Zombie", "Zombie", "Zombie"], "Ausgebaut (22/24 KP)": ["Lich", "Necromancer", "DeathKnight", "DeathKnight", "Ghost", "Ghost", "Skeleton", "Skeleton", "Skeleton", "Skeleton", "BoneArcher", "BoneArcher"], "Stark (34/34 KP)": ["Lich", "Necromancer", "DeathKnight", "DeathKnight", "DeathKnight", "Ghost", "Ghost", "DeathHunter", "DeathHunter", "BoneArcher", "BoneArcher", "BoneArcher", "BoneArcher"]}, "generated": "02.11.2026"};
+const U = Object.fromEntries(DATA.units.map(u => [u.id, u]));
+const PAL = DATA.palettes;
+const DE = {
+  role: {Melee:"Nahkampf",Tank:"Verteidiger",Ranged:"Fernkampf",Caster:"Zauber",Support:"Unterstützung",Siege:"Belagerung",Scout:"Späher",Commander:"Anführer"},
+  rank: {CannonFodder:"Kanonenfutter",Warrior:"Krieger",Machine:"Maschine",Commander:"Kommandeur",Unique:"Einzigartig"},
+  fac: {Undead:"Untote",Hanse:"Hanse",Guelphs:"Welfen",Clergy:"Klerus",Witches:"Hexen",WodanCult:"Wodan-Kult",Spreewald:"Spreewald",Wattenmeer:"Wattenmeer",HeathSpirits:"Heidegeister"},
+  def: {Unarmored:"ohne",Light:"leicht",Medium:"mittel",Heavy:"schwer",Fortified:"befestigt",Divine:"göttlich"},
+  pt: {Pierce:"Stich",Blunt:"Stumpf",Rend:"Reißen",Siege:"Belagerung",Fire:"Feuer",Poison:"Gift",Arcane:"Arkan",Soul:"Seele",Holy:"Heilig",Chaos:"Chaos",Heal:"Heilung"},
+  tod: {Night:"Nacht",Morning:"Morgen",Day:"Tag",Evening:"Abend"}
+};
+const SIZE_H = {1: 28, 2: 38, 3: 56, 4: 84};            // px bei Hex-Radius 30 (1 px = 5 cm, Hex = 300 cm)
+const SOCKET = {1: .6, 2: .75, 3: .9, 4: 1.0};
+const FORM = { Ghoul:"quad", BlackHound:"quad", Ghost:"shroud", WillOWisp:"orb", DeathLight:"orb", DeathHunter:"rider",
+               Wode:"rider", BogSpirit:"mound", BogCorpse:"mound", Lich:"caster", HeathQueen:"caster" };
+const ROLE_FORM = {Melee:"melee",Tank:"tank",Ranged:"ranged",Caster:"caster",Support:"support",Siege:"machine",Scout:"quad",Commander:"caster"};
+const formOf = u => FORM[u.id] || ROLE_FORM[u.role];
+
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * f))));
+  return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+}
+function lum(hex) { const n = parseInt(hex.slice(1), 16); const [r,g,b] = [n>>16,(n>>8)&255,n&255]; return (0.299*r+0.587*g+0.114*b)/255; }
+let uid = 0;
+
+/* ---------- Formen (Zeichenraum: Füße bei y=0, Kopf oben bei ca. y=-60, Blick nach rechts) ---------- */
+function forms(f, P, A, G, O) {
+  const eye = (x, y) => G ? `<circle class="glow" cx="${x}" cy="${y}" r="1.6" fill="${G}"/><circle class="glow" cx="${x+3}" cy="${y}" r="1.6" fill="${G}"/>` : "";
+  const st = `stroke="${O}" stroke-width="1.4" stroke-linejoin="round"`;
+  switch (f) {
+    case "melee": return { head: [5,-50], top: -58, body: `
+      <path d="M-6 0 L-4 -20 M6 0 L4 -20" stroke="${P}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-10 -19 Q-13 -38 -3 -45 L9 -42 Q13 -30 8 -19 Z" fill="${P}" ${st}/>
+      <circle cx="-11" cy="-30" r="7.5" fill="${A}" ${st}/>
+      <path d="M7 -33 L25 -22" stroke="${A}" stroke-width="3" stroke-linecap="round"/><path d="M25 -22 l2 -5 l3 7 z" fill="${A}"/>
+      <circle cx="5" cy="-51" r="6.5" fill="${P}" ${st}/>`, eyes: eye(5,-52) };
+    case "tank": return { head: [0,-52], top: -59, body: `
+      <path d="M-7 0 L-7 -18 M7 0 L7 -18" stroke="${P}" stroke-width="7" stroke-linecap="round"/>
+      <rect x="-14" y="-45" width="26" height="28" rx="4" fill="${P}" ${st}/>
+      <circle cx="0" cy="-52" r="7" fill="${P}" ${st}/><path d="M-7 -53 Q0 -62 7 -53 Z" fill="${A}"/>
+      <rect x="7" y="-47" width="15" height="40" rx="3" fill="${A}" ${st}/><path d="M14.5 -42 V-12" stroke="${O}" stroke-width="1.4"/>`, eyes: eye(-2,-52) };
+    case "ranged": return { head: [0,-52], top: -60, body: `
+      <path d="M-4 0 L-3 -20 M5 0 L3 -20" stroke="${P}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-6 -20 L-6 -43 Q0 -46 6 -43 L6 -20 Z" fill="${P}" ${st}/>
+      <rect x="-12" y="-44" width="5" height="18" rx="1.5" fill="${A}" ${st}/>
+      <circle cx="0" cy="-51" r="6" fill="${P}" ${st}/>
+      <path d="M-16 -60 Q14 -48 20 -4" stroke="${A}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M-16 -60 L20 -4" stroke="${O}" stroke-width=".8"/>`, eyes: eye(-1,-52) };
+    case "caster": return { head: [0,-48], top: -74, body: `
+      <path d="M-6 0 L-10 -38 Q0 -47 10 -38 L6 0 Z" fill="${P}" ${st}/>
+      <circle cx="0" cy="-47" r="6.5" fill="${P}" ${st}/><path d="M-7 -46 Q0 -60 7 -46" fill="${shade(P,.75)}" ${st}/>
+      <path d="M13 3 L13 -68" stroke="${A}" stroke-width="2.6" stroke-linecap="round"/>
+      <circle class="glow" cx="13" cy="-70" r="4.6" fill="${G || A}" ${st}/>`, eyes: eye(-1,-47) };
+    case "support": return { head: [0,-46], top: -66, body: `
+      <ellipse cx="0" cy="-22" rx="13" ry="18" fill="${P}" ${st}/>
+      <circle cx="0" cy="-45" r="6.5" fill="${P}" ${st}/>
+      <path d="M17 -2 L17 -60" stroke="${shade(A,.8)}" stroke-width="2" stroke-linecap="round"/>
+      <path d="M11 -30 L17 -32" stroke="${P}" stroke-width="3" stroke-linecap="round"/>
+      <rect class="glow" x="13" y="-66" width="8" height="9" rx="2" fill="${G || A}" ${st}/>`, eyes: eye(-2,-46) };
+    case "machine": return { head: [0,-30], top: -44, body: `
+      <rect x="-26" y="-17" width="52" height="9" rx="2" fill="${P}" ${st}/>
+      <circle cx="-16" cy="-5" r="6" fill="${A}" ${st}/><circle cx="16" cy="-5" r="6" fill="${A}" ${st}/>
+      <path d="M-4 -17 L0 -30 L4 -17" fill="${P}" ${st}/>
+      <path d="M-24 -30 Q0 -46 24 -30" stroke="${A}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <path d="M-22 -30 L30 -30" stroke="${shade(P,.7)}" stroke-width="2"/><path d="M30 -30 l-5 -3 v6 z" fill="${shade(P,.7)}"/>
+      ${G ? `<path class="glow" d="M-24 -30 L0 -26 L24 -30" stroke="${G}" stroke-width="1.2" fill="none"/>` : ""}`, eyes: "" };
+    case "orb": { const c = G || P; return { head: [0,-40], top: -50, body: `
+      <circle class="glow" cx="0" cy="-40" r="16" fill="url(#halo${uid})"/>
+      <path d="M-8 -36 Q-20 -30 -26 -20" stroke="${c}" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
+      <circle class="glow" cx="0" cy="-40" r="8.5" fill="${c}" ${st}/>`, eyes: "", halo: c }; }
+    case "shroud": return { head: [0,-46], top: -60, body: `
+      <path d="M0 -58 Q15 -50 12 -26 Q10 -10 19 2 Q5 -3 0 5 Q-6 -3 -17 1 Q-10 -12 -12 -30 Q-12 -52 0 -58 Z" fill="${P}" ${st}/>`, eyes: eye(-1,-46) };
+    case "quad": return { head: [18,-24], top: -34, body: `
+      <path d="M-13 0 L-12 -14 M-5 0 L-6 -14 M8 0 L7 -14 M15 0 L13 -14" stroke="${P}" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M-18 -16 Q-12 -32 4 -30 Q16 -28 17 -16 Q4 -10 -18 -16 Z" fill="${P}" ${st}/>
+      <circle cx="19" cy="-24" r="6.5" fill="${P}" ${st}/>
+      <path d="M22 -19 L31 -15 M21 -17 L29 -10" stroke="${A}" stroke-width="2.2" stroke-linecap="round"/>`, eyes: eye(18,-26) };
+    case "rider": return { head: [-1,-46], top: -64, body: `
+      <path d="M-15 0 L-14 -12 M-7 0 L-8 -12 M9 0 L9 -12 M16 0 L15 -12" stroke="${shade(P,.6)}" stroke-width="3.6" stroke-linecap="round"/>
+      <ellipse cx="0" cy="-15" rx="20" ry="8" fill="${shade(P,.6)}" ${st}/>
+      <path d="M14 -18 L21 -30 L27 -27 L20 -16 Z" fill="${shade(P,.6)}" ${st}/>
+      <path d="M-6 -20 L-5 -40 Q0 -43 5 -40 L5 -20 Z" fill="${P}" ${st}/>
+      <circle cx="0" cy="-46" r="5.5" fill="${P}" ${st}/>
+      <path d="M-12 -12 L10 -64" stroke="${A}" stroke-width="2.6" stroke-linecap="round"/><path d="M10 -64 l-1 6 l4 -2 z" fill="${A}"/>`, eyes: eye(-1,-47) };
+    case "mound": return { head: [0,-28], top: -38, body: `
+      <path d="M-11 -24 Q-26 -16 -25 -2 M11 -24 Q27 -16 27 -3" stroke="${P}" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M-19 1 Q-21 -24 -8 -33 Q0 -39 8 -33 Q21 -24 19 1 Z" fill="${P}" ${st}/>
+      <path d="M-14 -6 Q0 -2 14 -6" stroke="${shade(P,.7)}" stroke-width="2" fill="none"/>`, eyes: eye(-2,-27) };
+  }
+}
+
+function crown(x, y, A) { return `<path d="M${x-6} ${y} L${x-6} ${y-6} L${x-3} ${y-3} L${x} ${y-8} L${x+3} ${y-3} L${x+6} ${y-6} L${x+6} ${y} Z" fill="#e2b84a" stroke="#3a2a10" stroke-width="1"/>`; }
+function banner(A, P) { return `<path d="M-16 2 L-16 -72" stroke="${shade(P,.6)}" stroke-width="2"/><path d="M-16 -72 L-2 -68 L-16 -60 Z" fill="${A}" stroke="#0d0b09" stroke-width="1"/>`; }
+
+function socket(u, R, side) {
+  const rx = R * SOCKET[u.size], ry = rx * .42;
+  const col = side === "P" ? PAL.Undead.emissive : PAL[u.faction].accent;
+  if (side === "P") return `<ellipse cx="0" cy="0" rx="${rx}" ry="${ry}" fill="${col}" fill-opacity=".14" stroke="${col}" stroke-width="2.4"/>`;
+  let pts = [];
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r = i % 2 ? .82 : 1.05; pts.push(`${(Math.cos(a)*rx*r).toFixed(1)},${(Math.sin(a)*ry*r).toFixed(1)}`); }
+  return `<polygon points="${pts.join(" ")}" fill="${col}" fill-opacity=".14" stroke="${col}" stroke-width="2"/>`;
+}
+
+function overhead(u, top) {
+  const n = Math.ceil(u.hp / 5), s = Math.ceil(u.ss / 5), w = 4, g = 1, W = n * (w + g) - g, x0 = -W / 2, y = top - 9;
+  let r = `<rect x="${x0-2}" y="${y-2}" width="${W+4}" height="8" rx="2" fill="#0b0908" fill-opacity=".85"/>`;
+  for (let i = 0; i < n; i++) r += `<rect x="${x0 + i*(w+g)}" y="${y}" width="${w}" height="4" fill="${i < s ? "var(--shield)" : "var(--hp)"}"/>`;
+  const bx = x0 + W + 7, by = y + 2;
+  const badge = {Warrior: `<path d="M${bx} ${by-4} V${by+4}" stroke="var(--bone)" stroke-width="2"/>`,
+    Machine: `<circle cx="${bx}" cy="${by}" r="3.3" fill="none" stroke="var(--bone)" stroke-width="1.6" stroke-dasharray="1.6 1"/>`,
+    Commander: `<path d="M${bx-2} ${by+4} V${by-4} L${bx+4} ${by-2} L${bx-2} ${by}" stroke="var(--bone)" stroke-width="1.4" fill="none"/>`,
+    Unique: crown(bx, by + 4, "")}[u.rank] || "";
+  return `<g class="ov">${r}${badge}</g>`;
+}
+
+const GLYPH = {
+  Melee: `<path d="M0 -26 V-10 M-5 -14 H5" stroke="C" stroke-width="2.4" stroke-linecap="round"/>`,
+  Tank: `<path d="M-6 -25 H6 V-17 Q6 -11 0 -9 Q-6 -11 -6 -17 Z" fill="C"/>`,
+  Ranged: `<path d="M-3 -27 Q7 -18 -3 -9" stroke="C" stroke-width="2.2" fill="none"/><path d="M-3 -27 V-9" stroke="C" stroke-width="1"/>`,
+  Caster: `<path d="M2 -9 L-2 -25" stroke="C" stroke-width="2.2" stroke-linecap="round"/><circle cx="-2" cy="-26" r="3" fill="C"/>`,
+  Support: `<path d="M-5 -24 H5 L3 -14 H-3 Z M0 -14 V-10 M-3 -10 H3" stroke="C" stroke-width="1.8" fill="C" stroke-linejoin="round"/>`,
+  Siege: `<circle cx="0" cy="-17" r="7" stroke="C" stroke-width="2" fill="none"/><path d="M-7 -17 H7 M0 -24 V-10" stroke="C" stroke-width="1.6"/>`,
+  Scout: `<path d="M-8 -17 Q0 -25 8 -17 Q0 -9 -8 -17 Z" stroke="C" stroke-width="1.8" fill="none"/><circle cx="0" cy="-17" r="2.4" fill="C"/>`,
+  Commander: `<path d="M-4 -9 V-27 L7 -23 L-4 -19" stroke="C" stroke-width="2" fill="none" stroke-linejoin="round"/>`
+};
+function token(u, P, A) {
+  const k = [0, .8, 1, 1.25, 1.5][u.size], c = lum(P) > .5 ? "#14110e" : "#f1ead9";
+  return `<g transform="scale(${k})"><path d="M-13 -36 H13 V-20 Q13 -4 0 3 Q-13 -4 -13 -20 Z" fill="${P}" stroke="${A}" stroke-width="2.4"/>${GLYPH[u.role].replaceAll("C", c)}</g>`;
+}
+
+/* Eine Einheit als SVG-Gruppe. side: "P" (Spieler) oder "E" (Gegner). */
+function unitSVG(u, R, side, tokenMode) {
+  uid++;
+  const pal = PAL[u.faction], P = pal.primary, A = pal.accent, G = pal.emissive || null, O = "#0d0b09";
+  const H = SIZE_H[u.size], sc = H / 60, flip = side === "E" ? -1 : 1;
+  const hover = u.flying ? 12 : 0;
+  let fig, top;
+  if (tokenMode) { fig = token(u, P, A); top = -36 * [0, .8, 1, 1.25, 1.5][u.size] - 4; }
+  else {
+    const f = forms(formOf(u), P, A, G, O);
+    let deco = "";
+    if (u.rank === "Unique") deco += crown(f.head[0], f.head[1] - 6, A);
+    if (u.rank === "Commander") deco = banner(A, P) + deco;
+    const halo = f.halo ? `<defs><radialGradient id="halo${uid}"><stop offset="0" stop-color="${f.halo}" stop-opacity=".55"/><stop offset="1" stop-color="${f.halo}" stop-opacity="0"/></radialGradient></defs>` : "";
+    const spec = u.spectral ? ` opacity=".72"` : "";
+    const glows = (f.body.match(/<[^>]*class="glow"[^>]*\/>/g) || []).join("");   // Leuchten nachts nicht abdunkeln
+    fig = `${halo}<g transform="translate(0 ${-hover}) scale(${flip * sc} ${sc})"><g class="body"${spec}>${f.body}${deco}</g>${glows}${f.eyes}</g>`;
+    top = Math.min(f.top, -60) * sc - hover;
+  }
+  const shadow = u.flying && !tokenMode ? `<ellipse cx="0" cy="0" rx="${R*.32}" ry="${R*.12}" fill="#000" opacity=".45"/>` : "";
+  return `<g>${socket(u, R, side)}${shadow}${fig}${overhead(u, top)}</g>`;
+}
+
+/* ---------- Schlachtfeld ---------- */
+const GROUND = {
+  Enc_WilsedeFarm: ["#59633e", "#4f5a37", "#6b6247"], Enc_BispingenChapel: ["#55603c", "#6d685d", "#4d5636"],
+  Enc_Pietzmoor: ["#3f4733", "#4a4231", "#37402f"], Enc_Wode: ["#5d4a5c", "#4f4250", "#5a5040"],
+  Enc_DwarfKing: ["#57534c", "#4d4a44", "#615c53"], Enc_HeathQueen: ["#634f66", "#5a485c", "#6b5b4a"]
+};
+function hexPts(cx, cy, R) { let p = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i; p.push(`${(cx + R*Math.cos(a)).toFixed(1)},${(cy + R*Math.sin(a)).toFixed(1)}`); } return p.join(" "); }
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+const state = { enc: DATA.encounters[0].id, army: Object.keys(DATA.armies)[0], gray: false, blur: false, night: false, token: false, ov: true };
+state.night = DATA.encounters[0].tod === "Night";
+try { const s = JSON.parse(localStorage.getItem("eb-state") || "{}"); Object.assign(state, s); } catch (e) {}
+function save() { try { localStorage.setItem("eb-state", JSON.stringify(state)); } catch (e) {} }
+
+function place(list, cols, rows, side) {
+  // Einheiten spaltenweise vom eigenen Rand her verteilen, große Einheiten zuerst und mit Abstand
+  const out = [], order = [...list].sort((a, b) => U[b].size - U[a].size);
+  const per = Math.max(1, Math.floor((rows + 1) / 2));   // jede zweite Reihe, damit Figuren sich nicht verdecken
+  let i = 0;
+  for (const id of order) {
+    const col = Math.floor(i / per), slot = i % per;
+    const q = side === "P" ? col : cols - 1 - col;
+    const r = Math.min(rows - 1, slot * 2 + (col % 2));
+    out.push({ id, q, r }); i += 1;
+  }
+  return out;
+}
+
+function drawScene() {
+  const e = DATA.encounters.find(x => x.id === state.enc), army = DATA.armies[state.army];
+  const R = 36, S3 = Math.sqrt(3), cols = e.w, rows = e.h;
+  const W = Math.ceil((cols - 1) * 1.5 * R + 2 * R + 40), Hh = Math.ceil(rows * S3 * R + S3 * R / 2 + 110);
+  const ox = R + 20, oy = 110;
+  const rand = rng(e.q * 31 + e.r), gc = GROUND[e.id];
+  let ground = "";
+  for (let q = 0; q < cols; q++) for (let r = 0; r < rows; r++) {
+    const cx = ox + q * 1.5 * R, cy = oy + r * S3 * R + (q % 2 ? S3 * R / 2 : 0);
+    ground += `<polygon points="${hexPts(cx, cy, R - .6)}" fill="${gc[Math.floor(rand() * gc.length)]}" stroke="#1a1612" stroke-width="1.2"/>`;
+  }
+  const deploy = [...place(army.filter(id => true), cols, rows, "P").map(p => ({...p, side: "P"})),
+                  ...place(e.enemies, cols, rows, "E").map(p => ({...p, side: "E"}))];
+  deploy.forEach(d => { d.x = ox + d.q * 1.5 * R; d.y = oy + d.r * S3 * R + (d.q % 2 ? S3 * R / 2 : 0); });
+  deploy.sort((a, b) => a.y - b.y);
+  const units = deploy.map(d => `<g transform="translate(${d.x.toFixed(1)} ${d.y.toFixed(1)})">${unitSVG(U[d.id], R, d.side, state.token)}</g>`).join("");
+  const svg = document.getElementById("scene");
+  svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`); svg.setAttribute("width", W); svg.setAttribute("height", Hh);
+  svg.innerHTML = `<g class="ground">${ground}</g>${units}`;
+  svg.classList.toggle("gray", state.gray); svg.classList.toggle("blur", state.blur);
+  svg.classList.toggle("night", state.night); svg.classList.toggle("hide-ov", !state.ov);
+  const kp = army.reduce((s, id) => s + Math.max(0, -U[id].cp), 0);
+  document.getElementById("sceneNote").innerHTML =
+    `<span><b>${e.name}</b> · ${e.w}×${e.h} Felder · ${DE.tod[e.tod]}${e.pantheon ? " · Pantheon" : ""}</span>` +
+    `<span>Gegner: <b>${e.enemies.length}</b></span><span>Eigene Armee: <b>${army.length}</b> Einheiten, ${kp} KP</span>` +
+    `<span>${e.notes}</span>`;
+}
+
+function legend() {
+  const P = PAL.Undead, E = PAL.Hanse;
+  const mk = (inner) => `<svg width="64" height="34" viewBox="-32 -17 64 34" aria-hidden="true">${inner}</svg>`;
+  const fake = { size: 2, faction: "Hanse" };
+  const items = [
+    [mk(socket({size: 2, faction: "Undead"}, 30, "P")), "<b>Glatter Ring</b> – eigene Einheit (nekrotisches Grün)"],
+    [mk(socket(fake, 30, "E")), "<b>Gezackter Ring</b> – Gegner, in der Akzentfarbe seiner Fraktion"],
+    [mk(`<g transform="translate(-14 4)">${[0,1,2,3].map(i => `<rect x="${i*5}" y="-4" width="4" height="4" fill="${i<1?"var(--shield)":"var(--hp)"}"/>`).join("")}</g>`), "<b>Segmente</b> – 1 je 5 HP, blau = Seelenschild"],
+    [mk(`${crown(-12, 6, "")}<path d="M4 -4 V8" stroke="var(--bone)" stroke-width="2"/><path d="M14 8 V0 L20 2 L14 4" stroke="var(--bone)" stroke-width="1.4" fill="none"/>`), "<b>Rang</b> – Krone einzigartig, Kerbe Krieger, Fähnchen Kommandeur"],
+  ];
+  document.getElementById("legend").innerHTML = items.map(([s, t]) => `<div>${s}<span>${t}</span></div>`).join("");
+}
+
+/* ---------- Einheitenbuch ---------- */
+const filt = { side: "all", fac: null };
+function cardFig(u) {
+  const side = u.faction === "Undead" ? "P" : "E", sc = 1.55;
+  return `<svg width="230" height="132" viewBox="-74 -128 148 132" aria-hidden="true"><g transform="scale(${sc})">${unitSVG(u, 30, side, false)}</g></svg>`;
+}
+function renderGrid() {
+  const list = DATA.units.filter(u => (filt.side === "all" || (filt.side === "P") === (u.faction === "Undead")) && (!filt.fac || u.faction === filt.fac));
+  document.getElementById("count").textContent = `${list.length} von ${DATA.units.length} Einheiten`;
+  document.getElementById("grid").innerHTML = list.map(u => {
+    const pal = PAL[u.faction];
+    const cost = [["L", u.cost[0]], ["K", u.cost[1]], ["S", u.cost[2]]].filter(x => x[1]).map(x => x[1] + x[0]).join(" ");
+    return `<article class="card" tabindex="0">
+      <div class="fig">${cardFig(u)}</div>
+      <h3>${u.name}</h3>
+      <div class="meta"><span class="fac"><i style="background:${pal.primary};outline:2px solid ${pal.accent}"></i>${DE.fac[u.faction]}</span> · ${DE.role[u.role]} · ${DE.rank[u.rank]} · Größe ${u.size}${u.spectral ? " · geisterhaft" : ""}${u.flying ? " · fliegend" : ""}</div>
+      <div class="stats">
+        <div><span>HP</span><b>${u.hp}${u.ss ? "+" + u.ss : ""}</b></div>
+        <div><span>Initiative</span><b>${u.ini}</b></div>
+        <div><span>Bewegung</span><b>${u.mv}</b></div>
+        <div><span>Reichweite</span><b>${u.rng}</b></div>
+        <div style="grid-column: span 2"><span>Angriff</span><b>${u.dmg} ${DE.pt[u.pt]}</b></div>
+        <div style="grid-column: span 2"><span>Rüstung · MR</span><b>${DE.def[u.def]} · ${u.mr}</b></div>
+      </div>
+      <div class="abil">${u.abilities.length ? u.abilities.map(a => `<b>${a}</b>`).join(" · ") : "Keine Fähigkeit"}${u.faction === "Undead" && u.id !== "Lich" ? `<br>${-u.cp > 0 ? (-u.cp) + " KP" : "+" + u.cp + " KP"}${cost ? " · " + cost : ""}` : ""}</div>
+    </article>`;
+  }).join("");
+}
+function renderFilters() {
+  const facs = [...new Set(DATA.units.map(u => u.faction))];
+  const sides = [["all", "Alle"], ["P", "Eigene"], ["E", "Gegner"]];
+  document.getElementById("filters").innerHTML =
+    sides.map(([k, t]) => `<button class="chip" data-side="${k}" aria-pressed="${filt.side === k}">${t}</button>`).join("") +
+    facs.map(f => `<button class="chip" data-fac="${f}" aria-pressed="${filt.fac === f}"><span class="dot" style="background:${PAL[f].primary}"></span>${DE.fac[f]}</button>`).join("");
+}
+document.getElementById("filters").addEventListener("click", ev => {
+  const b = ev.target.closest(".chip"); if (!b) return;
+  if (b.dataset.side) { filt.side = b.dataset.side; filt.fac = null; }
+  if (b.dataset.fac) { filt.fac = filt.fac === b.dataset.fac ? null : b.dataset.fac; filt.side = "all"; }
+  renderFilters(); renderGrid();
+});
+
+/* ---------- Bedienung ---------- */
+const encSel = document.getElementById("encSel"), armySel = document.getElementById("armySel");
+encSel.innerHTML = DATA.encounters.map(e => `<option value="${e.id}">${e.name}${e.pantheon ? " (Pantheon)" : ""}</option>`).join("");
+armySel.innerHTML = Object.keys(DATA.armies).map(k => `<option value="${k}">${k}</option>`).join("");
+if (!DATA.encounters.some(e => e.id === state.enc)) state.enc = DATA.encounters[0].id;
+if (!DATA.armies[state.army]) state.army = Object.keys(DATA.armies)[0];
+encSel.value = state.enc; armySel.value = state.army;
+encSel.addEventListener("change", () => { state.enc = encSel.value; state.night = DATA.encounters.find(e => e.id === state.enc).tod === "Night"; syncToggles(); drawScene(); save(); });
+armySel.addEventListener("change", () => { state.army = armySel.value; drawScene(); save(); });
+const TG = { tgGray: "gray", tgBlur: "blur", tgNight: "night", tgToken: "token", tgOv: "ov" };
+function syncToggles() { for (const [id, k] of Object.entries(TG)) document.getElementById(id).setAttribute("aria-pressed", state[k]); }
+for (const [id, k] of Object.entries(TG)) document.getElementById(id).addEventListener("click", () => { state[k] = !state[k]; syncToggles(); drawScene(); save(); });
+
+document.getElementById("foot").textContent = `Erzeugt aus den DataTables des Projekts (${DATA.generated}). Figuren folgen den Regeln „Silhouette nach Rolle“, „höchster Punkt = Rollen-Merkmal“, „Leuchten nur für Übernatürliches“.`;
+syncToggles(); legend(); drawScene(); renderFilters(); renderGrid();
+</script>
