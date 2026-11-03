@@ -125,9 +125,9 @@
 <!-- Game data: classic scripts, loaded before the game module -->
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
-<script src="data/heightmap.js?v=3"></script>
-<script src="data/world_data.js?v=3"></script>
-<script src="data/ground_textures.js?v=3"></script>
+<script src="data/heightmap.js?v=4"></script>
+<script src="data/world_data.js?v=4"></script>
+<script src="data/ground_textures.js?v=4"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -912,7 +912,7 @@ const Campaign = {
     const extra = Math.floor(threat / THREAT.reinforcementPer);
     let best = null, bestN = -1;
     for (const [type, n] of Object.entries(node.garrison)) if (n > bestN) { best = type; bestN = n; }
-    for (let i = 0; i < extra; i++) list.push(best);
+    for (let i = 0; i < extra * (THREAT.reinforcementUnits || 1); i++) list.push(best);
     return list;
   },
   // Threat rises when a node is attacked.
@@ -1222,6 +1222,32 @@ const roundFrac = x => Math.round(x * RULES.roundTicks / 10);
 // u.hp is the stack's total; only the top creature can be wounded.
 const stackCount = u => u.hp > 0 ? Math.ceil(u.hp / u.def.hp - 1e-9) : 0;
 const topHp = u => u.hp - (stackCount(u) - 1) * u.def.hp;
+// Splits enemy groups into several stacks (rules in DATA.stacks): the type with the largest
+// stacks gets another one while the limits allow it and every part keeps minStackSize units.
+function splitStacks(groups) {
+  const S = DATA.stacks, types = groups.length;
+  const limit = types >= S.fullStacksFromTypes ? S.maxStacks : Math.min(S.maxStacks, types * S.stacksPerTypeFew);
+  const parts = groups.map(() => 1);
+  let total = types;
+  while (total < limit) {
+    let best = -1, bestSize = 0;
+    groups.forEach((g, i) => {
+      const size = g.hps.length / parts[i];
+      if (parts[i] < S.maxPerType && g.hps.length / (parts[i] + 1) >= S.minStackSize && size > bestSize) { best = i; bestSize = size; }
+    });
+    if (best < 0) break;
+    parts[best]++; total++;
+  }
+  const out = [];
+  groups.forEach((g, i) => {
+    const k = parts[i], n = g.hps.length;
+    for (let j = 0, start = 0; j < k; j++) {
+      const len = Math.floor(n / k) + (j < n % k ? 1 : 0);
+      out.push({ type: g.type, hps: g.hps.slice(start, start + len) }); start += len;
+    }
+  });
+  return out;
+}
 // Groups individual units [{type, hp}] by type in order of first appearance -> [{type, hps: [...]}].
 function groupByType(list) {
   const out = new Map();
@@ -1828,8 +1854,9 @@ const Battle = {
     };
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
+    this.applyLichBonus(b);
     const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
-    for (const g of groupByType(garrison)) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
+    for (const g of splitStacks(groupByType(garrison))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
     this.deploy(b);
 
     // View: lock the tile window on the node, dim everything outside the field.
@@ -1852,7 +1879,7 @@ const Battle = {
     cam.distance = Math.min(CAM.maxZoom, 25 + node.size * 1.4);
     game.mode = 'battle';
     UI.enterBattle();
-    this.log(`Angriff auf ${node.name}! (${b.units.filter(u => u.side === 'enemy').length} Verteidiger)`, 'hit');
+    this.log(`Angriff auf ${node.name}! (${b.units.filter(u => u.side === 'enemy').reduce((n, u) => n + stackCount(u), 0)} Verteidiger in ${b.units.filter(u => u.side === 'enemy').length} Gruppen)`, 'hit');
 
     // Stealth phase (PROMPT 9).
     const base = vectorToDirection(dir.x, dir.z), rng = makeRng(field.seed + 17);
@@ -1881,6 +1908,20 @@ const Battle = {
     u.maxHp = n * def.hp; u.startCount = n; u.shield = (def.soulShield || 0) * n;
     return u;
   },
+  // The Lich grows with his army (economy.lichArmyBonus per command point in use). His def is
+  // copied so the bonus stays in this battle; wounds keep their share of the boosted HP.
+  applyLichBonus(b) {
+    const lich = b.units.find(u => u.type === 'lich'), B = ECON.lichArmyBonus;
+    if (!lich || !B) return;
+    const cp = Campaign.commandUsed(), base = lich.def;
+    const add = { hp: Math.round(cp * B.hpPerCommand), damage: Math.round(cp * B.damagePerCommand), soulShield: Math.round(cp * B.shieldPerCommand) };
+    lich.def = { ...base, hp: base.hp + add.hp, damage: base.damage + add.damage, soulShield: base.soulShield + add.soulShield };
+    lich.hp = Math.max(1, Math.round(lich.hp / base.hp * lich.def.hp));
+    lich.maxHp = lich.def.hp; lich.shield = lich.def.soulShield;
+    if (cp > 0) this.log(`Der Lich zieht Kraft aus seiner Armee (${cp} Kommando): +${add.hp} LP, +${add.damage} Schaden, +${add.soulShield} Seelenschild.`, 'good');
+  },
+  // Battle HP of the Lich back to his campaign HP (without the army bonus).
+  lichCampaignHp(u) { return Math.max(1, Math.round(u.hp / u.def.hp * DATA.units.lich.hp)); },
   makeUnit(type, side, faction, hp) {
     const def = DATA.units[type];
     return { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, startCount: 1, q: 0, r: 0,
@@ -2170,6 +2211,11 @@ const Battle = {
       // Survivors recover part of their strength after a won battle.
       let healed = 0;
       c.army = this.alive('player').flatMap(u => {
+        if (u.type === 'lich') {
+          const hp = Math.min(DATA.units.lich.hp, this.lichCampaignHp(u) + Math.ceil(DATA.units.lich.hp * ECON.postBattleHealShare));
+          healed += hp - this.lichCampaignHp(u);
+          return [{ type: 'lich', hp }];
+        }
         const n = stackCount(u), cap = n * u.def.hp;
         const total = Math.min(cap, u.hp + n * Math.ceil(u.def.hp * ECON.postBattleHealShare));
         healed += total - u.hp;
@@ -2188,7 +2234,7 @@ const Battle = {
       html = `<h2>Der Lich fällt</h2><p>Die Armee zerfällt zu Staub. ${ECON.lichDeathDays} Tage später erwacht der Lich erneut im Hügelgrab am Wilseder Berg.</p>`;
     } else {
       const lich = this.alive('player').find(u => u.type === 'lich');
-      c.army = [{ type: 'lich', hp: lich ? lich.hp : DATA.units.lich.hp }];
+      c.army = [{ type: 'lich', hp: lich ? this.lichCampaignHp(lich) : DATA.units.lich.hp }];
       c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
       Campaign.advanceDays(1);
       html = `<h2>Rückzug</h2><p>Der Lich entweicht in die Nacht und kehrt nach einem Tag ins Hügelgrab zurück. Seine Diener bleiben zurück. Keine Beute.</p>`;
