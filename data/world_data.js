@@ -23,7 +23,7 @@ window.HARMBRINGER_DATA = {
     metersAtGrayZero: -58,
     // World map relief: height in world units = meters / colMeters * columnSpacing * reliefExaggeration.
     // 1 = true scale (~55 m per unit). Battles use the compressed hex heights (hex.heightPerStep).
-    reliefExaggeration: 20,
+    reliefExaggeration: 8,
     utm: { eMin: 370354.257, nMax: 6093532.332, colMeters: 247.1460, rowMeters: 285.3797 },
     startDate: { year: 1371, month: 5, day: 1 }
   },
