@@ -122,9 +122,11 @@
   #edgeTip { position: absolute; padding: 2px 8px; font-size: 13px; pointer-events: none; z-index: 7; }
 </style>
 <!-- Game data: classic scripts, loaded before the game module -->
-<script src="data/heightmap.js"></script>
-<script src="data/world_data.js"></script>
-<script src="data/ground_textures.js"></script>
+<!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
+     Bump it whenever a data format changes. -->
+<script src="data/heightmap.js?v=2"></script>
+<script src="data/world_data.js?v=2"></script>
+<script src="data/ground_textures.js?v=2"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -189,6 +191,13 @@ if (!DATA || !HM) {
     `• ZIP zuerst entpacken (Rechtsklick → „Alle extrahieren“), nicht nur im Explorer öffnen.<br>` +
     `• Dann im entpackten Ordner <b>harmbringer/index.html</b> doppelklicken.`;
   throw new Error('Harmbringer data files missing');
+}
+if (HM.format !== 'u16' || !DATA.map.metersPerStep) {
+  // Cached old data next to a new index.html (or the other way round) gives a gray world without places.
+  document.getElementById('loadingText').innerHTML =
+    '<b>Spieldaten passen nicht zu dieser Version.</b><br><br>Der Browser hat vermutlich alte Dateien zwischengespeichert. ' +
+    'Bitte mit <b>Strg + F5</b> (Mac: Cmd + Shift + R) neu laden.';
+  throw new Error('Harmbringer data version mismatch');
 }
 const MAP = DATA.map;
 const HEX = DATA.hex;
