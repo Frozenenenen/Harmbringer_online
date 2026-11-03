@@ -2587,16 +2587,24 @@ function onHover(ev) {
 }
 function initInput() {
   const canvas = game.view.renderer.domElement, inp = game.input;
-  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  // Releasing the right button outside the window used to leave rotation and pressed keys stuck:
+  // the release and the context menu went elsewhere and the keyup events were lost. Pointer capture
+  // keeps the release in the canvas, and every path that loses track of the input resets it.
+  const releaseAll = () => { inp.rmb = false; inp.keys.clear(); };
+  window.addEventListener('contextmenu', e => { e.preventDefault(); if (e.target !== canvas) releaseAll(); });
   canvas.addEventListener('pointerdown', e => {
     inp.downX = e.clientX; inp.downY = e.clientY;
-    if (e.button === 2) { inp.rmb = true; inp.lastX = e.clientX; }
+    if (e.button === 2) { inp.rmb = true; inp.lastX = e.clientX; canvas.setPointerCapture(e.pointerId); }
   });
+  canvas.addEventListener('lostpointercapture', () => { inp.rmb = false; });
+  window.addEventListener('pointercancel', releaseAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
   window.addEventListener('pointerup', e => {
     if (e.button === 2) inp.rmb = false;
     if (e.button === 0 && e.target === canvas && Math.hypot(e.clientX - inp.downX, e.clientY - inp.downY) < 6) onLeftClick(e);
   });
   window.addEventListener('pointermove', e => {
+    if (inp.rmb && !(e.buttons & 2)) inp.rmb = false;      // release was missed
     if (inp.rmb) { game.view.cam.yaw -= (e.clientX - inp.lastX) * 0.006; inp.lastX = e.clientX; }
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
@@ -2614,7 +2622,7 @@ function initInput() {
     if (e.code === 'Escape' && game.mode === 'world') { UI.selectedNode = null; UI.selectedTile = null; WorldView.refresh(); UI.renderInfo(); }
   });
   window.addEventListener('keyup', e => inp.keys.delete(e.code));
-  window.addEventListener('blur', () => inp.keys.clear());
+  window.addEventListener('blur', releaseAll);
   $('btnEndTurn').onclick = () => { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); };
   $('btnRetreat').onclick = () => Battle.retreat();
   $('btnEdges').onclick = () => toggleEdges();
