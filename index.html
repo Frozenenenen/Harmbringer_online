@@ -48,6 +48,7 @@
     padding: 6px 14px; flex-wrap: wrap; z-index: 5; }
   #header .res { display: flex; gap: 14px; flex-wrap: wrap; }
   #header .res b { font-weight: normal; color: var(--undead); }
+  #header .res span[title] { cursor: help; border-bottom: 1px dotted var(--ink-soft); }
   #threats { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
   .threat { font-size: 12px; min-width: 80px; }
   .threat .bar { height: 6px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 1px; }
@@ -2781,9 +2782,10 @@ const UI = {
     const c = game.campaign;
     $('date').textContent = Campaign.dateString(c.dayCount);
     const r = c.resources;
-    $('resources').innerHTML = `<span>Leichen <b>${r.corpses}</b></span><span>Knochen <b>${r.bones}</b></span>
-      <span>Seelen <b>${r.souls}</b></span><span>Wissen <b>${r.knowledge}</b></span>
-      <span>Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
+    const tip = k => esc(this.resourceTip(k)).replace(/\n/g, '&#10;');
+    $('resources').innerHTML = `<span title="${tip('corpses')}">Leichen <b>${r.corpses}</b></span><span title="${tip('bones')}">Knochen <b>${r.bones}</b></span>
+      <span title="${tip('souls')}">Seelen <b>${r.souls}</b></span><span title="${tip('knowledge')}">Wissen <b>${r.knowledge}</b></span>
+      <span title="${tip('command')}">Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
     $('threats').innerHTML = ENEMY_FACTIONS.map(f => {
       const v = Math.round(c.threat[f]), living = Campaign.isLiving(f);
       return `<div class="threat ${living ? '' : 'dead'}" title="Bedrohung ${DATA.factions[f].name}: ${v} %">${DATA.factions[f].name} ${v} %
@@ -2802,6 +2804,23 @@ const UI = {
     const parts = Object.entries(r).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`);
     if (node.type === 'MYTHIC') parts.push(`+${ECON.commandLimitPerMythicNode} Kommando`);
     return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
+  },
+  // Mouse-over help for the resources in the header: how to get them and what they are for.
+  resourceTip(k) {
+    const income = {};
+    for (const n of Campaign.ownedSpecials()) for (const [r, v] of Object.entries(DATA.specials[n.special].income || {})) income[r] = (income[r] || 0) + v;
+    const sites = r => Object.entries(DATA.specials).filter(([, sp]) => sp.income && sp.income[r]).map(([id]) => DATA.nodes.find(n => n.special === id)).filter(Boolean).map(n => n.name).join(', ');
+    const users = r => Object.values(DATA.units).filter(u => u.side === 'undead' && u.cost && u.cost[r]).map(u => u.name).join(', ');
+    const q = DATA.corpseQuality, pct = v => Math.round(v * 100) + ' %';
+    const daily = income[k] ? `\nZurzeit +${income[k]} pro Tag aus eroberten Orten.` : '';
+    if (k === 'corpses') return `Leichen\n• Jeder gefallene Gegner gibt ${ECON.corpsesPerKill} Leiche × Qualität der Todesart: Stich ${pct(q.PIERCE)}, Seele ${pct(q.SOUL)}, Wucht ${pct(q.BLUNT)}, Arkan ${pct(q.ARCANE)}, Reißen ${pct(q.REND)}, Feuer ${pct(q.FIRE)}.\n• Eroberung aller Orte (Dörfer, Städte, Klöster, mythische Orte).\n• Täglich aus: ${sites('corpses')}.\nBraucht: ${users('corpses')}.${daily}`;
+    if (k === 'bones') return `Knochen\n• ${ECON.bonesPerKill} Knochen je gefallenem Gegner, egal wie er starb.\n• Eroberung von Dörfern und Städten.\n• Täglich aus: ${sites('bones')}.\nBraucht: ${users('bones')}.${daily}`;
+    if (k === 'souls') return `Seelen\n• ${ECON.soulsPerSoulKill} Seele je Gegner, der durch Seelenschaden stirbt (Lich, Geist).\n• Eroberung mythischer Orte.\n• Täglich aus: ${sites('souls')}.\n• Artefakt: Glocke von Rungholt (+2 pro Sieg).\nBraucht: ${users('souls')}.${daily}`;
+    if (k === 'knowledge') {
+      const locked = Object.values(DATA.units).filter(u => u.side === 'undead' && u.requiresKnowledge).map(u => `${u.name} (${u.requiresKnowledge})`).join(', ');
+      return `Wissen\n• Eroberung von Klöstern (ihre Bücher) und mythischen Orten.\n• Artefakt: Lehniner Weissagung (+1 pro Sieg).\nSchaltet Einheiten frei: ${locked}. Wird nicht verbraucht.`;
+    }
+    return `Kommando\n• Der Lich führt ${ECON.commandLimitBase} Kommando-Punkte.\n• +${ECON.commandLimitPerMythicNode} je eroberter mythischer Ort.\n• Artefakt: Codex von Corvey (+8).\nJede Einheit belegt Punkte (Ghul 2, Skelett 1 …). Je mehr belegt, desto stärker der Lich im Kampf.`;
   },
   // What a special place offers (income / buff while owned, artifact on conquest).
   specialText(node) {
