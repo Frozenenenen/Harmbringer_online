@@ -117,6 +117,7 @@
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
+  .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
   .dmgText { font-size: 22px; color: #a01818; text-shadow: 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; font-weight: bold; }
   .dmgText.heal { color: #1f6a2a; }
   #edgeTip { position: absolute; padding: 2px 8px; font-size: 13px; pointer-events: none; z-index: 7; }
@@ -1217,6 +1218,16 @@ const RULES = DATA.rules;
 const turnTicks = def => Math.round(RULES.tickBase / def.initiative);
 // Old bonus values were in units of 1/10 round; scale them to ticks.
 const roundFrac = x => Math.round(x * RULES.roundTicks / 10);
+// Stacks (Heroes of Might and Magic style): one battle figure per unit type and side.
+// u.hp is the stack's total; only the top creature can be wounded.
+const stackCount = u => u.hp > 0 ? Math.ceil(u.hp / u.def.hp - 1e-9) : 0;
+const topHp = u => u.hp - (stackCount(u) - 1) * u.def.hp;
+// Groups individual units [{type, hp}] by type in order of first appearance -> [{type, hps: [...]}].
+function groupByType(list) {
+  const out = new Map();
+  for (const a of list) { if (!out.has(a.type)) out.set(a.type, []); out.get(a.type).push(a.hp); }
+  return [...out].map(([type, hps]) => ({ type, hps }));
+}
 
 class Battlefield {
   constructor(node) {
@@ -1536,8 +1547,10 @@ const Combat = {
   // Attack profile: what a unit does against a given target.
   profile(unit, target) {
     const def = unit.def;
-    if (def.power === 'HEAL') return target.side === unit.side ? { power: 'HEAL', damage: def.damage } : PRIEST_ATTACK;
-    return { power: def.power, damage: def.damage };
+    // A stack hits with the damage of all its creatures.
+    const n = Math.max(1, stackCount(unit));
+    if (def.power === 'HEAL') return target.side === unit.side ? { power: 'HEAL', damage: def.damage * n } : { power: PRIEST_ATTACK.power, damage: PRIEST_ATTACK.damage * n };
+    return { power: def.power, damage: def.damage * n };
   },
   edgeBetween(field, a, b) {
     const d = directionTo(a.q, a.r, b.q, b.r);
@@ -1565,7 +1578,7 @@ const Combat = {
     if (!target.alive || target === unit) return { ok: false };
     const healing = unit.def.power === 'HEAL' && target.side === unit.side;
     if (target.side === unit.side && !healing) return { ok: false };
-    if (healing && target.hp >= target.maxHp) return { ok: false };
+    if (healing && topHp(target) >= target.def.hp) return { ok: false };     // healing only mends the top creature
     const dist = hexDistance(from.q, from.r, tt.q, tt.r);
     let range = unit.def.range;
     if (range > 1 && from.level - tt.level >= 2) range += 1;        // ranged high ground bonus
@@ -1581,7 +1594,7 @@ const Combat = {
   },
   expected(field, unit, from, target, cover) {
     const prof = this.profile(unit, target);
-    if (prof.power === 'HEAL') return Math.min(prof.damage, target.maxHp - target.hp);
+    if (prof.power === 'HEAL') return Math.min(prof.damage, target.def.hp - topHp(target));
     return this.damage(prof, target.def, from.level, field.get(target.q, target.r).level, cover);
   }
 };
@@ -1684,7 +1697,7 @@ const BattleView = {
     group.add(ped, body);
     const el = document.createElement('div');
     el.className = 'unitLabel';
-    el.innerHTML = `<div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
+    el.innerHTML = `<span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
     label.position.y = body.position.y + 3.2 * s;
     group.add(label);
@@ -1698,7 +1711,10 @@ const BattleView = {
     u.view.group.position.set(p.x, t.y, p.z);
   },
   updateHp(u) {
-    u.view.el.firstChild.firstChild.style.width = Math.max(0, 100 * u.hp / u.maxHp) + '%';
+    // Bar = health of the top creature; the badge shows how many creatures are left.
+    const n = stackCount(u);
+    u.view.el.querySelector('.hpbar > div').style.width = (n ? 100 * topHp(u) / u.def.hp : 0) + '%';
+    u.view.el.querySelector('.stackCount').textContent = n > 1 ? '×' + n : '';
   },
   floatText(u, text, heal) {
     const el = document.createElement('div');
@@ -1811,8 +1827,9 @@ const Battle = {
       selected: null, hover: null, over: false
     };
     // Player army.
-    c.army.forEach(a => b.units.push(this.makeUnit(a.type, 'player', 'UNDEAD', a.hp)));
-    for (const type of Campaign.garrisonFor(node)) b.units.push(this.makeUnit(type, 'enemy', node.faction));
+    for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
+    const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
+    for (const g of groupByType(garrison)) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
     this.deploy(b);
 
     // View: lock the tile window on the node, dim everything outside the field.
@@ -1855,9 +1872,18 @@ const Battle = {
     SaveGame.save();
     this.nextTurn();
   },
+  // A stack of `hps.length` creatures. Wounds are pooled so only the top creature is wounded
+  // (never fewer creatures than came in).
+  makeStack(type, side, faction, hps) {
+    const def = DATA.units[type], n = hps.length;
+    const total = Math.max((n - 1) * def.hp + 1, hps.reduce((a, h) => a + h, 0));
+    const u = this.makeUnit(type, side, faction, total);
+    u.maxHp = n * def.hp; u.startCount = n; u.shield = (def.soulShield || 0) * n;
+    return u;
+  },
   makeUnit(type, side, faction, hp) {
     const def = DATA.units[type];
-    return { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, q: 0, r: 0,
+    return { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, startCount: 1, q: 0, r: 0,
       shield: def.soulShield || 0, nextTick: turnTicks(def), alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null };
   },
   // Deployment: player at the side facing the origin, enemies around the center.
@@ -1963,8 +1989,8 @@ const Battle = {
         this.applyDamage(u, eff.damageUndeadPerRound, null, null);
         this.log(`${u.def.name} brennt auf geweihtem Boden (−${eff.damageUndeadPerRound}).`, 'hit');
       }
-      if (eff.healUndeadPerRound && u.hp < u.maxHp) {
-        const h = Math.min(eff.healUndeadPerRound, u.maxHp - u.hp);
+      if (eff.healUndeadPerRound && topHp(u) < u.def.hp) {
+        const h = Math.min(eff.healUndeadPerRound, u.def.hp - topHp(u));
         u.hp += h; BattleView.updateHp(u); BattleView.floatText(u, '+' + h, true);
         this.log(`${u.def.name} zieht Kraft aus der Friedhofserde (+${h}).`, 'good');
       }
@@ -2065,9 +2091,15 @@ const Battle = {
     // Soul shield pool absorbs any damage first and does not regenerate during the battle.
     const absorbed = Math.min(target.shield || 0, dmg);
     target.shield = (target.shield || 0) - absorbed;
+    const before = stackCount(target);
     target.hp -= dmg - absorbed;
+    const deaths = before - stackCount(target);
     BattleView.updateHp(target);
-    BattleView.floatText(target, absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg);
+    BattleView.floatText(target, (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
+    // Every fallen creature leaves loot (corpse quality depends on the killing blow).
+    if (target.side === 'enemy' && killer && killer.side === 'player')
+      for (let i = 0; i < deaths; i++) game.battle.kills.push({ quality: DATA.corpseQuality[power] ?? 0, soul: power === 'SOUL' });
+    if (deaths && target.hp > 0) this.log(`${deaths}× ${target.def.name} ${deaths > 1 ? 'fallen' : 'fällt'}, ${stackCount(target)} übrig.`, target.side === 'player' ? 'hit' : 'good');
     if (target.hp <= 0) this.kill(target, killer, power);
   },
   async performAttack(att, target, surprise = false) {
@@ -2079,7 +2111,7 @@ const Battle = {
     await BattleView.attackAnim(att, target, chk.dist > 1);
     if (game.battle !== b || b.over) return;
     if (prof.power === 'HEAL') {
-      const h = Math.min(prof.damage, target.maxHp - target.hp);
+      const h = Math.min(prof.damage, target.def.hp - topHp(target));
       target.hp += h; BattleView.updateHp(target); BattleView.floatText(target, '+' + h, true);
       this.log(`${att.def.name} heilt ${target.def.name} (+${h}).`);
       return;
@@ -2108,11 +2140,7 @@ const Battle = {
     u.alive = false;
     b.field.get(u.q, u.r).unit = null;
     BattleView.removeUnit(u);
-    this.log(`${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
-    if (u.side === 'enemy' && killer && killer.side === 'player') {
-      const quality = DATA.corpseQuality[power] ?? 0;
-      b.kills.push({ quality, soul: power === 'SOUL' });
-    }
+    this.log(u.startCount > 1 ? `Die letzten ${u.def.name} fallen.` : `${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
     if (u.side === 'player' && u.type === 'lich') { this.finish('defeat'); return; }
     if (!this.alive('enemy').length) this.finish('victory');
   },
@@ -2141,10 +2169,12 @@ const Battle = {
       c.owners[node.id] = 'UNDEAD';
       // Survivors recover part of their strength after a won battle.
       let healed = 0;
-      c.army = this.alive('player').map(u => {
-        const hp = Math.min(u.maxHp, u.hp + Math.ceil(u.maxHp * ECON.postBattleHealShare));
-        healed += hp - u.hp;
-        return { type: u.type, hp };
+      c.army = this.alive('player').flatMap(u => {
+        const n = stackCount(u), cap = n * u.def.hp;
+        const total = Math.min(cap, u.hp + n * Math.ceil(u.def.hp * ECON.postBattleHealShare));
+        healed += total - u.hp;
+        // Back to individual creatures: all full except the top one.
+        return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: i < n - 1 ? u.def.hp : total - (n - 1) * u.def.hp }));
       });
       const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${v} ${RESOURCE_NAMES[k]}</li>`).join('');
       html = `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>
@@ -2208,9 +2238,9 @@ const EnemyAI = {
     if (u.def.power === 'HEAL') {
       let best = null;
       for (const t of spots) for (const a of this.allies(u)) {
-        if (a === u || a.hp >= a.maxHp) continue;
+        if (a === u || topHp(a) >= a.def.hp) continue;
         if (!Combat.canAttack(f, u, t, a).ok) continue;
-        const score = (a.maxHp - a.hp) * 10 - hexDistance(t.q, t.r, here.q, here.r) * 0.5;
+        const score = (a.def.hp - topHp(a)) * 10 - hexDistance(t.q, t.r, here.q, here.r) * 0.5;
         if (!best || score > best.score) best = { t, a, score };
       }
       if (best) { await this.execute(u, reach, best.t, best.a); return; }
@@ -2355,8 +2385,11 @@ const UI = {
     return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
   },
   armyHtml() {
-    return '<h3>Armee</h3><div class="armyList">' + game.campaign.army.map(a =>
-      `<div>${DATA.units[a.type].name} <span class="small">${a.hp}/${DATA.units[a.type].hp}</span></div>`).join('') + '</div>';
+    // Grouped like the battle stacks: "3× Ghul" with total health.
+    return '<h3>Armee</h3><div class="armyList">' + groupByType(game.campaign.army).map(g => {
+      const d = DATA.units[g.type], sum = g.hps.reduce((a, h) => a + h, 0);
+      return `<div>${g.hps.length > 1 ? g.hps.length + '× ' : ''}${d.name} <span class="small">${sum}/${g.hps.length * d.hp}</span></div>`;
+    }).join('') + '</div>';
   },
   renderInfo() {
     const el = $('info'), c = game.campaign, here = Campaign.armyNode();
@@ -2465,7 +2498,7 @@ const UI = {
     $('initBar').innerHTML = list.map((u, i) => {
       const border = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
       return `<div class="initSlot ${i === 0 ? 'current' : ''}"><div class="icon" style="background:${u.def.color};outline:2px solid ${border}"></div>
-        <div class="nm">${esc(u.def.name)}</div><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div></div>`;
+        <div class="nm">${stackCount(u) > 1 ? stackCount(u) + '× ' : ''}${esc(u.def.name)}</div><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div></div>`;
     }).join('');
     const cur = b.current;
     const who = !cur ? '' : cur.side === 'player' ? `Am Zug: ${cur.def.name}` : `Gegner am Zug: ${cur.def.name}`;
@@ -2483,13 +2516,15 @@ const UI = {
     if (!u) return;
     const d = u.def, b = game.battle, t = b.field.get(u.q, u.r);
     const flags = [d.flying && 'fliegt', d.spectral && 'spektral', d.counter && 'Konter'].filter(Boolean).join(', ');
-    $('unitCard').innerHTML = `<h3 style="margin-top:0">${esc(d.name)} <span class="small">(${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name})</span></h3>
+    const n = stackCount(u);
+    $('unitCard').innerHTML = `<h3 style="margin-top:0">${n > 1 ? n + '× ' : ''}${esc(d.name)} <span class="small">(${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name})</span></h3>
       <div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
-      <table><tr><td>Lebenspunkte</td><td>${Math.max(0, u.hp)} / ${u.maxHp}</td><td>Initiative</td><td>${d.initiative}</td></tr>
+      <table><tr><td>Anzahl</td><td>${n} / ${u.startCount}</td><td>Initiative</td><td>${d.initiative}</td></tr>
+      <tr><td>Lebenspunkte</td><td colspan="3">${n ? topHp(u) : 0} / ${d.hp} (vorderste) · ${Math.max(0, u.hp)} / ${u.maxHp} gesamt</td></tr>
       <tr><td>Bewegung</td><td>${d.move}</td><td>Reichweite</td><td>${d.range}</td></tr>
-      <tr><td>Schaden</td><td colspan="3">${d.damage} ${POWER_NAMES[d.power]} (${d.power})</td></tr>
+      <tr><td>Schaden</td><td colspan="3">${d.damage}${n > 1 ? ` × ${n} = ${d.damage * n}` : ''} ${POWER_NAMES[d.power]} (${d.power})</td></tr>
       <tr><td>Rüstung</td><td colspan="3">${DEFENSE_NAMES[d.defense]} (${d.defense})</td></tr>
-      <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${u.shield ?? d.soulShield} / ${d.soulShield}</td></tr>
+      <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${u.shield ?? d.soulShield} / ${d.soulShield * u.startCount}</td></tr>
       <tr><td>Sinne</td><td colspan="3">Sicht ${d.sight} · Gehör ${d.hear} · Geruch ${d.smell}</td></tr>
       ${flags ? `<tr><td>Eigenschaften</td><td colspan="3">${flags}</td></tr>` : ''}
       <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</td></tr></table>`;

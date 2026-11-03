@@ -2797,6 +2797,7 @@ Die CSV-Tabellen in `design/data/` sind die Quelle der Wahrheit. Das Spiel liest
 
 - **Einheiten:** Die Liste `GAME_UNITS` ordnet jeder Spiel-Kennung (`ghul`, `ritter` …) eine Design-Zeile zu und ergänzt Platzhalter-Form, Farbe und Wissens-Voraussetzung. Knochenkosten zählt das Spiel 60-fach.
 - **Regeln:** Schadensmatrix (inkl. Reißen), Leichenqualität je Schadensart, Initiative `2520 / Ini` (eine Runde = 1008 Ticks), MagicResist prozentual, SoulShield als Pool, der jeden Schaden zuerst schluckt und sich im Kampf nicht erneuert.
+- **Stapel (wie Heroes of Might and Magic):** Gleiche Einheiten einer Seite stehen im Kampf als *eine* Figur mit Anzahl (×3). Schaden des Stapels = Einzelschaden × Anzahl (Konter ebenso). Erlittener Schaden wird vom Gesamt-LP abgezogen; es sterben so viele, wie der Schaden hergibt, nur die vorderste Einheit ist angeschlagen (3 × 8 LP, 12 Schaden → 1 tot, 1 mit 4 LP, 1 unversehrt). Heilung flickt nur die vorderste, erweckt keine Toten. SoulShield-Pool = Wert × Anzahl. Jede gefallene Einheit bringt Beute. Auf der Weltkarte bleibt die Armee eine Liste einzelner Untoter (Rekrutierung, Kommando-Punkte).
 
 Fraktionen, Orte, Gebäude und Wirtschaft in `world_data.js` sind weiterhin von Hand gepflegt. Die zehn Einheiten, die es bisher nur im Spiel gab (z. B. Ritter, Stadtwache, Priester, Hexenkönigin), stehen jetzt mit ihren bisherigen Werten in den CSVs.
 
