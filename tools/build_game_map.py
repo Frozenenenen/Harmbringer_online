@@ -49,7 +49,8 @@ HARZ_POINTS = [
     ("St. Andreasberg", 51.7110, 10.5170, 620), ("Hahnenklee", 51.8580, 10.3370, 600), ("Braunlage", 51.7260, 10.6100, 560),
     ("Clausthal", 51.8050, 10.3360, 560), ("Benneckenstein", 51.6650, 10.7170, 560), ("Ramberg", 51.6930, 11.0380, 582),
     ("Auerberg", 51.5900, 11.0300, 580), ("Elend", 51.7450, 10.6880, 500), ("Altenau", 51.8000, 10.4450, 480),
-    ("Hasselfelde", 51.6900, 10.8540, 460),
+    ("Hasselfelde", 51.6900, 10.8540, 460), ("Oderbrück", 51.7700, 10.5600, 800), ("Oderteich", 51.7760, 10.5450, 725),
+    ("Drei Annen Hohne", 51.7900, 10.7100, 540), ("Sankt Andreasberg Matthias-Schmidt-Berg", 51.7150, 10.5300, 663),
 ]
 CAP_M = 449.0
 
@@ -65,13 +66,21 @@ def reconstruct_harz(m, G):
         q, r = to_tile(la, lo, G)
         if 0 <= r < m.shape[0] and 0 <= q < m.shape[1] and capped[r, q]:
             pts.append((q * G["col_m"], r * G["row_m"], float(h)))
+    # Base: the plateau rises gently from its rim (450 m) towards the interior, like the Harz high plateau.
+    # The spline then only carries the remaining difference to the summit heights, so the Brocken
+    # sits on a sloping massif instead of a flat 450 m shelf.
+    from scipy.ndimage import distance_transform_edt
+    dist_km = distance_transform_edt(capped, sampling=(G["row_m"] / 1000, G["col_m"] / 1000))
+    base = 450.0 + 260.0 * (1 - np.exp(-dist_km / 5.0))
     P = np.array(pts)
+    for k in range(len(P)):
+        q, r = int(round(P[k, 0] / G["col_m"])), int(round(P[k, 1] / G["row_m"]))
+        P[k, 2] -= base[r, q] if P[k, 2] != 450.0 else 450.0      # edge residual 0, summits relative to base
     cy, cx = np.nonzero(capped)
-    # Smooth thin-plate spline through edge and summits (km units keep the system well conditioned).
     from scipy.interpolate import RBFInterpolator
-    rbf = RBFInterpolator(P[:, :2] / 1000, P[:, 2], kernel="thin_plate_spline", smoothing=2.0, neighbors=120)
-    h = rbf(np.column_stack([cx * G["col_m"], cy * G["row_m"]]) / 1000)
-    # Ridges and valleys: fractal noise, stronger the higher the cell rises above the plateau.
+    rbf = RBFInterpolator(P[:, :2] / 1000, P[:, 2], kernel="thin_plate_spline", smoothing=5.0, neighbors=120)
+    h = base[cy, cx] + rbf(np.column_stack([cx * G["col_m"], cy * G["row_m"]]) / 1000)
+    # Ridges and valleys: fractal noise, stronger inside the massif.
     rng = np.random.default_rng(3)
     noise = np.zeros(m.shape)
     for k, amp in ((24, 1.0), (12, 0.5), (6, 0.25)):
@@ -80,7 +89,7 @@ def reconstruct_harz(m, G):
     noise = noise / 1.75 - 0.5
     rise = np.maximum(h - 450.0, 0)
     out = m.copy()
-    out[cy, cx] = np.maximum(CAP_M, h + noise[cy, cx] * (40 + 0.35 * rise))
+    out[cy, cx] = np.maximum(CAP_M, h + noise[cy, cx] * (40 + 0.25 * rise))
     return out
 
 def old_tile_to_latlon(q, r):
