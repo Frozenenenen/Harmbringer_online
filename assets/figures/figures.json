@@ -1,0 +1,902 @@
+[
+ {
+  "file": "Clergy/Clergy_Abbot1.glb",
+  "bytes": 201132,
+  "triangles": 2908,
+  "size": [
+   0.666,
+   1.911,
+   0.528
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Abbot2.glb",
+  "bytes": 578336,
+  "triangles": 24123,
+  "size": [
+   0.857,
+   1.879,
+   0.638
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Angel.glb",
+  "bytes": 500148,
+  "triangles": 20486,
+  "size": [
+   1.068,
+   1.906,
+   0.818
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Cherub.glb",
+  "bytes": 412444,
+  "triangles": 15320,
+  "size": [
+   1.084,
+   1.906,
+   0.575
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Crusader.glb",
+  "bytes": 515632,
+  "triangles": 24045,
+  "size": [
+   0.986,
+   1.906,
+   0.622
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Exorcist.glb",
+  "bytes": 397732,
+  "triangles": 16166,
+  "size": [
+   0.9,
+   1.906,
+   0.712
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Healer.glb",
+  "bytes": 441456,
+  "triangles": 18618,
+  "size": [
+   0.759,
+   1.906,
+   0.591
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Monk.glb",
+  "bytes": 394188,
+  "triangles": 16448,
+  "size": [
+   0.834,
+   1.906,
+   0.654
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Novice.glb",
+  "bytes": 341100,
+  "triangles": 14238,
+  "size": [
+   0.615,
+   1.906,
+   0.56
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Nun.glb",
+  "bytes": 443148,
+  "triangles": 18072,
+  "size": [
+   0.646,
+   1.906,
+   0.575
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Ophanim.glb",
+  "bytes": 378684,
+  "triangles": 11905,
+  "size": [
+   1.804,
+   1.906,
+   0.802
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Pilgrim.glb",
+  "bytes": 449108,
+  "triangles": 18842,
+  "size": [
+   0.834,
+   1.906,
+   0.669
+  ]
+ },
+ {
+  "file": "Clergy/Clergy_Plaguedoctor.glb",
+  "bytes": 643816,
+  "triangles": 27212,
+  "size": [
+   0.791,
+   1.722,
+   0.661
+  ]
+ },
+ {
+  "file": "Druids/Druid_Bear.glb",
+  "bytes": 622624,
+  "triangles": 24799,
+  "size": [
+   0.841,
+   1.906,
+   0.618
+  ]
+ },
+ {
+  "file": "Druids/Druid_Cultist.glb",
+  "bytes": 431064,
+  "triangles": 17000,
+  "size": [
+   0.795,
+   1.906,
+   0.544
+  ]
+ },
+ {
+  "file": "Druids/Druid_Druid.glb",
+  "bytes": 357548,
+  "triangles": 13149,
+  "size": [
+   1.057,
+   1.906,
+   0.771
+  ]
+ },
+ {
+  "file": "Druids/Druid_Leader.glb",
+  "bytes": 489748,
+  "triangles": 19994,
+  "size": [
+   0.931,
+   1.906,
+   0.763
+  ]
+ },
+ {
+  "file": "Druids/Druid_Ranger.glb",
+  "bytes": 384716,
+  "triangles": 15044,
+  "size": [
+   0.795,
+   1.906,
+   0.618
+  ]
+ },
+ {
+  "file": "Druids/Druid_Shapeshifter.glb",
+  "bytes": 616452,
+  "triangles": 23652,
+  "size": [
+   0.783,
+   1.902,
+   0.528
+  ]
+ },
+ {
+  "file": "Druids/Druid_StoneProtector.glb",
+  "bytes": 408288,
+  "triangles": 14965,
+  "size": [
+   0.838,
+   1.906,
+   0.83
+  ]
+ },
+ {
+  "file": "Druids/Druid_Sylvan.glb",
+  "bytes": 539256,
+  "triangles": 22370,
+  "size": [
+   1.072,
+   1.906,
+   0.528
+  ]
+ },
+ {
+  "file": "Druids/Druid_Treant.glb",
+  "bytes": 616676,
+  "triangles": 26061,
+  "size": [
+   0.978,
+   1.894,
+   0.661
+  ]
+ },
+ {
+  "file": "Dwarfs/Dwarf_Elder.glb",
+  "bytes": 497840,
+  "triangles": 16122,
+  "size": [
+   0.912,
+   1.902,
+   0.724
+  ]
+ },
+ {
+  "file": "Dwarfs/Dwarf_Hunter.glb",
+  "bytes": 427364,
+  "triangles": 18144,
+  "size": [
+   1.037,
+   1.906,
+   0.701
+  ]
+ },
+ {
+  "file": "Dwarfs/Dwarf_Mason.glb",
+  "bytes": 401880,
+  "triangles": 17113,
+  "size": [
+   1.014,
+   1.906,
+   0.72
+  ]
+ },
+ {
+  "file": "Dwarfs/Dwarf_Warrior.glb",
+  "bytes": 492296,
+  "triangles": 24840,
+  "size": [
+   1.127,
+   1.906,
+   0.775
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_Catapult.glb",
+  "bytes": 328552,
+  "triangles": 10960,
+  "size": [
+   1.906,
+   1.804,
+   1.225
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_DukeOfBrunswig.glb",
+  "bytes": 424048,
+  "triangles": 16712,
+  "size": [
+   0.802,
+   1.906,
+   0.434
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_Knave.glb",
+  "bytes": 387412,
+  "triangles": 14824,
+  "size": [
+   0.841,
+   1.906,
+   0.536
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_Knight_1h.glb",
+  "bytes": 434168,
+  "triangles": 16075,
+  "size": [
+   0.822,
+   1.906,
+   1.374
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_Knight_2h.glb",
+  "bytes": 462548,
+  "triangles": 18225,
+  "size": [
+   0.661,
+   1.906,
+   0.493
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_MountedArcher.glb",
+  "bytes": 407180,
+  "triangles": 15906,
+  "size": [
+   0.818,
+   1.906,
+   1.675
+  ]
+ },
+ {
+  "file": "Guelphs/Guelphs_Siegetower.glb",
+  "bytes": 485176,
+  "triangles": 15184,
+  "size": [
+   0.896,
+   1.906,
+   1.241
+  ]
+ },
+ {
+  "file": "Hanse/Hanse_Captain.glb",
+  "bytes": 494824,
+  "triangles": 22058,
+  "size": [
+   0.896,
+   1.906,
+   0.501
+  ]
+ },
+ {
+  "file": "Hanse/Hanse_HarbourWorker.glb",
+  "bytes": 427820,
+  "triangles": 18206,
+  "size": [
+   0.81,
+   1.906,
+   0.521
+  ]
+ },
+ {
+  "file": "Hanse/Hanse_Mayor.glb",
+  "bytes": 443860,
+  "triangles": 18042,
+  "size": [
+   0.822,
+   1.906,
+   0.599
+  ]
+ },
+ {
+  "file": "Hanse/Hanse_Siege.glb",
+  "bytes": 367096,
+  "triangles": 11808,
+  "size": [
+   1.906,
+   1.867,
+   1.436
+  ]
+ },
+ {
+  "file": "Human/Human_Farmer.glb",
+  "bytes": 444428,
+  "triangles": 17906,
+  "size": [
+   1.041,
+   1.906,
+   0.548
+  ]
+ },
+ {
+  "file": "Human/Human_Militia.glb",
+  "bytes": 602968,
+  "triangles": 26514,
+  "size": [
+   0.888,
+   1.906,
+   0.458
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_Marsh_Louse.glb",
+  "bytes": 183112,
+  "triangles": 2944,
+  "size": [
+   0.937,
+   1.91,
+   0.701
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_Rusalka.glb",
+  "bytes": 537300,
+  "triangles": 22420,
+  "size": [
+   1.084,
+   1.898,
+   1.01
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_SnakeGuard.glb",
+  "bytes": 409880,
+  "triangles": 15422,
+  "size": [
+   0.814,
+   1.906,
+   0.967
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_SnakeKing.glb",
+  "bytes": 442992,
+  "triangles": 17392,
+  "size": [
+   1.061,
+   1.906,
+   0.693
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_Treespirit.glb",
+  "bytes": 574296,
+  "triangles": 23573,
+  "size": [
+   0.818,
+   1.906,
+   0.611
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_Vodnik.glb",
+  "bytes": 501020,
+  "triangles": 22268,
+  "size": [
+   0.959,
+   1.898,
+   0.759
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_Will-o-wisp.glb",
+  "bytes": 613140,
+  "triangles": 16810,
+  "size": [
+   0.908,
+   1.906,
+   0.916
+  ]
+ },
+ {
+  "file": "Spreewald/Spree_Will-o-wisp2.glb",
+  "bytes": 607268,
+  "triangles": 22489,
+  "size": [
+   1.08,
+   1.906,
+   1.088
+  ]
+ },
+ {
+  "file": "Undead/UD_Archer.glb",
+  "bytes": 532848,
+  "triangles": 21622,
+  "size": [
+   1.444,
+   1.906,
+   0.685
+  ]
+ },
+ {
+  "file": "Undead/UD_Banshee.glb",
+  "bytes": 523860,
+  "triangles": 21554,
+  "size": [
+   0.943,
+   1.902,
+   0.755
+  ]
+ },
+ {
+  "file": "Undead/UD_Catapult.glb",
+  "bytes": 465044,
+  "triangles": 15904,
+  "size": [
+   1.585,
+   1.902,
+   1.879
+  ]
+ },
+ {
+  "file": "Undead/UD_Dragon.glb",
+  "bytes": 221812,
+  "triangles": 2876,
+  "size": [
+   1.736,
+   1.908,
+   0.942
+  ]
+ },
+ {
+  "file": "Undead/UD_Faceless.glb",
+  "bytes": 473152,
+  "triangles": 19524,
+  "size": [
+   0.638,
+   1.906,
+   0.528
+  ]
+ },
+ {
+  "file": "Undead/UD_Ghost.glb",
+  "bytes": 518864,
+  "triangles": 20824,
+  "size": [
+   0.998,
+   1.902,
+   0.689
+  ]
+ },
+ {
+  "file": "Undead/UD_Ghoul.glb",
+  "bytes": 571820,
+  "triangles": 23497,
+  "size": [
+   1.092,
+   1.906,
+   0.904
+  ]
+ },
+ {
+  "file": "Undead/UD_Hammer.glb",
+  "bytes": 436652,
+  "triangles": 18288,
+  "size": [
+   0.916,
+   1.902,
+   0.536
+  ]
+ },
+ {
+  "file": "Undead/UD_Lancer.glb",
+  "bytes": 424956,
+  "triangles": 16670,
+  "size": [
+   0.728,
+   1.906,
+   0.372
+  ]
+ },
+ {
+  "file": "Undead/UD_Lich.glb",
+  "bytes": 475852,
+  "triangles": 20996,
+  "size": [
+   0.881,
+   1.906,
+   0.603
+  ]
+ },
+ {
+  "file": "Undead/UD_Lich3.glb",
+  "bytes": 586392,
+  "triangles": 24325,
+  "size": [
+   0.689,
+   1.906,
+   0.677
+  ]
+ },
+ {
+  "file": "Undead/UD_Licht.glb",
+  "bytes": 345816,
+  "triangles": 13784,
+  "size": [
+   0.826,
+   1.906,
+   0.881
+  ]
+ },
+ {
+  "file": "Undead/UD_Mage.glb",
+  "bytes": 342004,
+  "triangles": 12509,
+  "size": [
+   1.256,
+   1.906,
+   0.896
+  ]
+ },
+ {
+  "file": "Undead/UD_MarshLouse.glb",
+  "bytes": 476812,
+  "triangles": 19497,
+  "size": [
+   0.931,
+   1.906,
+   0.701
+  ]
+ },
+ {
+  "file": "Undead/UD_Priest.glb",
+  "bytes": 402828,
+  "triangles": 13366,
+  "size": [
+   0.908,
+   1.949,
+   0.912
+  ]
+ },
+ {
+  "file": "Undead/UD_ScottishHero.glb",
+  "bytes": 403436,
+  "triangles": 15863,
+  "size": [
+   1.033,
+   1.906,
+   0.693
+  ]
+ },
+ {
+  "file": "Undead/UD_Shieldmaid.glb",
+  "bytes": 459236,
+  "triangles": 17519,
+  "size": [
+   0.904,
+   1.906,
+   0.599
+  ]
+ },
+ {
+  "file": "Undead/UD_Zombie.glb",
+  "bytes": 458096,
+  "triangles": 17530,
+  "size": [
+   0.74,
+   1.906,
+   0.81
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_BlankerHans.glb",
+  "bytes": 632384,
+  "triangles": 28286,
+  "size": [
+   0.986,
+   1.902,
+   0.818
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_Gnom.glb",
+  "bytes": 684036,
+  "triangles": 27018,
+  "size": [
+   1.01,
+   1.906,
+   0.771
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_Klabautermann.glb",
+  "bytes": 532952,
+  "triangles": 17801,
+  "size": [
+   1.006,
+   1.906,
+   0.931
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_Nixe.glb",
+  "bytes": 148792,
+  "triangles": 2921,
+  "size": [
+   0.971,
+   1.921,
+   0.934
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_RungholtGeist.glb",
+  "bytes": 657352,
+  "triangles": 27097,
+  "size": [
+   0.888,
+   1.796,
+   0.939
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_Sirene.glb",
+  "bytes": 677492,
+  "triangles": 28312,
+  "size": [
+   0.681,
+   1.851,
+   0.669
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_Wasserleiche.glb",
+  "bytes": 431308,
+  "triangles": 15502,
+  "size": [
+   1.076,
+   1.906,
+   0.395
+  ]
+ },
+ {
+  "file": "Wattenmeer/Watt_Wattjungfrau.glb",
+  "bytes": 594736,
+  "triangles": 25653,
+  "size": [
+   0.877,
+   1.906,
+   0.665
+  ]
+ },
+ {
+  "file": "Witch/Witch_Bogwitch.glb",
+  "bytes": 427748,
+  "triangles": 16021,
+  "size": [
+   0.834,
+   1.906,
+   0.693
+  ]
+ },
+ {
+  "file": "Witch/Witch_Cultist.glb",
+  "bytes": 485028,
+  "triangles": 19886,
+  "size": [
+   0.783,
+   1.906,
+   0.419
+  ]
+ },
+ {
+  "file": "Witch/Witch_Firewitch.glb",
+  "bytes": 549720,
+  "triangles": 22833,
+  "size": [
+   0.759,
+   1.894,
+   0.685
+  ]
+ },
+ {
+  "file": "Witch/Witch_Witch.glb",
+  "bytes": 506732,
+  "triangles": 19804,
+  "size": [
+   0.975,
+   1.894,
+   0.869
+  ]
+ },
+ {
+  "file": "Witch/Witch_Witchhunter.glb",
+  "bytes": 452316,
+  "triangles": 19399,
+  "size": [
+   0.896,
+   1.902,
+   0.528
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Berserker.glb",
+  "bytes": 465944,
+  "triangles": 18615,
+  "size": [
+   0.963,
+   1.906,
+   0.626
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Fru_Gode.glb",
+  "bytes": 443992,
+  "triangles": 17014,
+  "size": [
+   0.865,
+   1.906,
+   0.814
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_RuneCatapult.glb",
+  "bytes": 342672,
+  "triangles": 11168,
+  "size": [
+   0.99,
+   1.906,
+   0.646
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_RuneKnight.glb",
+  "bytes": 567264,
+  "triangles": 26059,
+  "size": [
+   1.115,
+   1.906,
+   0.912
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Runesourcerer.glb",
+  "bytes": 197488,
+  "triangles": 2892,
+  "size": [
+   1.095,
+   1.931,
+   0.787
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Runethrower.glb",
+  "bytes": 379496,
+  "triangles": 14907,
+  "size": [
+   0.939,
+   1.906,
+   0.795
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Sourcerer.glb",
+  "bytes": 601604,
+  "triangles": 25108,
+  "size": [
+   1.088,
+   1.933,
+   0.783
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Valkyrie.glb",
+  "bytes": 468784,
+  "triangles": 18820,
+  "size": [
+   1.147,
+   1.906,
+   0.818
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_ValkyrieOW.glb",
+  "bytes": 592292,
+  "triangles": 25884,
+  "size": [
+   1.1,
+   1.918,
+   0.841
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Warrior.glb",
+  "bytes": 434724,
+  "triangles": 17145,
+  "size": [
+   0.795,
+   1.906,
+   0.568
+  ]
+ },
+ {
+  "file": "Wodan/Wodan_Wölfin.glb",
+  "bytes": 451344,
+  "triangles": 18272,
+  "size": [
+   1.147,
+   1.906,
+   0.744
+  ]
+ },
+ {
+  "file": "Wodan/Wodin_Wodin.glb",
+  "bytes": 445048,
+  "triangles": 19724,
+  "size": [
+   0.924,
+   1.906,
+   0.544
+  ]
+ }
+]

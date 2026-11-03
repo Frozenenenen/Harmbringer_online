@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harmbringer Figuren</title>
+<style>
+  :root { --bg: #2b2620; --panel: #e8dfc4; --ink: #2a2218; --muted: #6d604b; --accent: #5a2d82; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 Georgia, serif; display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
+  #list { background: var(--panel); overflow-y: auto; padding: 12px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .small { color: var(--muted); font-size: 12px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 14px 0 4px; }
+  button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 3px 6px; font: inherit; color: inherit; cursor: pointer; border-radius: 3px; }
+  button:hover { background: #d8cda9; } button.on { background: var(--accent); color: #fff; }
+  #view { position: relative; }
+  #info { position: absolute; left: 12px; bottom: 12px; background: var(--panel); padding: 8px 12px; border-radius: 4px; }
+  canvas { display: block; width: 100%; height: 100%; }
+  @media (max-width: 700px) { body { grid-template-columns: 1fr; grid-template-rows: 40vh 60vh; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="list"><h1>Figuren</h1><div class="small">Aus dem Godot-Projekt, für den Browser verkleinert (<code>tools/slim_figures.py</code>). Ziehen zum Drehen, Mausrad zum Zoomen.</div></div>
+<div id="view"><div id="info"></div></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const BASE = '../../assets/figures/';
+const view = document.getElementById('view'), info = document.getElementById('info');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+view.prepend(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x6e675c);
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+camera.position.set(1.6, 1.4, 2.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.9, 0);
+scene.add(new THREE.HemisphereLight(0xe8dcc0, 0x3a3328, 1.4));
+const sun = new THREE.DirectionalLight(0xffe2b8, 2.2); sun.position.set(-2, 4, 3); scene.add(sun);
+const ground = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.0, 0.08, 6), new THREE.MeshStandardMaterial({ color: 0x5a2d82, roughness: 0.7 }));
+ground.position.y = -0.04; scene.add(ground);
+const loader = new GLTFLoader();
+let current = null;
+
+function resize() { const r = view.getBoundingClientRect(); renderer.setSize(r.width, r.height); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+async function show(f, btn) {
+  document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b === btn));
+  info.textContent = 'Lade …';
+  const gltf = await loader.loadAsync(BASE + f.file);
+  if (current) scene.remove(current);
+  current = gltf.scene;
+  // Fit: 1.8 units tall, standing on the pedestal.
+  const box = new THREE.Box3().setFromObject(current), size = box.getSize(new THREE.Vector3());
+  const k = 1.8 / Math.max(size.y, 1e-6);
+  current.scale.setScalar(k);
+  const box2 = new THREE.Box3().setFromObject(current), c = box2.getCenter(new THREE.Vector3());
+  current.position.set(-c.x, -box2.min.y, -c.z);
+  scene.add(current);
+  info.innerHTML = `<b>${f.file.split('/').pop().replace('.glb', '')}</b> · ${f.triangles.toLocaleString('de-DE')} Dreiecke · ${(f.bytes / 1e6).toFixed(2)} MB`;
+}
+
+const figures = await fetch(BASE + 'figures.json').then(r => r.json());
+const list = document.getElementById('list');
+let lastGroup = '';
+for (const f of figures) {
+  const g = f.file.split('/')[0];
+  if (g !== lastGroup) { const h = document.createElement('h2'); h.textContent = g; list.append(h); lastGroup = g; }
+  const b = document.createElement('button');
+  b.textContent = f.file.split('/').pop().replace('.glb', '').replace(/^[A-Za-z]+_/, '');
+  b.onclick = () => show(f, b);
+  list.append(b);
+}
+show(figures.find(f => f.file.includes('UD_Lich.glb')) || figures[0], [...list.querySelectorAll('button')].find(b => b.textContent === 'Lich'));
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>
