@@ -205,8 +205,8 @@ const NODE_TYPE_NAMES = { MYTHIC: 'Mythisch', WORLDLY: 'Weltlich', CHRISTIAN: 'C
 const EDGE_NAMES = { OPEN: 'Offen', COVER: 'Deckung (halber Schaden)', WALL: 'Mauer', WALL_DESTRUCTIBLE: 'Zerstörbare Mauer', WALL_TRANSPARENT: 'Durchsichtige Wand' };
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', knowledge: 'Wissen' };
-const REVEAL_DISTANCE = 120;           // tiles, from PROMPT section 7.1
-const VILLAGE_LABEL_DISTANCE = 60;     // village names only show near the camera, to keep the map readable
+const REVEAL_DISTANCE = 165;           // tiles, from PROMPT section 7.1
+const VILLAGE_LABEL_DISTANCE = 85;     // village names only show near the camera, to keep the map readable
 const TRAVEL_SECONDS = 2.5;            // animation length of a journey
 const STEP_SECONDS = 0.15;             // battle movement per tile
 const AI_PAUSE = 0.4;                  // pause between AI move and attack
@@ -2746,7 +2746,7 @@ async function boot() {
   const bar = $('loadingBar'), text = $('loadingText');
   game.world = new WorldData();
   const t0 = performance.now();
-  text.textContent = 'Berechne Höhen und Bodentypen für 1.567.680 Felder …';
+  text.textContent = `Berechne Höhen und Bodentypen für ${(WIDTH * HEIGHT).toLocaleString('de-DE')} Felder …`;
   await game.world.build(p => { bar.style.width = (p * 100).toFixed(0) + '%'; });
   game.loadMs = performance.now() - t0;
   text.textContent = 'Errichte die Welt …';

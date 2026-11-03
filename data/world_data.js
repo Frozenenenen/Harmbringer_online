@@ -10,18 +10,18 @@ window.HARMBRINGER_DATA = {
   // Map and geometry
   // ---------------------------------------------------------------------------
   map: {
-    width: 1704,              // tiles (= heightmap pixels), Q axis, west -> east
-    height: 920,              // tiles, R axis, north -> south (R = 0 is the north edge)
+    // Campaign grid ETRS89 / UTM 32N (tools/build_game_map.py). One hex tile = 247 m column spacing,
+    // 285 m row spacing, so tiles have the same size in meters in both directions.
+    // Tile (q, r) center: E = eMin + q * colMeters, N = nMax - (r + 0.5 * (q & 1)) * rowMeters.
+    // Positions from lat/lon: python tools/build_game_map.py --tile <lat> <lon>
+    width: 2017,               // tiles, Q axis, west -> east
+    height: 1583,              // tiles, R axis, north -> south (R = 0 is the north edge)
     seaLevelGray: 29,         // gray value of 0 m above sea level
     // Gray -> meters is linear: meters = gray * metersPerGray + metersAtGrayZero.
     // Everything above 450 m is capped at gray 255 (the Harz shows as a plateau).
     metersPerGray: 508 / 255,
     metersAtGrayZero: -58,
-    // Calibrated georeference (fitted on coastline features, error about +-5 tiles):
-    // Q = round((lon - lonLeft) * tilesPerDegree), R = round((latTop - lat) * tilesPerDegree)
-    lonLeft: 7.1529,
-    latTop: 54.8190,
-    tilesPerDegree: 240,       // the heightmap is a native 15 arc-second grid
+    utm: { eMin: 370354.257, nMax: 6093532.332, colMeters: 247.1460, rowMeters: 285.3797 },
     startDate: { year: 1371, month: 5, day: 1 }
   },
 
@@ -77,11 +77,11 @@ window.HARMBRINGER_DATA = {
   // Rule-based floor assignment for the world (see PROMPT.md, section "Bodentypen").
   // Bands are in meters above sea level. "mix" lists [floorType, weight] picked by value noise.
   floorRules: {
-    noiseCellSize: 12,         // tiles per value-noise cell (larger = bigger patches), noise seed 1
+    noiseCellSize: 15,         // tiles per value-noise cell (larger = bigger patches), noise seed 1
     // Lueneburger Heide: inside this soft region "heathMix" replaces "mix".
     // d = distance / radius; weight = smoothstep from 1 (d <= fullUntil) to 0 (d >= fadeOut);
     // a tile is "heath" when valueNoise(cell = edgeNoiseCellSize, seed 4) < weight.
-    heathRegion: { q: 725, r: 445, radius: 100, fullUntil: 0.6, fadeOut: 1.4, edgeNoiseCellSize: 10 },
+    heathRegion: { q: 844, r: 787, radius: 130, fullUntil: 0.6, fadeOut: 1.4, edgeNoiseCellSize: 13 },
     bands: [
       { maxMeters: -6,       floor: "DEEP_WATER" },
       { maxMeters: -0.2,     floor: "SHALLOW_WATER" },
@@ -164,98 +164,98 @@ window.HARMBRINGER_DATA = {
   // garrison: enemy units placed at battle start (before threat bonus).
   // ---------------------------------------------------------------------------
   nodes: [
-    { id: "wilseder_berg", name: "Wilseder Berg", q: 667,  r: 397, type: "PHYLACTERY", faction: "UNDEAD", size: 16,
+    { id: "wilseder_berg", name: "Wilseder Berg", q: 777,  r: 709, type: "PHYLACTERY", faction: "UNDEAD", size: 16,
       garrison: {}, desc: "Hügelgrab und Phylakterium des Lichs. Hier wird rekrutiert." },
 
-    { id: "soltau",        name: "Soltau",            q: 646,  r: 440, type: "WORLDLY",   faction: "GUELPHS",  size: 16,
+    { id: "soltau",        name: "Soltau",            q: 754,  r: 780, type: "WORLDLY",   faction: "GUELPHS",  size: 16,
       garrison: { bauer: 4 } },
-    { id: "medingen",      name: "Kloster Medingen",  q: 811,  r: 415, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
+    { id: "medingen",      name: "Kloster Medingen",  q: 940,  r: 736, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
       garrison: { moench: 2, priester: 1 } },
-    { id: "walsrode",      name: "Kloster Walsrode",  q: 586,  r: 470, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
+    { id: "walsrode",      name: "Kloster Walsrode",  q: 687,  r: 829, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
       garrison: { moench: 2, priester: 1, bauer: 2 } },
-    { id: "ebstorf",       name: "Kloster Ebstorf",   q: 784,  r: 429, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
+    { id: "ebstorf",       name: "Kloster Ebstorf",   q: 910,  r: 760, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
       garrison: { moench: 2, priester: 2, bauer: 2 } },
-    { id: "uelzen",        name: "Uelzen",            q: 817,  r: 445, type: "WORLDLY",   faction: "HANSE",    size: 16,
+    { id: "uelzen",        name: "Uelzen",            q: 948,  r: 785, type: "WORLDLY",   faction: "HANSE",    size: 16,
       garrison: { bauer: 3, stadtwache: 2 } },
-    { id: "teufelsmoor",   name: "Teufelsmoor",       q: 427,  r: 381, type: "MYTHIC",    faction: "WITCHES",  size: 16,
+    { id: "teufelsmoor",   name: "Teufelsmoor",       q: 506,  r: 685, type: "MYTHIC",    faction: "WITCHES",  size: 16,
       garrison: { irrlicht: 3, moorgeist: 2 } },
-    { id: "verden",        name: "Verden",            q: 500,  r: 455, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
+    { id: "verden",        name: "Verden",            q: 589,  r: 805, type: "CHRISTIAN", faction: "CLERGY",   size: 16,
       garrison: { moench: 3, priester: 1, stadtwache: 2 } },
-    { id: "hameln",        name: "Hameln",            q: 529,  r: 652, type: "MYTHIC",    faction: "WITCHES",  size: 16,
+    { id: "hameln",        name: "Hameln",            q: 624,  r: 1125, type: "MYTHIC",    faction: "WITCHES",  size: 16,
       garrison: { rattenfaenger: 1, hexe: 2, irrlicht: 2 } },
-    { id: "wittenberg",    name: "Wittenberg",        q: 1319, r: 709, type: "WORLDLY",   faction: "ASKANIER", size: 16,
+    { id: "wittenberg",    name: "Wittenberg",        q: 1541, r: 1195, type: "WORLDLY",   faction: "ASKANIER", size: 16,
       garrison: { ritter: 2, armbrust: 2, stadtwache: 2 } },
 
-    { id: "lueneburg",     name: "Lüneburg",          q: 783,  r: 376, type: "WORLDLY",   faction: "HANSE",    size: 32,
+    { id: "lueneburg",     name: "Lüneburg",          q: 907,  r: 673, type: "WORLDLY",   faction: "HANSE",    size: 32,
       garrison: { stadtwache: 4, armbrust: 2, bauer: 2 }, desc: "Erste Menschenhauptstadt, durch den Erbfolgekrieg geschwächt." },
-    { id: "celle",         name: "Celle",             q: 703,  r: 527, type: "WORLDLY",   faction: "GUELPHS",  size: 32,
+    { id: "celle",         name: "Celle",             q: 821,  r: 920, type: "WORLDLY",   faction: "GUELPHS",  size: 32,
       garrison: { ritter: 2, stadtwache: 3, armbrust: 2 } },
-    { id: "bremen",        name: "Bremen",            q: 396,  r: 418, type: "WORLDLY",   faction: "HANSE",    size: 32,
+    { id: "bremen",        name: "Bremen",            q: 471,  r: 745, type: "WORLDLY",   faction: "HANSE",    size: 32,
       garrison: { stadtwache: 4, armbrust: 3, balliste: 1, priester: 1 } },
-    { id: "hannover",      name: "Hannover",          q: 619,  r: 586, type: "WORLDLY",   faction: "GUELPHS",  size: 32,
+    { id: "hannover",      name: "Hannover",          q: 726,  r: 1017, type: "WORLDLY",   faction: "GUELPHS",  size: 32,
       garrison: { ritter: 3, stadtwache: 3, armbrust: 2 } },
-    { id: "braunschweig",  name: "Braunschweig",      q: 810,  r: 612, type: "WORLDLY",   faction: "GUELPHS",  size: 32,
+    { id: "braunschweig",  name: "Braunschweig",      q: 946,  r: 1056, type: "WORLDLY",   faction: "GUELPHS",  size: 32,
       garrison: { ritter: 4, armbrust: 2, balliste: 1 } },
-    { id: "magdeburg",     name: "Magdeburg",         q: 1074, r: 648, type: "CHRISTIAN", faction: "CLERGY",   size: 32,
+    { id: "magdeburg",     name: "Magdeburg",         q: 1253, r: 1107, type: "CHRISTIAN", faction: "CLERGY",   size: 32,
       garrison: { moench: 3, priester: 2, stadtwache: 3, balliste: 1 } },
 
-    { id: "hamburg",       name: "Hamburg",           q: 682,  r: 304, type: "WORLDLY",   faction: "HANSE",    size: 64,
+    { id: "hamburg",       name: "Hamburg",           q: 791,  r: 558, type: "WORLDLY",   faction: "HANSE",    size: 64,
       garrison: { stadtwache: 6, armbrust: 4, balliste: 2 } },
-    { id: "berlin",        name: "Berlin",            q: 1501, r: 552, type: "WORLDLY",   faction: "ASKANIER", size: 64,
+    { id: "berlin",        name: "Berlin",            q: 1734, r: 931, type: "WORLDLY",   faction: "ASKANIER", size: 64,
       garrison: { stadtwache: 5, armbrust: 4, ritter: 2, balliste: 1 } },
-    { id: "brocken",       name: "Brocken",           q: 831,  r: 725, type: "MYTHIC",    faction: "WITCHES",  size: 64,
+    { id: "brocken",       name: "Brocken",           q: 975,  r: 1239, type: "MYTHIC",    faction: "WITCHES",  size: 64,
       garrison: { brockenhexe: 1, hexe: 4, irrlicht: 4, moorgeist: 2 }, finale: true,
       desc: "Mächtigster Ley-Knoten. Sieg hier gewinnt das Spiel." },
 
     // --- Villages: small named places between the larger ones (easier than Soltau). First proposal. ---
-    { id: "undeloh", name: "Undeloh", q: 678, r: 390, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "egestorf", name: "Egestorf", q: 699, r: 390, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "bispingen", name: "Bispingen", q: 683, r: 417, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "schneverdingen", name: "Schneverdingen", q: 634, r: 408, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "amelinghausen", name: "Amelinghausen", q: 735, r: 407, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "munster", name: "Munster", q: 704, r: 440, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "hermannsburg", name: "Hermannsburg", q: 705, r: 477, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "bergen", name: "Bergen", q: 674, r: 482, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "salzhausen", name: "Salzhausen", q: 724, r: 383, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "hanstedt", name: "Hanstedt", q: 687, r: 374, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "bienenbuettel", name: "Bienenbüttel", q: 800, r: 402, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "suderburg", name: "Suderburg", q: 791, r: 462, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "unterluess", name: "Unterlüß", q: 753, r: 475, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "fallingbostel", name: "Fallingbostel", q: 611, r: 469, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "visselhoevede", name: "Visselhövede", q: 583, r: 440, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
-    { id: "tostedt", name: "Tostedt", q: 614, r: 369, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "zeven", name: "Zeven", q: 510, r: 365, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "buxtehude", name: "Buxtehude", q: 611, r: 322, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "achim", name: "Achim", q: 451, r: 433, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "syke", name: "Syke", q: 402, r: 457, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "schwarmstedt", name: "Schwarmstedt", q: 592, r: 514, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "burgdorf", name: "Burgdorf", q: 685, r: 570, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "wittingen", name: "Wittingen", q: 860, r: 502, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "dannenberg", name: "Dannenberg", q: 947, r: 413, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "hitzacker", name: "Hitzacker", q: 934, r: 400, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "bleckede", name: "Bleckede", q: 859, r: 367, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "lauenburg", name: "Lauenburg", q: 817, r: 347, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
-    { id: "bergedorf", name: "Bergedorf", q: 734, r: 319, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
-    { id: "neustadt", name: "Neustadt am Rübenberge", q: 554, r: 555, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "peine", name: "Peine", q: 739, r: 600, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "wolfenbuettel", name: "Wolfenbüttel", q: 811, r: 638, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "harzburg", name: "Harzburg", q: 818, r: 705, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
-    { id: "ilsenburg", name: "Ilsenburg", q: 847, r: 709, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "schierke", name: "Schierke", q: 843, r: 733, type: "VILLAGE", faction: "WITCHES", size: 16, garrison: { irrlicht: 2 } },
-    { id: "oschersleben", name: "Oschersleben", q: 979, r: 669, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "haldensleben", name: "Haldensleben", q: 1022, r: 607, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "gardelegen", name: "Gardelegen", q: 1018, r: 551, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
-    { id: "salzwedel", name: "Salzwedel", q: 959, r: 473, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
-    { id: "tangermuende", name: "Tangermünde", q: 1156, r: 547, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "burg", name: "Burg", q: 1129, r: 611, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
-    { id: "genthin", name: "Genthin", q: 1202, r: 579, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "zerbst", name: "Zerbst", q: 1183, r: 685, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "belzig", name: "Belzig", q: 1305, r: 643, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "nauen", name: "Nauen", q: 1375, r: 531, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "bernau", name: "Bernau", q: 1545, r: 513, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "koenigswusterhausen", name: "Wusterhausen", q: 1555, r: 605, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "rathenow", name: "Rathenow", q: 1244, r: 531, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
-    { id: "nienburg", name: "Nienburg", q: 493, r: 523, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "undeloh", name: "Undeloh", q: 789, r: 698, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "egestorf", name: "Egestorf", q: 813, r: 697, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "bispingen", name: "Bispingen", q: 795, r: 741, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "schneverdingen", name: "Schneverdingen", q: 740, r: 728, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "amelinghausen", name: "Amelinghausen", q: 854, r: 725, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "munster", name: "Munster", q: 820, r: 779, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "hermannsburg", name: "Hermannsburg", q: 822, r: 839, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "bergen", name: "Bergen", q: 787, r: 847, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "salzhausen", name: "Salzhausen", q: 841, r: 686, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "hanstedt", name: "Hanstedt", q: 799, r: 672, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "bienenbuettel", name: "Bienenbüttel", q: 927, r: 715, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "suderburg", name: "Suderburg", q: 919, r: 813, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "unterluess", name: "Unterlüß", q: 876, r: 835, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "fallingbostel", name: "Fallingbostel", q: 715, r: 827, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "visselhoevede", name: "Visselhövede", q: 683, r: 780, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 2 } },
+    { id: "tostedt", name: "Tostedt", q: 716, r: 665, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "zeven", name: "Zeven", q: 600, r: 659, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "buxtehude", name: "Buxtehude", q: 712, r: 588, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "achim", name: "Achim", q: 533, r: 769, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "syke", name: "Syke", q: 478, r: 808, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "schwarmstedt", name: "Schwarmstedt", q: 694, r: 900, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "burgdorf", name: "Burgdorf", q: 802, r: 990, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "wittingen", name: "Wittingen", q: 999, r: 876, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "dannenberg", name: "Dannenberg", q: 1093, r: 729, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "hitzacker", name: "Hitzacker", q: 1078, r: 709, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "bleckede", name: "Bleckede", q: 992, r: 657, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "lauenburg", name: "Lauenburg", q: 944, r: 626, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
+    { id: "bergedorf", name: "Bergedorf", q: 850, r: 582, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
+    { id: "neustadt", name: "Neustadt am Rübenberge", q: 651, r: 967, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "peine", name: "Peine", q: 864, r: 1038, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "wolfenbuettel", name: "Wolfenbüttel", q: 949, r: 1098, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "harzburg", name: "Harzburg", q: 959, r: 1207, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
+    { id: "ilsenburg", name: "Ilsenburg", q: 993, r: 1213, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "schierke", name: "Schierke", q: 990, r: 1252, type: "VILLAGE", faction: "WITCHES", size: 16, garrison: { irrlicht: 2 } },
+    { id: "oschersleben", name: "Oschersleben", q: 1144, r: 1145, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "haldensleben", name: "Haldensleben", q: 1190, r: 1043, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "gardelegen", name: "Gardelegen", q: 1182, r: 952, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
+    { id: "salzwedel", name: "Salzwedel", q: 1110, r: 827, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 3 } },
+    { id: "tangermuende", name: "Tangermünde", q: 1339, r: 940, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "burg", name: "Burg", q: 1313, r: 1045, type: "VILLAGE", faction: "CLERGY", size: 16, garrison: { bauer: 2, moench: 1 } },
+    { id: "genthin", name: "Genthin", q: 1395, r: 990, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "zerbst", name: "Zerbst", q: 1381, r: 1163, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "belzig", name: "Belzig", q: 1519, r: 1089, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "nauen", name: "Nauen", q: 1588, r: 904, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "bernau", name: "Bernau", q: 1780, r: 865, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "koenigswusterhausen", name: "Wusterhausen", q: 1802, r: 1013, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "rathenow", name: "Rathenow", q: 1439, r: 910, type: "VILLAGE", faction: "ASKANIER", size: 16, garrison: { bauer: 2, armbrust: 1 } },
+    { id: "nienburg", name: "Nienburg", q: 581, r: 915, type: "VILLAGE", faction: "GUELPHS", size: 16, garrison: { bauer: 3 } },
   ],
 
   // ---------------------------------------------------------------------------
@@ -298,7 +298,7 @@ window.HARMBRINGER_DATA = {
     corpsesPerKill: 1,                 // multiplied by corpse quality, summed, rounded down at battle end
     bonesPerKill: 30,                  // independent of quality (a skeleton yields its bones either way)
     soulsPerSoulKill: 1,               // extra souls when the killing blow was SOUL damage
-    travelTilesPerDay: 30,
+    travelTilesPerDay: 39,
     lichDeathDays: 3,                  // days lost when the Lich falls and returns to the phylactery
     // Loot for conquering a node, by type and size.
     nodeRewards: {

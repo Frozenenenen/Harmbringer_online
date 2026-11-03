@@ -31,5 +31,5 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 ## Getroffene Entscheidungen (Auszug)
 
 - Phylakterium im Hügelgrab in der Lüneburger Heide; der Kalkberg ist nur Erzählmotiv.
-- Kampagnenkarte als durchgehende Landschaft (Projektion ETRS89/UTM 32N, 2017 × 1828 Höhenpunkte à ~247 m); Hex-Felder nur in instanzierten Schlachtfeldern. Im Spiel zeichnet `TerrainRenderer` die Oberwelt als Landschaft, `TileRenderer` nur das Kampffeld.
+- Kampagnenkarte als durchgehende Landschaft (Projektion ETRS89/UTM 32N, 2017 × 1828 Höhenpunkte à ~247 m); Hex-Felder nur in instanzierten Schlachtfeldern. Spiel-Raster: 2017 × 1583 Hex-Felder (Spalten ~247 m, Zeilen ~285 m, `tools/build_game_map.py`; Position eines Orts: `--tile <lat> <lon>`). Im Spiel zeichnet `TerrainRenderer` die Oberwelt als Landschaft, `TileRenderer` nur das Kampffeld.
 - Initiative linear: Tick-Kosten `2520 / Initiative`. MagicResist prozentual (5 %/Punkt, max. 50 %).
