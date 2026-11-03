@@ -987,6 +987,8 @@ const WorldView = {
       const el = document.createElement('div');
       el.className = 'nodeLabel';
       el.addEventListener('click', ev => { ev.stopPropagation(); if (game.mode === 'world') UI.selectNode(node.id); });
+      el.addEventListener('mouseenter', () => { game.hoverNodeId = node.id; });
+      el.addEventListener('mouseleave', () => { if (game.hoverNodeId === node.id) game.hoverNodeId = null; });
       const label = new CSS2DObject(el);
       pillar.add(label);
       v.worldRoot.add(pillar);
@@ -2546,6 +2548,7 @@ function onHover(ev) {
     if (now - lastWorldHover < 60) return;
     lastWorldHover = now;
     const p = game.view.terrain.pick(game.view.raycaster);
+    if (game.debug) game.hoverNodeId = Debug.nodeUnderMouse(p);
     if (!p) { tip.classList.add('hidden'); return; }
     const w = game.world;
     showTip(ev, groundTip(w.floorKeyAt(p.q, p.r), w.levelAt(p.q, p.r), `<br><span class="small">${w.metersAt(p.q, p.r).toFixed(0)} m über dem Meer</span>`));
@@ -2628,6 +2631,23 @@ function toggleEdges() {
 // Debug overlay (F3)
 // =============================================================================
 const Debug = {
+  // Place under the mouse: pillar hit first, otherwise the nearest place within 3 tiles of the ground point.
+  nodeUnderMouse(p) {
+    const pillars = Object.values(game.view.nodeViews).map(v => v.pillar);
+    const hit = game.view.raycaster.intersectObjects(pillars, false)[0];
+    if (hit) return hit.object.userData.nodeId;
+    if (!p) return null;
+    let best = null, bd = 4;
+    for (const n of DATA.nodes) { const d = hexDistance(n.q, n.r, p.q, p.r); if (d < bd) { bd = d; best = n.id; } }
+    return best;
+  },
+  nodeLine() {
+    const id = game.battle ? game.battle.node.id : game.hoverNodeId, n = id && NODE_BY_ID[id];
+    if (!n) return '–';
+    const g = Object.entries(n.garrison || {}).map(([t, c]) => `${c}× ${DATA.units[t].name}`).join(', ');
+    return `${n.name} [${n.id}]\n           ${NODE_TYPE_NAMES[n.type] || n.type} · ${DATA.factions[Campaign.owner(n)]?.name || Campaign.owner(n)} · (${n.q}, ${n.r})` +
+      `${Campaign.isRevealed(n) ? '' : ' · unentdeckt'}${g ? `\n           ${g}` : ''}`;
+  },
   update() {
     if (!game.debug) return;
     const cam = game.view.cam, [q, r] = cam.pivotTile(), w = game.world;
@@ -2641,7 +2661,8 @@ const Debug = {
       `Bodentyp   ${game.battle && game.battle.field.get(q, r) ? game.battle.field.get(q, r).floor : w.floorKeyAt(q, r)}\n` +
       `Tiles      ${game.view.tiles.drawn}\n` +
       `Zoom       ${cam.distance.toFixed(0)}\n` +
-      `Modus      ${game.mode}`;
+      `Modus      ${game.mode}\n` +
+      `Ort        ${this.nodeLine()}`;
   }
 };
 
