@@ -328,13 +328,13 @@ function makeRng(seed) {
 // =============================================================================
 class WorldData {
   constructor() {
-    this.gray = null;
+    this.meters = null;
     this.height = new Float32Array(WIDTH * HEIGHT);
     this.floor = new Uint8Array(WIDTH * HEIGHT);
   }
-  static metersFromGray(g) { return g * MAP.metersPerGray + MAP.metersAtGrayZero; }
-  static heightFromGray(g) {
-    const s = g - MAP.seaLevelGray;
+  // Battle tile height: compressed (square root of the height in steps of metersPerStep).
+  static heightFromMeters(m) {
+    const s = m / MAP.metersPerStep;
     return Math.sign(s) * Math.sqrt(Math.abs(s)) * HEX.heightPerStep;   // top surface of the tile
   }
   // Floor rule for one tile (PROMPT section 5.1). bandIdx is precomputed per gray value.
@@ -360,24 +360,21 @@ class WorldData {
   }
   // Runs the precomputation in chunks so the loading bar can update.
   async build(onProgress) {
-    const raw = atob(HM.data);
-    const gray = this.gray = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) gray[i] = raw.charCodeAt(i);
-    // Height and band only depend on the gray value -> lookup tables.
-    const heightLUT = new Float32Array(256), bandLUT = [];
-    for (let g = 0; g < 256; g++) {
-      heightLUT[g] = WorldData.heightFromGray(g);
-      const m = WorldData.metersFromGray(g);
-      bandLUT[g] = DATA.floorRules.bands.find(b => b.maxMeters >= m);
-    }
+    // 16-bit little-endian heights: meters = value * scale + offset.
+    const raw = atob(HM.data), n = WIDTH * HEIGHT;
+    const meters = this.meters = new Float32Array(n);
+    for (let i = 0; i < n; i++) meters[i] = (raw.charCodeAt(2 * i) | (raw.charCodeAt(2 * i + 1) << 8)) * HM.scale + HM.offset;
+    const bands = DATA.floorRules.bands;
     const rowsPerChunk = 60;
     for (let r0 = 0; r0 < HEIGHT; r0 += rowsPerChunk) {
       const r1 = Math.min(HEIGHT, r0 + rowsPerChunk);
       for (let r = r0; r < r1; r++) {
         for (let q = 0; q < WIDTH; q++) {
-          const i = r * WIDTH + q, g = gray[i];
-          this.height[i] = heightLUT[g];
-          this.floor[i] = WorldData.computeFloor(q, r, bandLUT[g]);
+          const i = r * WIDTH + q, m = meters[i];
+          this.height[i] = WorldData.heightFromMeters(m);
+          let band = bands[0];
+          for (const b of bands) { band = b; if (b.maxMeters >= m) break; }
+          this.floor[i] = WorldData.computeFloor(q, r, band);
         }
       }
       onProgress(r1 / HEIGHT);
@@ -386,8 +383,8 @@ class WorldData {
     // Landscape relief for the world map: linear in meters, exaggerated (map.reliefExaggeration).
     // Battles keep the compressed hex heights in this.height.
     const unitsPerMeter = COL_SPACING / HM.utm.colMeters * (MAP.reliefExaggeration || 1);
-    const relief = new Float32Array(gray.length);
-    for (let i = 0; i < gray.length; i++) relief[i] = WorldData.metersFromGray(gray[i]) * unitsPerMeter;
+    const relief = new Float32Array(n);
+    for (let i = 0; i < n; i++) relief[i] = meters[i] * unitsPerMeter;
     this.smooth = WorldData.blur(WorldData.blur(relief));
   }
   // Separable [1 2 1] blur: removes the 8-bit terraces for the landscape mesh.
@@ -416,9 +413,8 @@ class WorldData {
     return Math.max(this.surfaceAt(x, z), HEX.waterLevel);
   }
   idx(q, r) { return r * WIDTH + q; }
-  grayAt(q, r) { return inMap(q, r) ? this.gray[r * WIDTH + q] : 0; }
   heightAt(q, r) { return inMap(q, r) ? this.height[r * WIDTH + q] : HEX.waterLevel; }
-  metersAt(q, r) { return WorldData.metersFromGray(this.grayAt(q, r)); }
+  metersAt(q, r) { return inMap(q, r) ? this.meters[r * WIDTH + q] : -60; }
   levelAt(q, r) { return Math.round(this.heightAt(q, r)); }
   floorKeyAt(q, r) { return inMap(q, r) ? FLOOR_KEYS[this.floor[r * WIDTH + q]] : 'DEEP_WATER'; }
 }
@@ -2676,12 +2672,10 @@ const Debug = {
   update() {
     if (!game.debug) return;
     const cam = game.view.cam, [q, r] = cam.pivotTile(), w = game.world;
-    const g = w.grayAt(q, r);
     $('debug').textContent =
       `FPS        ${game.fps.toFixed(0)}\n` +
       `Pivot      (${q}, ${r})\n` +
-      `Grauwert   ${g}\n` +
-      `Meter      ${WorldData.metersFromGray(g).toFixed(1)} m\n` +
+      `Meter      ${w.metersAt(q, r).toFixed(1)} m\n` +
       `Spielhöhe  ${w.heightAt(q, r).toFixed(3)} (Stufe ${w.levelAt(q, r)})\n` +
       `Bodentyp   ${game.battle && game.battle.field.get(q, r) ? game.battle.field.get(q, r).floor : w.floorKeyAt(q, r)}\n` +
       `Tiles      ${game.view.tiles.drawn}\n` +

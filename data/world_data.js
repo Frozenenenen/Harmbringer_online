@@ -16,11 +16,9 @@ window.HARMBRINGER_DATA = {
     // Positions from lat/lon: python tools/build_game_map.py --tile <lat> <lon>
     width: 2017,               // tiles, Q axis, west -> east
     height: 1583,              // tiles, R axis, north -> south (R = 0 is the north edge)
-    seaLevelGray: 29,         // gray value of 0 m above sea level
-    // Gray -> meters is linear: meters = gray * metersPerGray + metersAtGrayZero.
-    // Everything above 450 m is capped at gray 255 (the Harz shows as a plateau).
-    metersPerGray: 508 / 255,
-    metersAtGrayZero: -58,
+    // Heights come in meters (data/heightmap.js, 16 bit). Battle tiles use a compressed height:
+    // sign(s) * sqrt(|s|) * hex.heightPerStep with s = meters / metersPerStep.
+    metersPerStep: 508 / 255,
     // World map relief: height in world units = meters / colMeters * columnSpacing * reliefExaggeration.
     // 1 = true scale (~55 m per unit). Battles use the compressed hex heights (hex.heightPerStep).
     reliefExaggeration: 8,
