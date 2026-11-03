@@ -91,6 +91,7 @@
   #battleLog .hit { color: var(--blood); }
   #battleLog .good { color: var(--undead); }
   #battleButtons { position: absolute; right: 14px; bottom: 40px; display: flex; gap: 6px; padding: 6px; z-index: 5; }
+  #worldButtons { position: absolute; right: 14px; bottom: 40px; display: flex; gap: 6px; padding: 6px; z-index: 5; }
 
   /* Modals */
   .modal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(30,25,18,.55); z-index: 20; }
@@ -162,6 +163,10 @@
 <div id="roundInfo" class="panel hidden"></div>
 <div id="unitCard" class="panel hidden"></div>
 <div id="battleLog" class="panel hidden"></div>
+<div id="worldButtons" class="panel hidden">
+  <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (Taste R)">Rekrutierung finden</button>
+  <button id="btnHome" title="Zum Hügelgrab (Taste H)">Hügelgrab</button>
+</div>
 <div id="battleButtons" class="panel hidden">
   <button id="btnEndTurn">Zug beenden</button>
   <button id="btnRetreat">Rückzug</button>
@@ -2787,9 +2792,9 @@ const UI = {
 
   // ---- World map ----------------------------------------------------------
   enterWorld() {
-    ['header', 'info', 'minimap', 'hint'].forEach(id => this.show(id, true));
+    ['header', 'info', 'minimap', 'hint', 'worldButtons'].forEach(id => this.show(id, true));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
-    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · Maus über Feld: Boden · F3: Debug';
+    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · R: Rekrutierung finden · H: Hügelgrab · I: Inventar · F3: Debug';
     this.updateHeader();
     this.renderInfo();
   },
@@ -2819,6 +2824,26 @@ const UI = {
     const parts = Object.entries(r).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`);
     if (node.type === 'MYTHIC') parts.push(`+${ECON.commandLimitPerMythicNode} Kommando`);
     return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
+  },
+  // Camera to a place and select it (its info box offers travelling there).
+  focusNode(node) {
+    if (game.mode !== 'world') return;
+    game.view.cam.lookAtTile(node.q, node.r);
+    this.selectNode(node.id);
+  },
+  // Recruiting sites sorted by travel time from the army; repeated clicks step through them.
+  findRecruitSite() {
+    const here = Campaign.armyNode();
+    const sites = DATA.nodes.filter(n => Recruitment.canRecruitAt(n))
+      .sort((a, b) => Campaign.travelDays(here, a) - Campaign.travelDays(here, b) || hexDistance(here.q, here.r, a.q, a.r) - hexDistance(here.q, here.r, b.q, b.r));
+    if (!sites.length) return;
+    const fresh = this.recruitCycleFrom !== here.id || performance.now() - (this.recruitCycleAt || 0) > 8000;
+    this.recruitCycle = fresh ? 0 : (this.recruitCycle + 1) % sites.length;
+    this.recruitCycleFrom = here.id; this.recruitCycleAt = performance.now();
+    const n = sites[this.recruitCycle];
+    this.focusNode(n);
+    const d = Campaign.travelDays(here, n);
+    this.toast(`${n.name}: ${n.id === here.id ? 'Armee steht hier' : d + (d === 1 ? ' Tag' : ' Tage') + ' entfernt'} (${this.recruitCycle + 1}/${sites.length})`);
   },
   // Mouse-over help for the resources in the header: how to get them and what they are for.
   resourceTip(k) {
@@ -2977,7 +3002,7 @@ const UI = {
 
   // ---- Battle -------------------------------------------------------------
   enterBattle() {
-    ['header', 'info', 'minimap'].forEach(id => this.show(id, false));
+    ['header', 'info', 'minimap', 'worldButtons'].forEach(id => this.show(id, false));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'hint'].forEach(id => this.show(id, true));
     $('battleLog').innerHTML = '';
     $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Maus über Feld: Boden und Bewegungskosten · Leertaste: Zug beenden · R: Rückzug · T: Kanten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
@@ -3176,6 +3201,8 @@ function initInput() {
       if (e.code === 'KeyT') toggleEdges();
     }
     if (e.code === 'KeyI' && game.mode === 'world') UI.openInventory();
+    if (e.code === 'KeyR' && game.mode === 'world') UI.findRecruitSite();
+    if (e.code === 'KeyH' && game.mode === 'world') UI.focusNode(PHYLACTERY);
     if (e.code === 'Escape' && game.mode === 'world') { UI.selectedNode = null; UI.selectedTile = null; WorldView.refresh(); UI.renderInfo(); }
   });
   window.addEventListener('keyup', e => inp.keys.delete(e.code));
@@ -3183,6 +3210,8 @@ function initInput() {
   $('btnEndTurn').onclick = () => { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); };
   $('btnRetreat').onclick = () => Battle.retreat();
   $('btnEdges').onclick = () => toggleEdges();
+  $('btnRecruitSite').onclick = () => UI.findRecruitSite();
+  $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
