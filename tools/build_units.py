@@ -331,7 +331,44 @@ def build(unit):
         head(m, "#c89a78", y=1.13, beard="#c87a3a"); m.C((0, 1.07, 0.1), (0, 0.6, 0.15), 0.13, 0.03, "#c87a3a")
         crown(m, "#c9a227", 1.22, 0.12, 5); hammer(m, (0.3, 0.62, 0.14), length=0.8); return m
     if unit == "schwarzer_hund": return hound("#1e1c1c", "#0e0d0d", "#ff3a1a")
+    if unit == "knochendrache": return bone_dragon()
     raise KeyError(unit)
+
+def bone_dragon(bone="#e0d8c0", dark="#8a8070", glow="#7aff9a", membrane="#5a4a5a"):
+    """Skeletal dragon: four legs, ribcage, long neck and tail, skull with horns, bone wings
+    with torn membranes. About 2.6 tall at the wing tips, looks along +Z."""
+    m = Mesh()
+    m.C((0, 1.0, -0.6), (0, 1.15, 0.5), 0.05, 0.05, bone, seg=5)              # spine
+    for k in range(6):                                                         # ribcage
+        z = 0.35 - k * 0.15; r = 0.32 - abs(k - 2) * 0.04
+        for sx in (-1, 1): m.C((0, 1.12, z), (sx * r, 0.82, z + 0.02), 0.03, 0.025, bone, seg=4); m.C((sx * r, 0.82, z + 0.02), (sx * r * 0.4, 0.62, z), 0.025, 0.02, bone, seg=4)
+    m.B((0, 0.95, -0.62), (0.4, 0.12, 0.2), bone)                              # pelvis
+    for sx in (-1, 1):                                                         # legs with claws
+        for z, top in ((0.38, 1.05), (-0.62, 0.95)):
+            knee = (sx * 0.34, 0.55, z + 0.12); foot = (sx * 0.36, 0.04, z + 0.05)
+            m.C((sx * 0.2, top, z), knee, 0.06, 0.045, bone, seg=5); m.C(knee, foot, 0.045, 0.035, bone, seg=5)
+            for dx in (-0.06, 0.0, 0.06): m.C(foot, (foot[0] + dx, 0.0, foot[2] + 0.16), 0.02, 0.0, dark, seg=3)
+    pts = [(0, 1.15, 0.5), (0, 1.45, 0.75), (0, 1.75, 0.9), (0, 1.95, 1.05)]   # neck
+    for a, b in zip(pts, pts[1:]): m.C(a, b, 0.06, 0.05, bone, seg=5)
+    hx, hy, hz = 0, 2.0, 1.2                                                   # skull
+    m.O((hx, hy, hz), (0.13, 0.12, 0.16), bone); m.B((hx, hy - 0.04, hz + 0.2), (0.14, 0.08, 0.26), bone); m.B((hx, hy - 0.11, hz + 0.18), (0.12, 0.04, 0.24), dark)
+    for sx in (-1, 1):
+        m.B((sx * 0.06, hy + 0.04, hz + 0.1), (0.04, 0.035, 0.03), glow)
+        m.C((sx * 0.07, hy + 0.08, hz - 0.08), (sx * 0.16, hy + 0.32, hz - 0.3), 0.035, 0.0, dark, seg=4)
+    tail = [(0, 0.98, -0.7), (0, 0.85, -1.1), (0, 0.6, -1.5), (0.1, 0.35, -1.85), (0.2, 0.2, -2.1)]
+    for i, (a, b) in enumerate(zip(tail, tail[1:])): m.C(a, b, 0.06 - i * 0.012, 0.05 - i * 0.012, bone, seg=4)
+    m.C(tail[-1], (0.26, 0.12, -2.35), 0.05, 0.0, dark, seg=4)
+    for sx in (-1, 1):                                                         # wings: arm bone, fingers, membrane panels
+        sh = (sx * 0.2, 1.15, 0.25); el = (sx * 0.8, 1.75, 0.0); wr = (sx * 1.3, 2.25, -0.2)
+        m.C(sh, el, 0.045, 0.04, bone, seg=5); m.C(el, wr, 0.04, 0.03, bone, seg=5)
+        tips = [(sx * 2.0, 1.6, -0.5), (sx * 1.75, 1.05, -0.65), (sx * 1.3, 0.75, -0.6)]
+        for t in tips: m.C(wr, t, 0.025, 0.01, bone, seg=4)
+        prev = el
+        for t in tips:
+            m.tri(np.array(wr), np.array(t), np.array(prev), m.slot(membrane)); m.tri(np.array(prev), np.array(t), np.array(wr), m.slot(membrane))
+            prev = t
+        m.tri(np.array(prev), np.array(sh), np.array(el), m.slot(membrane)); m.tri(np.array(el), np.array(sh), np.array(prev), m.slot(membrane))
+    return m
 
 def ballista(wood, dark, metal, skulls=False):
     m = Mesh()
@@ -351,7 +388,7 @@ UNITS = ["lich", "ghul", "skelett", "bogner", "leichenhund", "zombie", "schleude
          "ritter", "balliste", "moench", "priester", "hexe", "irrlicht", "moorgeist", "rattenfaenger", "brockenhexe", "kleriker",
          "heideschwester", "druide", "druidin", "schwarzer_hund", "wode", "zwergenkoenig", "heidekoenigin", "knochenschuetze",
          "moorleiche", "todesritter", "totenlicht", "gefallene_schwester", "grabdruidin", "nekromant", "knochenballiste",
-         "fleischriese", "totenjaeger"]
+         "fleischriese", "totenjaeger", "knochendrache"]
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)

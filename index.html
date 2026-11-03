@@ -131,9 +131,9 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=10"></script>
+<script src="data/world_data.js?v=11"></script>
 <script src="data/ground_textures.js?v=7"></script>
-<script src="data/portraits.js?v=9"></script>
+<script src="data/portraits.js?v=10"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1155,8 +1155,8 @@ const Campaign = {
 const RECRUIT_AT = {
   PHYLACTERY: null,                                                     // null = all units
   WORLDLY: ['ghul', 'zombie', 'leichenhund', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'todesritter', 'knochenballiste', 'fleischriese'],
-  CHRISTIAN: ['zombie', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'gefallene_schwester', 'nekromant'],
-  MYTHIC: ['ghul', 'leichenhund', 'geist', 'moorleiche', 'totenlicht', 'grabdruidin', 'nekromant', 'totenjaeger']
+  CHRISTIAN: ['zombie', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'gefallene_schwester', 'nekromant', 'fleischriese'],
+  MYTHIC: ['ghul', 'leichenhund', 'geist', 'moorleiche', 'totenlicht', 'grabdruidin', 'nekromant', 'totenjaeger', 'knochendrache']
 };
 const Recruitment = {
   canRecruitAt(node) { return node && node.type in RECRUIT_AT && (node.type === 'PHYLACTERY' || Campaign.isConquered(node)); },

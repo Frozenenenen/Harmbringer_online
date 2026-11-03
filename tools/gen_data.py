@@ -40,6 +40,8 @@ units = [
    18,8,5,3,6,4,"Soul",1,F,"Light",5,4, 4,3,2,1,2,2,F,F,4, l=2, s=2, ab=("NecroRaiseDead",)),
  U("FleshGiant","Fleischriese","Warrior","Tank","Undead","Aus 15 Leichen vernäht.",
    70,3,2,2,14,1,"Blunt",1,T,"Medium",1,0, 3,2,2,4,4,4,F,F,-8, l=15, ab=("FleshGiantCrush",)),
+ U("BoneDragon","Knochendrache","Warrior","Tank","Undead","Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",
+   120,4,5,6,18,2,"Soul",1,T,"Heavy",4,4, 6,4,3,4,2,4,F,T,-16, k=30, s=6),
  # --- Gegner Basis ---
  U("Peasant","Bauer","CannonFodder","Melee","Hanse","Mistgabel, rot-weißer Wappenrock.",
    10,0,4,3,4,1,"Pierce",1,T,"Unarmored",0,0, 4,3,2,2,2,2,F,F,0, ab=("PeasantMob",)),
@@ -139,7 +141,8 @@ GAME_UNITS = [
  ("grabdruidin", "GraveDruidess", dict(shape="cone", color="#4a5a3a", requiresKnowledge=6)),
  ("nekromant", "Necromancer", dict(shape="octahedron", color="#2a1a3a", requiresKnowledge=6)),
  ("knochenballiste", "Ballista", dict(shape="box", color="#8a7a5a", requiresKnowledge=7)),
- ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=8)),
+ ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=3)),
+ ("knochendrache", "BoneDragon", dict(shape="octahedron", color="#d8d0b8", requiresKnowledge=10)),
  ("totenjaeger", "DeathHunter", dict(shape="box", color="#3a2a2a", requiresKnowledge=10)),
  # Heath pantheon and clergy units for the mythic places of the wider map
  ("kleriker", "Cleric", dict(shape="cone", color="#cfc6a8")),

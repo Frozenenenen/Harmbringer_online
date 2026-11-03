@@ -22,7 +22,7 @@ from build_units import UNITS as _UNITS
 GAME_FIGURES = {u: f"Generated/{u}.glb" for u in _UNITS}
 
 # Side view for animals (the default view is nearly frontal).
-PORTRAIT_YAW = {"leichenhund": -65, "schwarzer_hund": -65, "balliste": -60, "knochenballiste": -60}
+PORTRAIT_YAW = {"leichenhund": -65, "schwarzer_hund": -65, "balliste": -60, "knochenballiste": -60, "knochendrache": -50}
 
 def load(path):
     b = open(path, "rb").read()

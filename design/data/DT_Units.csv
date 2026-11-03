@@ -8,6 +8,7 @@ Ghost,Geist,Warrior,Scout,Undead,Lautloser Seelenfresser.,10,0,8,5,8,1,Soul,1,Fa
 Ballista,Balliste,Machine,Siege,Undead,Knochen-Belagerungsgeschütz.,25,0,2,1,20,6,Siege,1,False,Fortified,0,0,6,3,1,4,1,3,False,False,-5,3,5,0,()
 Necromancer,Nekromant,Commander,Caster,Undead,"Generischer Kommandeur, ruft Tote.",18,8,5,3,6,4,Soul,1,False,Light,5,4,4,3,2,1,2,2,False,False,4,2,0,2,"(""NecroRaiseDead"")"
 FleshGiant,Fleischriese,Warrior,Tank,Undead,Aus 15 Leichen vernäht.,70,3,2,2,14,1,Blunt,1,True,Medium,1,0,3,2,2,4,4,4,False,False,-8,15,0,0,"(""FleshGiantCrush"")"
+BoneDragon,Knochendrache,Warrior,Tank,Undead,"Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",120,4,5,6,18,2,Soul,1,True,Heavy,4,4,6,4,3,4,2,4,False,True,-16,0,30,6,()
 Peasant,Bauer,CannonFodder,Melee,Hanse,"Mistgabel, rot-weißer Wappenrock.",10,0,4,3,4,1,Pierce,1,True,Unarmored,0,0,4,3,2,2,2,2,False,False,0,0,0,0,"(""PeasantMob"")"
 Crossbowman,Lüneburger Armbrustschütze,CannonFodder,Ranged,Hanse,Armbrust mit Setzschild.,15,0,4,3,9,5,Pierce,1,False,Medium,1,0,6,3,2,2,2,2,False,False,0,0,0,0,"(""CrossbowPavise"")"
 Cleric,Kleriker,Warrior,Support,Clergy,Weihrauchfass und Buch.,14,4,5,3,4,2,Holy,1,False,Light,4,6,4,3,2,1,1,2,False,False,0,0,0,0,"(""ClericCenser"")"
