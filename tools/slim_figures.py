@@ -119,7 +119,7 @@ def slim(src, dst, tex_px):
         gj["samplers"] = [{"magFilter": 9729, "minFilter": 9987}]
         gj["textures"] = [{"source": 0, "sampler": 0}]
         gj["materials"][0]["pbrMetallicRoughness"]["baseColorTexture"] = {"index": 0}
-    binb = b"".join(chunks); gj["buffers"] = [{"byteLength": len(binb)}]
+    binb = b"".join(chunks); gj["buffers"] = [{"byteLength": len(binb)}]; gj["bufferViews"] = views
     js = json.dumps(gj, separators=(",", ":")).encode(); js += b" " * ((-len(js)) % 4)
     out = b"glTF" + struct.pack("<II", 2, 12 + 8 + len(js) + 8 + len(binb))
     out += struct.pack("<I", len(js)) + b"JSON" + js + struct.pack("<I", len(binb)) + b"BIN\0" + binb
