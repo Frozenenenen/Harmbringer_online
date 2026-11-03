@@ -1031,10 +1031,14 @@ const WorldView = {
   // Village labels only near the camera pivot (or when selected); larger places always show.
   updateLabels() {
     const [pq, pr] = game.view.cam.pivotTile();
+    // Labels hidden in the fog would float above the horizon in flat views: cut them off where the fog is ~95 %.
+    const v = game.view, maxDist = 1.73 / v.scene.fog.density;
     for (const node of DATA.nodes) {
-      if (node.type !== 'VILLAGE') continue;
-      game.view.nodeViews[node.id].label.visible = UI.selectedNode === node.id ||
-        hexDistance(node.q, node.r, pq, pr) <= VILLAGE_LABEL_DISTANCE;
+      const nv = v.nodeViews[node.id];
+      const inFog = nv.pillar.position.distanceTo(v.camera.position) > maxDist;
+      nv.pillar.visible = !inFog;
+      if (node.type !== 'VILLAGE') { nv.label.visible = !inFog; continue; }
+      nv.label.visible = !inFog && (UI.selectedNode === node.id || hexDistance(node.q, node.r, pq, pr) <= VILLAGE_LABEL_DISTANCE);
     }
   }
 };
