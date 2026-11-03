@@ -1309,7 +1309,33 @@ const Minimap = {
     return { x0, y0, scale, z };
   },
   toTile(px, py) { const v = this.view(); return [v.x0 + px * v.scale, v.y0 + py * v.scale]; },
+  // Place symbols: circle = small (villages, small towns), square = medium, star = large cities;
+  // the phylactery is a diamond. Within a shape the size grows with the garrison.
+  initSymbols() {
+    const shapeOf = n => n.type === 'PHYLACTERY' ? 'diamond' : n.size >= 64 ? 'star' : n.size >= 32 ? 'square' : 'circle';
+    const RANGE = { circle: [3.5, 7], square: [5.5, 8.5], star: [10, 14], diamond: [8, 8] };
+    const strength = n => Object.values(n.garrison || {}).reduce((a, b) => a + b, 0) + (n.type === 'VILLAGE' ? 0 : 8);
+    const groups = {};
+    for (const n of DATA.nodes) (groups[shapeOf(n)] = groups[shapeOf(n)] || []).push(n);
+    this.symbols = {};
+    for (const [shape, list] of Object.entries(groups)) {
+      const vals = list.map(strength), lo = Math.min(...vals), hi = Math.max(...vals), [a, b] = RANGE[shape];
+      for (const n of list) this.symbols[n.id] = { shape, size: a + (b - a) * (hi > lo ? (strength(n) - lo) / (hi - lo) : 0.5) };
+    }
+  },
+  symbolPath(ctx, shape, x, y, r) {
+    ctx.beginPath();
+    if (shape === 'circle') ctx.arc(x, y, r, 0, Math.PI * 2);
+    else if (shape === 'square') ctx.rect(x - r, y - r, 2 * r, 2 * r);
+    else if (shape === 'diamond') { ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); }
+    else for (let i = 0; i < 10; i++) {               // five-pointed star
+      const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r;
+      i ? ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr) : ctx.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    if (shape === 'star') ctx.closePath();
+  },
   draw() {
+    if (!this.symbols) this.initSymbols();
     const ctx = this.ctx, cv = this.canvas, v = this.view();
     const sx = q => (q - v.x0) / v.scale, sy = r => (r - v.y0) / v.scale;
     ctx.fillStyle = '#22364f'; ctx.fillRect(0, 0, cv.width, cv.height);
@@ -1324,10 +1350,10 @@ const Minimap = {
       const x = sx(node.q), y = sy(node.r);
       if (x < -40 || y < -40 || x > cv.width + 40 || y > cv.height + 40) continue;
       const rev = Campaign.isRevealed(node), village = node.type === 'VILLAGE';
-      const rad = (village ? 4 : 7) * (v.z >= 4 ? 1.4 : 1);
+      const sym = this.symbols[node.id], rad = sym.size * (v.z >= 4 ? 1.4 : 1);
       ctx.fillStyle = rev ? DATA.factions[Campaign.owner(node)].color : '#888';
-      ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = rev && node.special ? '#e0b830' : '#2b2116'; ctx.lineWidth = rev && node.special ? 3 : 2;
+      this.symbolPath(ctx, sym.shape, x, y, rad); ctx.fill(); ctx.stroke();
       if (rev && (village ? v.z >= 8 : v.z >= 2)) {
         ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(233,223,196,.9)'; ctx.fillStyle = '#2b2116';
         ctx.strokeText(node.name, x, y - rad - 6); ctx.fillText(node.name, x, y - rad - 6);
