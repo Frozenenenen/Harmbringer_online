@@ -23,7 +23,7 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 ## Arbeitsregeln
 
 - **Generierte Bereiche** im Design-Dokument (`<!--GEN:…:BEGIN/END-->`, Inhaltsverzeichnis) nicht von Hand ändern. Werte in `tools/gen_data.py` bzw. `tools/campaign_data.py` ändern, dann `python tools/gen_data.py` ausführen.
-- Nach Änderungen an Einheiten: `python tools/build_gallery.py`. Karten-Daten: `python tools/build_webmap.py --assets <Ordner mit Textures/ und Maps/>`.
+- Nach Änderungen an Einheiten: `python tools/build_gallery.py`. Karten-Daten: `python tools/build_webmap.py --assets <Ordner mit Textures/ und Maps/>`. Danach `python tools/build_game_textures.py` (Bodentexturen fürs Spiel).
 - `data/world_data.js`: Einheiten und Kampfregeln (Bereiche `// <GEN:UNITS>`, `// <GEN:RULES>`) erzeugt `gen_data.py` aus den CSVs – dort nicht von Hand ändern. Fraktionen, Orte, Gebäude, Wirtschaft sind Handarbeit.
 - Spieltexte und Dokumentation auf Deutsch, Code-Kommentare auf Englisch.
 - Änderungen **direkt auf `main` committen und pushen** – ohne Branch und Pull Request. Das Spiel spielt aktuell nur Kevin, GitHub Pages darf sofort den neuen Stand zeigen.
@@ -31,5 +31,5 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 ## Getroffene Entscheidungen (Auszug)
 
 - Phylakterium im Hügelgrab in der Lüneburger Heide; der Kalkberg ist nur Erzählmotiv.
-- Kampagnenkarte als durchgehende Landschaft (Projektion ETRS89/UTM 32N, 2017 × 1828 Höhenpunkte à ~247 m); Hex-Felder nur in instanzierten Schlachtfeldern.
+- Kampagnenkarte als durchgehende Landschaft (Projektion ETRS89/UTM 32N, 2017 × 1828 Höhenpunkte à ~247 m); Hex-Felder nur in instanzierten Schlachtfeldern. Im Spiel zeichnet `TerrainRenderer` die Oberwelt als Landschaft, `TileRenderer` nur das Kampffeld.
 - Initiative linear: Tick-Kosten `2520 / Initiative`. MagicResist prozentual (5 %/Punkt, max. 50 %).

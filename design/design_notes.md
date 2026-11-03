@@ -2785,7 +2785,8 @@ Im Spiel als Klassen in `index.html`:
 |-|-|-|
 | `WorldData` | Spielwerte aus `world_data.js` bereitstellen | – |
 | `Battlefield` | Hex-Gitter des Kampfes: Tiles, `hexToWorld`, Nachbarn, Distanz | Spielregeln, Einheiten |
-| `TileRenderer` | Tiles zeichnen, ein instanziertes Mesh pro FloorType | – |
+| `TerrainRenderer` | Weltkarte als Landschaft: Gitter folgt der Kamera, Höhen und Bodentypen aus Datentexturen, Bodentexturen mit weichen Übergängen | – |
+| `TileRenderer` | Hex-Tiles im Kampf zeichnen, ein instanziertes Mesh pro FloorType | – |
 | `CameraController` | Bewegen, Drehen, Zoomen | – |
 
 Globale Werte (z. B. Hex-Größe) liegen an einer Stelle. Breite und Höhe des Schlachtfelds gehören dagegen zum jeweiligen Kampf, nicht in die globale Konfiguration.
@@ -2818,6 +2819,7 @@ Erste Spalte `Name` = Zeilenname, über den Tabellen aufeinander verweisen (z. B
 - `sim.py` / `encounter_check.py` – Balancing- und Schlacht-Simulation
 - `geo.py`, `worldmap.py`, `build_webmap.py` – Projektion und Daten der Weltkarte
 - `build_gallery.py` – baut das Einheitenbuch aus den CSVs
+- `build_game_textures.py` – bettet die Bodentexturen als Data-URIs in `data/ground_textures.js` ein (nötig für file://)
 
 Generierte Bereiche sind mit `<!--GEN:…:BEGIN/END-->` markiert – dort nicht von Hand editieren. **Workflow:** Werte im Generator ändern, `python tools/gen_data.py` ausführen, dann sind CSV, Dokument und `data/world_data.js` synchron.
 
