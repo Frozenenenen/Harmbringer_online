@@ -36,6 +36,14 @@ GAME_FIGURES = {
     "moorgeist": "Spreewald/Spree_Marsh_Louse.glb",
     "rattenfaenger": "Witch/Witch_Cultist.glb",
     "brockenhexe": "Witch/Witch_Firewitch.glb",
+    "kleriker": "Clergy/Clergy_Exorcist.glb",
+    "heideschwester": "Clergy/Clergy_Nun.glb",
+    "druide": "Druids/Druid_Druid.glb",
+    "druidin": "Druids/Druid_Leader.glb",
+    "schwarzer_hund": "Wodan/Wodan_Wölfin.glb",
+    "wode": "Wodan/Wodin_Wodin.glb",
+    "zwergenkoenig": "Dwarfs/Dwarf_Elder.glb",
+    "heidekoenigin": "Druids/Druid_Sylvan.glb",
 }
 
 def load(path):

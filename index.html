@@ -128,10 +128,10 @@
 <!-- Game data: classic scripts, loaded before the game module -->
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
-<script src="data/heightmap.js?v=5"></script>
-<script src="data/world_data.js?v=5"></script>
-<script src="data/ground_textures.js?v=5"></script>
-<script src="data/portraits.js?v=5"></script>
+<script src="data/heightmap.js?v=6"></script>
+<script src="data/world_data.js?v=6"></script>
+<script src="data/ground_textures.js?v=6"></script>
+<script src="data/portraits.js?v=6"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -147,6 +147,7 @@
   <div id="date" style="font-size:18px"></div>
   <div class="res" id="resources"></div>
   <div id="threats"></div>
+  <button id="btnInventory" title="Artefakte und besondere Orte (I)">Inventar</button>
   <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
 </div>
 <div id="info" class="panel hidden"></div>
@@ -1007,6 +1008,8 @@ const Campaign = {
       owners: Object.fromEntries(DATA.nodes.map(n => [n.id, n.faction])),
       threat,
       battles: 0,
+      inventory: [],          // artifact ids found
+      equipped: [],           // up to DATA.artifactSlots artifact ids that are active
       won: false,
       econVersion: 2          // 2 = bone amounts scaled x60
     };
@@ -1027,6 +1030,7 @@ const Campaign = {
     for (let i = 0; i < n; i++) {
       c.dayCount++;
       for (const f of ENEMY_FACTIONS) c.threat[f] -= c.threat[f] * THREAT.dailyDecay;
+      for (const node of this.ownedSpecials()) this.addResources(DATA.specials[node.special].income || {});
     }
   },
   owner(node) { return game.campaign.owners[node.id]; },
@@ -1036,8 +1040,18 @@ const Campaign = {
   armyNode() { return NODE_BY_ID[game.campaign.nodeId]; },
   commandLimit() {
     const mythic = DATA.nodes.filter(n => n.type === 'MYTHIC' && this.isConquered(n)).length;
-    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic;
+    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0);
   },
+  // Sum of all active bonuses: equipped artifacts plus buffs of owned special places.
+  effects() {
+    const c = game.campaign, e = {};
+    const add = eff => { for (const [k, v] of Object.entries(eff || {})) e[k] = (e[k] || 0) + v; };
+    for (const id of c.equipped || []) if (DATA.artifacts[id]) add(DATA.artifacts[id].effect);
+    for (const n of DATA.nodes) if (n.special && this.isConquered(n)) add(DATA.specials[n.special].buff);
+    return e;
+  },
+  // Special places the undead own (for income, buffs and the inventory screen).
+  ownedSpecials() { return DATA.nodes.filter(n => n.special && this.isConquered(n)); },
   commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
   isRevealed(node) {
     const a = this.armyNode();
@@ -1045,7 +1059,7 @@ const Campaign = {
     if (hexDistance(node.q, node.r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
     return DATA.nodes.some(n => this.isConquered(n) && hexDistance(node.q, node.r, n.q, n.r) <= REVEAL_DISTANCE);
   },
-  travelDays(from, to) { return Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / ECON.travelTilesPerDay); },
+  travelDays(from, to) { return Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / (ECON.travelTilesPerDay * (1 + (this.effects().travelPct || 0)))); },
   // Garrison incl. threat reinforcements: +1 of the most common unit per full reinforcementPer %.
   garrisonFor(node) {
     const list = [];
@@ -1178,7 +1192,7 @@ const WorldView = {
       nv.pillar.scale.set(village ? 0.6 : 1, revealed ? (village ? 18 : 40) : 10, village ? 0.6 : 1);
       nv.el.classList.toggle('village', village);
       nv.pillar.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
-      nv.el.textContent = revealed ? node.name : '?';
+      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') : '?';
       nv.el.classList.toggle('unknown', !revealed);
       nv.el.classList.toggle('selected', UI.selectedNode === node.id);
     }
@@ -2003,6 +2017,7 @@ const Battle = {
     };
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
+    this.applyArmyEffects(b);
     this.applyLichBonus(b);
     const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
     for (const g of splitStacks(groupByType(garrison))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
@@ -2063,11 +2078,26 @@ const Battle = {
     const lich = b.units.find(u => u.type === 'lich'), B = ECON.lichArmyBonus;
     if (!lich || !B) return;
     const cp = Campaign.commandUsed(), base = lich.def;
-    const add = { hp: Math.round(cp * B.hpPerCommand), damage: Math.round(cp * B.damagePerCommand), soulShield: Math.round(cp * B.shieldPerCommand) };
+    const fx = Campaign.effects();
+    const add = { hp: Math.round(cp * B.hpPerCommand) + (fx.lichHp || 0), damage: Math.round(cp * B.damagePerCommand) + (fx.lichDamage || 0),
+      soulShield: Math.round(cp * B.shieldPerCommand) + (fx.lichShield || 0) };
     lich.def = { ...base, hp: base.hp + add.hp, damage: base.damage + add.damage, soulShield: base.soulShield + add.soulShield };
     lich.hp = Math.max(1, Math.round(lich.hp / base.hp * lich.def.hp));
     lich.maxHp = lich.def.hp; lich.shield = lich.def.soulShield;
-    if (cp > 0) this.log(`Der Lich zieht Kraft aus seiner Armee (${cp} Kommando): +${add.hp} LP, +${add.damage} Schaden, +${add.soulShield} Seelenschild.`, 'good');
+    if (cp > 0 || add.hp) this.log(`Der Lich zieht Kraft aus Armee (${cp} Kommando) und Artefakten: +${add.hp} LP, +${add.damage} Schaden, +${add.soulShield} Seelenschild.`, 'good');
+  },
+  // Artifacts and owned special places strengthen every undead stack (copied defs, battle only).
+  applyArmyEffects(b) {
+    const fx = Campaign.effects();
+    if (!fx.undeadHpPct && !fx.undeadDamagePct && !fx.undeadMr && !fx.undeadIni) return;
+    for (const u of b.units) {
+      if (u.side !== 'player' || u.type === 'lich') continue;
+      const base = u.def, n = stackCount(u);
+      u.def = { ...base, hp: Math.round(base.hp * (1 + (fx.undeadHpPct || 0))), damage: Math.round(base.damage * (1 + (fx.undeadDamagePct || 0))),
+        magicResist: base.magicResist + (fx.undeadMr || 0), initiative: base.initiative + (fx.undeadIni || 0) };
+      u.hp = Math.round(u.hp / base.hp * u.def.hp); u.maxHp = n * u.def.hp;
+      u.nextTick = turnTicks(u.def);
+    }
   },
   // Battle HP of the Lich back to his campaign HP (without the army bonus).
   lichCampaignHp(u) { return Math.max(1, Math.round(u.hp / u.def.hp * DATA.units.lich.hp)); },
@@ -2349,32 +2379,47 @@ const Battle = {
     c.battles++;
     let html = '';
     if (result === 'victory') {
-      const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0));
-      const bones = Math.floor(b.kills.length * ECON.bonesPerKill);
-      const souls = b.kills.filter(k => k.soul).length * ECON.soulsPerSoulKill;
+      const fx = Campaign.effects();
+      const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0) * (1 + (fx.lootCorpsesPct || 0)));
+      const bones = Math.floor(b.kills.length * ECON.bonesPerKill * (1 + (fx.lootBonesPct || 0)));
+      const souls = b.kills.filter(k => k.soul).length * ECON.soulsPerSoulKill + (fx.soulsPerVictory || 0);
+      const knowledgeBonus = fx.knowledgePerVictory || 0;
       const reward = (ECON.nodeRewards[node.type] || {})[node.size] || {};
       const loot = { corpses, bones, souls };
+      if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       Campaign.addResources(loot);
       c.owners[node.id] = 'UNDEAD';
+      // Special place: artifact into the inventory (auto-equipped while a slot is free).
+      const sp = node.special && DATA.specials[node.special];
+      let found = '';
+      if (sp && sp.artifact && !c.inventory.includes(sp.artifact)) {
+        c.inventory.push(sp.artifact);
+        if (c.equipped.length < DATA.artifactSlots) c.equipped.push(sp.artifact);
+        const a = DATA.artifacts[sp.artifact];
+        found = `<h3>Artefakt gefunden</h3><p><b>${a.name}</b> – ${a.text}${c.equipped.includes(sp.artifact) ? ' <span class="small">(angelegt)</span>' : ' <span class="small">(im Inventar)</span>'}</p>`;
+      } else if (sp) found = `<h3>${sp.name}</h3><p>${sp.text}</p>`;
       // Survivors recover part of their strength after a won battle.
       let healed = 0;
+      const healShare = ECON.postBattleHealShare + (fx.healPct || 0);
       c.army = this.alive('player').flatMap(u => {
         if (u.type === 'lich') {
-          const hp = Math.min(DATA.units.lich.hp, this.lichCampaignHp(u) + Math.ceil(DATA.units.lich.hp * ECON.postBattleHealShare));
+          const hp = Math.min(DATA.units.lich.hp, this.lichCampaignHp(u) + Math.ceil(DATA.units.lich.hp * healShare));
           healed += hp - this.lichCampaignHp(u);
           return [{ type: 'lich', hp }];
         }
         const n = stackCount(u), cap = n * u.def.hp;
-        const total = Math.min(cap, u.hp + n * Math.ceil(u.def.hp * ECON.postBattleHealShare));
+        const total = Math.min(cap, u.hp + n * Math.ceil(u.def.hp * healShare));
         healed += total - u.hp;
         // Back to individual creatures: all full except the top one.
-        return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: i < n - 1 ? u.def.hp : total - (n - 1) * u.def.hp }));
+        // Back in campaign units: artifact HP bonuses only exist in battle.
+        const baseHp = DATA.units[u.type].hp, back = x => Math.max(1, Math.round(x / u.def.hp * baseHp));
+        return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: back(i < n - 1 ? u.def.hp : total - (n - 1) * u.def.hp) }));
       });
       const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${v} ${RESOURCE_NAMES[k]}</li>`).join('');
       html = `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>
         <h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>
-        <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(ECON.postBattleHealShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>`;
+        <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}`;
       if (node.finale) c.won = true;
     } else if (result === 'defeat') {
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
@@ -2579,6 +2624,47 @@ const UI = {
     if (node.type === 'MYTHIC') parts.push(`+${ECON.commandLimitPerMythicNode} Kommando`);
     return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
   },
+  // What a special place offers (income / buff while owned, artifact on conquest).
+  specialText(node) {
+    const sp = DATA.specials[node.special];
+    if (sp.artifact) {
+      const a = DATA.artifacts[sp.artifact], have = game.campaign.inventory.includes(sp.artifact);
+      return `★ <b>${a.name}</b>${have ? ' <span class="small">(im Inventar)</span>' : ''}<br><span class="small">${a.text}</span>`;
+    }
+    return `★ <b>${sp.name}</b><br><span class="small">${sp.text}</span>`;
+  },
+  // Inventory: artifacts (equip up to DATA.artifactSlots) and owned special places.
+  openInventory() {
+    const c = game.campaign, slots = DATA.artifactSlots;
+    const row = id => {
+      const a = DATA.artifacts[id], on = c.equipped.includes(id);
+      const full = !on && c.equipped.length >= slots;
+      return `<div class="recruitRow" style="grid-template-columns:1fr auto"><div><b>${a.name}</b>${on ? ' <span class="small">· angelegt</span>' : ''}<br><span class="small">${a.text}</span></div>
+        <div><button data-art="${id}" ${full ? 'disabled title="Alle Plätze belegt"' : ''}>${on ? 'Ablegen' : 'Anlegen'}</button></div></div>`;
+    };
+    const arts = c.inventory.length ? c.inventory.map(row).join('')
+      : '<p class="small">Noch keine Artefakte. Orte mit ★ auf der Karte bergen Artefakte, Einkommen oder dauerhafte Vorteile.</p>';
+    const owned = Campaign.ownedSpecials();
+    const sites = owned.length ? '<ul>' + owned.map(n => `<li><b>${esc(n.name)}</b>: ${DATA.specials[n.special].text || DATA.artifacts[DATA.specials[n.special].artifact].name + ' geborgen'}</li>`).join('') + '</ul>'
+      : '<p class="small">Noch keine besonderen Orte erobert.</p>';
+    const fx = Campaign.effects();
+    const NAMES = { lichHp: 'Lich LP', lichDamage: 'Lich Schaden', lichShield: 'Lich Seelenschild', undeadHpPct: 'Untote LP', undeadDamagePct: 'Untote Schaden',
+      undeadMr: 'Untote Magieresistenz', undeadIni: 'Untote Initiative', travelPct: 'Reisetempo', commandLimit: 'Kommando', healPct: 'Heilung nach Sieg',
+      soulsPerVictory: 'Seelen pro Sieg', knowledgePerVictory: 'Wissen pro Sieg', lootBonesPct: 'Knochen aus Kämpfen', lootCorpsesPct: 'Leichen aus Kämpfen' };
+    const fmt = (k, v) => k.endsWith('Pct') ? `+${Math.round(v * 100)} %` : `+${v}`;
+    const total = Object.entries(fx).filter(([, v]) => v).map(([k, v]) => `${NAMES[k] || k} ${fmt(k, v)}`).join(' · ') || 'keine';
+    const income = {};
+    for (const n of owned) for (const [k, v] of Object.entries(DATA.specials[n.special].income || {})) income[k] = (income[k] || 0) + v;
+    const inc = Object.entries(income).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ') || 'keins';
+    this.modal(`<h2>Inventar</h2>
+      <p class="small">Angelegt: ${c.equipped.length} / ${slots} Plätze · Wirkung gesamt: ${total} · Einkommen pro Tag: ${inc}</p>
+      <h3>Artefakte</h3>${arts}<h3>Besondere Orte</h3>${sites}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
+    $('modalBody').querySelectorAll('button[data-art]').forEach(b => b.onclick = () => {
+      const id = b.dataset.art, i = c.equipped.indexOf(id);
+      if (i >= 0) c.equipped.splice(i, 1); else if (c.equipped.length < slots) c.equipped.push(id);
+      SaveGame.save(); this.openInventory();
+    });
+  },
   armyHtml() {
     // Grouped like the battle stacks: "3× Ghul" with total health.
     return '<h3>Armee</h3><div class="armyList">' + groupByType(game.campaign.army).map(g => {
@@ -2612,6 +2698,7 @@ const UI = {
           ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
           <tr><td>Besatzung</td><td>${garrison}</td></tr>
           ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
+          ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
         </table>
         ${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}
         <div class="buttons" id="nodeButtons"></div>`;
@@ -2871,6 +2958,7 @@ function initInput() {
       if (e.code === 'KeyR') Battle.retreat();
       if (e.code === 'KeyT') toggleEdges();
     }
+    if (e.code === 'KeyI' && game.mode === 'world') UI.openInventory();
     if (e.code === 'Escape' && game.mode === 'world') { UI.selectedNode = null; UI.selectedTile = null; WorldView.refresh(); UI.renderInfo(); }
   });
   window.addEventListener('keyup', e => inp.keys.delete(e.code));
@@ -2878,6 +2966,7 @@ function initInput() {
   $('btnEndTurn').onclick = () => { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); };
   $('btnRetreat').onclick = () => Battle.retreat();
   $('btnEdges').onclick = () => toggleEdges();
+  $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
 }

@@ -130,6 +130,15 @@ GAME_UNITS = [
  ("moorgeist", "BogSpirit", dict(shape="capsule", color="#3a4a3a")),
  ("rattenfaenger", "PiedPiper", dict(shape="octahedron", color="#b0422e")),
  ("brockenhexe", "BrockenQueen", dict(shape="octahedron", color="#1d1d1d")),
+ # Heath pantheon and clergy units for the mythic places of the wider map
+ ("kleriker", "Cleric", dict(shape="cone", color="#cfc6a8")),
+ ("heideschwester", "HeathSister", dict(shape="cone", color="#9a7a8a")),
+ ("druide", "Druid", dict(shape="cone", color="#4f6a3a")),
+ ("druidin", "Druidess", dict(shape="cone", color="#6a8a4a")),
+ ("schwarzer_hund", "BlackHound", dict(shape="box", color="#202020")),
+ ("wode", "Wode", dict(shape="octahedron", color="#3a4a6a")),
+ ("zwergenkoenig", "DwarfKing", dict(shape="octahedron", color="#8a6a3a")),
+ ("heidekoenigin", "HeathQueen", dict(shape="octahedron", color="#a0607a")),
 ]
 
 # ---------- Abilities ----------
