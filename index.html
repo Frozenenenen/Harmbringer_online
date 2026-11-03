@@ -131,9 +131,9 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=9"></script>
+<script src="data/world_data.js?v=10"></script>
 <script src="data/ground_textures.js?v=7"></script>
-<script src="data/portraits.js?v=7"></script>
+<script src="data/portraits.js?v=8"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1154,9 +1154,9 @@ const Campaign = {
 // Towns raise corpses and bones from their graveyards; spirits answer only at barrow or mythic places.
 const RECRUIT_AT = {
   PHYLACTERY: null,                                                     // null = all units
-  WORLDLY: ['ghul', 'zombie', 'leichenhund', 'skelett', 'bogner', 'schleuderer'],
-  CHRISTIAN: ['zombie', 'skelett', 'bogner', 'schleuderer'],
-  MYTHIC: ['ghul', 'leichenhund', 'geist']
+  WORLDLY: ['ghul', 'zombie', 'leichenhund', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'todesritter', 'knochenballiste', 'fleischriese'],
+  CHRISTIAN: ['zombie', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'gefallene_schwester', 'nekromant'],
+  MYTHIC: ['ghul', 'leichenhund', 'geist', 'moorleiche', 'totenlicht', 'grabdruidin', 'nekromant', 'totenjaeger']
 };
 const Recruitment = {
   canRecruitAt(node) { return node && node.type in RECRUIT_AT && (node.type === 'PHYLACTERY' || Campaign.isConquered(node)); },
@@ -1535,8 +1535,11 @@ function portraitHtml(type, def) {
   return PORTRAITS[type] ? `<img class="portrait" src="${PORTRAITS[type]}" alt="${def.name}">`
     : `<span class="portrait none" style="background:${def.color}" title="${def.name}"></span>`;
 }
+// Height at which figures and overlays sit on a battle tile: water tiles lie below the water
+// plane, so everything there is shown on the water surface (otherwise reach and flyers vanish).
+const surfaceY = t => Math.max(t.y, HEX.waterLevel + 0.02);
 // Figures are normalized to the same height; animals are scaled down to fit next to people.
-const FIGURE_SCALE = { leichenhund: 0.55, schwarzer_hund: 0.6 };
+const FIGURE_SCALE = { leichenhund: 0.55, schwarzer_hund: 0.6, fleischriese: 1.25 };
 // Unit figures (slimmed Godot models). Each lives in data/figures/<type>.js as base64 GLB and is
 // loaded on demand with a <script> tag, which also works under file:// (fetch would not).
 const Figures = {
@@ -1551,7 +1554,7 @@ const Figures = {
       const timer = setTimeout(() => resolve(null), 15000);
       const finish = tpl => { clearTimeout(timer); resolve(tpl); };
       const el = document.createElement('script');
-      el.src = `data/figures/${type}.js?v=2`;
+      el.src = `data/figures/${type}.js?v=3`;
       el.onerror = () => finish(null);
       el.onload = () => {
         const b64 = (window.HARMBRINGER_FIGURES || {})[type];
@@ -1993,7 +1996,7 @@ const BattleView = {
     list.forEach((it, i) => {
       const p = hexToWorld(it.t.q, it.t.r), o = i * 16;
       m.fill(0, o, o + 16); m[o] = 1; m[o + 5] = 1; m[o + 10] = 1; m[o + 15] = 1;
-      m[o + 12] = p.x; m[o + 13] = it.t.y + 0.08 + (it.lift || 0); m[o + 14] = p.z;
+      m[o + 12] = p.x; m[o + 13] = surfaceY(it.t) + 0.08 + (it.lift || 0); m[o + 14] = p.z;
       col.set(it.color); c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b;
     });
     mesh.count = list.length;
@@ -2072,7 +2075,7 @@ const BattleView = {
   },
   placeUnit(u) {
     const t = game.battle.field.get(u.q, u.r), p = hexToWorld(u.q, u.r);
-    u.view.group.position.set(p.x, t.y, p.z);
+    u.view.group.position.set(p.x, surfaceY(t), p.z);
   },
   updateHp(u) {
     // Bar = health of the top creature; the badge shows how many creatures are left.
@@ -2296,7 +2299,8 @@ const Battle = {
   // Deployment: player at the side facing the origin, enemies around the center.
   deploy(b) {
     const f = b.field, size = f.size, cpos = hexToWorld(f.cq, f.cr);
-    const canStand = (u, t) => t && !t.unit && (u.def.flying || f.walkable(t));
+    // Nobody starts in the water except flyers (a ballista in a pond helps no one).
+    const canStand = (u, t) => t && !t.unit && (u.def.flying || (f.walkable(t) && !f.isWater(t)));
     const players = b.units.filter(u => u.side === 'player');
     const D = Math.min(size / 2 - 2, 12);
     const free = f.tiles.filter(t => t && t.building === null && f.walkable(t) && !f.isWater(t));
@@ -2324,6 +2328,8 @@ const Battle = {
     for (const u of enemies) {
       let t = null;
       if (u.def.rank === 'UNIQUE') t = area.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
+      // Machines: on a watch tower if there is one, otherwise in the open (never inside houses).
+      if (!t && u.def.rank === 'MACHINE') t = ordered.find(x => canStand(u, x) && x.building !== null && f.buildings[x.building].key === 'tower' && !perBuilding[x.building]);
       if (!t) t = ordered.find(x => canStand(u, x) && (x.building === null || (u.def.rank !== 'MACHINE' && (perBuilding[x.building] || 0) < 2)));
       if (!t) t = f.tiles.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
       if (t && t.building !== null) perBuilding[t.building] = (perBuilding[t.building] || 0) + 1;
@@ -2448,7 +2454,8 @@ const Battle = {
       const a = path[i - 1], c = path[i], pa = hexToWorld(a.q, a.r), pc = hexToWorld(c.q, c.r);
       BattleView.face(u, pc.x, pc.z);
       await tween(STEP_SECONDS, k => {
-        u.view.group.position.set(pa.x + (pc.x - pa.x) * k, a.y + (c.y - a.y) * k + Math.sin(k * Math.PI) * 0.4, pa.z + (pc.z - pa.z) * k);
+        const ya = surfaceY(a), yc = surfaceY(c);
+        u.view.group.position.set(pa.x + (pc.x - pa.x) * k, ya + (yc - ya) * k + Math.sin(k * Math.PI) * 0.4, pa.z + (pc.z - pa.z) * k);
       });
       if (game.battle !== b) return;            // battle was closed meanwhile
     }
@@ -2974,7 +2981,7 @@ const UI = {
       const cost = Object.entries(u.cost || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
       const locked = (u.requiresKnowledge || 0) > c.resources.knowledge;
       return `<div class="recruitRow ${locked ? 'locked' : ''}">${portraitHtml(type, u)}
-        <div><b>${u.name}</b> <span class="small">· ${u.commandPoints} Kommando · Kosten: ${cost}${u.requiresKnowledge ? ` · benötigt ${u.requiresKnowledge} Wissen` : ''}</span><br>
+        <div><b>${u.name}</b> <span class="small">· ${u.commandPoints < 0 ? `+${-u.commandPoints} Kommando (Anführer)` : u.commandPoints + ' Kommando'} · Kosten: ${cost}${u.requiresKnowledge ? ` · benötigt ${u.requiresKnowledge} Wissen` : ''}</span><br>
         <span class="small">LP ${u.hp} · Ini ${u.initiative} · Bew ${u.move} · Schaden ${u.damage} ${POWER_NAMES[u.power]} · Reichweite ${u.range} · Rüstung ${DEFENSE_NAMES[u.defense]}</span><br>
         <span class="small"><i>${esc(u.desc || '')}</i></span></div>
         <div><button data-type="${type}" ${block ? 'disabled' : ''} title="${block || ''}">Rekrutieren</button><div class="small">${block || ''}</div></div></div>`;

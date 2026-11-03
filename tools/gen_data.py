@@ -130,6 +130,17 @@ GAME_UNITS = [
  ("moorgeist", "BogSpirit", dict(shape="capsule", color="#3a4a3a")),
  ("rattenfaenger", "PiedPiper", dict(shape="octahedron", color="#b0422e")),
  ("brockenhexe", "BrockenQueen", dict(shape="octahedron", color="#1d1d1d")),
+ # Advanced undead from the design data (unlocked by knowledge; where to recruit: RECRUIT_AT in index.html)
+ ("knochenschuetze", "BoneArcher", dict(shape="cylinder", color="#e0d8c0", requiresKnowledge=4)),
+ ("moorleiche", "BogCorpse", dict(shape="capsule", color="#4a4030", requiresKnowledge=4)),
+ ("todesritter", "DeathKnight", dict(shape="box", color="#3a3a44", requiresKnowledge=5)),
+ ("totenlicht", "DeathLight", dict(shape="sphere", color="#9be05a", requiresKnowledge=5)),
+ ("gefallene_schwester", "FallenSister", dict(shape="cone", color="#6a4a5a", requiresKnowledge=6)),
+ ("grabdruidin", "GraveDruidess", dict(shape="cone", color="#4a5a3a", requiresKnowledge=6)),
+ ("nekromant", "Necromancer", dict(shape="octahedron", color="#2a1a3a", requiresKnowledge=6)),
+ ("knochenballiste", "Ballista", dict(shape="box", color="#8a7a5a", requiresKnowledge=7)),
+ ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=8)),
+ ("totenjaeger", "DeathHunter", dict(shape="box", color="#3a2a2a", requiresKnowledge=10)),
  # Heath pantheon and clergy units for the mythic places of the wider map
  ("kleriker", "Cleric", dict(shape="cone", color="#cfc6a8")),
  ("heideschwester", "HeathSister", dict(shape="cone", color="#9a7a8a")),
