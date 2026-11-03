@@ -260,6 +260,26 @@
   ]
  },
  {
+  "file": "Generated/Hound_Black.glb",
+  "bytes": 32804,
+  "triangles": 578,
+  "size": [
+   0.361,
+   1.16,
+   1.6
+  ]
+ },
+ {
+  "file": "Generated/Hound_Corpse.glb",
+  "bytes": 39716,
+  "triangles": 706,
+  "size": [
+   0.37,
+   1.16,
+   1.6
+  ]
+ },
+ {
   "file": "Guelphs/Guelphs_Catapult.glb",
   "bytes": 328552,
   "triangles": 10960,

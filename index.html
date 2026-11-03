@@ -128,10 +128,10 @@
 <!-- Game data: classic scripts, loaded before the game module -->
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
-<script src="data/heightmap.js?v=6"></script>
-<script src="data/world_data.js?v=6"></script>
-<script src="data/ground_textures.js?v=6"></script>
-<script src="data/portraits.js?v=6"></script>
+<script src="data/heightmap.js?v=7"></script>
+<script src="data/world_data.js?v=7"></script>
+<script src="data/ground_textures.js?v=7"></script>
+<script src="data/portraits.js?v=7"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1515,6 +1515,8 @@ function portraitHtml(type, def) {
   return PORTRAITS[type] ? `<img class="portrait" src="${PORTRAITS[type]}" alt="${def.name}">`
     : `<span class="portrait none" style="background:${def.color}" title="${def.name}"></span>`;
 }
+// Figures are normalized to the same height; animals are scaled down to fit next to people.
+const FIGURE_SCALE = { leichenhund: 0.55, schwarzer_hund: 0.6 };
 // Unit figures (slimmed Godot models). Each lives in data/figures/<type>.js as base64 GLB and is
 // loaded on demand with a <script> tag, which also works under file:// (fetch would not).
 const Figures = {
@@ -1529,7 +1531,7 @@ const Figures = {
       const timer = setTimeout(() => resolve(null), 15000);
       const finish = tpl => { clearTimeout(timer); resolve(tpl); };
       const el = document.createElement('script');
-      el.src = `data/figures/${type}.js?v=1`;
+      el.src = `data/figures/${type}.js?v=2`;
       el.onerror = () => finish(null);
       el.onload = () => {
         const b64 = (window.HARMBRINGER_FIGURES || {})[type];
@@ -2020,7 +2022,7 @@ const BattleView = {
     if (tpl) {
       // Figure: 2.8 units tall at size 1, standing on the pedestal.
       body = tpl.clone(true);
-      body.scale.setScalar(2.8 * s);
+      body.scale.setScalar(2.8 * s * (FIGURE_SCALE[u.type] || 1));
       if (def.spectral) body.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.7; } });
     } else {
       body = new THREE.Mesh(this.shapeGeometry(def.shape),

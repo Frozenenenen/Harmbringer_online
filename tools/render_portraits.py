@@ -14,8 +14,8 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIG = os.path.join(ROOT, "assets", "figures")
 
-# Game unit id -> figure file (assets/figures/...). Units without a fitting figure (leichenhund) are left out
-# and keep their colored placeholder icon in the game.
+# Game unit id -> figure file (assets/figures/...). Units without a figure keep a colored placeholder.
+# Generated/: figures built by build_hounds.py (no dog exists among the Godot figures).
 GAME_FIGURES = {
     "lich": "Undead/UD_Lich.glb",
     "ghul": "Undead/UD_Ghoul.glb",
@@ -40,11 +40,15 @@ GAME_FIGURES = {
     "heideschwester": "Clergy/Clergy_Nun.glb",
     "druide": "Druids/Druid_Druid.glb",
     "druidin": "Druids/Druid_Leader.glb",
-    "schwarzer_hund": "Wodan/Wodan_Wölfin.glb",
+    "schwarzer_hund": "Generated/Hound_Black.glb",
+    "leichenhund": "Generated/Hound_Corpse.glb",
     "wode": "Wodan/Wodin_Wodin.glb",
     "zwergenkoenig": "Dwarfs/Dwarf_Elder.glb",
     "heidekoenigin": "Druids/Druid_Sylvan.glb",
 }
+
+# Side view for animals (the default view is nearly frontal).
+PORTRAIT_YAW = {"leichenhund": -65, "schwarzer_hund": -65}
 
 def load(path):
     b = open(path, "rb").read()
@@ -137,7 +141,7 @@ if __name__ == "__main__":
         raise SystemExit
     out = {}
     for unit, f in GAME_FIGURES.items():
-        im = render(os.path.join(FIG, f), a.size)
+        im = render(os.path.join(FIG, f), a.size, yaw=PORTRAIT_YAW.get(unit, -28))
         buf = io.BytesIO(); im.save(buf, "WEBP", quality=82, method=6)
         out[unit] = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
         print(f"{unit:14s} {f:40s} {len(buf.getvalue()) // 1024} KB")
