@@ -55,7 +55,7 @@ addEventListener('resize', resize); resize();
 async function show(f, btn) {
   document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b === btn));
   info.textContent = 'Lade …';
-  const gltf = await loader.loadAsync(BASE + f.file + '?v=2');   // ?v: bypass cached broken files
+  const gltf = await loader.loadAsync(BASE + f.file + '?v=3');   // ?v: bypass cached broken files
   if (current) scene.remove(current);
   current = gltf.scene;
   // Fit: 1.8 units tall, standing on the pedestal.
@@ -68,7 +68,7 @@ async function show(f, btn) {
   info.innerHTML = `<b>${f.file.split('/').pop().replace('.glb', '')}</b> · ${f.triangles.toLocaleString('de-DE')} Dreiecke · ${(f.bytes / 1e6).toFixed(2)} MB`;
 }
 
-const figures = await fetch(BASE + 'figures.json?v=2').then(r => r.json());
+const figures = await fetch(BASE + 'figures.json?v=3').then(r => r.json());
 const list = document.getElementById('list');
 let lastGroup = '';
 for (const f of figures) {

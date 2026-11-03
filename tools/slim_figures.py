@@ -100,7 +100,7 @@ def slim(src, dst, tex_px):
     v_pos = add(pos4, 34962, 8); v_nrm = add(nrm4, 34962, 4); v_uv = add(quv, 34962, 4); v_idx = add(IDX.astype(idx_t), 34963)
     accs = [
         {"bufferView": v_pos, "componentType": 5122, "normalized": True, "count": len(qp), "type": "VEC3",
-         "min": (qp.min(0) / 32767).tolist(), "max": (qp.max(0) / 32767).tolist()},
+         "min": qp.min(0).tolist(), "max": qp.max(0).tolist()},   # normalized accessors: min/max in raw int units
         {"bufferView": v_nrm, "componentType": 5120, "normalized": True, "count": len(qn), "type": "VEC3"},
         {"bufferView": v_uv, "componentType": 5123, "normalized": True, "count": len(quv), "type": "VEC2"},
         {"bufferView": v_idx, "componentType": 5123 if idx_t is np.uint16 else 5125, "count": len(IDX), "type": "SCALAR"},
