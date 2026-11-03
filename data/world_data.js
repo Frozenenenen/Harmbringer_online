@@ -21,6 +21,9 @@ window.HARMBRINGER_DATA = {
     // Everything above 450 m is capped at gray 255 (the Harz shows as a plateau).
     metersPerGray: 508 / 255,
     metersAtGrayZero: -58,
+    // World map relief: height in world units = meters / colMeters * columnSpacing * reliefExaggeration.
+    // 1 = true scale (~55 m per unit). Battles use the compressed hex heights (hex.heightPerStep).
+    reliefExaggeration: 20,
     utm: { eMin: 370354.257, nMax: 6093532.332, colMeters: 247.1460, rowMeters: 285.3797 },
     startDate: { year: 1371, month: 5, day: 1 }
   },

@@ -383,7 +383,12 @@ class WorldData {
       onProgress(r1 / HEIGHT);
       await new Promise(res => setTimeout(res, 0));
     }
-    this.smooth = WorldData.blur(WorldData.blur(this.height));
+    // Landscape relief for the world map: linear in meters, exaggerated (map.reliefExaggeration).
+    // Battles keep the compressed hex heights in this.height.
+    const unitsPerMeter = COL_SPACING / HM.utm.colMeters * (MAP.reliefExaggeration || 1);
+    const relief = new Float32Array(gray.length);
+    for (let i = 0; i < gray.length; i++) relief[i] = WorldData.metersFromGray(gray[i]) * unitsPerMeter;
+    this.smooth = WorldData.blur(WorldData.blur(relief));
   }
   // Separable [1 2 1] blur: removes the 8-bit terraces for the landscape mesh.
   static blur(src) {
@@ -755,6 +760,8 @@ class CameraController {
       this.pivot.x + Math.sin(this.yaw) * h,
       this.pivot.y + Math.sin(this.pitch) * this.distance,
       this.pivot.z + Math.cos(this.yaw) * h);
+    // Do not dive into mountains with flat views.
+    if (!game.battle) this.camera.position.y = Math.max(this.camera.position.y, game.world.groundAt(this.camera.position.x, this.camera.position.z) + 3);
     this.camera.lookAt(this.pivot);
   }
   zoom(deltaY) {
