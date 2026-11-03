@@ -226,6 +226,7 @@ const VILLAGE_LABEL_DISTANCE = 85;     // village names only show near the camer
 const TRAVEL_SECONDS = 2.5;            // animation length of a journey
 const STEP_SECONDS = 0.15;             // battle movement per tile
 const AI_PAUSE = 0.4;                  // pause between AI move and attack
+const MOVE_AFTER_ATTACK = 2 / 3;       // share of the movement left when a unit attacks first and moves afterwards
 
 // The one global game object (besides the two data objects). Everything that
 // has state hangs off it, so it can also be inspected from the console.
@@ -1763,8 +1764,8 @@ const Pathfinding = {
     return { cost, prev, start: si };
   },
   // Tiles the unit may end its move on (free tiles within its move points), incl. its own.
-  reachable(field, unit) {
-    const s = this.search(field, unit, unit.def.move);
+  reachable(field, unit, budget = unit.def.move) {
+    const s = this.search(field, unit, budget);
     const tiles = [];
     for (const [i] of s.cost) { const t = field.tiles[i]; if (!t.unit || t.unit === unit) tiles.push(t); }
     return { ...s, tiles };
@@ -2316,7 +2317,8 @@ const Battle = {
   computeOptions() {
     const b = game.battle, u = b.current;
     const from = b.field.get(u.q, u.r);
-    b.reach = u.hasMoved ? null : Pathfinding.reachable(b.field, u);
+    // After an attack only MOVE_AFTER_ATTACK of the movement is left (at least 1).
+    b.reach = u.hasMoved ? null : Pathfinding.reachable(b.field, u, u.hasAttacked ? Math.max(1, Math.floor(u.def.move * MOVE_AFTER_ATTACK)) : u.def.move);
     b.targets = u.hasAttacked ? [] : b.units.filter(t => Combat.canAttack(b.field, u, from, t).ok);
     this.drawOptions();
     UI.updateBattle();
