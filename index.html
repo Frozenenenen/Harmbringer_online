@@ -611,6 +611,9 @@ class TerrainRenderer {
         }`,
       fragmentShader: `
         precision highp sampler2DArray;
+        // GLSL3 ShaderMaterial: three.js does not declare the output, so the colorspace chunk needs this alias.
+        layout(location = 0) out vec4 pc_fragColor;
+        #define gl_FragColor pc_fragColor
         uniform sampler2D fTex; uniform sampler2DArray groundTex;
         uniform int layer[${FLOOR_KEYS.length}]; uniform vec3 tint[${FLOOR_KEYS.length}];
         uniform vec2 mapSize; uniform float uvScale;
