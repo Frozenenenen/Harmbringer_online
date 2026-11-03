@@ -2394,6 +2394,11 @@ const Battle = {
     b.busy = false;
     if (b.over) return;
     if (surprise) this.revealed('Überraschungsangriff! Die Untoten sind im Vorteil.', -5, 'player');
+    // Attack first, move afterwards: the unit keeps its turn while it still has its move.
+    if (u.alive && !u.hasMoved && b.current === u) {
+      this.computeOptions();
+      if (b.reach && b.reach.tiles.some(t => !t.unit)) return;
+    }
     this.endTurn();
   },
   applyDamage(target, dmg, killer, power) {
