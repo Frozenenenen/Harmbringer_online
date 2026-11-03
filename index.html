@@ -705,7 +705,7 @@ const VEG_SPILL_RADIUS = 2;        // tiles
 // Objects per tile (expected value) by floor type. Fractions are rolled per tile.
 const VEG_RULES = {
   GRASS_TALL:   { pine: 0.9, leaf: 0.7, bush: 0.2 },
-  HEATHER:      { juniper: 0.35, birch: 0.1, bush: 0.15, grass: 0.2 },
+  HEATHER:      { heath: 0.6, juniper: 0.3, birch: 0.1, grass: 0.1 },
   BOG:          { reed: 0.7, birch: 0.08, pine: 0.05 },
   SWAMP:        { reed: 0.6, leaf: 0.2, bush: 0.15 },
   GRASS_SHORT:  { grass: 0.6, leaf: 0.05, bush: 0.07 },
@@ -715,7 +715,7 @@ const VEG_RULES = {
   DRY_EARTH:    { bush: 0.03, grass: 0.08 },
   GRAVEL:       { rock: 0.3, pine: 0.25, grass: 0.1 },
   RAW_STONE:    { rock: 0.6, pine: 0.3 },
-  PAGAN_GROUND: { rock: 0.2, juniper: 0.2 },
+  PAGAN_GROUND: { rock: 0.2, juniper: 0.2, heath: 0.2 },
   GRAVEYARD_GROUND: { bush: 0.1 }
 };
 
@@ -749,6 +749,9 @@ class VegetationRenderer {
                              [T(new THREE.IcosahedronGeometry(0.6, 0), 0, 1.7, 0), '#7f9a3e']]),
       juniper: mergeColored([[T(new THREE.ConeGeometry(0.35, 1.5, 6), 0, 0.75, 0), '#33472d']]),
       bush:    mergeColored([[T(new THREE.IcosahedronGeometry(0.55, 0).scale(1, 0.7, 1), 0, 0.3, 0), '#4f6532']]),
+      // Heather tufts: low, matte mauve (Calluna in bloom).
+      heath:   mergeColored([[T(new THREE.IcosahedronGeometry(0.5, 0).scale(1.2, 0.55, 1), 0, 0.22, 0), '#8a6478'],
+                             [T(new THREE.IcosahedronGeometry(0.32, 0).scale(1.1, 0.6, 1), 0.38, 0.15, 0.15), '#7d5a6e']]),
       rock:    mergeColored([[T(new THREE.DodecahedronGeometry(0.6, 0).scale(1.2, 0.7, 1), 0, 0.2, 0), '#837d72']]),
       grass:   mergeColored([[T(new THREE.ConeGeometry(0.05, 0.5, 3), 0, 0.25, 0), '#7d8b47'], [T(new THREE.ConeGeometry(0.05, 0.42, 3).rotateZ(0.35), 0.12, 0.2, 0), '#879450'],
                              [T(new THREE.ConeGeometry(0.05, 0.45, 3).rotateX(-0.3), -0.05, 0.2, 0.12), '#76853f']]),
@@ -756,7 +759,7 @@ class VegetationRenderer {
                              [T(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 4), 0, 0.95, 0), '#5a4028']])
     };
     // Size factor per kind (world units are ~55 m; figures stay readable from the default zoom).
-    this.size = { pine: 2.2, leaf: 2.2, birch: 2.0, juniper: 1.6, bush: 1.4, rock: 1.6, grass: 2.2, reed: 2.0 };
+    this.size = { pine: 2.2, leaf: 2.2, birch: 2.0, juniper: 1.6, bush: 1.4, heath: 1.5, rock: 1.6, grass: 2.2, reed: 2.0 };
     const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 });
     this.capacity = 24000;
     this.meshes = {};
