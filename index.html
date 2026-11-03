@@ -131,7 +131,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=12"></script>
+<script src="data/world_data.js?v=13"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=10"></script>
 <script type="importmap">
@@ -1204,6 +1204,9 @@ const SaveGame = {
       // Saves from before the bone rescale (x60) get their bones converted once.
       if ((c.econVersion || 1) < 2 && c.resources) { c.resources.bones = (c.resources.bones || 0) * 60; c.econVersion = 2; }
       c.travel = null;                 // an interrupted journey is not resumed after reloading
+      // Places whose faction changed in the data (e.g. mythic places split into own factions) follow the data,
+      // unless the undead own them (enemy factions never take places from each other).
+      for (const n of DATA.nodes) if (c.owners[n.id] && c.owners[n.id] !== 'UNDEAD' && c.owners[n.id] !== n.faction) c.owners[n.id] = n.faction;
       return { ...fresh, ...c, resources: { ...fresh.resources, ...c.resources }, threat: { ...fresh.threat, ...c.threat },
         owners: { ...fresh.owners, ...c.owners } };   // new places added since the save keep their default owner
     } catch (e) { return null; }

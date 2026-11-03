@@ -1501,6 +1501,8 @@ Jede Fraktion hat drei Farben: **Primär** (Stoff, große Flächen), **Akzent** 
 | `Wattenmeer` | Schlickgrau | Sturmblau | Meerleuchten (Cyan) | Muscheln, Tang, Wellen |
 | `HeathSpirits` | Torfbraun | Heidelila | Irrlicht-Blassgelb | Wurzeln, Sumpfgas, Heidekraut |
 
+**Im Spiel (Nov. 2026):** Die mythischen Fraktionen der Palette sind jetzt eigene Fraktionen mit Bedrohung: **Wodan-Kult** (Hackelbergs Grab, Kyffhäuser★, Externsteine), **Spreewald** (Spreewald★, Kap Arkona), **Wattenmeer** (Rungholt★, Vineta), **Heidegeister** (`HeathSpirits`: Teufelsmoor, Dümmer-Moor, Arendsee, Pestruper Gräberfeld, Sieben Steinhäuser, Iberg, Oldendorfer Totenstatt★ mit der Heidekönigin). **Hexen und Haine** behalten Brocken★, Hameln, Hexentanzplatz, Teufelsmauer, Schierke. Dazu die weltlichen Fraktionen Hanse, Welfen, Askanier, Klerus, Grafen, Mecklenburg, Wettiner. ★ = große Stadt bzw. Hauptort (Kampffeld 64); jede Fraktion hat mindestens einen. Eigene Einheiten für Wodan-Kult, Spreewald und Wattenmeer fehlen noch (sie nutzen vorerst Hexen-, Heide- und Geister-Einheiten).
+
 **Mindest-Helligkeit:** Keine Primärfarbe dunkler als das dunkelste Gelände bei Nacht. *Befund 01.11.2026 aus dem Einheitenbuch:* Die Hexen-Primärfarbe war Schwarz – Hexe, Druide, Druidin und Heidekönigin verschwanden auf dunklem Grund, nachts blieb nur die Stabspitze sichtbar. Geändert zu dunklem Aubergine (#43364F), Akzent heller (#8A5BB0). Zusätzlich empfohlen: ein schwacher Rim-Light-/Fresnel-Anteil im Einheiten-Material, damit dunkle Silhouetten sich immer vom Boden lösen.
 
 **Regel:** Lebende Menschenfraktionen leuchten nicht. Leuchten = übernatürlich. Damit erkennt man Magie-Einheiten auch in gemischten Pantheons sofort.
