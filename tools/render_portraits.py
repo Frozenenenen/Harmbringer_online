@@ -16,49 +16,13 @@ FIG = os.path.join(ROOT, "assets", "figures")
 
 # Game unit id -> figure file (assets/figures/...). Units without a figure keep a colored placeholder.
 # Generated/: figures built by build_hounds.py (no dog exists among the Godot figures).
-GAME_FIGURES = {
-    "lich": "Undead/UD_Lich.glb",
-    "ghul": "Undead/UD_Ghoul.glb",
-    "skelett": "Undead/UD_Lancer.glb",
-    "bogner": "Undead/UD_Archer.glb",
-    "zombie": "Undead/UD_Zombie.glb",
-    "schleuderer": "Undead/UD_Hammer.glb",
-    "geist": "Undead/UD_Ghost.glb",
-    "bauer": "Human/Human_Farmer.glb",
-    "stadtwache": "Human/Human_Militia.glb",
-    "armbrust": "Guelphs/Guelphs_Knave.glb",
-    "ritter": "Guelphs/Guelphs_Knight_1h.glb",
-    "balliste": "Hanse/Hanse_Siege.glb",
-    "moench": "Clergy/Clergy_Monk.glb",
-    "priester": "Clergy/Clergy_Healer.glb",
-    "hexe": "Witch/Witch_Witch.glb",
-    "irrlicht": "Spreewald/Spree_Will-o-wisp.glb",
-    "moorgeist": "Spreewald/Spree_Marsh_Louse.glb",
-    "rattenfaenger": "Witch/Witch_Cultist.glb",
-    "brockenhexe": "Witch/Witch_Firewitch.glb",
-    "knochenschuetze": "Undead/UD_Archer.glb",
-    "moorleiche": "Undead/UD_MarshLouse.glb",
-    "todesritter": "Undead/UD_ScottishHero.glb",
-    "totenlicht": "Undead/UD_Licht.glb",
-    "gefallene_schwester": "Undead/UD_Banshee.glb",
-    "grabdruidin": "Undead/UD_Priest.glb",
-    "nekromant": "Undead/UD_Mage.glb",
-    "knochenballiste": "Undead/UD_Catapult.glb",
-    "fleischriese": "Undead/UD_Faceless.glb",
-    "totenjaeger": "Undead/UD_Shieldmaid.glb",
-    "kleriker": "Clergy/Clergy_Exorcist.glb",
-    "heideschwester": "Clergy/Clergy_Nun.glb",
-    "druide": "Druids/Druid_Druid.glb",
-    "druidin": "Druids/Druid_Leader.glb",
-    "schwarzer_hund": "Generated/Hound_Black.glb",
-    "leichenhund": "Generated/Hound_Corpse.glb",
-    "wode": "Wodan/Wodin_Wodin.glb",
-    "zwergenkoenig": "Dwarfs/Dwarf_Elder.glb",
-    "heidekoenigin": "Druids/Druid_Sylvan.glb",
-}
+# Since Nov. 2026 every unit uses its own low-poly figure from build_units.py (one consistent style).
+# The slimmed Godot figures stay in assets/figures/<faction>/ for reference.
+from build_units import UNITS as _UNITS
+GAME_FIGURES = {u: f"Generated/{u}.glb" for u in _UNITS}
 
 # Side view for animals (the default view is nearly frontal).
-PORTRAIT_YAW = {"leichenhund": -65, "schwarzer_hund": -65}
+PORTRAIT_YAW = {"leichenhund": -65, "schwarzer_hund": -65, "balliste": -60, "knochenballiste": -60}
 
 def load(path):
     b = open(path, "rb").read()

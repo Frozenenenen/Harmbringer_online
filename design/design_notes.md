@@ -2835,6 +2835,7 @@ Erste Spalte `Name` = Zeilenname, über den Tabellen aufeinander verweisen (z. B
 - `geo.py`, `worldmap.py`, `build_webmap.py` – Projektion und Daten der Weltkarte
 - `build_gallery.py` – baut das Einheitenbuch aus den CSVs
 - `build_game_map.py` – rechnet die alte Höhenkarte ins UTM-Kampagnenraster des Spiels um (`data/heightmap.js`, 2017 × 1583 Hex-Felder, gleich groß in beide Richtungen, 16 Bit in Metern). Die alte Karte endet bei 450 m; darüber wird der Harz aus bekannten Gipfel- und Ortshöhen genähert (Thin-Plate-Spline plus Rauschen), bis ein echtes Höhenmodell vorliegt; `--tile <lat> <lon>` gibt das Feld eines Orts
+- `build_units.py` – baut **alle Einheiten** als eigene Low-Poly-Figuren in einheitlichem Stil (Bauteile: Beine, Rumpf, Robe, Skelett, Geisterkörper, Irrlicht; Ausrüstung: Speer, Schwert, Schild, Bogen, Armbrust, Stab, Hammer, Kronen, Hüte, Geweihe). Echte Größen: Mensch 1,8, Zwerg kleiner, Fleischriese größer, Hunde und Irrlichter klein. Diese Figuren nutzt das Spiel; die Godot-Figuren bleiben als Vorlage
 - `slim_figures.py` – verkleinert die Figuren aus dem Godot-Projekt (`models/Figures`, nur lesend) für den Browser: Geometrie quantisiert, nur Farbtextur 512 px; 90 Figuren von 1,08 GB auf 42 MB (`assets/figures/`, Betrachter `prototypes/figuren/`)
 - `build_game_textures.py` – bettet die Bodentexturen als Data-URIs in `data/ground_textures.js` ein (nötig für file://)
 

@@ -20,14 +20,15 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 | `prototypes/worldmap/` | Weltkarte in WebGL2 (lädt per `fetch`, läuft nur über Webserver/Pages) |
 | `prototypes/einheitenbuch/` | Einheitenbuch (Lesbarkeit der Einheiten) |
 | `assets/figures/` | Figuren aus dem Godot-Projekt, verkleinert mit `tools/slim_figures.py` (Betrachter: `prototypes/figuren/`) |
-| `data/portraits.js` | Einheitenbilder (Rekrutieren, Einheitenkarte), gerendert mit `tools/render_portraits.py`; Zuordnung Einheit → Figur dort in `GAME_FIGURES` |
+| `assets/figures/Generated/` | **Eigene Low-Poly-Figuren aller Einheiten** aus `tools/build_units.py` (einheitlicher Stil, echte Größenverhältnisse: Mensch 1,8) – das sind die Figuren im Spiel |
+| `data/portraits.js` | Einheitenbilder (Rekrutieren, Einheitenkarte), gerendert mit `tools/render_portraits.py` aus den Generated-Figuren |
 | `data/figures/<einheit>.js` | Figuren fürs Kampffeld (Base64-GLB, beim Kampfstart per `<script>` nachgeladen), erzeugt mit `tools/build_game_figures.py` |
 | `BUGS.md` | Fehlerliste (von Kevin gemeldete Fehler und ihr Status) |
 
 ## Arbeitsregeln
 
 - **Generierte Bereiche** im Design-Dokument (`<!--GEN:…:BEGIN/END-->`, Inhaltsverzeichnis) nicht von Hand ändern. Werte in `tools/gen_data.py` bzw. `tools/campaign_data.py` ändern, dann `python tools/gen_data.py` ausführen.
-- Nach Änderungen an Einheiten: `python tools/build_gallery.py`. Karten-Daten: `python tools/build_webmap.py --assets <Ordner mit Textures/ und Maps/>`. Danach `python tools/build_game_textures.py` (Bodentexturen fürs Spiel).
+- Nach Änderungen an Einheiten: `python tools/build_gallery.py`. Neue Einheit: Figur in `tools/build_units.py` (`build()` + `UNITS`), dann `build_units.py`, `render_portraits.py`, `build_game_figures.py`. Karten-Daten: `python tools/build_webmap.py --assets <Ordner mit Textures/ und Maps/>`. Danach `python tools/build_game_textures.py` (Bodentexturen fürs Spiel).
 - `data/world_data.js`: Einheiten und Kampfregeln (Bereiche `// <GEN:UNITS>`, `// <GEN:RULES>`) erzeugt `gen_data.py` aus den CSVs – dort nicht von Hand ändern. Fraktionen, Orte, Gebäude, Wirtschaft sind Handarbeit.
 - Spieltexte und Dokumentation auf Deutsch, Code-Kommentare auf Englisch.
 - Änderungen **direkt auf `main` committen und pushen** – ohne Branch und Pull Request. Das Spiel spielt aktuell nur Kevin, GitHub Pages darf sofort den neuen Stand zeigen.

@@ -133,7 +133,7 @@
 <script src="data/heightmap.js?v=7"></script>
 <script src="data/world_data.js?v=10"></script>
 <script src="data/ground_textures.js?v=7"></script>
-<script src="data/portraits.js?v=8"></script>
+<script src="data/portraits.js?v=9"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1538,8 +1538,9 @@ function portraitHtml(type, def) {
 // Height at which figures and overlays sit on a battle tile: water tiles lie below the water
 // plane, so everything there is shown on the water surface (otherwise reach and flyers vanish).
 const surfaceY = t => Math.max(t.y, HEX.waterLevel + 0.02);
-// Figures are normalized to the same height; animals are scaled down to fit next to people.
-const FIGURE_SCALE = { leichenhund: 0.55, schwarzer_hund: 0.6, fleischriese: 1.25 };
+// Figures (tools/build_units.py) are built at real proportions: a human is FIGURE_HUMAN units tall.
+const FIGURE_HUMAN = 1.8;
+const FIGURE_SCALE = {};                       // per-unit correction if ever needed
 // Unit figures (slimmed Godot models). Each lives in data/figures/<type>.js as base64 GLB and is
 // loaded on demand with a <script> tag, which also works under file:// (fetch would not).
 const Figures = {
@@ -1554,7 +1555,7 @@ const Figures = {
       const timer = setTimeout(() => resolve(null), 15000);
       const finish = tpl => { clearTimeout(timer); resolve(tpl); };
       const el = document.createElement('script');
-      el.src = `data/figures/${type}.js?v=3`;
+      el.src = `data/figures/${type}.js?v=4`;
       el.onerror = () => finish(null);
       el.onload = () => {
         const b64 = (window.HARMBRINGER_FIGURES || {})[type];
@@ -1563,10 +1564,11 @@ const Figures = {
         for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
         new GLTFLoader().parse(buf.buffer, '', gltf => {
           const root = gltf.scene, box = new THREE.Box3().setFromObject(root), size = box.getSize(new THREE.Vector3());
-          const k = 1 / Math.max(size.y, 1e-6), c = box.getCenter(new THREE.Vector3());
+          const k = 1 / FIGURE_HUMAN, c = box.getCenter(new THREE.Vector3());   // same factor for all: sizes stay relative
           root.scale.setScalar(k);
           root.position.set(-c.x * k, -box.min.y * k, -c.z * k);
           const g = new THREE.Group(); g.add(root);
+          g.userData.height = size.y * k;
           finish(g);
         }, () => finish(null));
       };
@@ -2043,9 +2045,9 @@ const BattleView = {
     const tpl = Figures.templates[u.type];
     let body;
     if (tpl) {
-      // Figure: 2.8 units tall at size 1, standing on the pedestal.
+      // Figure: a human is 2.8 units tall; the model already carries its size, so `size` only adds a little.
       body = tpl.clone(true);
-      body.scale.setScalar(2.8 * s * (FIGURE_SCALE[u.type] || 1));
+      body.scale.setScalar(2.8 * (1 + 0.1 * (def.size - 1)) * (FIGURE_SCALE[u.type] || 1));
       if (def.spectral) body.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.7; } });
     } else {
       body = new THREE.Mesh(this.shapeGeometry(def.shape),
@@ -2063,7 +2065,7 @@ const BattleView = {
     el.className = 'unitLabel';
     el.innerHTML = `<span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
-    label.position.y = body.position.y + (tpl ? 3.3 : 3.2) * s;
+    label.position.y = body.position.y + (tpl ? tpl.userData.height * body.scale.y + 0.5 : 3.2 * s);
     group.add(label);
     game.view.battleRoot.add(group);
     u.view = { group, body, el, label };
