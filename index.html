@@ -98,7 +98,10 @@
   .modal .buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
   #loading .bar { height: 12px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 10px; }
   #loading .bar div { height: 100%; width: 0; background: var(--undead); }
-  .recruitRow { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
+  .recruitRow { display: grid; grid-template-columns: 72px 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
+  .portrait { width: 72px; height: 72px; object-fit: contain; border-radius: 4px; background: radial-gradient(circle at 50% 40%, #8c826f, #4a4337); }
+  .portrait.none { display: block; }
+  #unitCard .portrait { float: right; width: 64px; height: 64px; margin: 0 0 4px 8px; }
   .recruitRow.locked { opacity: .5; }
   .armyList { font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
 
@@ -128,6 +131,7 @@
 <script src="data/heightmap.js?v=4"></script>
 <script src="data/world_data.js?v=4"></script>
 <script src="data/ground_textures.js?v=4"></script>
+<script src="data/portraits.js?v=4"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1384,6 +1388,12 @@ function splitStacks(groups) {
   });
   return out;
 }
+// Unit portrait (rendered from the Godot figures, data/portraits.js); colored placeholder otherwise.
+const PORTRAITS = window.HARMBRINGER_PORTRAITS || {};
+function portraitHtml(type, def) {
+  return PORTRAITS[type] ? `<img class="portrait" src="${PORTRAITS[type]}" alt="${def.name}">`
+    : `<span class="portrait none" style="background:${def.color}" title="${def.name}"></span>`;
+}
 // Groups individual units [{type, hp}] by type in order of first appearance -> [{type, hps: [...]}].
 function groupByType(list) {
   const out = new Map();
@@ -2633,7 +2643,7 @@ const UI = {
       const block = Recruitment.blocker(type);
       const cost = Object.entries(u.cost || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
       const locked = (u.requiresKnowledge || 0) > c.resources.knowledge;
-      return `<div class="recruitRow ${locked ? 'locked' : ''}">
+      return `<div class="recruitRow ${locked ? 'locked' : ''}">${portraitHtml(type, u)}
         <div><b>${u.name}</b> <span class="small">· ${u.commandPoints} Kommando · Kosten: ${cost}${u.requiresKnowledge ? ` · benötigt ${u.requiresKnowledge} Wissen` : ''}</span><br>
         <span class="small">LP ${u.hp} · Ini ${u.initiative} · Bew ${u.move} · Schaden ${u.damage} ${POWER_NAMES[u.power]} · Reichweite ${u.range} · Rüstung ${DEFENSE_NAMES[u.defense]}</span><br>
         <span class="small"><i>${esc(u.desc || '')}</i></span></div>
@@ -2699,7 +2709,7 @@ const UI = {
     const d = u.def, b = game.battle, t = b.field.get(u.q, u.r);
     const flags = [d.flying && 'fliegt', d.spectral && 'spektral', d.counter && 'Konter'].filter(Boolean).join(', ');
     const n = stackCount(u);
-    $('unitCard').innerHTML = `<h3 style="margin-top:0">${n > 1 ? n + '× ' : ''}${esc(d.name)} <span class="small">(${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name})</span></h3>
+    $('unitCard').innerHTML = `${portraitHtml(u.type, d)}<h3 style="margin-top:0">${n > 1 ? n + '× ' : ''}${esc(d.name)} <span class="small">(${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name})</span></h3>
       <div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
       <table><tr><td>Anzahl</td><td>${n} / ${u.startCount}</td><td>Initiative</td><td>${d.initiative}</td></tr>
       <tr><td>Lebenspunkte</td><td colspan="3">${n ? topHp(u) : 0} / ${d.hp} (vorderste) · ${Math.max(0, u.hp)} / ${u.maxHp} gesamt</td></tr>
