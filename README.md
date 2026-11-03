@@ -36,7 +36,7 @@ Repo herunterladen, entpacken, `index.html` doppelklicken. Der Ordner `data/` mu
 | --- | --- |
 | `index.html` | Das komplette Spiel (eine Datei, kein Build-Schritt) |
 | `data/world_data.js` | Alle Spielwerte: Einheiten, Fraktionen, Orte, Wirtschaft, Bodentypen |
-| `data/heightmap.js` | Höhendaten im UTM-Kampagnenraster (2017 × 1583 Hex-Felder à ~247 m, Base64), erzeugt von `tools/build_game_map.py` |
+| `data/heightmap.js` | Höhendaten im UTM-Kampagnenraster (2017 × 1583 Hex-Felder à ~247 m, 16 Bit in Metern, Base64; Harz über 450 m aus Gipfelhöhen genähert), erzeugt von `tools/build_game_map.py` |
 | `data/ground_textures.js` | Bodentexturen als Data-URIs (`tools/build_game_textures.py`) |
 | `design/source/heightmap_wgs84_15s.png` | Quelle: alte Höhenkarte im Grad-Raster (1704 × 920) |
 | `reference/floor_preview.png` | Erwartete Bodentyp-Verteilung |

@@ -32,7 +32,7 @@ window.HARMBRINGER_DATA = {
     //   inradius      = circumradius * sqrt(3) / 2   (~2.598)
     //   columnSpacing = 1.5 * circumradius           (4.5)
     //   rowSpacing    = 2 * inradius                 (~5.196)
-    heightPerStep: 1.0,        // world height = sign(s) * sqrt(|s|) * heightPerStep, s = gray - seaLevelGray
+    heightPerStep: 1.0,        // battle tile height = sign(s) * sqrt(|s|) * heightPerStep, s = meters / map.metersPerStep
     tileDepth: 20.0,           // tiles are tall prisms so height steps never show gaps
     waterLevel: -0.5           // y of the water plane
   },
