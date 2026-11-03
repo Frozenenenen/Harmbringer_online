@@ -174,6 +174,79 @@ def cross(m, col="#c9a227", at=(0, 1.2, 0.12)):
     x, y, z = at
     m.B((x, y, z), (0.03, 0.18, 0.02), col); m.B((x, y + 0.03, z), (0.12, 0.03, 0.02), col)
 
+
+# ---------------------------------------------------------------- mythic extras (Wodan cult, Spreewald, Wattenmeer)
+def scaled(m, k):
+    """Scale a finished figure about the ground point (small kobolds, giants)."""
+    m.P = [np.asarray(p, float) * k for p in m.P]; return m
+
+def sickle(m, hand=R_HAND, blade="#e8e8f0", wood="#6a4a2a"):
+    x, y, z = hand
+    m.C((x, y - 0.12, z), (x, y + 0.22, z + 0.04), 0.022, 0.02, wood, seg=4)
+    pts = [(x, y + 0.22, z + 0.04)] + [(x, y + 0.22 + 0.34 * math.sin(a), z + 0.04 + 0.34 * (1 - math.cos(a)))
+                                       for a in (0.6, 1.2, 1.8, 2.4, 2.9)]
+    for i, (a, b) in enumerate(zip(pts, pts[1:])): m.C(a, b, 0.035 - i * 0.005, 0.03 - i * 0.005, blade, seg=3)
+
+def lantern(m, hand=L_HAND, frame="#3a3428", glow="#e8f0a0"):
+    x, y, z = hand
+    m.C((x, y, z + 0.04), (x, y - 0.12, z + 0.06), 0.006, 0.006, frame, seg=3)
+    m.B((x, y - 0.2, z + 0.06), (0.1, 0.14, 0.1), frame); m.O((x, y - 0.2, z + 0.06), (0.06, 0.06, 0.06), glow, 3, 6)
+
+def horse(m, coat, mane, hoof="#2a2420", eye="#1a1410", saddle="#4a2a1a"):
+    """Horse looking along +Z, back at about 1.4."""
+    m.O((0, 1.15, 0), (0.26, 0.3, 0.62), coat)
+    for sx in (-1, 1):
+        for z in (0.42, -0.42):
+            m.C((sx * 0.14, 1.0, z), (sx * 0.15, 0.5, z + 0.03), 0.075, 0.055, coat)
+            m.C((sx * 0.15, 0.5, z + 0.03), (sx * 0.15, 0.07, z), 0.05, 0.045, coat)
+            m.B((sx * 0.15, 0.04, z + 0.02), (0.1, 0.08, 0.12), hoof)
+    m.C((0, 1.22, 0.48), (0, 1.75, 0.8), 0.15, 0.1, coat)                     # neck
+    m.O((0, 1.8, 0.9), (0.1, 0.11, 0.14), coat); m.B((0, 1.7, 1.06), (0.13, 0.13, 0.26), coat, rot_x=0.5)
+    for sx in (-1, 1):
+        m.C((sx * 0.05, 1.88, 0.86), (sx * 0.06, 2.0, 0.83), 0.03, 0.0, coat, seg=3)
+        m.B((sx * 0.09, 1.82, 0.97), (0.01, 0.03, 0.03), eye)
+    m.C((0, 1.38, 0.42), (0, 1.94, 0.84), 0.05, 0.035, mane, seg=4)
+    m.C((0, 1.3, -0.6), (0, 0.55, -0.82), 0.07, 0.02, mane, seg=5)            # tail
+    m.B((0, 1.44, 0.0), (0.4, 0.06, 0.42), saddle)
+
+def rider(m, skin, shirt, pants, boots, hand_r=(0.27, 1.6, 0.25), hand_l=(-0.27, 1.6, 0.25), hair=None, beard=None, eyes="#1a1410"):
+    """Seated human on a horse built with horse()."""
+    for sx in (-1, 1):
+        m.C((sx * 0.1, 1.5, 0.05), (sx * 0.28, 1.3, 0.2), 0.07, 0.065, pants)
+        m.C((sx * 0.28, 1.3, 0.2), (sx * 0.28, 0.9, 0.12), 0.06, 0.05, pants)
+        m.B((sx * 0.28, 0.86, 0.16), (0.1, 0.08, 0.18), boots)
+    torso(m, shirt, w=0.36, h=0.5, y0=1.47)
+    arms(m, shirt, skin, y=1.93, r=hand_r, l=hand_l)
+    head(m, skin, y=2.13, hair=hair, beard=beard, eyes=eyes)
+
+def raven(m, at=(0, 1.0, 0), k=1.0, body="#141418", eye="#ff3a1a", beak="#2a2a2a"):
+    x, y, z = at
+    m.O((x, y, z), (0.1 * k, 0.09 * k, 0.2 * k), body)
+    m.O((x, y + 0.07 * k, z + 0.18 * k), (0.07 * k, 0.07 * k, 0.08 * k), body)
+    m.C((x, y + 0.06 * k, z + 0.25 * k), (x, y + 0.03 * k, z + 0.38 * k), 0.03 * k, 0.0, beak, seg=4)
+    for sx in (-1, 1):
+        m.B((x + sx * 0.04 * k, y + 0.09 * k, z + 0.24 * k), (0.015 * k, 0.015 * k, 0.01 * k), eye)
+        sh = np.array((x + sx * 0.08 * k, y + 0.03 * k, z + 0.05 * k))
+        for t, b in (((x + sx * 0.6 * k, y + 0.25 * k, z - 0.05 * k), (x + sx * 0.3 * k, y + 0.12 * k, z - 0.15 * k)),
+                     ((x + sx * 0.3 * k, y + 0.12 * k, z - 0.15 * k), (x + sx * 0.08 * k, y, z - 0.12 * k))):
+            m.tri(sh, np.array(t), np.array(b), m.slot(body)); m.tri(np.array(b), np.array(t), sh, m.slot(body))
+    m.C((x, y, z - 0.15 * k), (x, y - 0.02 * k, z - 0.36 * k), 0.07 * k, 0.01 * k, body, seg=4)
+
+def serpent(m, scale_col, belly, eye="#e0c030", tongue="#c02a2a"):
+    """Coiled snake with raised head (Schlangenkönig)."""
+    pts = []
+    for i in range(30):
+        a = i * 0.55; r = 0.55 - i * 0.011; pts.append((math.cos(a) * r, 0.1 + i * 0.018, math.sin(a) * r))
+    pts += [(0.05, 0.75, 0.1), (0.0, 1.05, 0.15), (0.0, 1.3, 0.25)]
+    for i, (a, b) in enumerate(zip(pts, pts[1:])):
+        rr = 0.13 if i < 26 else 0.11 - (i - 26) * 0.01
+        m.C(a, b, rr, rr, scale_col if i % 3 else belly, seg=6)
+    hx, hy, hz = 0.0, 1.36, 0.36
+    m.O((hx, hy, hz), (0.13, 0.09, 0.18), scale_col)
+    for sx in (-1, 1): m.B((sx * 0.08, hy + 0.04, hz + 0.08), (0.03, 0.025, 0.03), eye)
+    m.C((hx, hy - 0.03, hz + 0.17), (hx, hy - 0.04, hz + 0.32), 0.012, 0.004, tongue, seg=3)
+    return hx, hy, hz
+
 # ---------------------------------------------------------------- archetypes
 def human(skin="#c89a78", shirt="#6a5a40", pants="#4a3a2a", boots="#3a2a1a", **kw):
     m = Mesh()
@@ -332,6 +405,73 @@ def build(unit):
         crown(m, "#c9a227", 1.22, 0.12, 5); hammer(m, (0.3, 0.62, 0.14), length=0.8); return m
     if unit == "schwarzer_hund": return hound("#1e1c1c", "#0e0d0d", "#ff3a1a")
     if unit == "knochendrache": return bone_dragon()
+    # --- Wodan cult -----------------------------------------------------
+    if unit == "sachsenkrieger":
+        m = human(skin="#c89a78", shirt="#6a5a3a", pants="#5a4a34", boots="#3a2a1a", hair="#c8a060", beard="#c8a060", belt="#3a2a1a")
+        cloak(m, "#3a4a2a"); shield(m, face="#3a5a3a", rim="#6a4a2a", r=0.26); sword(m, length=0.55, blade="#a8a8a0")
+        m.O((0, 1.66, 0), (0.12, 0.06, 0.12), "#7a7a80"); m.C((0, 1.6, 0.1), (0, 1.48, 0.13), 0.015, 0.015, "#7a7a80", seg=3); return m   # spangenhelm + nasal
+    if unit == "wodansrabe":
+        m = Mesh(); raven(m, (0.0, 1.25, 0.0), 1.0); raven(m, (0.45, 0.85, -0.25), 0.8); raven(m, (-0.4, 1.0, -0.15), 0.85); return m
+    if unit == "wilder_jaeger":
+        m = Mesh(); horse(m, "#5a6270", "#2a2e36", eye="#ff3a1a", saddle="#2a2420")
+        rider(m, "#9aa4ae", "#4a525e", "#3a3e48", "#22252a", hand_r=(0.27, 1.62, 0.25), eyes="#ff3a1a")
+        hood(m, "#3a3e48", 2.15); cloak(m, "#2a2e36", top=2.0, bot=1.3); spear(m, (0.27, 1.62, 0.25), wood="#3a2a1a", tip="#8a9aa0", length=2.4); return m
+    if unit == "hackelberg":
+        m = Mesh(); horse(m, "#2a2420", "#141010", eye="#ff4a1a", saddle="#6a1a1a")
+        rider(m, "#b08a6a", "#5a3a2a", "#3a2a1e", "#1e1610", hair="#4a3a2a", beard="#4a3a2a", hand_l=(-0.2, 2.08, 0.25))
+        m.O((0, 1.95, -0.06), (0.26, 0.1, 0.18), "#7a7a70"); cloak(m, "#5a1a1a", top=2.0, bot=1.25, w=0.5)            # wolf pelt + cloak
+        m.C((0, 2.23, 0), (0, 2.26, 0), 0.18, 0.18, "#3a4a2a", seg=10); m.C((0, 2.26, 0), (0, 2.36, -0.04), 0.11, 0.07, "#3a4a2a", seg=8)
+        m.C((-0.2, 2.08, 0.25), (-0.12, 2.18, 0.45), 0.02, 0.06, "#e0d0a0", seg=6)                                       # hunting horn
+        spear(m, (0.27, 1.6, 0.25), wood="#4a3020", length=2.5); return m
+    # --- Spreewald --------------------------------------------------------
+    if unit == "lutki":
+        m = human(skin="#c8a07a", shirt="#6a4a2a", pants="#4a3a2a", boots="#2a1e14", beard="#8a6a4a", belt="#2a1e14")
+        m.C((0, 1.6, 0), (0.03, 1.98, -0.1), 0.14, 0.0, "#a02a20", seg=8); hammer(m, length=0.7, head_="#6a6a6a")
+        return scaled(m, 0.55)
+    if unit == "wassermann":
+        m = human(skin="#7a9a8a", shirt="#2e6a3a", pants="#245a30", boots="#1a3a22", hair="#3a5a3a", beard="#4a6a4a", belt="#1a3a22")
+        m.B((0, 0.75, -0.05), (0.42, 0.5, 0.26), "#2e6a3a")                                                            # long coat tails
+        m.C((0, 1.63, 0), (0, 1.65, 0), 0.19, 0.19, "#a02a20", seg=10); m.C((0, 1.65, 0), (0, 1.86, 0), 0.12, 0.11, "#a02a20", seg=8)
+        spear(m, wood="#4a4a3a", tip="#5a7a6a", length=1.9); m.C((0.27, 2.1, 0.12), (0.4, 1.95, 0.12), 0.015, 0.0, "#5a7a6a", seg=3)   # boat hook
+        for x, y, z in ((0.15, 0.55, 0.14), (-0.18, 0.62, 0.1), (0.05, 1.0, 0.13), (-0.3, 0.86, 0.14)): m.O((x, y, z), (0.025, 0.04, 0.025), "#7ab0d0", 2, 4)
+        return scaled(m, 1.1)
+    if unit == "rusalka":
+        m = robed("#d8e4dc", skin="#b8d0c8", hair="#3a5a4a", eyes="#4ac0b0", r_bot=0.28)
+        m.B((0, 1.05, -0.14), (0.3, 0.9, 0.05), "#3a5a4a")                                                             # long hair down the back
+        for k in range(7):
+            a = k * 2 * math.pi / 7; m.O((math.cos(a) * 0.12, 1.64, math.sin(a) * 0.12), (0.035, 0.035, 0.035), "#e8e0f0" if k % 2 else "#d0c060", 2, 4)
+        m.O((R_HAND[0], R_HAND[1] + 0.05, R_HAND[2]), (0.06, 0.06, 0.06), "#6ae0d0", 3, 6); return m
+    if unit == "mittagsfrau":
+        m = robed("#ece6d4", skin="#d8c8b0", hair="#e8e0c8", eyes="#6a2a1a", r_bot=0.36, belt="#c8b070")
+        m.B((0, 1.2, -0.14), (0.26, 0.6, 0.04), "#e8e0c8"); m.C((0, 1.64, 0), (0, 1.66, 0), 0.22, 0.22, "#d8c070", seg=10)   # sun hat
+        sickle(m); return scaled(m, 1.05)
+    if unit == "schlangenkoenig":
+        m = Mesh(); hx, hy, hz = serpent(m, "#3a6a3a", "#a8b060"); crown(m, "#e0b020", hy + 0.07, 0.075, 5)
+        return scaled(m, 1.3)
+    # --- Wattenmeer -------------------------------------------------------
+    if unit == "ertrunkener":
+        m = human(skin="#8a9aa0", shirt="#4a5a6a", pants="#3a3e44", boots="#2a2a2e", hair="#3a3a30", r=(0.27, 1.0, 0.2), l=(-0.24, 1.2, 0.42))
+        for x, y in ((0.1, 1.3), (-0.12, 1.05), (0.15, 0.9)): m.B((x, y, 0.12), (0.06, 0.22, 0.01), "#3a6a3a")         # seaweed
+        spear(m, (0.27, 1.0, 0.2), wood="#5a4a3a", tip="#6a4a3a", length=1.7); m.C((0.27, 1.85, 0.2), (0.4, 1.75, 0.2), 0.015, 0.0, "#6a4a3a", seg=3)
+        return m
+    if unit == "wattjungfrau":
+        m = robed("#9aaab0", skin="#c8d0d0", hair="#2a4a3a", eyes="#e8f0a0", r_bot=0.3)
+        m.B((0, 1.0, -0.14), (0.3, 0.8, 0.05), "#2a4a3a"); lantern(m, (-0.27, 1.05, 0.2)); return m
+    if unit == "klabautermann":
+        m = human(skin="#d0a080", shirt="#2a3a6a", pants="#d8d0b8", boots="#2a2018", hair="#c0502a", beard="#c0502a", belt="#2a2018")
+        m.C((0, 1.63, -0.02), (0, 1.66, -0.02), 0.2, 0.22, "#d8b030", seg=10); m.O((0, 1.7, 0), (0.12, 0.08, 0.12), "#d8b030")   # sou'wester
+        hammer(m, length=0.6, head_="#5a4a3a"); m.C((-0.05, 1.46, 0.12), (-0.15, 1.42, 0.28), 0.012, 0.012, "#4a3020", seg=3)
+        m.O((-0.15, 1.45, 0.29), (0.025, 0.03, 0.025), "#4a3020", 2, 4); return scaled(m, 0.6)                             # pipe
+    if unit == "blanker_hans":
+        m = Mesh()
+        m.C((0, 1.2, 0), (0, 0.02, 0), 0.25, 0.55, "#2a5a7a", seg=10)                                                  # wave body
+        for k, (y, r) in enumerate(((0.25, 0.58), (0.55, 0.48), (0.85, 0.38))): m.C((0, y, 0), (0, y + 0.07, 0), r, r * 0.9, "#e8f0f0", seg=10)  # foam crests
+        torso(m, "#2e6a8a", w=0.42, h=0.5, y0=1.05); m.B((0, 1.3, 0.12), (0.3, 0.4, 0.02), "#3a7a9a")
+        arms(m, "#2e6a8a", "#8ab0c0", w=0.42, y=1.48, r=(0.42, 1.95, 0.1), l=(-0.42, 1.95, 0.1), rr=0.07)
+        head(m, "#8ab0c0", y=1.7, hair="#e8f0f0", beard="#e8f0f0", eyes="#e0ffff"); m.C((0, 1.62, 0.1), (0, 1.1, 0.16), 0.14, 0.03, "#e8f0f0")
+        crown(m, "#e8f0f0", 1.82, 0.12, 7); spear(m, (0.42, 1.95, 0.1), wood="#6a6a60", tip="#c8d8d8", length=2.3)
+        for x in (-0.1, 0.0, 0.1): m.C((0.42 + x, 2.25 + 0.05, 0.1), (0.42 + x, 2.5, 0.1), 0.02, 0.0, "#c8d8d8", seg=3)     # trident tines
+        return scaled(m, 1.45)
     raise KeyError(unit)
 
 def bone_dragon(bone="#e0d8c0", dark="#8a8070", glow="#7aff9a", membrane="#5a4a5a"):
@@ -388,7 +528,9 @@ UNITS = ["lich", "ghul", "skelett", "bogner", "leichenhund", "zombie", "schleude
          "ritter", "balliste", "moench", "priester", "hexe", "irrlicht", "moorgeist", "rattenfaenger", "brockenhexe", "kleriker",
          "heideschwester", "druide", "druidin", "schwarzer_hund", "wode", "zwergenkoenig", "heidekoenigin", "knochenschuetze",
          "moorleiche", "todesritter", "totenlicht", "gefallene_schwester", "grabdruidin", "nekromant", "knochenballiste",
-         "fleischriese", "totenjaeger", "knochendrache"]
+         "fleischriese", "totenjaeger", "knochendrache",
+         "sachsenkrieger", "wodansrabe", "wilder_jaeger", "hackelberg", "lutki", "wassermann", "rusalka", "mittagsfrau",
+         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans"]
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)

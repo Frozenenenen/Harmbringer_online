@@ -1266,6 +1266,19 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Priester | Clergy | Warrior / Support | 1 | 16 | 0 | 4 | 3 | 6 | 3 | Heal | Unarmored | 4 / 4 | 5/4/3 | 1/1 | – | +0 | – |
 | Rattenfänger | Witches | Unique / Caster | 2 | 35 | 0 | 8 | 4 | 9 | 4 | Arcane | Light | 5 / 3 | 7/7/3 | 2/1 | – | +0 | – |
 | Hexenkönigin vom Brocken | Witches | Unique / Caster | 3 | 90 | 0 | 8 | 4 | 14 | 4 | Chaos | Divine | 6 / 6 | 8/8/8 | 2/2 | Flug | +0 | – |
+| Sachsenkrieger | WodanCult | Warrior / Melee | 2 | 20 | 0 | 5 | 3 | 7 | 1 | Pierce | Medium | 2 / 0 | 5/3/2 | 2/2 | – | +0 | – |
+| Wodansrabe | WodanCult | CannonFodder / Scout | 1 | 6 | 0 | 9 | 6 | 3 | 1 | Rend | Unarmored | 3 / 2 | 7/4/2 | 1/1 | Flug | +0 | – |
+| Wilder Jäger | WodanCult | Warrior / Scout | 3 | 26 | 0 | 7 | 6 | 9 | 1 | Pierce | Light | 3 / 2 | 6/5/4 | 3/2 | Spektral | +0 | – |
+| Hackelberg | WodanCult | Unique / Melee | 3 | 60 | 0 | 7 | 6 | 13 | 1 | Pierce | Divine | 5 / 6 | 7/6/5 | 4/2 | – | +0 | – |
+| Lutki | Spreewald | CannonFodder / Melee | 1 | 7 | 0 | 7 | 3 | 3 | 1 | Blunt | Unarmored | 3 / 0 | 4/4/3 | 1/1 | – | +0 | – |
+| Wassermann | Spreewald | Warrior / Tank | 2 | 32 | 0 | 4 | 3 | 8 | 1 | Blunt | Unarmored | 3 / 2 | 4/4/3 | 2/2 | – | +0 | – |
+| Rusalka | Spreewald | Warrior / Caster | 2 | 14 | 0 | 6 | 3 | 7 | 3 | Arcane | Light | 5 / 3 | 5/4/2 | 0/1 | Spektral | +0 | – |
+| Mittagsfrau | Spreewald | Warrior / Melee | 2 | 22 | 0 | 6 | 4 | 11 | 1 | Rend | Unarmored | 4 / 2 | 5/4/3 | 1/1 | Spektral | +0 | – |
+| Schlangenkönig | Spreewald | Unique / Caster | 3 | 65 | 0 | 6 | 3 | 12 | 3 | Poison | Divine | 6 / 6 | 6/5/6 | 2/2 | – | +0 | – |
+| Ertrunkener | Wattenmeer | CannonFodder / Melee | 2 | 16 | 0 | 3 | 2 | 6 | 1 | Blunt | Unarmored | 1 / 0 | 3/2/3 | 2/3 | – | +0 | – |
+| Wattjungfrau | Wattenmeer | Warrior / Caster | 2 | 14 | 0 | 6 | 3 | 6 | 3 | Arcane | Light | 5 / 3 | 6/4/2 | 0/1 | Spektral | +0 | – |
+| Klabautermann | Wattenmeer | Warrior / Support | 1 | 12 | 0 | 7 | 3 | 6 | 1 | Blunt | Light | 4 / 2 | 5/5/3 | 2/1 | – | +0 | – |
+| Blanker Hans | Wattenmeer | Unique / Caster | 4 | 80 | 0 | 5 | 4 | 14 | 3 | Blunt | Divine | 6 / 8 | 7/6/4 | 4/1 | – | +0 | – |
 <!--GEN:UNITS:END-->
 
 **Neue Lich-Einheiten in Kürze:**
