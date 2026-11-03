@@ -181,6 +181,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // =============================================================================
 // CONFIG
@@ -1411,6 +1412,42 @@ function portraitHtml(type, def) {
   return PORTRAITS[type] ? `<img class="portrait" src="${PORTRAITS[type]}" alt="${def.name}">`
     : `<span class="portrait none" style="background:${def.color}" title="${def.name}"></span>`;
 }
+// Unit figures (slimmed Godot models). Each lives in data/figures/<type>.js as base64 GLB and is
+// loaded on demand with a <script> tag, which also works under file:// (fetch would not).
+const Figures = {
+  templates: {},          // type -> normalized THREE.Group (1 unit tall, feet at y = 0) or null
+  pending: {},
+  load(type) {
+    if (type in this.templates) return Promise.resolve(this.templates[type]);
+    if (!PORTRAITS[type]) { this.templates[type] = null; return Promise.resolve(null); }   // no figure for this unit
+    if (this.pending[type]) return this.pending[type];
+    const done = tpl => { this.templates[type] = tpl; delete this.pending[type]; return tpl; };
+    const p = new Promise(resolve => {
+      const timer = setTimeout(() => resolve(null), 15000);
+      const finish = tpl => { clearTimeout(timer); resolve(tpl); };
+      const el = document.createElement('script');
+      el.src = `data/figures/${type}.js?v=1`;
+      el.onerror = () => finish(null);
+      el.onload = () => {
+        const b64 = (window.HARMBRINGER_FIGURES || {})[type];
+        if (!b64) return finish(null);
+        const bin = atob(b64), buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        new GLTFLoader().parse(buf.buffer, '', gltf => {
+          const root = gltf.scene, box = new THREE.Box3().setFromObject(root), size = box.getSize(new THREE.Vector3());
+          const k = 1 / Math.max(size.y, 1e-6), c = box.getCenter(new THREE.Vector3());
+          root.scale.setScalar(k);
+          root.position.set(-c.x * k, -box.min.y * k, -c.z * k);
+          const g = new THREE.Group(); g.add(root);
+          finish(g);
+        }, () => finish(null));
+      };
+      document.head.appendChild(el);
+    }).then(done);
+    return this.pending[type] = p;
+  },
+  ensure(types) { return Promise.all([...new Set(types)].map(t => this.load(t))); }
+};
 // Groups individual units [{type, hp}] by type in order of first appearance -> [{type, hps: [...]}].
 function groupByType(list) {
   const out = new Map();
@@ -1875,10 +1912,20 @@ const BattleView = {
   createUnit(u) {
     const def = u.def, s = 1.0 + 0.35 * def.size;
     const group = new THREE.Group();
-    const body = new THREE.Mesh(this.shapeGeometry(def.shape),
-      new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.6, flatShading: true, transparent: def.spectral, opacity: def.spectral ? 0.75 : 1 }));
-    body.scale.setScalar(s);
+    const tpl = Figures.templates[u.type];
+    let body;
+    if (tpl) {
+      // Figure: 2.8 units tall at size 1, standing on the pedestal.
+      body = tpl.clone(true);
+      body.scale.setScalar(2.8 * s);
+      if (def.spectral) body.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.7; } });
+    } else {
+      body = new THREE.Mesh(this.shapeGeometry(def.shape),
+        new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.6, flatShading: true, transparent: def.spectral, opacity: def.spectral ? 0.75 : 1 }));
+      body.scale.setScalar(s);
+    }
     body.position.y = 0.35 + (def.flying ? 1.2 : 0);
+    body.traverse(o => { if (o.isMesh) o.userData.unitId = u.id; });
     const pedColor = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
     const ped = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 0.35, 6), new THREE.MeshStandardMaterial({ color: pedColor, roughness: 0.7 }));
     ped.rotation.y = Math.PI / 6; ped.position.y = 0.17;
@@ -1888,11 +1935,14 @@ const BattleView = {
     el.className = 'unitLabel';
     el.innerHTML = `<span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
-    label.position.y = body.position.y + 3.2 * s;
+    label.position.y = body.position.y + (tpl ? 3.3 : 3.2) * s;
     group.add(label);
     game.view.battleRoot.add(group);
     u.view = { group, body, el, label };
     this.placeUnit(u);
+    // Initial facing: enemies look where their sight cone points, the undead towards the field center.
+    if (u.side === 'enemy') { const d = edgeDirection(u.facing); this.face(u, group.position.x + d.x, group.position.z + d.z); }
+    else { const c = hexToWorld(game.battle.field.cq, game.battle.field.cr); this.face(u, c.x, c.z); }
     this.updateHp(u);
   },
   placeUnit(u) {
@@ -1916,9 +1966,15 @@ const BattleView = {
     tween(1.0, k => { obj.position.y = base.y + 4 + k * 3; el.style.opacity = String(1 - k * k); })
       .then(() => removeWithLabels(obj));
   },
+  // Turns the figure towards a world position (figures look along +Z).
+  face(u, x, z) {
+    const p = u.view.group.position, dx = x - p.x, dz = z - p.z;
+    if (dx * dx + dz * dz > 1e-6) u.view.body.rotation.y = Math.atan2(dx, dz);
+  },
   // Melee lunge or projectile.
   async attackAnim(att, tgt, ranged) {
     const a = att.view.group.position.clone(), b = tgt.view.group.position.clone();
+    this.face(att, b.x, b.z); this.face(tgt, a.x, a.z);
     if (!ranged) {
       await tween(0.25, k => { const f = Math.sin(k * Math.PI) * 0.45; att.view.group.position.lerpVectors(a, b, f); });
       att.view.group.position.copy(a);
@@ -2001,8 +2057,14 @@ const Stealth = {
 // =============================================================================
 let unitIdCounter = 1;
 const Battle = {
-  start(node) {
+  async start(node) {
     const c = game.campaign;
+    if (this.starting) return;
+    // Load the figures of everyone taking part first (scripts, on demand).
+    this.starting = true;
+    UI.toast('Die Toten erheben sich …');
+    await Figures.ensure([...c.army.map(a => a.type), ...Campaign.garrisonFor(node)]);
+    this.starting = false;
     Campaign.registerAttack(node);
     const field = new Battlefield(node);
     const origin = NODE_BY_ID[c.prevNodeId] && c.prevNodeId !== node.id ? NODE_BY_ID[c.prevNodeId] : PHYLACTERY;
@@ -2258,6 +2320,7 @@ const Battle = {
     dest.unit = u;
     for (let i = 1; i < path.length; i++) {
       const a = path[i - 1], c = path[i], pa = hexToWorld(a.q, a.r), pc = hexToWorld(c.q, c.r);
+      BattleView.face(u, pc.x, pc.z);
       await tween(STEP_SECONDS, k => {
         u.view.group.position.set(pa.x + (pc.x - pa.x) * k, a.y + (c.y - a.y) * k + Math.sin(k * Math.PI) * 0.4, pa.z + (pc.z - pa.z) * k);
       });
