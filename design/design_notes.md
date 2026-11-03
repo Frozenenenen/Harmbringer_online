@@ -1073,7 +1073,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Fire | 100% | 125% | 100% | 75% | 50% | 75% |
 | Poison | 100% | 100% | 100% | 75% | 0% | 50% |
 | Arcane | 100% | 100% | 100% | 100% | 75% | 75% |
-| Soul | 150% | 125% | 100% | 75% | 0% | 50% |
+| Soul | 150% | 125% | 100% | 75% | 25% | 50% |
 | Holy | 150% | 125% | 100% | 75% | 50% | 100% |
 | Chaos | 100% | 100% | 100% | 100% | 100% | 100% |
 
@@ -1082,6 +1082,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 - **0%** = Immunität
 - **Chaos** = immer 100%, universell aber nie optimal
 - **Rend** = stark gegen Ungerüstete, fällt gegen Rüstung schnell ab (Zähne gegen Platte)
+- **Soul gegen Fortified 25 %** = Maschinen und Mauern haben keine Seele, aber ihre Bedienmannschaft (vorher 0 %, Geister waren gegen Ballisten nutzlos)
 
 ### Basis-Klasse S_UnitData
 

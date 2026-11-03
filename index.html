@@ -130,7 +130,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=7"></script>
+<script src="data/world_data.js?v=8"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=7"></script>
 <script type="importmap">
@@ -2490,7 +2490,7 @@ const Battle = {
     target.hp -= dmg - absorbed;
     const deaths = before - stackCount(target);
     BattleView.updateHp(target);
-    BattleView.floatText(target, (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
+    BattleView.floatText(target, dmg === 0 ? 'immun' : (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
     // Every fallen creature leaves loot (corpse quality depends on the killing blow).
     if (target.side === 'enemy' && killer && killer.side === 'player')
       for (let i = 0; i < deaths; i++) game.battle.kills.push({ quality: DATA.corpseQuality[power] ?? 0, soul: power === 'SOUL' });
@@ -2512,7 +2512,8 @@ const Battle = {
       return;
     }
     const dmg = Combat.damage(prof, target.def, from.level, tt.level, chk.cover);
-    this.log(`${att.def.name} trifft ${target.def.name}: ${dmg} Schaden${chk.cover ? ' (Deckung)' : ''}${surprise ? ' – Überraschung!' : ''}.`, att.side === 'player' ? 'good' : 'hit');
+    if (dmg === 0) this.log(`${target.def.name} ist immun gegen ${POWER_NAMES[prof.power]}-Schaden.`, 'hit');
+    else this.log(`${att.def.name} trifft ${target.def.name}: ${dmg} Schaden${chk.cover ? ' (Deckung)' : ''}${surprise ? ' – Überraschung!' : ''}.`, att.side === 'player' ? 'good' : 'hit');
     this.applyDamage(target, dmg, att, prof.power);
     if (b.over) return;
     // Counter: surviving melee targets with counter strike back once at 50 %.
