@@ -19,6 +19,7 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 | `tools/` | Python-Werkzeuge: Generator, Balancing- und Schlacht-Simulation, Karten-Pipeline |
 | `prototypes/worldmap/` | Weltkarte in WebGL2 (lädt per `fetch`, läuft nur über Webserver/Pages) |
 | `prototypes/einheitenbuch/` | Einheitenbuch (Lesbarkeit der Einheiten) |
+| `assets/figures/` | Figuren aus dem Godot-Projekt, verkleinert mit `tools/slim_figures.py` (Betrachter: `prototypes/figuren/`) |
 | `BUGS.md` | Fehlerliste (von Kevin gemeldete Fehler und ihr Status) |
 
 ## Arbeitsregeln
