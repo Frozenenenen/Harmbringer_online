@@ -124,6 +124,7 @@
 <!-- Game data: classic scripts, loaded before the game module -->
 <script src="data/heightmap.js"></script>
 <script src="data/world_data.js"></script>
+<script src="data/ground_textures.js"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -382,6 +383,32 @@ class WorldData {
       onProgress(r1 / HEIGHT);
       await new Promise(res => setTimeout(res, 0));
     }
+    this.smooth = WorldData.blur(WorldData.blur(this.height));
+  }
+  // Separable [1 2 1] blur: removes the 8-bit terraces for the landscape mesh.
+  static blur(src) {
+    const tmp = new Float32Array(src.length), out = new Float32Array(src.length);
+    for (let r = 0; r < HEIGHT; r++) for (let q = 0; q < WIDTH; q++) {
+      const i = r * WIDTH + q, l = q > 0 ? i - 1 : i, rr = q < WIDTH - 1 ? i + 1 : i;
+      tmp[i] = (src[l] + 2 * src[i] + src[rr]) / 4;
+    }
+    for (let r = 0; r < HEIGHT; r++) for (let q = 0; q < WIDTH; q++) {
+      const i = r * WIDTH + q, u = r > 0 ? i - WIDTH : i, d = r < HEIGHT - 1 ? i + WIDTH : i;
+      out[i] = (tmp[u] + 2 * tmp[i] + tmp[d]) / 4;
+    }
+    return out;
+  }
+  // Height of the landscape mesh at a world position (bilinear, matches the terrain shader).
+  surfaceAt(x, z) {
+    const fq = Math.min(WIDTH - 1, Math.max(0, x / COL_SPACING)), fr = Math.min(HEIGHT - 1, Math.max(0, (z - INRADIUS / 2) / ROW_SPACING));
+    const q0 = Math.min(WIDTH - 2, Math.floor(fq)), r0 = Math.min(HEIGHT - 2, Math.floor(fr)), a = fq - q0, b = fr - r0;
+    const h = this.smooth, i = r0 * WIDTH + q0;
+    return (h[i] * (1 - a) + h[i + 1] * a) * (1 - b) + (h[i + WIDTH] * (1 - a) + h[i + WIDTH + 1] * a) * b;
+  }
+  // Ground height for figures: landscape on the world map, hex tiles in battle.
+  groundAt(x, z) {
+    if (game.battle) { const [q, r] = worldToHex(x, z); return Math.max(this.heightAt(q, r), HEX.waterLevel); }
+    return Math.max(this.surfaceAt(x, z), HEX.waterLevel);
   }
   idx(q, r) { return r * WIDTH + q; }
   grayAt(q, r) { return inMap(q, r) ? this.gray[r * WIDTH + q] : 0; }
@@ -478,6 +505,176 @@ class TileRenderer {
   }
 }
 
+// =============================================================================
+// TerrainRenderer (world map)
+// Continuous landscape instead of hex prisms: one vertex per heightmap point in a
+// window that follows the camera. Heights and floor types are read in the shaders
+// from data textures; the fragment shader blends the ground textures of the 3x3
+// neighbouring points with soft radial weights, so floor types fade into each other.
+// Battles still use the hex TileRenderer.
+// =============================================================================
+const TERRAIN_HALF = 160;          // window = (2 * TERRAIN_HALF + 1)^2 vertices around the camera
+const TERRAIN_UV_SCALE = 1 / 14;   // texture repeats every 14 world units (about 3 points)
+// Floor type -> ground texture (index into HARMBRINGER_GROUND.textures). Borrowed textures are
+// tinted towards the floor color so every floor type keeps its own look.
+const GROUND_TEXTURE_FOR = {
+  DEEP_WATER: 'Sand', SHALLOW_WATER: 'Mud', SAND: 'Sand', WET_EARTH: 'WetEarth', MUD: 'Mud', BOG: 'Bog', SWAMP: 'Swamp',
+  GRASS_SHORT: 'GrassShort', GRASS_TALL: 'GrassTall', HEATHER: 'Heather', DRY_EARTH: 'DryEarth', GRAVEL: 'RawStone',
+  RAW_STONE: 'RawStone', COBBLESTONE: 'RawStone', STONE_FLOOR: 'RawStone', WOOD_FLOOR: 'DryEarth',
+  HOLY_GROUND: 'Sand', GRAVEYARD_GROUND: 'WetEarth', PAGAN_GROUND: 'Heather'
+};
+const NATIVE_TEXTURE = new Set(['SAND', 'WET_EARTH', 'MUD', 'BOG', 'SWAMP', 'GRASS_SHORT', 'GRASS_TALL', 'HEATHER', 'DRY_EARTH', 'RAW_STONE']);
+
+// World position of heightmap point (q, r). Odd hex columns are shifted by half a row;
+// the landscape uses the mean offset so the mesh stays a regular grid.
+const terrainX = q => q * COL_SPACING;
+const terrainZ = r => r * ROW_SPACING + INRADIUS / 2;
+
+class TerrainRenderer {
+  // Decodes the embedded textures (data URIs, readable under file://) into one texture array.
+  static async loadTextures() {
+    const G = window.HARMBRINGER_GROUND, S = G.size, n = G.textures.length;
+    const data = new Uint8Array(S * S * 4 * n), avg = [];
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = S;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    for (let i = 0; i < n; i++) {
+      const img = new Image(); img.src = G.textures[i].src; await img.decode();
+      ctx.drawImage(img, 0, 0, S, S);
+      const px = ctx.getImageData(0, 0, S, S).data;
+      data.set(px, i * S * S * 4);
+      let r = 0, g = 0, b = 0;
+      for (let k = 0; k < px.length; k += 4) { r += px[k]; g += px[k + 1]; b += px[k + 2]; }
+      const c = S * S * 255; avg.push([r / c, g / c, b / c]);
+    }
+    const tex = new THREE.DataArrayTexture(data, S, S, n);
+    tex.format = THREE.RGBAFormat; tex.type = THREE.UnsignedByteType;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.generateMipmaps = true; tex.anisotropy = 8; tex.needsUpdate = true;
+    return { tex, avg, names: G.textures.map(t => t.name) };
+  }
+  constructor(scene, world, ground) {
+    this.world = world;
+    this.center = [-9999, -9999];
+    // Height texture (smoothed heights) and floor type texture, one texel per heightmap point.
+    const hTex = new THREE.DataTexture(world.smooth, WIDTH, HEIGHT, THREE.RedFormat, THREE.FloatType);
+    hTex.magFilter = hTex.minFilter = THREE.NearestFilter; hTex.needsUpdate = true;
+    const fTex = new THREE.DataTexture(world.floor, WIDTH, HEIGHT, THREE.RedFormat, THREE.UnsignedByteType);
+    fTex.magFilter = fTex.minFilter = THREE.NearestFilter; fTex.needsUpdate = true;
+    // Per floor type: texture layer and tint (linear color ratio floor color / texture average).
+    const layer = [], tint = [];
+    const lin = c => Math.pow(c, 2.2);
+    FLOOR_KEYS.forEach(key => {
+      const li = ground.names.indexOf(GROUND_TEXTURE_FOR[key] || 'GrassShort');
+      layer.push(li);
+      if (NATIVE_TEXTURE.has(key)) { tint.push(new THREE.Vector3(1, 1, 1)); return; }
+      const fc = new THREE.Color(DATA.floorTypes[key].color), a = ground.avg[li];   // fc is linear already
+      tint.push(new THREE.Vector3(fc.r / lin(a[0]), fc.g / lin(a[1]), fc.b / lin(a[2])));
+    });
+    // Grid: position.xz holds the integer offset from the window center.
+    const N = 2 * TERRAIN_HALF + 1, pos = new Float32Array(N * N * 3);
+    for (let j = 0, k = 0; j < N; j++) for (let i = 0; i < N; i++, k += 3) { pos[k] = i - TERRAIN_HALF; pos[k + 2] = j - TERRAIN_HALF; }
+    const index = new Uint32Array((N - 1) * (N - 1) * 6);
+    for (let j = 0, k = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
+      const a = j * N + i, b = a + 1, c = a + N, d = c + 1;
+      index.set([a, c, b, b, c, d], k); k += 6;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setIndex(new THREE.BufferAttribute(index, 1));
+    this.uniforms = {
+      hTex: { value: hTex }, fTex: { value: fTex }, groundTex: { value: ground.tex },
+      layer: { value: layer }, tint: { value: tint },
+      center: { value: new THREE.Vector2() }, mapSize: { value: new THREE.Vector2(WIDTH, HEIGHT) },
+      spacing: { value: new THREE.Vector3(COL_SPACING, ROW_SPACING, INRADIUS / 2) },
+      uvScale: { value: TERRAIN_UV_SCALE },
+      sunDir: { value: new THREE.Vector3(0, 1, 0) }, sunColor: { value: new THREE.Color(0xffe2b8).multiplyScalar(1.9) },
+      skyColor: { value: new THREE.Color(0xe8dcc0).multiplyScalar(1.1) }, groundColor: { value: new THREE.Color(0x3a3328).multiplyScalar(1.1) },
+      fogColor: { value: new THREE.Color(BG_COLOR) }, fogDensity: { value: 0.008 }
+    };
+    const mat = new THREE.ShaderMaterial({
+      glslVersion: THREE.GLSL3, uniforms: this.uniforms,
+      vertexShader: `
+        uniform sampler2D hTex; uniform vec2 center, mapSize; uniform vec3 spacing;
+        out vec2 vTile; out vec3 vWorld; out vec3 vNormal; out float vDepth;
+        float H(ivec2 t) { return texelFetch(hTex, clamp(t, ivec2(0), ivec2(mapSize) - 1), 0).r; }
+        void main() {
+          ivec2 t = ivec2(center + position.xz);
+          float h = H(t);
+          float hl = H(t + ivec2(-1, 0)), hr = H(t + ivec2(1, 0)), hd = H(t + ivec2(0, -1)), hu = H(t + ivec2(0, 1));
+          vNormal = normalize(vec3((hl - hr) / (2.0 * spacing.x), 1.0, (hd - hu) / (2.0 * spacing.y)));
+          vTile = vec2(t);
+          vWorld = vec3(vTile.x * spacing.x, h, vTile.y * spacing.y + spacing.z);
+          vec4 mv = viewMatrix * vec4(vWorld, 1.0);
+          vDepth = -mv.z;
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `
+        precision highp sampler2DArray;
+        uniform sampler2D fTex; uniform sampler2DArray groundTex;
+        uniform int layer[${FLOOR_KEYS.length}]; uniform vec3 tint[${FLOOR_KEYS.length}];
+        uniform vec2 mapSize; uniform float uvScale;
+        uniform vec3 sunDir, sunColor, skyColor, groundColor, fogColor; uniform float fogDensity;
+        in vec2 vTile; in vec3 vWorld; in vec3 vNormal; in float vDepth;
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float vnoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+        }
+        void main() {
+          // Jitter the lookup position so borders between floor types become irregular.
+          vec2 p = vTile + (vec2(vnoise(vTile * 0.9), vnoise(vTile * 0.9 + 17.3)) - 0.5) * 0.7;
+          vec2 base = floor(p + 0.5), uv = vWorld.xz * uvScale;
+          vec3 col = vec3(0.0); float wsum = 0.0;
+          for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) {
+            vec2 n = base + vec2(dx, dy);
+            vec2 c = n + (vec2(hash(n), hash(n + 7.7)) - 0.5) * 0.4;
+            float w = 1.0 - smoothstep(0.3, 1.2, length(p - c));
+            if (w <= 0.0) continue;
+            int f = int(texelFetch(fTex, clamp(ivec2(n), ivec2(0), ivec2(mapSize) - 1), 0).r * 255.0 + 0.5);
+            vec3 tc = pow(texture(groundTex, vec3(uv, float(layer[f]))).rgb, vec3(2.2)) * tint[f];
+            col += w * tc; wsum += w;
+          }
+          col /= max(wsum, 1e-4);
+          vec3 nrm = normalize(vNormal);
+          vec3 light = sunColor * max(dot(nrm, sunDir), 0.0) + mix(groundColor, skyColor, nrm.y * 0.5 + 0.5);
+          col *= light;
+          // Outside the heightmap: fade to the background.
+          vec2 out2 = max(-vTile, vTile - (mapSize - 1.0));
+          col = mix(col, fogColor, clamp(max(out2.x, out2.y) / 8.0, 0.0, 1.0));
+          float fog = 1.0 - exp(-fogDensity * fogDensity * vDepth * vDepth);
+          gl_FragColor = vec4(mix(col, fogColor, fog), 1.0);
+          #include <colorspace_fragment>
+        }`
+    });
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.frustumCulled = false;
+    scene.add(this.mesh);
+  }
+  set visible(on) { this.mesh.visible = on; }
+  get visible() { return this.mesh.visible; }
+  // Moves the window to the camera pivot (integer steps, so vertices never swim).
+  update(pivot, sun, fog) {
+    const q = Math.round(pivot.x / COL_SPACING), r = Math.round((pivot.z - INRADIUS / 2) / ROW_SPACING);
+    this.uniforms.center.value.set(q, r);
+    this.uniforms.sunDir.value.copy(sun.position).sub(sun.target.position).normalize();
+    this.uniforms.fogDensity.value = fog.density;
+  }
+  // Ray march against the surface (CPU). Returns { q, r, point } of the hex tile below the hit.
+  pick(raycaster) {
+    const ray = raycaster.ray, o = ray.origin, d = ray.direction, w = this.world;
+    const above = t => o.y + d.y * t - Math.max(w.surfaceAt(o.x + d.x * t, o.z + d.z * t), HEX.waterLevel);
+    let t0 = 0, t1 = 0;
+    const step = 1.5;
+    for (let t = step; t < 4000; t += step) { if (above(t) < 0) { t0 = t - step; t1 = t; break; } }
+    if (!t1) return null;
+    for (let i = 0; i < 12; i++) { const m = (t0 + t1) / 2; if (above(m) > 0) t0 = m; else t1 = m; }
+    const point = new THREE.Vector3(o.x + d.x * t1, o.y + d.y * t1, o.z + d.z * t1);
+    const [q, r] = worldToHex(point.x, point.z);
+    return inMap(q, r) ? { q, r, point } : null;
+  }
+}
+
 // Procedural normal map for the water plane (generated in JS, no image reading).
 function makeWaterNormalMap() {
   const N = 128, data = new Uint8Array(N * N * 4);
@@ -520,7 +717,7 @@ class CameraController {
   lookAtTile(q, r, snap = true) {
     const p = hexToWorld(q, r);
     this.pivot.x = p.x; this.pivot.z = p.z;
-    if (snap) this.pivot.y = Math.max(game.world.heightAt(q, r), HEX.waterLevel);
+    if (snap) this.pivot.y = game.world.groundAt(p.x, p.z);
   }
   pivotTile() { return worldToHex(this.pivot.x, this.pivot.z); }
   update(dt, keys) {
@@ -547,8 +744,7 @@ class CameraController {
     this.pivot.x = Math.min(b.maxX, Math.max(b.minX, this.pivot.x));
     this.pivot.z = Math.min(b.maxZ, Math.max(b.minZ, this.pivot.z));
     // Pivot height follows the terrain, damped; water level is the minimum.
-    const [q, r] = this.pivotTile();
-    const targetY = Math.max(game.world.heightAt(q, r), HEX.waterLevel);
+    const targetY = game.world.groundAt(this.pivot.x, this.pivot.z);
     this.pivot.y += (targetY - this.pivot.y) * Math.min(1, CAM.heightSmoothing * dt);
     // Place the camera.
     const h = Math.cos(this.pitch) * this.distance;
@@ -568,7 +764,7 @@ class CameraController {
 // Scene setup (view only)
 // =============================================================================
 const BG_COLOR = 0x6e675c;   // muted sepia gray, also the fog color
-function initScene() {
+function initScene(ground) {
   const v = game.view;
   const app = document.getElementById('app');
   v.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -603,6 +799,7 @@ function initScene() {
   v.water = water;
 
   v.tiles = new TileRenderer(v.scene, game.world);
+  v.terrain = new TerrainRenderer(v.scene, game.world, ground);
   v.cam = new CameraController(v.camera);
   v.raycaster = new THREE.Raycaster();
   v.worldRoot = new THREE.Group();      // node pillars and army figure
@@ -781,7 +978,8 @@ const WorldView = {
       const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, fog: false, depthWrite: false });
       const pillar = new THREE.Mesh(pillarGeo, mat);
       const p = hexToWorld(node.q, node.r);
-      pillar.position.set(p.x, Math.max(game.world.heightAt(node.q, node.r), HEX.waterLevel), p.z);
+      pillar.position.set(p.x, game.world.surfaceAt(p.x, p.z), p.z);
+      pillar.position.y = Math.max(pillar.position.y, HEX.waterLevel);
       pillar.userData.nodeId = node.id;
       const el = document.createElement('div');
       el.className = 'nodeLabel';
@@ -807,7 +1005,7 @@ const WorldView = {
   placeArmy() {
     // Stands one tile south-east of the node so the pillar does not hide it.
     const n = Campaign.armyNode(), [q, r] = neighbor(n.q, n.r, 2), p = hexToWorld(q, r);
-    game.view.army.position.set(p.x, Math.max(game.world.heightAt(q, r), HEX.waterLevel), p.z);
+    game.view.army.position.set(p.x, game.world.groundAt(p.x, p.z), p.z);
   },
   // Update pillar colors, heights and labels from the campaign state.
   refresh() {
@@ -850,8 +1048,7 @@ async function startTravel(target) {
     const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // ease in-out
     fig.position.x = a.x + (b.x - a.x) * e;
     fig.position.z = a.z + (b.z - a.z) * e;
-    const [q, r] = worldToHex(fig.position.x, fig.position.z);
-    fig.position.y = Math.max(game.world.heightAt(q, r), HEX.waterLevel);
+    fig.position.y = game.world.groundAt(fig.position.x, fig.position.z);
   });
   cam.follow = null;
   c.prevNodeId = from.id;
@@ -2298,7 +2495,7 @@ function onLeftClick(ev) {
     const pillars = Object.values(game.view.nodeViews).map(v => v.pillar);
     const hit = game.view.raycaster.intersectObjects(pillars, false)[0];
     if (hit) { UI.selectNode(hit.object.userData.nodeId); return; }
-    const t = game.view.tiles.pick(game.view.raycaster);
+    const t = game.view.terrain.pick(game.view.raycaster);
     if (t) {
       const near = DATA.nodes.find(n => n.q === t.q && n.r === t.r);
       if (near) { UI.selectNode(near.id); return; }
@@ -2345,7 +2542,7 @@ function onHover(ev) {
     const now = performance.now();
     if (now - lastWorldHover < 60) return;
     lastWorldHover = now;
-    const p = game.view.tiles.pick(game.view.raycaster);
+    const p = game.view.terrain.pick(game.view.raycaster);
     if (!p) { tip.classList.add('hidden'); return; }
     const w = game.world;
     showTip(ev, groundTip(w.floorKeyAt(p.q, p.r), w.levelAt(p.q, p.r), `<br><span class="small">${w.metersAt(p.q, p.r).toFixed(0)} m über dem Meer</span>`));
@@ -2458,13 +2655,17 @@ function frame(now) {
   const v = game.view;
   const keys = (game.mode === 'world' || game.mode === 'battle' || game.mode === 'travel' || game.mode === 'end') ? game.input.keys : new Set();
   v.cam.update(dt, keys);
-  const [pq, pr] = v.cam.pivotTile();
-  v.tiles.update(pq, pr);
+  // World map: landscape mesh. Battle: hex tiles (the battlefield is an instanced hex area).
+  const inBattle = !!game.battle;
+  v.terrain.visible = !inBattle;
+  for (const m of v.tiles.meshes) m.visible = inBattle;
+  if (inBattle) { const [pq, pr] = v.cam.pivotTile(); v.tiles.update(pq, pr); }
   updateTweens(dt);
   // Fog: dense enough that the edge of the tile window disappears.
   v.scene.fog.density = 1.35 / (v.cam.distance + 160);
   v.sun.position.set(v.cam.pivot.x - 60, v.cam.pivot.y + 90, v.cam.pivot.z + 60);
   v.sun.target.position.copy(v.cam.pivot);
+  if (!inBattle) v.terrain.update(v.cam.pivot, v.sun, v.scene.fog);
   v.waterNormal.offset.x = now * 0.00002; v.waterNormal.offset.y = now * 0.000013;
   if (v.armyBody && game.mode !== 'battle') { v.armyBody.rotation.y = now * 0.0008; v.armyBody.position.y = 4.2 + Math.sin(now * 0.002) * 0.4; }
   if (game.battle && BattleView.ring && game.battle.current && game.battle.current.alive) {
@@ -2526,13 +2727,14 @@ async function boot() {
   game.loadMs = performance.now() - t0;
   text.textContent = 'Errichte die Welt …';
   await new Promise(r => setTimeout(r, 0));
-  initScene();
+  text.textContent = 'Lade Bodentexturen …';
+  const ground = await TerrainRenderer.loadTextures();
+  initScene(ground);
   game.campaign = Campaign.create();      // placeholder until the intro choice
   WorldView.init();
   Minimap.init();
   initInput();
   game.view.cam.lookAtTile(PHYLACTERY.q, PHYLACTERY.r);
-  game.view.tiles.update(PHYLACTERY.q, PHYLACTERY.r, true);
   UI.show('loading', false);
   requestAnimationFrame(frame);
   showIntro();
