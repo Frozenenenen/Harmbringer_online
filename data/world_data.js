@@ -641,6 +641,13 @@ window.HARMBRINGER_DATA = {
   // stacksPerTypeFew per type. A stack is only split while every part keeps minStackSize units.
   stacks: { maxStacks: 8, maxPerType: 3, fullStacksFromTypes: 4, stacksPerTypeFew: 2, minStackSize: 4 },
 
+  // Random encounters while travelling. Every unconquered place the army passes (within
+  // passRadius tiles of the road) adds danger; each travel day rolls
+  // chance = baseChance + chancePerDanger * danger (capped). The enemies come from the most
+  // dangerous place passed; their number grows with the danger. At most one per journey.
+  encounters: { baseChance: 0.03, chancePerDanger: 0.04, maxChance: 0.6, passRadius: 30,
+                danger: { VILLAGE: 0.5, 16: 1, 32: 2, 64: 3 }, unitsBase: 8, unitsPerDanger: 6, maxUnits: 64, size: 16 },
+
   threat: {
     attackOwnNode: 25,       // faction of the attacked node
     attackOwnVillage: 10,    // faction of an attacked village (small places cause less alarm)
