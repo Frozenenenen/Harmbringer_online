@@ -39,7 +39,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 view.prepend(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x6e675c);
 const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
-camera.position.set(1.6, 1.4, 2.6);
+camera.position.set(2.4, 1.9, 3.8);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0.9, 0);
 scene.add(new THREE.HemisphereLight(0xe8dcc0, 0x3a3328, 1.4));
@@ -55,7 +55,7 @@ addEventListener('resize', resize); resize();
 async function show(f, btn) {
   document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b === btn));
   info.textContent = 'Lade …';
-  const gltf = await loader.loadAsync(BASE + f.file);
+  const gltf = await loader.loadAsync(BASE + f.file + '?v=2');   // ?v: bypass cached broken files
   if (current) scene.remove(current);
   current = gltf.scene;
   // Fit: 1.8 units tall, standing on the pedestal.
@@ -68,7 +68,7 @@ async function show(f, btn) {
   info.innerHTML = `<b>${f.file.split('/').pop().replace('.glb', '')}</b> · ${f.triangles.toLocaleString('de-DE')} Dreiecke · ${(f.bytes / 1e6).toFixed(2)} MB`;
 }
 
-const figures = await fetch(BASE + 'figures.json').then(r => r.json());
+const figures = await fetch(BASE + 'figures.json?v=2').then(r => r.json());
 const list = document.getElementById('list');
 let lastGroup = '';
 for (const f of figures) {
