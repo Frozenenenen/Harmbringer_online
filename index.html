@@ -130,7 +130,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=8"></script>
+<script src="data/world_data.js?v=9"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=7"></script>
 <script type="importmap">
@@ -1145,12 +1145,26 @@ const Campaign = {
 // =============================================================================
 // Recruitment (Hügelgrab / phylactery)
 // =============================================================================
+// Where the undead can recruit: the barrow (everything) and every conquered place except villages.
+// Towns raise corpses and bones from their graveyards; spirits answer only at barrow or mythic places.
+const RECRUIT_AT = {
+  PHYLACTERY: null,                                                     // null = all units
+  WORLDLY: ['ghul', 'zombie', 'leichenhund', 'skelett', 'bogner', 'schleuderer'],
+  CHRISTIAN: ['zombie', 'skelett', 'bogner', 'schleuderer'],
+  MYTHIC: ['ghul', 'leichenhund', 'geist']
+};
 const Recruitment = {
-  candidates() { return Object.entries(DATA.units).filter(([k, u]) => u.side === 'undead' && k !== 'lich'); },
+  canRecruitAt(node) { return node && node.type in RECRUIT_AT && (node.type === 'PHYLACTERY' || Campaign.isConquered(node)); },
+  candidates(node = Campaign.armyNode()) {
+    const allow = RECRUIT_AT[node.type];
+    return Object.entries(DATA.units).filter(([k, u]) => u.side === 'undead' && k !== 'lich' && (!allow || allow.includes(k)));
+  },
   // Returns null if recruitable, otherwise a German reason.
   blocker(type) {
     const u = DATA.units[type], c = game.campaign;
-    if (c.nodeId !== PHYLACTERY.id) return 'Nur im Hügelgrab';
+    const here = Campaign.armyNode();
+    if (!this.canRecruitAt(here)) return 'Hier kann nicht rekrutiert werden';
+    if (!this.candidates(here).some(([k]) => k === type)) return 'Nicht an diesem Ort';
     if ((u.requiresKnowledge || 0) > c.resources.knowledge) return `Benötigt ${u.requiresKnowledge} Wissen`;
     for (const [k, v] of Object.entries(u.cost || {})) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
     if (Campaign.commandUsed() + u.commandPoints > Campaign.commandLimit()) return 'Kommandolimit erreicht';
@@ -2925,7 +2939,7 @@ const UI = {
       };
       if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
       else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
-      if (here.id === node.id && node.type === 'PHYLACTERY') add('Rekrutieren', () => this.openRecruit(), true);
+      if (here.id === node.id && Recruitment.canRecruitAt(node)) add('Rekrutieren', () => this.openRecruit(), true);
     }
   },
   openRecruit() {
@@ -2941,7 +2955,9 @@ const UI = {
         <div><button data-type="${type}" ${block ? 'disabled' : ''} title="${block || ''}">Rekrutieren</button><div class="small">${block || ''}</div></div></div>`;
     }).join('');
     const r = c.resources;
-    this.modal(`<h2>Hügelgrab – Rekrutieren</h2>
+    const place = Campaign.armyNode();
+    this.modal(`<h2>${esc(place.name)} – Rekrutieren</h2>
+      ${place.type !== 'PHYLACTERY' ? '<p class="small">Eroberte Orte erheben nur, was ihre Gräber hergeben. Alle Einheiten gibt es im Hügelgrab, Geister auch an mythischen Orten.</p>' : ''}
       <p class="small">Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge} · Kommando ${Campaign.commandUsed()} / ${Campaign.commandLimit()}</p>
       ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
     $('modalBody').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => {

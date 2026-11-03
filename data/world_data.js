@@ -231,7 +231,7 @@ window.HARMBRINGER_DATA = {
   // ---------------------------------------------------------------------------
   nodes: [
     { id: "wilseder_berg", name: "Wilseder Berg", q: 777,  r: 709, type: "PHYLACTERY", faction: "UNDEAD", size: 16,
-      garrison: {}, desc: "Hügelgrab und Phylakterium des Lichs. Hier wird rekrutiert." },
+      garrison: {}, desc: "Hügelgrab und Phylakterium des Lichs. Hier können alle Einheiten erhoben werden, und die Armee heilt." },
 
     { id: "soltau",        name: "Soltau",            q: 754,  r: 780, type: "WORLDLY",   faction: "GUELPHS",  size: 16,
       garrison: { bauer: 16 } },
