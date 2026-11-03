@@ -43,6 +43,7 @@ window.HARMBRINGER_DATA = {
   camera: {
     minZoom: 10, maxZoom: 160, startZoom: 60,
     pitchDegrees: 55,          // looking down at the board
+    minPitchDegrees: 15, maxPitchDegrees: 85,   // tilt range for right mouse button dragging
     moveSpeed: 20,             // world units per second at minZoom, scales with zoom
     rotateSpeed: 2.0,          // radians per second for Q/E
     heightSmoothing: 5.0

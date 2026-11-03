@@ -2308,7 +2308,7 @@ const UI = {
   enterWorld() {
     ['header', 'info', 'minimap', 'hint'].forEach(id => this.show(id, true));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
-    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen · Mausrad: Zoom · Linksklick: auswählen · Maus über Feld: Boden · F3: Debug';
+    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · Maus über Feld: Boden · F3: Debug';
     this.updateHeader();
     this.renderInfo();
   },
@@ -2594,7 +2594,7 @@ function initInput() {
   window.addEventListener('contextmenu', e => { e.preventDefault(); if (e.target !== canvas) releaseAll(); });
   canvas.addEventListener('pointerdown', e => {
     inp.downX = e.clientX; inp.downY = e.clientY;
-    if (e.button === 2) { inp.rmb = true; inp.lastX = e.clientX; canvas.setPointerCapture(e.pointerId); }
+    if (e.button === 2) { inp.rmb = true; inp.lastX = e.clientX; inp.lastY = e.clientY; canvas.setPointerCapture(e.pointerId); }
   });
   canvas.addEventListener('lostpointercapture', () => { inp.rmb = false; });
   window.addEventListener('pointercancel', releaseAll);
@@ -2605,7 +2605,13 @@ function initInput() {
   });
   window.addEventListener('pointermove', e => {
     if (inp.rmb && !(e.buttons & 2)) inp.rmb = false;      // release was missed
-    if (inp.rmb) { game.view.cam.yaw -= (e.clientX - inp.lastX) * 0.006; inp.lastX = e.clientX; }
+    if (inp.rmb) {
+      // Horizontal drag rotates, vertical drag tilts (flat views show relief better).
+      const cam = game.view.cam;
+      cam.yaw -= (e.clientX - inp.lastX) * 0.006;
+      cam.pitch = Math.min(CAM.maxPitchDegrees, Math.max(CAM.minPitchDegrees, cam.pitch * 180 / Math.PI + (e.clientY - inp.lastY) * 0.25)) * Math.PI / 180;
+      inp.lastX = e.clientX; inp.lastY = e.clientY;
+    }
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
