@@ -121,6 +121,8 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
+  #armyList { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; } #armyList:empty { display: none; }
+  #armyList button { font-size: 12px; text-align: left; } #armyList button.on { outline: 2px solid var(--gold); }
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
   #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
@@ -176,6 +178,8 @@
 <div id="worldButtons" class="panel hidden">
   <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (Taste R)">Rekrutierung finden</button>
   <button id="btnHome" title="Zum Hügelgrab (Taste H)">Hügelgrab</button>
+  <div id="armyList"></div>
+  <button id="btnGo" class="primary hidden" title="Alle Befehle ausführen: die Zeit läuft für alle Armeen gleichzeitig (Taste G)">Los</button>
 </div>
 <div id="battleButtons" class="panel hidden">
   <div id="abilityBar"></div>
@@ -1261,8 +1265,7 @@ const Campaign = {
   commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
   isRevealed(node) { return this.revealedAt(node.q, node.r); },
   revealedAt(q, r) {
-    const a = this.armyNode();
-    if (hexDistance(q, r, a.q, a.r) <= REVEAL_DISTANCE) return true;
+    if (Expeditions.armyNodes().some(a => hexDistance(q, r, a.q, a.r) <= REVEAL_DISTANCE)) return true;
     if (hexDistance(q, r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
     return DATA.nodes.some(n => this.isConquered(n) && hexDistance(q, r, n.q, n.r) <= REVEAL_DISTANCE);
   },
@@ -1376,7 +1379,7 @@ const RAIDS = DATA.raids;
 const Raids = {
   list() { const c = game.campaign; return c ? (c.raids = c.raids || []) : []; },
   get(id) { return this.list().find(p => p.id === id); },
-  armyNear(q, r) { const a = Campaign.armyNode(); return hexDistance(Math.round(q), Math.round(r), a.q, a.r) <= RAIDS.safeRadius; },
+  armyNear(q, r) { return Expeditions.armyNodes().some(a => hexDistance(Math.round(q), Math.round(r), a.q, a.r) <= RAIDS.safeRadius); },
   targeted() { return new Set(this.list().map(p => p.targetId)); },
   // Best target for a party at (q, r): the nearest conquered place within range that the army does not guard.
   pickTarget(q, r, taken, region = null) {
@@ -1757,6 +1760,7 @@ const WorldView = {
   setVisible(on) {
     game.view.worldRoot.visible = on; for (const id in game.view.nodeViews) game.view.nodeViews[id].label.visible = on;
     for (const id in game.view.raidViews || {}) game.view.raidViews[id].label.visible = on;
+    for (const id in game.view.expViews || {}) { game.view.expViews[id].label.visible = on; game.view.expViews[id].group.visible = on; }
     if (on) { this.updateLabels(); Raids.syncView(); }
   },
   // Village labels only near the camera pivot (or when selected); larger places always show.
@@ -1828,6 +1832,161 @@ async function startTravel(target, resume = null) {
   SaveGame.save();
   if (target.id === PHYLACTERY.id) UI.toast('Im Hügelgrab: Die Untoten sind geheilt.');
 }
+// =============================================================================
+// Expeditions: commanders (necromancer, death knight) lead their own armies. Orders are given
+// first (each army gets a target), then "Los" lets the time run for all of them at once.
+// The Lich army is the campaign's main army (c.army, c.nodeId); expeditions live in
+// c.expeditions = [{ id, leader, army: [{type, hp}], nodeId, prevNodeId, order }].
+// =============================================================================
+const COMMANDER_TYPES = ['nekromant', 'todesritter'];
+const EXPEDITION = { commandLimit: 30, requiresBuilding: 'deadHall' };
+const Expeditions = {
+  list() { const c = game.campaign; return c ? (c.expeditions = c.expeditions || []) : []; },
+  get(id) { return this.list().find(e => e.id === id); },
+  name(e) { return `${DATA.units[e.leader].name}-Zug`; },
+  command(army) { return army.reduce((s, u) => s + Math.max(0, DATA.units[u.type].commandPoints || 0), 0); },
+  // All armies as { id, label, army, node } (Lich first).
+  all() {
+    const c = game.campaign;
+    return [{ id: 'lich', label: 'Lich-Armee', army: c.army, node: Campaign.armyNode(), order: c.order || null },
+      ...this.list().map(e => ({ id: e.id, label: this.name(e), army: e.army, node: NODE_BY_ID[e.nodeId], order: e.order || null, exp: e }))];
+  },
+  active() { const id = UI.activeArmy || 'lich'; return this.all().find(a => a.id === id) || this.all()[0]; },
+  armyNodes() { return this.all().map(a => a.node); },
+  slowest(army) {
+    const m = army.map(a => DATA.units[a.type]).filter(u => u.name !== DATA.units.lich.name && u.rank !== 'COMMANDER' && u.rank !== 'UNIQUE' && !COMMANDER_TYPES.includes(Object.keys(DATA.units).find(k => DATA.units[k] === u))).map(u => u.move);
+    return m.length ? Math.min(...m) : 3;
+  },
+  days(army, from, to) {
+    const tpd = ECON.travelTilesPerDay * (2 + this.slowest(army)) / 5 * (1 + (Campaign.effects().travelPct || 0));
+    return Math.max(1, Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / tpd));
+  },
+  canCreate() {
+    const c = game.campaign;
+    if (Base.level(EXPEDITION.requiresBuilding) < 1) return 'Benötigt die Totenhalle';
+    if (!c.army.some(u => COMMANDER_TYPES.includes(u.type))) return 'Kein Kommandeur in der Armee (Nekromant oder Todesritter)';
+    return null;
+  },
+  // Modal: choose a commander and the units that follow him.
+  openCreate() {
+    const c = game.campaign, block = this.canCreate();
+    if (block) { UI.toast(block); return; }
+    const counts = {}; for (const u of c.army) if (u.type !== 'lich') counts[u.type] = (counts[u.type] || 0) + 1;
+    const leaders = COMMANDER_TYPES.filter(t => counts[t]);
+    const rows = Object.entries(counts).map(([t, n]) => `<tr><td>${esc(DATA.units[t].name)}</td><td>${n}</td>
+      <td><input type="number" min="0" max="${n}" value="0" data-exp="${t}" style="width:60px"></td><td class="small">${DATA.units[t].commandPoints} Kommando</td></tr>`).join('');
+    UI.modal(`<h2>Expedition aufstellen</h2><p class="small">Ein Kommandeur führt einen eigenen Zug (bis ${EXPEDITION.commandLimit} Kommando). Gib dann allen Armeen Befehle und starte mit „Los“.</p>
+      <p>Anführer: <select id="expLeader">${leaders.map(t => `<option value="${t}">${esc(DATA.units[t].name)}</option>`).join('')}</select></p>
+      <table><tr><th>Einheit</th><th>Vorhanden</th><th>Mitgeben</th><th></th></tr>${rows}</table><p class="small" id="expInfo"></p>`,
+      [{ label: 'Aufstellen', primary: true, action: () => this.create() }, { label: 'Abbrechen', action: () => {} }]);
+  },
+  create() {
+    const c = game.campaign, leader = document.getElementById('expLeader').value;
+    const take = {}; document.querySelectorAll('[data-exp]').forEach(i => { const n = Math.max(0, Math.floor(+i.value || 0)); if (n) take[i.dataset.exp] = n; });
+    take[leader] = Math.max(1, take[leader] || 0);
+    const army = [], rest = [];
+    for (const u of c.army) { if (u.type !== 'lich' && take[u.type] > 0) { take[u.type]--; army.push(u); } else rest.push(u); }
+    const cmd = this.command(army.filter((u, i) => !(u.type === leader && i === army.findIndex(x => x.type === leader))));
+    if (cmd > EXPEDITION.commandLimit) { UI.toast(`Zu viel: ${cmd} von ${EXPEDITION.commandLimit} Kommando.`); return; }
+    c.army = rest;
+    c.expCounter = (c.expCounter || 0) + 1;
+    const e = { id: 'exp' + c.expCounter, leader, army, nodeId: c.nodeId, prevNodeId: c.prevNodeId, order: null };
+    this.list().push(e);
+    UI.activeArmy = e.id;
+    SaveGame.save(); this.syncView(); UI.renderInfo(); UI.renderArmies();
+    UI.toast(`${this.name(e)} aufgestellt (${army.length} Einheiten). Wähle ein Ziel und dann „Los“.`, 5);
+  },
+  merge(e) {
+    const c = game.campaign;
+    if (e.nodeId !== c.nodeId) return;
+    c.army.push(...e.army); c.expeditions = this.list().filter(x => x !== e);
+    UI.activeArmy = 'lich'; SaveGame.save(); this.syncView(); UI.renderInfo(); UI.renderArmies();
+    UI.toast(`${this.name(e)} schließt sich dem Lich an.`);
+  },
+  setOrder(armyId, target) {
+    const c = game.campaign;
+    if (armyId === 'lich') c.order = target ? target.id : null;
+    else { const e = this.get(armyId); if (e) e.order = target ? target.id : null; }
+    UI.renderArmies(); UI.renderInfo(); this.syncView();
+  },
+  hasOrders() { return this.all().some(a => a.order); },
+  // "Los": all armies with orders march at the same time, day by day.
+  async go() {
+    const c = game.campaign;
+    if (game.mode !== 'world' || !this.hasOrders()) return;
+    const legs = this.all().filter(a => a.order && a.order !== a.node.id).map(a => {
+      const to = NODE_BY_ID[a.order], days = this.days(a.army, a.node, to);
+      const fig = a.id === 'lich' ? game.view.army : (game.view.expViews[a.id] || {}).group;
+      return { a, to, days, fig, p0: hexToWorld(...neighbor(a.node.q, a.node.r, a.id === 'lich' ? 2 : 4)), p1: hexToWorld(...neighbor(to.q, to.r, a.id === 'lich' ? 2 : 4)) };
+    });
+    if (!legs.length) { for (const a of this.all()) this.setOrder(a.id, null); return; }
+    const D = Math.max(...legs.map(l => l.days));
+    game.mode = 'travel'; UI.renderInfo();
+    let counted = 0;
+    TravelClock.show(D);
+    await tween(Math.max(1.5, D * DAY_SECONDS), k => {
+      for (const l of legs) {
+        if (!l.fig) continue;
+        const t = Math.min(1, k * D / l.days);
+        l.fig.position.x = l.p0.x + (l.p1.x - l.p0.x) * t; l.fig.position.z = l.p0.z + (l.p1.z - l.p0.z) * t;
+        l.fig.position.y = game.world.groundAt(l.fig.position.x, l.fig.position.z);
+      }
+      const d = Math.min(D, Math.floor(k * D + 1e-6));
+      while (counted < d) { counted++; Campaign.advanceDays(1); UI.updateHeader(); TravelClock.update(counted, D); }
+    }, true);
+    while (counted < D) { counted++; Campaign.advanceDays(1); }
+    TravelClock.hide();
+    for (const l of legs) {
+      if (l.a.id === 'lich') { c.prevNodeId = c.nodeId; c.nodeId = l.to.id; c.order = null; }
+      else { l.a.exp.prevNodeId = l.a.exp.nodeId; l.a.exp.nodeId = l.to.id; l.a.exp.order = null; }
+    }
+    for (const a of this.all()) if (a.order) this.setOrder(a.id, null);
+    Campaign.healAtPhylactery();
+    for (const e of this.list()) if (e.nodeId === PHYLACTERY.id) for (const u of e.army) u.hp = DATA.units[u.type].hp;
+    game.mode = 'world';
+    WorldView.placeArmy(); WorldView.refresh(); this.syncView();
+    UI.updateHeader(); UI.renderArmies(); UI.renderInfo(); SaveGame.save();
+    const arrived = legs.filter(l => Campaign.isEnemy(l.to)).map(l => `${l.a.label} vor ${l.to.name}`);
+    UI.toast(arrived.length ? `Angekommen: ${arrived.join(', ')}. Angreifen über die Ortsinfo.` : 'Alle Armeen sind angekommen.', 6);
+  },
+  // World view: banner + commander figure per expedition.
+  syncView() {
+    const v = game.view; if (!v || !v.worldRoot) return;
+    v.expViews = v.expViews || {};
+    const alive = new Set();
+    for (const e of this.list()) {
+      alive.add(e.id);
+      let ev = v.expViews[e.id];
+      if (!ev) ev = v.expViews[e.id] = this.createView(e);
+      if (game.mode !== 'travel') {
+        const n = NODE_BY_ID[e.nodeId], w = hexToWorld(...neighbor(n.q, n.r, 4));
+        ev.group.position.set(w.x, Math.max(game.world.surfaceAt(w.x, w.z), HEX.waterLevel), w.z);
+      }
+      ev.group.visible = v.worldRoot.visible; ev.label.visible = v.worldRoot.visible;
+      ev.el.textContent = `☠ ${this.name(e)}${e.order ? ' → ' + NODE_BY_ID[e.order].name : ''}`;
+      ev.el.classList.toggle('selected', UI.activeArmy === e.id);
+    }
+    for (const id of Object.keys(v.expViews)) if (!alive.has(id)) { const ev = v.expViews[id]; ev.group.removeFromParent(); ev.label.element.remove(); delete v.expViews[id]; }
+  },
+  createView(e) {
+    const v = game.view, group = new THREE.Group(), col = DATA.factions.UNDEAD.color;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 11, 5), new THREE.MeshStandardMaterial({ color: 0x2a2030 }));
+    pole.position.set(-2.2, 5.5, 0);
+    const flag = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.4, 3.2), new THREE.MeshStandardMaterial({ color: col, emissive: 0x2a0f45 }));
+    flag.position.set(-2.2, 9.6, -1.6); group.add(pole, flag);
+    Figures.load(e.leader).then(tpl => {
+      const body = tpl ? tpl.clone(true) : new THREE.Mesh(new THREE.OctahedronGeometry(0.5), new THREE.MeshStandardMaterial({ color: col }));
+      body.scale.setScalar(7); body.position.y = 0.6; group.add(body);
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(3, 3.3, 0.6, 6), new THREE.MeshStandardMaterial({ color: col })); ped.position.y = 0.3; group.add(ped);
+    });
+    const el = document.createElement('div'); el.className = 'nodeLabel';
+    el.addEventListener('click', ev => { ev.stopPropagation(); if (game.mode === 'world') { UI.activeArmy = e.id; UI.renderArmies(); UI.selectNode(e.nodeId); } });
+    const label = new CSS2DObject(el); label.position.y = 13; group.add(label);
+    v.worldRoot.add(group);
+    return { group, label, el };
+  }
+};
+
 // Big date in the middle of the screen while the army marches.
 const TravelClock = {
   el() {
@@ -1957,6 +2116,12 @@ const Minimap = {
     const ley = Pantheons.leyNodes();
     ctx.strokeStyle = 'rgba(170,110,230,0.85)'; ctx.lineWidth = 3;
     for (const n of ley.slice(1)) { ctx.beginPath(); ctx.moveTo(sx(PHYLACTERY.q), sy(PHYLACTERY.r)); ctx.lineTo(sx(n.q), sy(n.r)); ctx.stroke(); }
+    // Expeditions and orders: violet dots, dashed lines to the ordered target.
+    for (const a of Expeditions.all()) {
+      const x = sx(a.node.q + (a.id === 'lich' ? 0 : 3)), y = sy(a.node.r + (a.id === 'lich' ? 0 : 3));
+      if (a.order) { const t = NODE_BY_ID[a.order]; ctx.strokeStyle = '#b07ae0'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(sx(t.q), sy(t.r)); ctx.stroke(); ctx.setLineDash([]); }
+      if (a.id !== 'lich') { ctx.fillStyle = DATA.factions.UNDEAD.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+    }
     // War parties: a faction-colored triangle and a dashed line to their target.
     for (const p of Raids.list()) {
       if (!Campaign.revealedAt(Math.round(p.q), Math.round(p.r))) continue;
@@ -2767,9 +2932,15 @@ const Weather = {
 // =============================================================================
 let unitIdCounter = 1;
 const Battle = {
-  async start(node) {
+  async start(node, exp = null) {
     const c = game.campaign;
     if (this.starting) return;
+    // An expedition fights with its own army: swap it in as the campaign army for the battle.
+    this.saved = null;
+    if (exp) {
+      this.saved = { army: c.army, nodeId: c.nodeId, prevNodeId: c.prevNodeId, travel: c.travel };
+      c.army = exp.army; c.nodeId = exp.nodeId; c.prevNodeId = exp.prevNodeId; c.travel = null;
+    }
     // Load the figures of everyone taking part first (scripts, on demand).
     this.starting = true;
     UI.toast('Die Toten erheben sich …');
@@ -2786,7 +2957,8 @@ const Battle = {
       node, field, dir, units: [], log: [], round: 1, lastTick: null, current: null,
       state: 'fight', busy: false, retreatPending: false, kills: [], reach: null, targets: [],
       selected: null, hover: null, over: false, corpses: new Map(), abilityMode: null,
-      time: Weather.startTime(node), wind: Math.floor(hash2(node.q, node.r, c.dayCount * 7 + 3) * 6), arrival: 'STANDARD'
+      time: Weather.startTime(node), wind: Math.floor(hash2(node.q, node.r, c.dayCount * 7 + 3) * 6), arrival: 'STANDARD',
+      expedition: exp, leader: exp ? exp.leader : 'lich'
     };
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
@@ -2857,7 +3029,7 @@ const Battle = {
       this.log('Schleich-Modus: Die Gegner haben euch nicht bemerkt. Ein Angriff aus dem Verborgenen ist ein Überraschungsangriff.', 'good');
     }
     this.refreshCones();
-    SaveGame.save();
+    if (!exp) SaveGame.save();
     this.nextTurn();
   },
   // A stack of `hps.length` creatures. Wounds are pooled so only the top creature is wounded
@@ -2991,7 +3163,7 @@ const Battle = {
     b.selected = u;
     u.hasMoved = false; u.hasAttacked = false; u.movedThisTurn = false;
     b.abilityMode = null;
-    if (u.side === 'player' && u.type === 'lich' && b.retreatPending) { this.finish('retreat'); return; }
+    if (u.side === 'player' && u.type === b.leader && b.retreatPending) { this.finish('retreat'); return; }
     if (Abilities.turnStart(u)) { if (b.over) return; UI.updateBattle(); await wait(0.5); if (game.battle === b && !b.over) this.endTurn(); return; }
     UI.updateBattle();
     if (u.side === 'player') {
@@ -3195,7 +3367,7 @@ const Battle = {
     b.field.get(u.q, u.r).unit = null;
     BattleView.removeUnit(u);
     this.log(u.startCount > 1 ? `Die letzten ${u.def.name} fallen.` : `${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
-    if (u.side === 'player' && u.type === 'lich') { this.finish('defeat'); return; }
+    if (u.side === 'player' && (u.type === b.leader || !this.alive('player').length)) { this.finish('defeat'); return; }
     Abilities.afterDeath(u);
     if (!this.alive('enemy').length) this.finish('victory');
   },
@@ -3298,6 +3470,14 @@ const Battle = {
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${pantheonText}`;
       // Show the end screen only once (the campaign may go on afterwards).
       if (node.finale && !c.won) { c.won = true; endNow = true; }
+    } else if (result === 'defeat' && b.expedition) {
+      c.army = [];
+      html = `<h2>${esc(Expeditions.name(b.expedition))} vernichtet</h2><p>Der Kommandeur ist gefallen, sein Zug zerfällt. Der Lich verliert diese Diener.</p>`;
+    } else if (b.expedition) {
+      const lead = this.alive('player').find(u => u.type === b.leader);
+      c.army = lead ? [{ type: b.leader, hp: Math.max(1, topHp(lead)) }] : [];
+      b.expedition.nodeId = PHYLACTERY.id;
+      html = `<h2>Rückzug</h2><p>${esc(DATA.units[b.leader].name)} entkommt ins Hügelgrab. Sein Zug bleibt zurück. Keine Beute.</p>`;
     } else if (result === 'defeat') {
       c.travel = null;
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
@@ -3312,6 +3492,15 @@ const Battle = {
       c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
       Campaign.advanceDays(1);
       html = `<h2>Rückzug</h2><p>Der Lich entweicht in die Nacht und kehrt nach einem Tag ins Hügelgrab zurück. Seine Diener bleiben zurück. Keine Beute.</p>`;
+    }
+    if (b.expedition) {
+      // Write the result back to the expedition and restore the Lich army.
+      const e = b.expedition, sv = this.saved;
+      e.army = c.army;
+      if (result === 'victory' && !node.encounter) e.nodeId = node.id;
+      c.army = sv.army; c.nodeId = sv.nodeId; c.prevNodeId = sv.prevNodeId; c.travel = sv.travel;
+      if (!e.army.length) { c.expeditions = Expeditions.list().filter(x => x !== e); if (UI.activeArmy === e.id) UI.activeArmy = 'lich'; }
+      this.saved = null;
     }
     Campaign.healAtPhylactery();
     SaveGame.save();
@@ -3812,7 +4001,17 @@ const UI = {
       return `<div>${g.hps.length > 1 ? g.hps.length + '× ' : ''}${d.name} <span class="small">${sum}/${g.hps.length * d.hp}</span></div>`;
     }).join('') + '</div>';
   },
+  renderArmies() {
+    const el = $('armyList'); if (!el) return;
+    const all = Expeditions.all();
+    $('btnGo').classList.toggle('hidden', !Expeditions.hasOrders());
+    if (all.length < 2) { el.innerHTML = ''; return; }
+    if (!all.some(a => a.id === this.activeArmy)) this.activeArmy = 'lich';
+    el.innerHTML = all.map(a => `<button data-army="${a.id}" class="${(this.activeArmy || 'lich') === a.id ? 'on' : ''}">${a.id === 'lich' ? '♛' : '☠'} ${esc(a.label)} · ${esc(a.node.name)}${a.order ? ' → ' + esc(NODE_BY_ID[a.order].name) : ''}</button>`).join('');
+    el.querySelectorAll('[data-army]').forEach(b => b.onclick = () => { this.activeArmy = b.dataset.army; const a = Expeditions.active(); this.focusNode(a.node); this.renderArmies(); Expeditions.syncView(); });
+  },
   renderInfo() {
+    this.renderArmies();
     const el = $('info'), c = game.campaign, here = Campaign.armyNode();
     if (game.mode !== 'world' && game.mode !== 'travel') return;
     let html = '';
@@ -3882,8 +4081,21 @@ const UI = {
         b.textContent = label; if (primary) b.className = 'primary'; b.disabled = !!disabled || game.mode !== 'world';
         b.onclick = fn; bx.appendChild(b);
       };
-      if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
-      else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
+      const exps = Expeditions.list(), act = Expeditions.active();
+      if (!exps.length) {
+        if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
+        else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
+      } else {
+        // Several armies: orders first, then "Los".
+        if (act.node.id !== node.id) add(act.order === node.id ? `Befehl aufheben (${act.label})` : `Befehl: ${act.label} hierher (${Expeditions.days(act.army, act.node, node)} T.)`,
+          () => Expeditions.setOrder(act.id, act.order === node.id ? null : node), true);
+        if (Campaign.isEnemy(node)) {
+          if (here.id === node.id) add('Angreifen (Lich)', () => Battle.start(node), true);
+          for (const e of exps) if (e.nodeId === node.id) add(`Angreifen (${Expeditions.name(e)})`, () => Battle.start(node, e), true);
+        }
+        for (const e of exps) if (e.nodeId === node.id && here.id === node.id) add(`${Expeditions.name(e)} vereinen`, () => Expeditions.merge(e), false);
+      }
+      if (here.id === node.id && Recruitment.canRecruitAt(node) && Base.level('deadHall') >= 1) add('Expedition aufstellen', () => Expeditions.openCreate(), false, !!Expeditions.canCreate());
       if (here.id === node.id && Recruitment.canRecruitAt(node)) add('Rekrutieren', () => this.openRecruit(), true);
       if (here.id === node.id && Pantheons.isLeyNode(node)) add('Ley-Sprung', () => Pantheons.openJump(), false);
       if (here.id === node.id && node === PHYLACTERY) add('Bauen', () => Base.open(), true);
@@ -4139,6 +4351,7 @@ function initInput() {
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
+  window.addEventListener('keydown', e => { if (e.code === 'KeyG' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT')) Expeditions.go(); });
   // Space during a journey: hurry (4x).
   window.addEventListener('keydown', e => { if (e.code === 'Space' && game.mode === 'travel') { game.hurry = true; e.preventDefault(); } });
   window.addEventListener('keyup', e => { if (e.code === 'Space') game.hurry = false; });
@@ -4167,6 +4380,7 @@ function initInput() {
   $('btnEdges').onclick = () => toggleEdges();
   $('btnRecruitSite').onclick = () => UI.findRecruitSite();
   $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
+  $('btnGo').onclick = () => Expeditions.go();
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
@@ -4249,7 +4463,7 @@ function frame(now) {
     BattleView.ring.position.copy(game.battle.current.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
   }
   miniAcc += dt;
-  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Raids.syncView(); Minimap.draw(); WorldView.updateLabels(); }
+  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Raids.syncView(); Expeditions.syncView(); Minimap.draw(); WorldView.updateLabels(); }
   Debug.update();
   v.renderer.render(v.scene, v.camera);
   v.labelRenderer.render(v.scene, v.camera);
@@ -4259,7 +4473,7 @@ function newGame() {
   SaveGame.clear();
   if (game.battle) Battle.exit();
   game.campaign = Campaign.create();
-  game.mode = 'world'; UI.selectedRaid = null;
+  game.mode = 'world'; UI.selectedRaid = null; UI.activeArmy = 'lich';
   UI.closeModal();
   WorldView.placeArmy();
   game.view.cam.lookAtTile(PHYLACTERY.q, PHYLACTERY.r);
