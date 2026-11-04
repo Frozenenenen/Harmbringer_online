@@ -149,7 +149,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=20"></script>
+<script src="data/world_data.js?v=21"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=12"></script>
 <script type="importmap">
@@ -1357,7 +1357,23 @@ const Pantheons = {
   fallenFaction(f) { return Object.keys(DATA.pantheons).some(pid => DATA.pantheons[pid].factions.includes(f) && this.assimilated(pid)); },
   memberOf(node) { return Object.keys(DATA.pantheons).find(pid => DATA.pantheons[pid].members.includes(node.id)); },
   // Active ley nodes: the barrow and the seats of assimilated pantheons.
-  leyNodes() { return [PHYLACTERY, ...Object.keys(DATA.pantheons).filter(pid => this.assimilated(pid)).map(pid => NODE_BY_ID[DATA.pantheons[pid].seat])]; },
+  leyNodes() { const c = game.campaign; return [PHYLACTERY, ...Object.keys(DATA.pantheons).filter(pid => this.assimilated(pid) && (c.portals || {})[DATA.pantheons[pid].seat]).map(pid => NODE_BY_ID[DATA.pantheons[pid].seat])]; },
+  // An assimilated seat without a portal yet (the Lich must raise it there).
+  portalPossible(node) {
+    const pid = this.memberOf(node), c = game.campaign;
+    return !!pid && DATA.pantheons[pid].seat === node.id && this.assimilated(pid) && !(c.portals || {})[node.id];
+  },
+  portalBlocker() { const c = game.campaign; return Object.entries(LEY.portalCost).find(([k, v]) => (c.resources[k] || 0) < v) ? 'Zu wenig Mittel' : null; },
+  buildPortal(node) {
+    const c = game.campaign;
+    if (!this.portalPossible(node) || this.portalBlocker() || game.mode !== 'world') return;
+    for (const [k, v] of Object.entries(LEY.portalCost)) c.resources[k] -= v;
+    Campaign.advanceDays(LEY.portalDays);
+    (c.portals = c.portals || {})[node.id] = true;
+    UI.toast(`Portal in ${node.name} errichtet: Ley-Sprung möglich.`, 5);
+    Narrator.say(`In ${node.name} reißt der Lich die Erde auf. Die Ley-Linie, die hier zutage tritt, gehorcht nun ihm.`);
+    SaveGame.save(); WorldView.refresh(); UI.updateHeader(); UI.renderInfo();
+  },
   isLeyNode(node) { return this.leyNodes().includes(node); },
   canJump() {
     const c = game.campaign;
@@ -1385,7 +1401,7 @@ const Pantheons = {
   infoRow(node) {
     const pid = this.regionOf[node.id]; if (!pid) return '';
     const P = DATA.pantheons[pid], live = this.living(pid), n = P.members.length;
-    const state = live.length ? `${n - live.length} von ${n} Mitgliedern besiegt` : 'assimiliert – sicher vor Trupps';
+    const state = live.length ? `${n - live.length} von ${n} Mitgliedern besiegt${node.id === P.seat ? ' · Heimvorteil am Sitz' : ''}` : `assimiliert – sicher vor Trupps${node.id === P.seat ? ((game.campaign.portals || {})[P.seat] ? ' · Portal steht' : ' · Portal fehlt noch') : ''}`;
     const extra = this.memberOf(node) ? (node.id === P.seat ? ' · <b>Sitz</b> (Ley-Knoten)' : ' · Mitglied') : '';
     return `<tr><td>Pantheon</td><td>${esc(P.name)}${extra}<br><span class="small">${state}</span></td></tr>`;
   }
@@ -1783,6 +1799,21 @@ const WorldView = {
       nv.el.classList.toggle('unknown', !revealed);
       const dg = revealed ? Campaign.danger(node) : null;
       nv.el.dataset.danger = dg || '';
+      // Light pillars over a pantheon seat: one per living member (they go out as members fall).
+      const pid = Pantheons.memberOf(node);
+      if (pid && DATA.pantheons[pid].seat === node.id) {
+        if (!nv.ley) {
+          nv.ley = []; const mat = new THREE.MeshBasicMaterial({ color: 0xc8a0ff, transparent: true, opacity: 0.55, fog: false, depthWrite: false });
+          const n = DATA.pantheons[pid].members.length - 1;
+          for (let i = 0; i < n; i++) {
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 60, 6), mat), a = i / n * Math.PI * 2;
+            m.position.set(nv.pillar.position.x + Math.cos(a) * 6, nv.pillar.position.y + 30, nv.pillar.position.z + Math.sin(a) * 6);
+            game.view.worldRoot.add(m); nv.ley.push(m);
+          }
+        }
+        const alive = Pantheons.living(pid).filter(m => m !== node.id).length;
+        nv.ley.forEach((m, i) => { m.visible = revealed && !Pantheons.assimilated(pid) && i < alive; });
+      }
       nv.el.classList.toggle('selected', UI.selectedNode === node.id);
     }
   },
@@ -3012,6 +3043,10 @@ const Battle = {
     for (const g of splitStacks(groupByType(garrison))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
     // Ley-Bund: a pantheon leader is shielded by every living member of its pantheon.
     const pidB = Pantheons.memberOf(node);
+    if (pidB && DATA.pantheons[pidB].seat === node.id) {
+      for (const u of b.units) if (u.side === 'enemy') u.shield += LEY.homeShield * stackCount(u);
+      this.log(`Heimvorteil: Am Sitz des ${DATA.pantheons[pidB].name}s schützt der Ley-Knoten die Verteidiger (+${LEY.homeShield} Seelenschild je Kreatur).`, 'hit');
+    }
     if (pidB) for (const u of b.units) if (u.side === 'enemy' && (u.def.abilities || []).includes('HeathQueenLeyBond')) {
       const add = Math.min(20, (Pantheons.living(pidB).length - 1) * DATA.abilities.HeathQueenLeyBond.value);
       if (add > 0) { u.shield += add; this.log(`Ley-Bund: ${u.def.name} +${add} Seelenschild (${Pantheons.living(pidB).length - 1} Mitglieder leben).`, 'hit'); }
@@ -3225,6 +3260,7 @@ const Battle = {
     const b = game.battle;
     b.round++;
     this.log(`— Runde ${b.round} —`);
+    Abilities.roundEnd();
     if ((b.round - 1) % ROUNDS_PER_TIME === 0) {
       b.time = (b.time + 1) % 4; Weather.apply(b);
       const T = TIMES[b.time];
@@ -3481,7 +3517,7 @@ const Battle = {
       let pantheonText = '';
       if (pidWon && wasLiving && Pantheons.assimilated(pidWon)) {
         const P = DATA.pantheons[pidWon];
-        pantheonText = `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, ${esc(NODE_BY_ID[P.seat].name)} ist ein Ley-Knoten (Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
+        pantheonText = `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, in ${esc(NODE_BY_ID[P.seat].name)} kann der Lich ein Portal errichten (danach Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
         c.raids = Raids.list().filter(r => !P.factions.includes(r.faction));
         setTimeout(() => Knowledge.discover(), 1500);
         setTimeout(() => Narrator.say(`${P.name} ist gefallen. Die alten Mächte dieser Gegend schweigen, und die Ley-Linien singen nun für den Lich.`), 2500);
@@ -3600,6 +3636,8 @@ const STATUS_TIPS = { POISONED: 'verliert LP zu Zugbeginn', BURNING: 'verliert L
   SLOWED: '−2 Bewegung', HASTED: '+2 Bewegung', SHIELDED: 'Seelenschild erhöht', ENHANCED: '+25 % Schaden', CURSED: '−25 % Schaden',
   REGENERATION: 'heilt zu Zugbeginn', MARKED: 'erleidet +25 % Schaden', CONFUSED: '−50 % Schaden' };
 const DOT = new Set(['POISONED', 'BURNING', 'BLEEDING']);
+// Ground the terrain abilities leave behind (for `duration` rounds).
+const TERRAIN_FLOOR = { SisterConsecrate: 'HOLY_GROUND', DruidessEarthBind: 'MUD', HeathQueenThorns: 'MUD' };
 const SUMMON_TYPE = { NecroRaiseDead: 'zombie', WodeWildHunt: 'schwarzer_hund', WispFalseLight: 'irrlicht' };
 
 function moveOf(u) {
@@ -3736,6 +3774,7 @@ const Abilities = {
     await wait(0.25);
     if (a.effect === 'SUMMON') { this.summon(u, id, t, Math.max(1, a.value * (id === 'WodeWildHunt' ? 4 : 1) * (id === 'NecroRaiseDead' ? Math.min(4 * n, b.corpses.get(f.index(t)) || 1) : 1))); return true; }
     if (id === 'GhoulCorpseEater') { this.heal(u, a.value * n, a.name); b.corpses.set(f.index(t), Math.max(0, (b.corpses.get(f.index(t)) || 1) - n)); return true; }
+    if (a.effect === 'MODIFY_TERRAIN' && TERRAIN_FLOOR[id]) this.changeGround(t || f.get(u.q, u.r), Math.max(1, a.area), TERRAIN_FLOOR[id], Math.max(1, a.duration));
     const targets = this.affected(u, a, t);
     for (const x of targets) {
       if (!x.alive || b.over) continue;
@@ -3753,6 +3792,25 @@ const Abilities = {
     }
     if (!targets.length) Battle.log('… ohne Wirkung.');
     return true;
+  },
+  changeGround(center, radius, floor, rounds) {
+    const b = game.battle, f = b.field, tiles = [];
+    for (const t of f.tilesWithin(center.q, center.r, radius)) {
+      if (f.isWater(t) || t.building !== null || DATA.floorTypes[t.floor].moveCost === null) continue;
+      tiles.push({ t, old: t.floor }); t.floor = floor;
+    }
+    if (!tiles.length) return;
+    (b.terrainMods = b.terrainMods || []).push({ tiles, rounds });
+    game.view.tiles.rebuild();
+    Battle.log(`Der Boden wird zu ${DATA.floorTypes[floor].name} (${rounds} ${rounds === 1 ? 'Runde' : 'Runden'}).`);
+  },
+  // Called every round: terrain changes wear off.
+  roundEnd() {
+    const b = game.battle; if (!b.terrainMods || !b.terrainMods.length) return;
+    let changed = false;
+    for (const m of b.terrainMods) if (--m.rounds <= 0) { for (const { t, old } of m.tiles) t.floor = old; changed = true; }
+    b.terrainMods = b.terrainMods.filter(m => m.rounds > 0);
+    if (changed) { game.view.tiles.rebuild(); Battle.log('Der Boden wird wieder, wie er war.'); }
   },
   summon(u, id, t, count) {
     const b = game.battle, f = b.field, type = SUMMON_TYPE[id];
@@ -4155,6 +4213,7 @@ const UI = {
       if (here.id === node.id && Recruitment.canRecruitAt(node) && Base.level('deadHall') >= 1) add('Expedition aufstellen', () => Expeditions.openCreate(), false, !!Expeditions.canCreate());
       if (here.id === node.id && Recruitment.canRecruitAt(node)) add('Rekrutieren', () => this.openRecruit(), true);
       if (here.id === node.id && Pantheons.isLeyNode(node)) add('Ley-Sprung', () => Pantheons.openJump(), false);
+      if (here.id === node.id && Pantheons.portalPossible(node)) add(`Portal errichten (${Object.entries(LEY.portalCost).map(([k, v]) => v + ' ' + RESOURCE_NAMES[k]).join(', ')}, ${LEY.portalDays} Tage)`, () => Pantheons.buildPortal(node), true, !!Pantheons.portalBlocker());
       if (here.id === node.id && node === PHYLACTERY) add('Bauen', () => Base.open(), true);
     }
   },

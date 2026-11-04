@@ -763,6 +763,8 @@ window.HARMBRINGER_DATA = {
     harz:       { name: "Walpurgis-Zirkel",    seat: "brocken",     factions: ["WITCHES"],    members: ["brocken", "hexentanzplatz", "teufelsmauer", "hameln"] }
   },
   ley: { regionRadius: 260, jumpDays: 1, jumpCost: { souls: 4 },
+         portalCost: { corpses: 20, souls: 10 }, portalDays: 3,   // a portal at an assimilated seat opens the ley node
+         homeShield: 2,                  // home advantage at the seat: soul shield per defending creature
          seatBonusPerMember: 4,          // Ley-Bund: extra units of the seat's main type per living member
          fallenGarrison: 0.6 },          // garrison share of a fallen pantheon's factions
 
