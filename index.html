@@ -151,6 +151,11 @@
   #battleBar { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; z-index: 5; box-shadow: 0 -2px 10px rgba(0,0,0,.35); }
   #unitCard { position: absolute; left: 10px; bottom: 74px; width: 280px; padding: 10px 12px; font-size: 14px; z-index: 5; }
   #unitCard table { width: 100%; font-size: 13px; }
+  #hoverCard { position: absolute; left: 10px; width: 280px; padding: 10px 12px; font-size: 14px; z-index: 5; pointer-events: none; border-color: var(--gold); }
+  #hoverCard .portrait { float: right; width: 64px; height: 64px; margin: 0 0 4px 8px; }
+  #hoverCard .ucStats { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; margin: 6px 0 4px; clear: both; } #hoverCard .st { white-space: nowrap; }
+  #hoverCard .ucRow { font-size: 12px; margin-top: 2px; } #hoverCard .ucRow > span:first-child { color: var(--ink-soft); display: inline-block; min-width: 72px; }
+  #hoverCard .hcTag { font-size: 11px; color: var(--ink-soft); margin-bottom: 2px; }
   #unitCard .ucStats { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; margin: 6px 0 4px; clear: both; } #unitCard .st { white-space: nowrap; cursor: help; }
   #unitCard .ucRow { font-size: 12px; margin-top: 2px; } #unitCard .ucRow > span:first-child { color: var(--ink-soft); display: inline-block; min-width: 72px; }
   #battleLog { position: absolute; left: 10px; bottom: 5px; height: 54px; right: var(--logRight, 480px); padding: 2px 10px; overflow: auto; font-size: 13px; z-index: 6; cursor: pointer;
@@ -303,6 +308,7 @@
 <div id="roundInfo" class="panel hidden"></div>
 <div id="battleBar" class="panel hidden"></div>
 <div id="unitCard" class="panel hidden"></div>
+<div id="hoverCard" class="panel hidden"></div>
 <div id="battleLog" class="hidden" title="Chronik – Klick: auf-/zuklappen"></div>
 <div id="battleButtons" class="hidden">
   <div id="abilityBar"></div>
@@ -357,7 +363,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 99, "date": "2026-11-04", "changes": [{"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Leiste unten mit Tag/Uhr/verstrichener Zeit, Bedrohungs-Chip, Ortsinfo nur bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}]};
+const BUILD = {"version": 100, "date": "2026-11-04", "changes": [{"date": "04.11. 19:35", "text": "Kampf: Einheitenkarte bei Mouseover über der eigenen Karte, Bodeninfo nur auf leeren Feldern"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -4971,7 +4977,7 @@ const UI = {
   enterWorld() {
     Sfx.ambience('world');
     ['header', 'info', 'sidebar', 'minimap', 'worldButtons', 'armyPanel'].forEach(id => this.show(id, true));
-    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'battleBar', 'edgeTip', 'hint'].forEach(id => this.show(id, false));
+    ['initBar', 'roundInfo', 'unitCard', 'hoverCard', 'battleLog', 'battleButtons', 'battleBar', 'edgeTip', 'hint'].forEach(id => this.show(id, false));
     this.lastHours = null;
     this.updateHeader();
     this.renderInfo();
@@ -5388,8 +5394,8 @@ const UI = {
     // Hover over a portrait highlights the unit on the field (ring) and shows its card.
     $('initBar').querySelectorAll('[data-uid]').forEach(el => {
       const u = b.units.find(x => x.id === +el.dataset.uid); if (!u) return;
-      el.onmouseenter = () => { if (!u.view) return; BattleView.hoverRing(u); this.renderUnitCard(u); };
-      el.onmouseleave = () => { BattleView.hoverRing(null); this.renderUnitCard(b.selected || b.current); };
+      el.onmouseenter = () => { if (!u.view) return; BattleView.hoverRing(u); this.renderHoverCard(u); };
+      el.onmouseleave = () => { BattleView.hoverRing(null); this.renderHoverCard(null); };
       el.onclick = () => { if (u.view) game.view.cam.lookAtTile(u.q, u.r, false); };
     });
     const cur = b.current;
@@ -5416,14 +5422,26 @@ const UI = {
       BattleView.ring.position.copy(cur.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
     }
   },
-  renderUnitCard(u) {
+  // Card of the hovered unit, above the card of the own/selected unit (more room than next to the cursor).
+  renderHoverCard(u) {
+    const el = $('hoverCard'), b = game.battle;
+    if (!u || !b || u === (b.selected || b.current)) { el.classList.add('hidden'); this.hoverUnit = null; return; }
+    if (this.hoverUnit === u && !el.classList.contains('hidden') && this.hoverHp === u.hp) return;
+    this.hoverUnit = u; this.hoverHp = u.hp;
+    this.renderUnitCard(u, 'hoverCard');
+    el.insertAdjacentHTML('afterbegin', '<div class="hcTag">Unter der Maus</div>');
+    const uc = $('unitCard').getBoundingClientRect();
+    el.style.bottom = Math.round(window.innerHeight - uc.top + 8) + 'px';
+    el.classList.remove('hidden');
+  },
+  renderUnitCard(u, target = 'unitCard') {
     if (!u) return;
     const d = u.def, b = game.battle, t = b.field.get(u.q, u.r);
     const flags = [d.flying && 'fliegt', d.spectral && 'spektral', d.counter && 'Konter'].filter(Boolean).join(', ');
     const n = stackCount(u);
     const st = (ic, v, tip) => `<span class="st" title="${tip}">${ic} ${v}</span>`;
     const mark = u.side === 'enemy' && u.alert ? { unaware: ' · <i>ahnungslos</i>', suspicious: ' · <b style="color:#a07a00">misstrauisch</b>', alarmed: ' · <b style="color:var(--blood)">alarmiert</b>' }[u.alert] : '';
-    $('unitCard').innerHTML = `${portraitHtml(u.type, d)}<h3 style="margin:0">${n > 1 ? n + '× ' : ''}${esc(d.name)}</h3>
+    $(target).innerHTML = `${portraitHtml(u.type, d)}<h3 style="margin:0">${n > 1 ? n + '× ' : ''}${esc(d.name)}</h3>
       <div class="small">${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name}${n !== u.startCount ? ` · ${n} von ${u.startCount}` : ''}${mark}</div>
       <div class="hpbar ${u.side === 'player' ? 'player' : ''}" style="margin-top:4px" title="Lebenspunkte gesamt"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
       <div class="small">LP ${Math.max(0, u.hp)} / ${u.maxHp}${n > 1 ? ` · vorderste ${n ? topHp(u) : 0} / ${d.hp}` : ''}${d.energy ? ` · Energie ${u.energy} / ${d.energy}` : ''}</div>
@@ -5432,7 +5450,8 @@ const UI = {
       <div class="ucRow"><span>Sinne</span> 👁 ${d.sight} · 👂 ${d.hear} · 👃 ${d.smell}${flags ? ' · ' + flags : ''}</div>
       ${Abilities.statusHtml(u) ? `<div class="ucRow"><span>Zustand</span> ${Abilities.statusHtml(u)}</div>` : ''}
       ${(d.abilities || []).length ? `<div class="ucRow"><span>Fähigkeiten</span> ${d.abilities.map(id => DATA.abilities[id]).filter(Boolean).map(a => `<span title="${esc(a.desc || '')}" style="border-bottom:1px dotted">${esc(a.name)}</span>`).join(', ')}</div>` : ''}
-      <div class="ucRow"><span>Feld</span> ${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</div>`;
+      <div class="ucRow"><span>Feld</span> ${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}${(() => { const e = DATA.floorTypes[t.floor].effect || {};
+        return e.damageUndeadPerRound ? ` · Untote −${e.damageUndeadPerRound} LP/Runde` : e.healUndeadPerRound ? ` · Untote +${e.healUndeadPerRound} LP/Runde` : ''; })()}</div>`;
   }
 };
 
@@ -5537,17 +5556,20 @@ function onHover(ev) {
       const eff = DATA.powerDefense[Combat.profile(cur, x).power][x.def.defense];
       extra += `<br><b>Angriff: ≈ ${dmg} Schaden</b>${x.shield ? ` (Schild ${Math.min(x.shield, dmg)})` : ''} · ${left <= 0 ? 'vernichtet den Stapel' : `~${dies} fallen`}<br><span class="small">${eff >= 125 ? '▲ sehr wirksam' : eff >= 100 ? '► wirksam' : eff > 0 ? '▼ schwach' : '✖ immun'} (${eff} %)${chk.cover ? ' · Deckung' : ''}${x.def.counter && chk.dist === 1 ? ' · Gegner kontert' : ''}</span>`;
     }
-    if (t.unit && Abilities.statusHtml(t.unit)) extra += `<br><span class="small">${Abilities.statusHtml(t.unit)}</span>`;
+    UI.renderHoverCard(t.unit && t.unit.alive ? t.unit : null);
     if (myTurn && !t.unit) {
       const c = b.reach.cost.get(b.field.index(t));
       if (b.reach.tiles.includes(t)) extra += `<br>Weg: ${c} von ${cur.def.move} Bewegungspunkten`;
       else extra += '<br><i>außer Reichweite</i>';
       if (cur.def.flying) extra += ' <span class="small">(fliegt: jedes Feld kostet 1)</span>';
     }
-    showTip(ev, groundTip(t.floor, t.level, extra));
+    // With a unit on the tile its card shows everything (ground included); the cursor keeps only the attack preview.
+    if (t.unit && t.unit.alive) { if (extra.includes('Angriff:')) showTip(ev, extra.slice(extra.indexOf('<b>Angriff'))); else tip.classList.add('hidden'); }
+    else showTip(ev, groundTip(t.floor, t.level, extra));
   } else if (p) {
     showTip(ev, groundTip(game.world.floorKeyAt(p.q, p.r), game.world.levelAt(p.q, p.r), '<br><i>außerhalb des Kampffelds</i>'));
   } else tip.classList.add('hidden');
+  if (!t || !t.unit) UI.renderHoverCard(null);
   // Path preview.
   if (!myTurn) { BattleView.setOverlay(BattleView.pathOverlay, []); return; }
   if (t && b.reach.tiles.includes(t) && !t.unit) {
@@ -5587,7 +5609,7 @@ function initInput() {
       inp.lastX = e.clientX; inp.lastY = e.clientY;
     }
     inp.mx = e.clientX; inp.my = e.clientY; inp.overCanvas = e.target === canvas;
-    if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
+    if (e.target === canvas) onHover(e); else { $('edgeTip').classList.add('hidden'); if (game.mode === 'battle' && !(e.target.closest && e.target.closest('#initBar'))) UI.renderHoverCard(null); }
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
   window.addEventListener('keydown', e => { if (e.code === 'KeyB' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT') && $('modal').classList.contains('hidden')) Base.open(); });
