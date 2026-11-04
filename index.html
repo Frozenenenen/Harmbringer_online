@@ -310,7 +310,7 @@
   </div>
 </div>
 <div id="sidebar" class="hidden">
-  <div id="minimap" class="hidden"><canvas id="miniMap" title="Klick oder Ziehen: Kamera dorthin · Mausrad: Zoom"></canvas>
+  <div id="minimap" class="hidden"><canvas id="miniMap" title="Linke Maustaste (Klick oder Ziehen): Kamera dorthin · Rechte Maustaste ziehen: Minimap verschieben · Mausrad: Zoom"></canvas>
   <div class="zoom"><button id="miniIn" title="Hineinzoomen">+</button><button id="miniOut" title="Herauszoomen">−</button><button id="miniMode">◎</button></div>
   <div class="zoomLabel" id="miniZoom">1×</div></div>
   <div id="worldButtons" class="hidden">
@@ -388,7 +388,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 122, "date": "2026-11-04", "changes": [{"date": "04.11. 23:17", "text": "Schnelle Tooltips (120 ms statt Browser-Verzögerung)"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}]};
+const BUILD = {"version": 123, "date": "2026-11-04", "changes": [{"date": "04.11. 23:31", "text": "Minimap: Rechte Maustaste ziehen verschiebt den Ausschnitt"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2808,13 +2808,32 @@ const Minimap = {
       this.draw();
     };
     cv.addEventListener('pointerdown', ev => {
-      if (game.mode !== 'world' || ev.button !== 0) return;
+      if (game.mode !== 'world' && game.mode !== 'travel') return;
+      if (ev.button === 2) {
+        // Right button: grab the minimap itself and pan its window (when zoomed in).
+        ev.preventDefault(); this.pan = { x: ev.clientX, y: ev.clientY };
+        try { cv.setPointerCapture(ev.pointerId); } catch (e) {}
+        return;
+      }
+      if (ev.button !== 0 || game.mode !== 'world') return;
+      this.panOffset = null;
       this.dragView = null; this.dragView = this.view();
       try { cv.setPointerCapture(ev.pointerId); } catch (e) {}
       moveTo(ev);
     });
-    cv.addEventListener('pointermove', ev => { if (this.dragView && (ev.buttons & 1) && game.mode === 'world') moveTo(ev); });
-    const end = ev => { if (!this.dragView) return; this.dragView = null; try { cv.releasePointerCapture(ev.pointerId); } catch (e) {} this.draw(); };
+    cv.addEventListener('pointermove', ev => {
+      if (this.pan && (ev.buttons & 2)) {
+        const rect = cv.getBoundingClientRect(), v = this.view(), k = cv.width / rect.width * v.scale;
+        const dq = -(ev.clientX - this.pan.x) * k, dr = -(ev.clientY - this.pan.y) * k;
+        this.pan = { x: ev.clientX, y: ev.clientY };
+        if (this.mode === 'cursor') { const c = this.center || [v.x0 + cv.width * v.scale / 2, v.y0 + cv.height * v.scale / 2]; this.center = [c[0] + dq, c[1] + dr]; }
+        else { const o = this.panOffset || [0, 0]; this.panOffset = [o[0] + dq, o[1] + dr]; }
+        this.draw(); return;
+      }
+      if (this.dragView && (ev.buttons & 1) && game.mode === 'world') moveTo(ev);
+    });
+    cv.addEventListener('contextmenu', ev => ev.preventDefault());
+    const end = ev => { this.pan = null; if (!this.dragView) return; this.dragView = null; try { cv.releasePointerCapture(ev.pointerId); } catch (e) {} this.draw(); };
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     cv.addEventListener('wheel', ev => {
       ev.preventDefault();
@@ -2828,7 +2847,7 @@ const Minimap = {
     const mb = document.getElementById('miniMode');
     const label = () => { mb.textContent = this.mode === 'cursor' ? '⌖' : '◎'; mb.title = this.mode === 'cursor' ? 'Zoom auf die Mausposition (Klick: auf die Kamera)' : 'Zoom auf die Kamera (Klick: auf die Mausposition)'; };
     label();
-    mb.onclick = () => { this.mode = this.mode === 'cursor' ? 'camera' : 'cursor'; this.center = null; try { localStorage.setItem('harmbringer_miniZoom', this.mode); } catch (e) {} label(); this.draw(); };
+    mb.onclick = () => { this.mode = this.mode === 'cursor' ? 'camera' : 'cursor'; this.center = null; this.panOffset = null; try { localStorage.setItem('harmbringer_miniZoom', this.mode); } catch (e) {} label(); this.draw(); };
   },
   zoom(step, at = null) {
     // Cursor mode: the tile under the mouse stays under the mouse.
@@ -2849,7 +2868,13 @@ const Minimap = {
     // Tiles per canvas pixel: at 1x the whole map fits (letterboxed to the canvas aspect).
     const scale = Math.max(WIDTH / cw, HEIGHT / ch) / z;
     const vw = cw * scale, vh = ch * scale;
-    const [pq, pr] = this.mode === 'cursor' && this.center ? this.center : game.view.cam.pivotTile();
+    let [pq, pr] = this.mode === 'cursor' && this.center ? this.center : game.view.cam.pivotTile();
+    if (this.mode !== 'cursor' && this.panOffset) {
+      // Panned with the right button; the offset is kept within the map so panning back reacts at once.
+      const o = this.panOffset, cq = Math.min(Math.max(pq + o[0], vw / 2), WIDTH - vw / 2), cr = Math.min(Math.max(pr + o[1], vh / 2), HEIGHT - vh / 2);
+      o[0] = cq - pq; o[1] = cr - pr; pq = cq; pr = cr;
+    }
+    if (this.mode === 'cursor' && this.center) { this.center[0] = Math.min(Math.max(this.center[0], vw / 2), WIDTH - vw / 2); this.center[1] = Math.min(Math.max(this.center[1], vh / 2), HEIGHT - vh / 2); [pq, pr] = this.center; }
     const x0 = vw >= WIDTH ? (WIDTH - vw) / 2 : Math.min(WIDTH - vw, Math.max(0, pq - vw / 2));
     const y0 = vh >= HEIGHT ? (HEIGHT - vh) / 2 : Math.min(HEIGHT - vh, Math.max(0, pr - vh / 2));
     return { x0, y0, scale, z };
