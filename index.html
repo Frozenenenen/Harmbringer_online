@@ -266,6 +266,8 @@
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
   .dmgText { font-size: 22px; color: #a01818; text-shadow: 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; font-weight: bold; }
   .dmgText.heal { color: #1f6a2a; }
+  #fastTip { display: none; position: fixed; z-index: 60; pointer-events: none; max-width: 340px; padding: 5px 9px; font-size: 13px; line-height: 1.35;
+    white-space: pre-line; background: #f4ecd6; color: var(--ink); border: 1px solid var(--ink); box-shadow: 0 3px 10px rgba(0,0,0,.35); }
   #edgeTip { position: absolute; padding: 2px 8px; font-size: 13px; pointer-events: none; z-index: 7; }
 </style>
 <!-- Game data: classic scripts, loaded before the game module -->
@@ -386,7 +388,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 121, "date": "2026-11-04", "changes": [{"date": "04.11. 23:14", "text": "Minimap: Ziehen mit gedrückter Maustaste verschiebt die Kamera"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}]};
+const BUILD = {"version": 122, "date": "2026-11-04", "changes": [{"date": "04.11. 23:17", "text": "Schnelle Tooltips (120 ms statt Browser-Verzögerung)"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -6284,6 +6286,32 @@ function initInput() {
   window.addEventListener('click', () => { ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)); Minimap.highlight = null; });
   $('btnHelp').onclick = () => { UI.show('menuPop', false); UI.openHelp(); };
   $('btnNews').onclick = () => UI.openNews();
+  // Fast tooltips: the browser waits about a second before showing a title; ours appear after 120 ms.
+  // Titles move into data-tip when first hovered (so the native one never shows).
+  (() => {
+    const tip = document.createElement('div'); tip.id = 'fastTip'; document.body.appendChild(tip);
+    let cur = null, timer = 0, mx = 0, my = 0;
+    const place = () => {
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      let x = mx + 14, y = my + 18;
+      if (x + w > innerWidth - 6) x = Math.max(6, mx - w - 10);
+      if (y + h > innerHeight - 6) y = Math.max(6, my - h - 12);
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    };
+    const hide = () => { clearTimeout(timer); cur = null; tip.style.display = 'none'; };
+    document.addEventListener('mouseover', e => {
+      const el = e.target.closest && e.target.closest('[title], [data-tip]');
+      if (el === cur) return;
+      hide(); if (!el || el.tagName === 'CANVAS' && el.id !== 'miniMap') return;
+      if (el.hasAttribute('title')) { el.dataset.tip = el.getAttribute('title'); el.removeAttribute('title'); }
+      const text = el.dataset.tip; if (!text) return;
+      cur = el;
+      timer = setTimeout(() => { if (cur !== el || !document.body.contains(el)) return; tip.textContent = text; tip.style.display = 'block'; place(); }, 120);
+    });
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; if (tip.style.display === 'block') place(); });
+    document.addEventListener('mousedown', hide, true);
+    document.addEventListener('wheel', hide, { passive: true });
+  })();
   // Esc closes the open window (same as its × / Schließen), before any other Esc use.
   window.addEventListener('keydown', e => {
     if (e.code !== 'Escape') return;
