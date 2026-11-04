@@ -378,7 +378,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 109, "date": "2026-11-04", "changes": [{"date": "04.11. 21:48", "text": "Ladefehler: Meldung nennt fehlende Datendatei, Knopf Neu laden"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}]};
+const BUILD = {"version": 110, "date": "2026-11-04", "changes": [{"date": "04.11. 22:04", "text": "Fix: keine Gegner mehr in geschlossenen Türmen (unangreifbar)"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -4278,7 +4278,9 @@ const Battle = {
   deploy(b) {
     const f = b.field, size = f.size, cpos = hexToWorld(f.cq, f.cr);
     // Nobody starts in the water except flyers (a ballista in a pond helps no one).
-    const canStand = (u, t) => t && !t.unit && (u.def.flying || (SWIMMERS.has(u.type) && f.walkable(t)) || (f.walkable(t) && !f.isWater(t)));
+    // Closed blocks (keep, stone tower: no door) are obstacles, nobody starts inside.
+    const closed = t => t.building !== null && f.buildings[t.building] && !f.buildings[t.building].doors.length && f.buildings[t.building].key !== 'walltower';
+    const canStand = (u, t) => t && !t.unit && !closed(t) && (u.def.flying || (SWIMMERS.has(u.type) && f.walkable(t)) || (f.walkable(t) && !f.isWater(t)));
     const players = b.units.filter(u => u.side === 'player');
     const D = Math.min(size / 2 - 2, 12);
     const free = f.tiles.filter(t => t && t.building === null && f.walkable(t) && !f.isWater(t));
