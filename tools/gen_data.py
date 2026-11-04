@@ -581,6 +581,12 @@ def game_unit(gid, row, extra):
     if d["side"] == "undead":
         d["commandPoints"] = -u["CommandPoints"]; d["cost"] = cost
     if "requiresKnowledge" in extra: d["requiresKnowledge"] = extra["requiresKnowledge"]
+    # Rarer undead are stronger: +5 % HP, damage and soul shield per point of required knowledge
+    # (capped at +60 %), +10 % more for units from a fallen pantheon (04.11.2026).
+    if d["side"] == "undead" and extra.get("requiresKnowledge"):
+        f = 1 + min(0.6, 0.05 * extra["requiresKnowledge"]) + (0.1 if extra.get("requiresPantheon") else 0)
+        d["hp"] = int(round(d["hp"] * f)); d["damage"] = int(round(d["damage"] * f)); d["soulShield"] = int(round(d["soulShield"] * f))
+        d["rarityBonus"] = round(f - 1, 2)
     if "requiresPantheon" in extra: d["requiresPantheon"] = extra["requiresPantheon"]
     if extra.get("ancestor"): d["ancestor"] = True
     d["energy"] = u["MaxEnergy"]
