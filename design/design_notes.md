@@ -2228,6 +2228,16 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Restpunkte aus „Offene Fragen“ und TODO (umgesetzt 04.11.2026)
+
+- **Eigene Tote recyceln:** Nach einem Sieg geben eigene Gefallene 50 % ihrer Leichen- und Knochenkosten zurück (nicht Geister, Maschinen, Beschworene).
+- **Führerlos:** Fällt ein Kommandeur und die Armee liegt über dem Kommando-Limit, werden die zuletzt aufgestellten Stapel führerlos (⚑): −2 Initiative, kein Konter, verlieren 2 LP je Kreatur pro Zug.
+- **Masse:** Felder neben einem gegnerischen Riesen (Größe 4) kosten 1 Bewegung mehr.
+- **Sockel:** Untote stehen auf glatten Sechsecken, Gegner auf gezackten Sternen (Freund/Feind auch ohne Farbe lesbar).
+- **Zustands-Symbole** über den Einheiten (☣ ♨ ✚ ✶ ⇣ ⇡ ⛨ ▲ ▼ ♥ ◎ ? ⚑).
+- **Treffer-Effekte** in der Farbe der Schadensart; **Leichen** bleiben als Knochenhaufen auf dem Feld liegen (verschwinden, wenn sie gefressen oder erhoben werden).
+- **Kamera am Bildschirmrand:** Maus an den Rand des 3D-Bilds bewegt die Kamera.
+
 ### Lich gestärkt (04.11.2026)
 
 - Grundwerte: 60 LP, 12 Seelenschaden, 20 Seelenschild (vorher 40 / 8 / 10).

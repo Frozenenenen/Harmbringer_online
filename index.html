@@ -141,6 +141,7 @@
   #travelClock .tcHint { font-size: 11px; opacity: .6; margin-top: 4px; }
   .nodeLabel.raidLabel { background: rgba(90,24,20,.88); color: #f2e6cf; font-size: 13px; }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
+  .unitLabel .stIcons { font-size: 12px; color: #fff; text-shadow: 0 0 3px #000; margin-right: 2px; }
   .unitLabel .tokName { display: none; } body.tokens .unitLabel { width: 70px; } body.tokens .unitLabel .tokName { display: block; font-size: 11px; color: #fff; text-shadow: 0 0 3px #000; white-space: nowrap; }
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
   .dmgText { font-size: 22px; color: #a01818; text-shadow: 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; font-weight: bold; }
@@ -239,7 +240,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 73, "date": "2026-11-04", "changes": [{"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}]};
+const BUILD = {"version": 74, "date": "2026-11-04", "changes": [{"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2685,7 +2686,11 @@ const Pathfinding = {
     if (!def.flying && Math.abs(A.level - B.level) >= 2) return null;
     if (B.unit && B.unit !== unit && !def.flying && !ignoreUnits) return null;     // flyers may pass over units
     if (def.flying) return 1;
-    return DATA.floorTypes[B.floor].moveCost;                        // null = impassable
+    const base = DATA.floorTypes[B.floor].moveCost;                  // null = impassable
+    if (base === null || base === undefined) return base;
+    // Mass: tiles next to an enemy giant (size 4) cost one more movement point.
+    for (let k = 0; k < 6; k++) { const n = field.neighborTile(B, k); if (n && n.unit && n.unit !== unit && n.unit.side !== unit.side && n.unit.def.size >= 4) return base + 1; }
+    return base;
   },
   // Returns { cost: Map(index -> cost), prev: Map(index -> index) } up to maxCost.
   // ignoreUnits: plan through occupied tiles (used by the AI to queue behind allies).
@@ -2885,6 +2890,41 @@ const BattleView = {
     }
     this.optionalEdges.visible = game.showEdges;
   },
+  starGeometry() {
+    if (this._star) return this._star;
+    const sh = new THREE.Shape(), n = 12;
+    for (let i = 0; i <= 2 * n; i++) { const a = i / (2 * n) * Math.PI * 2, r = i % 2 ? 1.55 : 2.0; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(r, 0); }
+    const g = new THREE.ExtrudeGeometry(sh, { depth: 0.35, bevelEnabled: false });
+    g.rotateX(-Math.PI / 2); g.translate(0, -0.17, 0);
+    return (this._star = g);
+  },
+  // Hit effect: a short burst in the color of the power type.
+  burst(u, power) {
+    if (!u.view) return;
+    const col = POWER_COLORS[power] || 0xffffff, g = new THREE.Group(), p = u.view.group.position;
+    const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.9, depthWrite: false });
+    const geo = new THREE.SphereGeometry(0.22, 6, 4), parts = [];
+    for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(geo, mat); const a = i / 9 * Math.PI * 2; m.userData.v = new THREE.Vector3(Math.cos(a) * 3, 2 + (i % 3), Math.sin(a) * 3); parts.push(m); g.add(m); }
+    g.position.set(p.x, p.y + 2.2, p.z); game.view.battleRoot.add(g);
+    tween(0.45, k => { for (const m of parts) m.position.copy(m.userData.v).multiplyScalar(k * 0.6); mat.opacity = 0.9 * (1 - k); }).then(() => { game.view.battleRoot.remove(g); mat.dispose(); });
+  },
+  // Corpses on the field: a small heap of bones per tile with fallen creatures.
+  syncCorpses() {
+    const b = game.battle; if (!b || !b.corpses) return;
+    b.corpseViews = b.corpseViews || new Map();
+    for (const [i, n] of b.corpses) {
+      let v = b.corpseViews.get(i);
+      if (n > 0 && !v) {
+        const t = b.field.tiles[i], w = hexToWorld(t.q, t.r);
+        v = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({ color: 0xb8ae94, roughness: 0.9, flatShading: true });
+        for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.1, 4), mat); m.rotation.z = Math.PI / 2; m.rotation.y = k * 0.9; m.position.set((k - 1.5) * 0.25, 0.12 + k * 0.03, (k % 2) * 0.3 - 0.15); v.add(m); }
+        const sk = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28, 0), mat); sk.position.set(0.5, 0.25, 0.3); v.add(sk);
+        v.position.set(w.x + 1.1, surfaceY(t), w.z - 0.8);
+        game.view.battleRoot.add(v); b.corpseViews.set(i, v);
+      } else if (n <= 0 && v) { game.view.battleRoot.remove(v); b.corpseViews.delete(i); }
+    }
+  },
   createUnit(u) {
     const def = u.def, s = 1.0 + 0.35 * def.size;
     const group = new THREE.Group();
@@ -2903,7 +2943,8 @@ const BattleView = {
     body.position.y = 0.35 + (def.flying ? 1.2 : 0);
     body.traverse(o => { if (o.isMesh) o.userData.unitId = u.id; });
     const pedColor = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
-    const ped = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 0.35, 6), new THREE.MeshStandardMaterial({ color: pedColor, roughness: 0.7 }));
+    // Friend or foe is readable from the shape, not only the color: smooth hexagon vs. jagged star.
+    const ped = new THREE.Mesh(u.side === 'player' ? new THREE.CylinderGeometry(1.7, 1.9, 0.35, 6) : BattleView.starGeometry(), new THREE.MeshStandardMaterial({ color: pedColor, roughness: 0.7 }));
     ped.rotation.y = Math.PI / 6; ped.position.y = 0.17;
     body.userData.unitId = ped.userData.unitId = u.id;
     // Token mode: a flat disc in the unit color instead of the figure.
@@ -2912,7 +2953,7 @@ const BattleView = {
     group.add(ped, body, token);
     const el = document.createElement('div');
     el.className = 'unitLabel';
-    el.innerHTML = `<span class="tokName">${esc(def.name)}</span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
+    el.innerHTML = `<span class="tokName">${esc(def.name)}</span><span class="stIcons"></span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
     label.position.y = body.position.y + (tpl ? tpl.userData.height * body.scale.y + 0.5 : 3.2 * s);
     group.add(label);
@@ -2933,6 +2974,8 @@ const BattleView = {
     const n = stackCount(u);
     u.view.el.querySelector('.hpbar > div').style.width = (n ? 100 * topHp(u) / u.def.hp : 0) + '%';
     u.view.el.querySelector('.stackCount').textContent = n > 1 ? '×' + n : '';
+    const st = u.view.el.querySelector('.stIcons');
+    if (st) st.textContent = Object.keys(u.status || {}).map(k => STATUS_ICONS[k] || '').join('');
   },
   floatText(u, text, heal) {
     const el = document.createElement('div');
@@ -3373,7 +3416,7 @@ const Battle = {
     const b = game.battle;
     if (!b || b.over || b.busy) return;
     const u = b.current;
-    u.nextTick += turnTicks(u.def);
+    u.nextTick += (u.status && u.status.LEADERLESS) ? turnTicks({ initiative: Math.max(1, u.def.initiative - 2) }) : turnTicks(u.def);
     Abilities.turnEnd(u);
     b.abilityMode = null;
     this.clearOptions();
@@ -3480,6 +3523,8 @@ const Battle = {
     if (deaths) { const i = game.battle.field.index(game.battle.field.get(target.q, target.r)); game.battle.corpses.set(i, (game.battle.corpses.get(i) || 0) + deaths); }
     if (target.hp <= 0 && Abilities.beforeDeath(target, power)) deaths = before - stackCount(target);
     BattleView.updateHp(target);
+    if (dmg > 0 && power) BattleView.burst(target, power);
+    BattleView.syncCorpses();
     BattleView.floatText(target, dmg === 0 ? 'immun' : (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
     // Every fallen creature leaves loot (corpse quality depends on the killing blow).
     if (target.side === 'enemy' && killer && killer.side === 'player')
@@ -3508,7 +3553,7 @@ const Battle = {
     if (b.over) return;
     Abilities.afterHit(att, target, dmg);
     // Counter: surviving melee targets with counter strike back once at 50 %.
-    if (target.alive && chk.dist === 1 && target.def.counter) {
+    if (target.alive && chk.dist === 1 && target.def.counter && !(target.status && target.status.LEADERLESS)) {
       const back = Combat.canAttack(f, target, tt, att);
       if (back.ok) {
         await wait(0.15);
@@ -3536,6 +3581,7 @@ const Battle = {
     this.log(u.startCount > 1 ? `Die letzten ${u.def.name} fallen.` : `${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
     if (u.side === 'player' && (u.type === b.leader || !this.alive('player').length)) { this.finish('defeat'); return; }
     Abilities.afterDeath(u);
+    if (u.side === 'player' && (u.def.commandPoints || 0) < 0) this.checkLeaderless(u);
     if (!this.alive('enemy').length) this.finish('victory');
   },
   // Player picks an ability: immediate ones fire at once, others wait for a target tile.
@@ -3561,6 +3607,21 @@ const Battle = {
       if (b.reach && b.reach.tiles.some(t => !t.unit)) return;
     }
     this.endTurn();
+  },
+  // A commander fell: stacks over the command budget lose their leadership (the last ones first).
+  checkLeaderless(fallen) {
+    const b = game.battle, alive = this.alive('player');
+    const budget = (b.expedition ? EXPEDITION.commandLimit : Campaign.commandLimit());
+    let used = alive.reduce((s, x) => s + Math.max(0, x.def.commandPoints || 0) * stackCount(x), 0)
+      - alive.reduce((s, x) => s + Math.max(0, -(x.def.commandPoints || 0)) * stackCount(x), 0) * (b.expedition ? 0 : 1);
+    const lost = [];
+    for (const x of [...alive].reverse()) {
+      if (used <= budget) break;
+      if (x.type === 'lich' || (x.def.commandPoints || 0) <= 0 || x.status.LEADERLESS) continue;
+      x.status.LEADERLESS = { turns: 999, value: 2 }; BattleView.updateHp(x); lost.push(x.def.name);
+      used -= x.def.commandPoints * stackCount(x);
+    }
+    if (lost.length) this.log(`${fallen.def.name} ist gefallen – führerlos: ${lost.join(', ')} (−2 Initiative, kein Konter, Zerfall).`, 'hit');
   },
   retreat() {
     const b = game.battle;
@@ -3590,6 +3651,14 @@ const Battle = {
       const loot = { corpses, bones, souls };
       if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
+      // A Lich wastes nothing: own fallen (not ghosts, machines or summoned) return half their corpses and bones.
+      for (const u of b.units) {
+        if (u.side !== 'player' || u.summoned || u.def.spectral || u.def.rank === 'MACHINE' || u.type === 'lich') continue;
+        const lostN = u.startCount - (u.alive ? stackCount(u) : 0);
+        if (lostN <= 0) continue;
+        const cost = DATA.units[u.type].cost || {};
+        for (const k of ['corpses', 'bones']) if (cost[k]) loot[k] = (loot[k] || 0) + Math.floor(cost[k] * lostN * 0.5);
+      }
       Campaign.addResources(loot);
       if (node.raidId) Raids.remove(node.raidId);
       const pidWon = !node.encounter && Pantheons.memberOf(node), wasLiving = pidWon && Pantheons.living(pidWon).length;
@@ -3723,14 +3792,18 @@ const Battle = {
 // Every stack has energy (def.energy, +1 per own turn), cooldowns in own turns and statuses
 // that last a number of the stack's own turns. Values scale with the stack size.
 // =============================================================================
-const STATUS_NAMES = { POISONED: 'Vergiftet', BURNING: 'Brennt', BLEEDING: 'Blutet', STUNNED: 'Betäubt', SLOWED: 'Verlangsamt', HASTED: 'Beschleunigt',
+const STATUS_NAMES = { LEADERLESS: 'Führerlos', POISONED: 'Vergiftet', BURNING: 'Brennt', BLEEDING: 'Blutet', STUNNED: 'Betäubt', SLOWED: 'Verlangsamt', HASTED: 'Beschleunigt',
   SHIELDED: 'Geschützt', ENHANCED: 'Gestärkt', CURSED: 'Verflucht', REGENERATION: 'Regeneration', MARKED: 'Gezeichnet', CONFUSED: 'Verwirrt' };
-const STATUS_TIPS = { POISONED: 'verliert LP zu Zugbeginn', BURNING: 'verliert LP zu Zugbeginn', BLEEDING: 'verliert LP zu Zugbeginn', STUNNED: 'setzt den nächsten Zug aus',
+const STATUS_TIPS = { LEADERLESS: 'ohne Anführer: −2 Initiative, kein Konter, verliert 2 LP je Kreatur pro Zug', POISONED: 'verliert LP zu Zugbeginn', BURNING: 'verliert LP zu Zugbeginn', BLEEDING: 'verliert LP zu Zugbeginn', STUNNED: 'setzt den nächsten Zug aus',
   SLOWED: '−2 Bewegung', HASTED: '+2 Bewegung', SHIELDED: 'Seelenschild erhöht', ENHANCED: '+25 % Schaden', CURSED: '−25 % Schaden',
   REGENERATION: 'heilt zu Zugbeginn', MARKED: 'erleidet +25 % Schaden', CONFUSED: '−50 % Schaden' };
-const DOT = new Set(['POISONED', 'BURNING', 'BLEEDING']);
+const DOT = new Set(['POISONED', 'BURNING', 'BLEEDING', 'LEADERLESS']);
 // Ground the terrain abilities leave behind (for `duration` rounds).
 const TERRAIN_FLOOR = { SisterConsecrate: 'HOLY_GROUND', DruidessEarthBind: 'MUD', HeathQueenThorns: 'MUD' };
+const POWER_COLORS = { PIERCE: 0xd8d8d0, BLUNT: 0x9a8a6a, REND: 0xb03020, SIEGE: 0x6a5a40, FIRE: 0xff7a20, POISON: 0x7ac030,
+  ARCANE: 0xa060ff, SOUL: 0x7aff9a, HOLY: 0xffe080, CHAOS: 0xff3060, HEAL: 0x60ff80 };
+const STATUS_ICONS = { POISONED: '☣', BURNING: '♨', BLEEDING: '✚', STUNNED: '✶', SLOWED: '⇣', HASTED: '⇡', SHIELDED: '⛨', ENHANCED: '▲',
+  CURSED: '▼', REGENERATION: '♥', MARKED: '◎', CONFUSED: '?', LEADERLESS: '⚑' };
 const SUMMON_TYPE = { NecroRaiseDead: 'zombie', WodeWildHunt: 'schwarzer_hund', WispFalseLight: 'irrlicht' };
 
 function moveOf(u) {
@@ -3746,6 +3819,7 @@ const Abilities = {
     if (st === 'SHIELDED') { u.shield = (u.shield || 0) + value; if (!quiet) BattleView.floatText(u, `Schild +${value}`, true); BattleView.updateHp(u); return; }
     const old = u.status[st];
     u.status[st] = { turns: Math.max(duration || 1, old ? old.turns : 0), value: Math.max(value, old ? old.value : 0) };
+    BattleView.updateHp(u);
     if (!quiet) BattleView.floatText(u, STATUS_NAMES[st], !['POISONED', 'BURNING', 'BLEEDING', 'STUNNED', 'SLOWED', 'CURSED', 'MARKED', 'CONFUSED'].includes(st));
   },
   // Damage multiplier from statuses (attacker deals, target takes).
@@ -3764,7 +3838,7 @@ const Abilities = {
     for (const st of DOT) if (u.status[st]) {
       const v = u.status[st].value;
       Battle.log(`${u.def.name}: ${STATUS_NAMES[st].toLowerCase()} (−${v}).`, u.side === 'player' ? 'hit' : 'good');
-      Battle.applyDamage(u, v, null, st === 'POISONED' ? 'POISON' : st === 'BURNING' ? 'FIRE' : 'REND');
+      Battle.applyDamage(u, st === 'LEADERLESS' ? 2 * Math.max(1, stackCount(u)) : v, null, st === 'POISONED' ? 'POISON' : st === 'BURNING' ? 'FIRE' : 'REND');
       if (!u.alive || b.over) return true;
     }
     if (u.status.REGENERATION) this.heal(u, u.status.REGENERATION.value, 'Regeneration');
@@ -3787,6 +3861,7 @@ const Abilities = {
   },
   turnEnd(u) {
     for (const st of Object.keys(u.status || {})) if (--u.status[st].turns <= 0) delete u.status[st];
+    if (u.view && u.alive) BattleView.updateHp(u);
   },
   heal(u, amount, why) {
     const cap = stackCount(u) * u.def.hp;
@@ -3868,7 +3943,7 @@ const Abilities = {
     if (t && t !== f.get(u.q, u.r)) { const p = hexToWorld(t.q, t.r); BattleView.face(u, p.x, p.z); }
     await wait(0.25);
     if (a.effect === 'SUMMON') { this.summon(u, id, t, Math.max(1, a.value * (id === 'WodeWildHunt' ? 4 : 1) * (id === 'NecroRaiseDead' ? Math.min(4 * n, b.corpses.get(f.index(t)) || 1) : 1))); return true; }
-    if (id === 'GhoulCorpseEater') { this.heal(u, a.value * n, a.name); b.corpses.set(f.index(t), Math.max(0, (b.corpses.get(f.index(t)) || 1) - n)); return true; }
+    if (id === 'GhoulCorpseEater') { this.heal(u, a.value * n, a.name); b.corpses.set(f.index(t), Math.max(0, (b.corpses.get(f.index(t)) || 1) - n)); BattleView.syncCorpses(); return true; }
     if (a.effect === 'MODIFY_TERRAIN' && TERRAIN_FLOOR[id]) this.changeGround(t || f.get(u.q, u.r), Math.max(1, a.area), TERRAIN_FLOOR[id], Math.max(1, a.duration));
     const targets = this.affected(u, a, t);
     for (const x of targets) {
@@ -3921,6 +3996,7 @@ const Abilities = {
     b.units.push(s); Battle.putUnit(s, tile);
     BattleView.createUnit(s); game.tokensShown = null;
     if (t && b.corpses) b.corpses.delete(f.index(t));
+    BattleView.syncCorpses();
     Battle.log(`${count}× ${s.def.name} ${count > 1 ? 'erheben sich' : 'erhebt sich'}.`, u.side === 'player' ? 'good' : 'hit');
     UI.updateBattle();
   },
@@ -3953,6 +4029,7 @@ const Abilities = {
     return true;
   },
   statusHtml(u) {
+    if (u.view) BattleView.updateHp(u);
     const s = Object.entries(u.status || {});
     return s.length ? s.map(([k, v]) => `<span title="${STATUS_TIPS[k]}">${STATUS_NAMES[k]} (${v.turns})</span>`).join(', ') : '';
   }
@@ -4564,6 +4641,7 @@ function initInput() {
   canvas.addEventListener('lostpointercapture', () => { inp.rmb = false; });
   window.addEventListener('pointercancel', releaseAll);
   document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+  document.addEventListener('mouseleave', () => { inp.overCanvas = false; });
   window.addEventListener('pointerup', e => {
     if (e.button === 2) inp.rmb = false;
     if (e.button === 0 && e.target === canvas && Math.hypot(e.clientX - inp.downX, e.clientY - inp.downY) < 6) onLeftClick(e);
@@ -4577,6 +4655,7 @@ function initInput() {
       cam.pitch = Math.min(CAM.maxPitchDegrees, Math.max(CAM.minPitchDegrees, cam.pitch * 180 / Math.PI + (e.clientY - inp.lastY) * 0.25)) * Math.PI / 180;
       inp.lastX = e.clientX; inp.lastY = e.clientY;
     }
+    inp.mx = e.clientX; inp.my = e.clientY; inp.overCanvas = e.target === canvas;
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
@@ -4673,7 +4752,15 @@ function frame(now) {
   fpsAcc += dt; fpsFrames++;
   if (fpsAcc >= 0.5) { game.fps = fpsFrames / fpsAcc; fpsAcc = 0; fpsFrames = 0; }
   const v = game.view;
-  const keys = (game.mode === 'world' || game.mode === 'battle' || game.mode === 'travel' || game.mode === 'end') ? game.input.keys : new Set();
+  let keys = (game.mode === 'world' || game.mode === 'battle' || game.mode === 'travel' || game.mode === 'end') ? game.input.keys : new Set();
+  // Mouse at the screen edge moves the camera (only over the 3D view, not while rotating).
+  const inp = game.input, E = 10;
+  if (inp.overCanvas && !inp.rmb && document.hasFocus() && (game.mode === 'world' || game.mode === 'battle') && $('modal').classList.contains('hidden')) {
+    const edge = new Set(keys);
+    if (inp.mx <= E) edge.add('KeyA'); if (inp.mx >= innerWidth - 1 - E) edge.add('KeyD');
+    if (inp.my <= E) edge.add('KeyW'); if (inp.my >= innerHeight - 1 - E) edge.add('KeyS');
+    if (edge.size !== keys.size) keys = edge;
+  }
   v.cam.update(dt, keys);
   // World map: landscape mesh. Battle: hex tiles (the battlefield is an instanced hex area).
   const inBattle = !!game.battle;
