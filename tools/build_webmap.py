@@ -69,7 +69,7 @@ TYPES = [  # id, Name, Textur, Bedeutung auf der Karte
     (5, "Bog", "Bog/Bog.png", "Hochmoor"),
     (6, "Swamp", "Swamp/Swamp.png", "Bruch, Niedermoor"),
     (7, "GrassTall", "GrassTall/GrassTall.png", "Wald, Dickicht (Platzhalter)"),
-    (8, "RawStone", "RawStone/RawStone.png", "Fels, Bergland"),
+    (8, "RawStone", "RawStone/RawStone.png", "Geröll, Bergland"),
     (9, "Mud", "Mud/Mud.png", "Schlick"),
 ]
 rng = np.random.default_rng(7)
@@ -100,7 +100,7 @@ t[(h < 25) & (h > 1) & (slope < 0.15) & (lat_c > 52.4) & (n1 > 0.58)] = 5   # Ho
 t[(h < 15) & (h > 1) & (slope < 0.1) & (n2 > 0.62)] = 6             # Brüche
 t[(h <= 4) & (h > 0.5)] = 1                             # Marsch
 t[(h > 250)] = 7                                        # Mittelgebirge bewaldet
-t[(h > 380) | ((slope > 4.0) & (h > 120))] = 8                        # Fels: Harz-Höhen, Steilhänge
+t[(h > 380) | ((slope > 4.0) & (h > 120))] = 8                        # Geröll: Harz-Höhen, Steilhänge
 t[(h <= 0.5) & (h > -3)] = 0                            # Strand / Watt
 t[(h <= -3) & (h > -12)] = 9                            # Schlick im Flachwasser
 t[h <= -12] = 0                                         # tieferer Meeresgrund: Sand

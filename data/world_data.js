@@ -68,7 +68,7 @@ window.HARMBRINGER_DATA = {
     HEATHER:           { name: "Heide",            color: "#7a5a6e", moveCost: 1 },
     DRY_EARTH:         { name: "Trockene Erde",    color: "#8a7650", moveCost: 1 },
     GRAVEL:            { name: "Kies",             color: "#8c8679", moveCost: 1 },
-    RAW_STONE:         { name: "Fels",             color: "#77746c", moveCost: 2 },
+    RAW_STONE:         { name: "Geröll",           color: "#77746c", moveCost: 2 },
     COBBLESTONE:       { name: "Kopfsteinpflaster",color: "#6b6660", moveCost: 1 },
     STONE_FLOOR:       { name: "Steinboden",       color: "#8d867a", moveCost: 1 },
     WOOD_FLOOR:        { name: "Holzboden",        color: "#7b5a3a", moveCost: 1 },
