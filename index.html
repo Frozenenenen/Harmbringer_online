@@ -76,9 +76,15 @@
 
   /* Battle UI */
   #initBar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px 8px; z-index: 5; }
-  .initSlot { width: 74px; font-size: 11px; text-align: center; padding: 2px; border: 1px solid transparent; }
-  .initSlot.current { border-color: var(--gold); background: #f4ecd6; }
-  .initSlot .icon { width: 18px; height: 18px; margin: 0 auto 2px; border: 1px solid var(--ink); }
+  .initSlot { width: 62px; font-size: 10px; text-align: center; padding: 2px; border: 1px solid transparent; position: relative; cursor: pointer; }
+  .initSlot.current { width: 96px; font-size: 11px; border-color: var(--gold); background: #f4ecd6; }
+  .initSlot .pic { width: 44px; height: 44px; margin: 0 auto 2px; background: #3a332a center/cover no-repeat; border: 2px solid; position: relative; }
+  .initSlot.current .pic { width: 70px; height: 70px; }
+  .initSlot.enemy .pic { clip-path: polygon(50% 0, 61% 12%, 79% 7%, 82% 25%, 100% 32%, 90% 50%, 100% 68%, 82% 75%, 79% 93%, 61% 88%, 50% 100%, 39% 88%, 21% 93%, 18% 75%, 0 68%, 10% 50%, 0 32%, 18% 25%, 21% 7%, 39% 12%); }
+  .initSlot.player .pic { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+  .initSlot .cnt { position: absolute; right: 2px; top: 2px; font-size: 10px; background: rgba(0,0,0,.65); color: #fff; padding: 0 3px; }
+  .initSlot .st { font-size: 10px; height: 12px; line-height: 12px; }
+  .initSlot .en { height: 3px; background: #2a2a50; margin-top: 1px; } .initSlot .en div { height: 100%; background: #7a9aff; }
   .initSlot .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hpbar { height: 5px; border: 1px solid var(--ink); background: #f4ecd6; }
   .hpbar div { height: 100%; background: var(--blood); }
@@ -129,10 +135,14 @@
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
   #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
-  #narrator { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); max-width: 620px; z-index: 31; padding: 10px 18px;
-    background: rgba(30,24,20,.88); color: #efe4c8; font: italic 17px/1.4 "IM Fell English", Georgia, serif; border: 1px solid #7a6a4a;
+  #narrator { position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%); width: min(660px, calc(100vw - 32px)); z-index: 31; padding: 10px 16px;
+    display: flex; gap: 12px; align-items: center; background: rgba(30,24,20,.92); color: #efe4c8; border: 1px solid #7a6a4a;
     opacity: 0; pointer-events: none; transition: opacity .6s; } #narrator.on { opacity: 1; pointer-events: auto; cursor: pointer; }
-  #narrator .small { font-style: normal; opacity: .7; }
+  #narrator .nn { font: 600 12px/1.2 Georgia, serif; font-variant: small-caps; letter-spacing: .08em; opacity: .8; margin-bottom: 3px; }
+  #narrator.chron { border-left: 5px solid #7a1e2a; } #narrator.chron .nt { font: italic 17px/1.4 "IM Fell English", Georgia, serif; }
+  #narrator.char .nt { font: 15px/1.4 "Segoe UI", Helvetica, Arial, sans-serif; }
+  #narrator .np { flex: 0 0 64px; height: 64px; border: 3px solid; background: #3a332a center/cover no-repeat; }
+  #narrator .nb { flex: 0 0 40px; font-size: 30px; text-align: center; }
   #travelClock { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
     background: rgba(233,223,196,.92); color: var(--ink); padding: 10px 26px 12px; border: 1px solid #7a6a4a; box-shadow: 0 4px 18px rgba(0,0,0,.35); text-align: center; }
   #travelClock .tcDate { font-size: 34px; font-family: "IM Fell English", Georgia, serif; }
@@ -240,7 +250,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 74, "date": "2026-11-04", "changes": [{"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}]};
+const BUILD = {"version": 75, "date": "2026-11-04", "changes": [{"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2128,16 +2138,53 @@ const Expeditions = {
   }
 };
 
-// Narrator: short story lines at the bottom of the screen (each story beat only once).
+// Story bar at the bottom: the chronicler (book icon, italic serif, bordeaux line) or a character
+// (portrait in a faction frame, name in small caps). Lines queue up; each story beat only once.
+const BOSS_LINES = {
+  heidekoenigin: 'Du schläfst unter meinem Berg seit dreitausend Jahren, Toter. Die Heide hat dich vergessen – ich nicht.',
+  wode: 'Hörst du die Hunde? Die Jagd reitet, und sie fragt nicht, ob ihre Beute lebt oder tot ist.',
+  zwergenkoenig: 'Jedes Grab hier ist meins zu hüten. Du bist nur eins mehr.',
+  brockenhexe: 'Walpurgisnacht, Lich. Auf diesem Berg tanzen wir, nicht du.',
+  rattenfaenger: 'Hundertdreißig Kinder sind mir gefolgt. Deine Toten folgen mir auch, wenn ich nur richtig pfeife.',
+  schlangenkoenig: 'Wer meine Krone will, muss zuerst durch das Wasser. Das Wasser hier ist tief.',
+  blanker_hans: 'Ich habe Rungholt geholt. Was glaubst du, was ich mit einem Haufen Knochen mache?',
+  hackelberg: 'Bis zum Jüngsten Tag soll ich jagen. Heute jage ich dich.'
+};
+const LICH_LINES = {
+  awaken: 'Wie lange … Die Heide riecht noch wie damals. Erde, Rauch und Angst. Steht auf, meine Diener. Wir haben viel nachzuholen.',
+  bossDown: 'Noch eine alte Macht, die schweigt. Ihre Kraft gehört jetzt mir.'
+};
 const Narrator = {
-  say(text, key) {
+  queue: [], busy: false,
+  // Chronicler line.
+  say(text, key) { this.push({ text, key }); },
+  // Character line: type = unit id for portrait and name, side decides the frame color.
+  speak(type, text, key, faction) { this.push({ text, key, type, faction }); },
+  push(m) {
     const c = game.campaign;
-    if (key) { c.told = c.told || []; if (c.told.includes(key)) return; c.told.push(key); }
+    if (m.key && c) { c.told = c.told || []; if (c.told.includes(m.key)) return; c.told.push(m.key); }
+    this.queue.push(m); if (!this.busy) this.next();
+  },
+  el() {
     let el = document.getElementById('narrator');
-    if (!el) { el = document.createElement('div'); el.id = 'narrator'; document.body.appendChild(el); el.onclick = () => el.classList.remove('on'); }
-    el.innerHTML = `<span class="small">Der Chronist:</span><br>${esc(text)}`;
-    el.classList.add('on');
-    clearTimeout(this.timer); this.timer = setTimeout(() => el.classList.remove('on'), 11000);
+    if (!el) { el = document.createElement('div'); el.id = 'narrator'; document.body.appendChild(el); el.onclick = () => { clearTimeout(this.timer); this.next(); }; }
+    return el;
+  },
+  next() {
+    const el = this.el(), m = this.queue.shift();
+    if (!m) { el.classList.remove('on'); this.busy = false; return; }
+    this.busy = true;
+    if (m.type) {
+      const u = DATA.units[m.type], col = m.faction ? (DATA.factions[m.faction] || {}).color : (u.side === 'undead' ? DATA.factions.UNDEAD.color : '#888');
+      el.className = 'on char';
+      el.innerHTML = `<div class="np" style="border-color:${col};${PORTRAITS[m.type] ? `background-image:url(${PORTRAITS[m.type]})` : `background:${u.color}`}"></div>
+        <div><div class="nn">${esc(u.name)}</div><div class="nt">${esc(m.text)}</div></div>`;
+    } else {
+      el.className = 'on chron';
+      el.innerHTML = `<div class="nb">📖</div><div><div class="nn">Der Chronist</div><div class="nt">${esc(m.text)}</div></div>`;
+    }
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.next(), Math.max(6000, m.text.length * 75));
   }
 };
 // Big date in the middle of the screen while the army marches.
@@ -2890,6 +2937,15 @@ const BattleView = {
     }
     this.optionalEdges.visible = game.showEdges;
   },
+  hoverRing(u) {
+    if (!this.hring) {
+      this.hring = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.12, 6, 24), new THREE.MeshBasicMaterial({ color: 0x7ad0ff, depthTest: false, transparent: true, opacity: 0.9 }));
+      this.hring.rotation.x = Math.PI / 2; this.hring.renderOrder = 10;
+    }
+    if (!u || !u.alive) { if (this.hring.parent) this.hring.parent.remove(this.hring); return; }
+    game.view.battleRoot.add(this.hring);
+    this.hring.position.copy(u.view.group.position).add(new THREE.Vector3(0, 0.5, 0));
+  },
   starGeometry() {
     if (this._star) return this._star;
     const sh = new THREE.Shape(), n = 12;
@@ -3202,6 +3258,7 @@ const Battle = {
     const base = vectorToDirection(dir.x, dir.z), rng = makeRng(field.seed + 17);
     for (const u of b.units) if (u.side === 'enemy') u.facing = (base + Math.floor(rng() * 3) - 1 + 6) % 6;
     Weather.apply(b);
+    for (const u of b.units) if (u.side === 'enemy' && BOSS_LINES[u.type]) { Narrator.speak(u.type, BOSS_LINES[u.type], 'boss_' + u.type, u.faction); break; }
     const T = TIMES[b.time], windTxt = `Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}`;
     this.log(`${T.name}${T.foggy ? ', Nebel' : ''} · ${windTxt}. ${b.time === 0 ? 'Die Toten sind in ihrem Element.' : b.time === 2 ? 'Das Tageslicht stärkt die Lebenden.' : ''}`);
     const alarm = !node.encounter && ((game.campaign.threat[node.faction] || 0) >= 50 || Raids.list().some(r => r.faction === node.faction));
@@ -3574,6 +3631,7 @@ const Battle = {
       const c = game.campaign;
       for (const f of ENEMY_FACTIONS) if (Campaign.isLiving(f)) c.threat[f] = Math.min(100, c.threat[f] + (f === u.faction ? 15 : 5));
       this.log(`Der Tod von ${u.def.name} erschüttert die Lebenden (Bedrohung steigt).`, 'hit');
+      if (BOSS_LINES[u.type]) Narrator.speak('lich', LICH_LINES.bossDown, 'bossDown');
     }
     u.alive = false;
     b.field.get(u.q, u.r).unit = null;
@@ -4461,10 +4519,20 @@ const UI = {
     if (!b) return;
     const list = Battle.forecast(10);
     $('initBar').innerHTML = list.map((u, i) => {
-      const border = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
-      return `<div class="initSlot ${i === 0 ? 'current' : ''}"><div class="icon" style="background:${u.def.color};outline:2px solid ${border}"></div>
-        <div class="nm">${stackCount(u) > 1 ? stackCount(u) + '× ' : ''}${esc(u.def.name)}</div><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div></div>`;
+      const border = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color, pic = PORTRAITS[u.type];
+      const st = Object.keys(u.status || {}).map(k => STATUS_ICONS[k] || '').join('');
+      return `<div class="initSlot ${i === 0 ? 'current' : ''} ${u.side === 'player' ? 'player' : 'enemy'}" data-uid="${u.id}" style="opacity:${Math.max(0.45, 1 - i * 0.06)}">
+        <div class="pic" style="border-color:${border};background-color:${pic ? '#3a332a' : u.def.color};${pic ? `background-image:url(${pic})` : ''}">${stackCount(u) > 1 ? `<span class="cnt">${stackCount(u)}</span>` : ''}</div>
+        <div class="nm">${esc(u.def.name)}</div><div class="st">${st}</div><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
+        ${i === 0 && u.def.energy ? `<div class="en" title="Energie ${u.energy}/${u.def.energy}"><div style="width:${100 * u.energy / u.def.energy}%"></div></div>` : ''}</div>`;
     }).join('');
+    // Hover over a portrait highlights the unit on the field (ring) and shows its card.
+    $('initBar').querySelectorAll('[data-uid]').forEach(el => {
+      const u = b.units.find(x => x.id === +el.dataset.uid); if (!u) return;
+      el.onmouseenter = () => { if (!u.view) return; BattleView.hoverRing(u); this.renderUnitCard(u); };
+      el.onmouseleave = () => { BattleView.hoverRing(null); this.renderUnitCard(b.selected || b.current); };
+      el.onclick = () => { if (u.view) game.view.cam.lookAtTile(u.q, u.r, false); };
+    });
     const cur = b.current;
     const who = !cur ? '' : cur.side === 'player' ? `Am Zug: ${cur.def.name}` : `Gegner am Zug: ${cur.def.name}`;
     const T = TIMES[b.time], left = ROUNDS_PER_TIME - ((b.round - 1) % ROUNDS_PER_TIME);
@@ -4817,7 +4885,7 @@ function showIntro() {
   game.mode = 'intro';
   const buttons = [];
   if (saved) buttons.push({ label: 'Fortsetzen', action: () => startGame(saved) });
-  buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); } });
+  buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); setTimeout(() => Narrator.speak('lich', LICH_LINES.awaken, 'awaken'), 1200); } });
   UI.modal(`<h2>Harmbringer</h2>
     <p>Mai 1371. Unter dem Wilseder Berg, in einem Hügelgrab aus der Bronzezeit, öffnet ein Toter die Augen.
     Jahrhunderte lang hat der Lich geschlafen, nun ruft ihn der Hunger der Ley-Linien.</p>
