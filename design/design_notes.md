@@ -2223,6 +2223,17 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Gegnertrupps (umgesetzt 04.11.2026)
+
+Die Lebenden schlagen zurück, aber nur dort, wo der Lich nicht ist:
+
+- **Auszug:** Ab Tag 8 schicken Städte und große Klöster (Größe ≥ 32, noch in eigener Hand) Trupps aus. Chance pro Ort und Tag 1 % + 0,06 % je Prozent Bedrohung der Fraktion; höchstens 3 Trupps gleichzeitig. Stärke: die Hälfte der Besatzung des Ausgangsorts (ohne Anführer), mindestens 6 Einheiten.
+- **Ziel:** der nächste eroberte Ort im Umkreis von 450 Feldern, den die Armee nicht deckt. Marsch: 20 Felder pro Tag (die Armee schafft 39).
+- **Kartenseite:** Steht die Armee höchstens 250 Felder vom Trupp oder von dessen Ziel entfernt, wartet der Trupp. So fallen Orte nur, wenn der Lich anderswo unterwegs ist.
+- **Rückeroberung:** Erreicht ein Trupp sein Ziel, gehört der Ort wieder seiner alten Fraktion; das tote Land dort verschwindet.
+- **Abfangen:** Trupps erscheinen auf Karte und Minimap (Dreieck, gestrichelte Linie zum Ziel). Anklicken → „Abfangen“: Kampf gegen den Trupp, danach steht die Armee wieder an ihrem Ort.
+- Werte: `raids` in `data/world_data.js`.
+
 ### Totes Land (umgesetzt 04.11.2026)
 
 Um das Hügelgrab und um jeden eroberten Ort stirbt die Landschaft – sichtbare Spur des Raubzugs:

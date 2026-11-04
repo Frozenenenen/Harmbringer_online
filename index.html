@@ -121,6 +121,7 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
+  .nodeLabel.raidLabel { background: rgba(90,24,20,.88); color: #f2e6cf; font-size: 13px; }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
   .dmgText { font-size: 22px; color: #a01818; text-shadow: 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; font-weight: bold; }
@@ -131,7 +132,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=14"></script>
+<script src="data/world_data.js?v=15"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=11"></script>
 <script type="importmap">
@@ -1150,6 +1151,8 @@ const Campaign = {
       battles: 0,
       inventory: [],          // artifact ids found
       equipped: [],           // up to DATA.artifactSlots artifact ids that are active
+      conqueredDay: {},       // node id -> day of conquest (dead land grows from there)
+      raids: [],              // enemy war parties on the map (Raids)
       won: false,
       econVersion: 2          // 2 = bone amounts scaled x60
     };
@@ -1171,6 +1174,7 @@ const Campaign = {
       c.dayCount++;
       for (const f of ENEMY_FACTIONS) c.threat[f] -= c.threat[f] * THREAT.dailyDecay;
       for (const node of this.ownedSpecials()) this.addResources(DATA.specials[node.special].income || {});
+      Raids.day();
     }
   },
   owner(node) { return game.campaign.owners[node.id]; },
@@ -1243,11 +1247,12 @@ const Campaign = {
   // Special places the undead own (for income, buffs and the inventory screen).
   ownedSpecials() { return DATA.nodes.filter(n => n.special && this.isConquered(n)); },
   commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
-  isRevealed(node) {
+  isRevealed(node) { return this.revealedAt(node.q, node.r); },
+  revealedAt(q, r) {
     const a = this.armyNode();
-    if (hexDistance(node.q, node.r, a.q, a.r) <= REVEAL_DISTANCE) return true;
-    if (hexDistance(node.q, node.r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
-    return DATA.nodes.some(n => this.isConquered(n) && hexDistance(node.q, node.r, n.q, n.r) <= REVEAL_DISTANCE);
+    if (hexDistance(q, r, a.q, a.r) <= REVEAL_DISTANCE) return true;
+    if (hexDistance(q, r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
+    return DATA.nodes.some(n => this.isConquered(n) && hexDistance(q, r, n.q, n.r) <= REVEAL_DISTANCE);
   },
   travelDays(from, to) { return Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / (ECON.travelTilesPerDay * (1 + (this.effects().travelPct || 0)))); },
   // Garrison incl. threat reinforcements: +1 of the most common unit per full reinforcementPer %.
@@ -1276,6 +1281,158 @@ const Campaign = {
   },
   addResources(res) {
     for (const [k, v] of Object.entries(res)) game.campaign.resources[k] = (game.campaign.resources[k] || 0) + v;
+  }
+};
+
+// =============================================================================
+// Raids: enemy war parties on the world map (DATA.raids). They march from their cities to
+// a conquered place and take it back unless the Lich is near; then they wait and can be
+// intercepted. A retaken place belongs to its old faction again (dead land shrinks).
+// =============================================================================
+const RAIDS = DATA.raids;
+const Raids = {
+  list() { const c = game.campaign; return c ? (c.raids = c.raids || []) : []; },
+  get(id) { return this.list().find(p => p.id === id); },
+  armyNear(q, r) { const a = Campaign.armyNode(); return hexDistance(Math.round(q), Math.round(r), a.q, a.r) <= RAIDS.safeRadius; },
+  targeted() { return new Set(this.list().map(p => p.targetId)); },
+  // Best target for a party at (q, r): the nearest conquered place within range that the army does not guard.
+  pickTarget(q, r, taken) {
+    let best = null, bd = Infinity;
+    for (const n of DATA.nodes) {
+      if (!Campaign.isConquered(n) || taken.has(n.id) || this.armyNear(n.q, n.r)) continue;
+      const d = hexDistance(Math.round(q), Math.round(r), n.q, n.r);
+      if (d <= RAIDS.maxRange && d < bd) { best = n; bd = d; }
+    }
+    return best;
+  },
+  // One day: move, retake, spawn.
+  day() {
+    const c = game.campaign, list = this.list();
+    if (c.dayCount < RAIDS.startDay) return;
+    for (const p of [...list]) {
+      if (p.id === c.intercepting) continue;
+      let t = NODE_BY_ID[p.targetId];
+      if (!t || !Campaign.isConquered(t)) {                     // target lost its point: look for another one
+        const taken = this.targeted(); taken.delete(p.targetId);
+        t = this.pickTarget(p.q, p.r, taken);
+        if (!t) { this.remove(p.id); continue; }
+        p.targetId = t.id;
+      }
+      p.holding = this.armyNear(p.q, p.r) || this.armyNear(t.q, t.r);
+      if (p.holding) continue;
+      const dq = t.q - p.q, dr = t.r - p.r, dist = Math.hypot(dq, dr);
+      if (dist <= RAIDS.tilesPerDay) { this.retake(p, t); continue; }
+      p.q += dq / dist * RAIDS.tilesPerDay; p.r += dr / dist * RAIDS.tilesPerDay;
+    }
+    if (list.length >= RAIDS.maxParties) return;
+    const taken = this.targeted();
+    for (const o of DATA.nodes) {
+      if (list.length >= RAIDS.maxParties) break;
+      if (!RAIDS.originTypes.includes(o.type) || (o.size || 0) < RAIDS.minOriginSize) continue;
+      if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id)) continue;
+      const chance = RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0);
+      if (Math.random() >= chance) continue;
+      const t = this.pickTarget(o.q, o.r, taken);
+      if (!t) continue;
+      taken.add(t.id);
+      list.push(this.create(o, t));
+    }
+  },
+  create(o, t) {
+    const garrison = {};
+    const types = Object.entries(o.garrison).filter(([u]) => DATA.units[u].rank !== 'UNIQUE');
+    for (const [u, n] of types) { const k = Math.round(n * RAIDS.strength); if (k > 0) garrison[u] = k; }
+    let total = Object.values(garrison).reduce((a, b) => a + b, 0);
+    if (total < RAIDS.minUnits && types.length) garrison[types[0][0]] = (garrison[types[0][0]] || 0) + RAIDS.minUnits - total;
+    if (!Object.keys(garrison).length) garrison.bauer = RAIDS.minUnits;
+    const c = game.campaign; c.raidCounter = (c.raidCounter || 0) + 1;
+    UI.toast(`${DATA.factions[o.faction].name}: Ein Trupp zieht aus ${o.name} gegen ${t.name}.`, 5);
+    return { id: 'raid' + c.raidCounter, faction: o.faction, originId: o.id, targetId: t.id, q: o.q, r: o.r, garrison };
+  },
+  retake(p, t) {
+    const c = game.campaign;
+    const back = t.faction === p.faction || Campaign.isLiving(t.faction) ? t.faction : p.faction;
+    c.owners[t.id] = back;
+    if (c.conqueredDay) delete c.conqueredDay[t.id];
+    this.remove(p.id);
+    UI.toast(`${t.name} ist verloren! Ein Trupp aus ${NODE_BY_ID[p.originId].name} hat den Ort zurückerobert.`, 6);
+    if (game.view && game.view.nodeViews) WorldView.refresh();
+  },
+  remove(id) { const c = game.campaign; c.raids = this.list().filter(p => p.id !== id); },
+  total(p) { return Object.values(p.garrison).reduce((a, b) => a + b, 0); },
+  name(p) { return `Trupp aus ${NODE_BY_ID[p.originId].name}`; },
+  // Pseudo node for the battle against a party.
+  node(p) {
+    return { id: 'raid', raidId: p.id, name: this.name(p), q: Math.round(p.q), r: Math.round(p.r), type: 'ENCOUNTER', faction: p.faction,
+      size: RAIDS.size, garrison: p.garrison, encounter: true, desc: `Unterwegs nach ${NODE_BY_ID[p.targetId].name}.` };
+  },
+  // The army marches out from its place, fights the party and returns.
+  async intercept(p) {
+    const c = game.campaign, here = Campaign.armyNode();
+    if (game.mode !== 'world') return;
+    const days = this.interceptDays(p);
+    c.intercepting = p.id;
+    game.mode = 'travel';
+    const a = hexToWorld(...neighbor(here.q, here.r, 2)), b = hexToWorld(Math.round(p.q), Math.round(p.r)), fig = game.view.army;
+    game.view.cam.follow = fig;
+    await tween(TRAVEL_SECONDS * 0.6, k => {
+      const t = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      fig.position.set(a.x + (b.x - a.x) * t, 0, a.z + (b.z - a.z) * t);
+      fig.position.y = game.world.groundAt(fig.position.x, fig.position.z);
+    });
+    game.view.cam.follow = null;
+    Campaign.advanceDays(days);
+    c.intercepting = null;
+    c.travel = null;
+    game.mode = 'world';
+    UI.updateHeader();
+    await Battle.start(this.node(p));
+  },
+  interceptDays(p) {
+    const a = Campaign.armyNode();
+    return Math.max(1, Math.ceil(hexDistance(a.q, a.r, Math.round(p.q), Math.round(p.r)) / (ECON.travelTilesPerDay * (1 + (Campaign.effects().travelPct || 0)))));
+  },
+  // World view: a banner with the leading unit's figure per visible party.
+  syncView() {
+    const v = game.view; if (!v || !v.worldRoot) return;
+    v.raidViews = v.raidViews || {};
+    const list = this.list(), alive = new Set();
+    for (const p of list) {
+      alive.add(p.id);
+      let rv = v.raidViews[p.id];
+      if (!rv) rv = v.raidViews[p.id] = this.createView(p);
+      const w = hexToWorld(Math.round(p.q), Math.round(p.r));
+      rv.group.position.set(w.x, Math.max(game.world.surfaceAt(w.x, w.z), HEX.waterLevel), w.z);
+      const t = NODE_BY_ID[p.targetId], tw = hexToWorld(t.q, t.r);
+      rv.group.rotation.y = Math.atan2(tw.x - w.x, tw.z - w.z);
+      const show = Campaign.revealedAt(Math.round(p.q), Math.round(p.r)) && v.worldRoot.visible;
+      rv.group.visible = show; rv.label.visible = show;
+      rv.el.textContent = `⚔ ${this.name(p)}${p.holding ? ' (wartet)' : ''}`;
+      rv.el.classList.toggle('selected', UI.selectedRaid === p.id);
+    }
+    for (const id of Object.keys(v.raidViews)) if (!alive.has(id)) { const rv = v.raidViews[id]; rv.group.removeFromParent(); rv.label.element.remove(); delete v.raidViews[id]; }
+  },
+  createView(p) {
+    const v = game.view, group = new THREE.Group(), col = DATA.factions[p.faction].color;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 11, 5), new THREE.MeshStandardMaterial({ color: 0x4a3a28 }));
+    pole.position.set(-2.2, 5.5, 0);
+    const flag = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.4, 3.2), new THREE.MeshStandardMaterial({ color: col, roughness: 0.8 }));
+    flag.position.set(-2.2, 9.6, -1.6);
+    group.add(pole, flag);
+    const lead = Object.entries(p.garrison).sort((a, b) => b[1] - a[1])[0][0];
+    Figures.load(lead).then(tpl => {
+      const body = tpl ? tpl.clone(true) : new THREE.Mesh(new THREE.ConeGeometry(0.4, 1, 6).translate(0, 0.5, 0), new THREE.MeshStandardMaterial({ color: col }));
+      body.scale.setScalar(7); group.add(body);
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(3, 3.3, 0.6, 6), new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 }));
+      ped.position.y = 0.3; group.add(ped); body.position.y = 0.6;
+    });
+    const el = document.createElement('div');
+    el.className = 'nodeLabel raidLabel';
+    el.addEventListener('click', ev => { ev.stopPropagation(); if (game.mode === 'world') UI.selectRaid(p.id); });
+    const label = new CSS2DObject(el); label.position.y = 13;
+    group.add(label);
+    v.worldRoot.add(group);
+    return { group, label, el };
   }
 };
 
@@ -1405,7 +1562,11 @@ const WorldView = {
       nv.el.classList.toggle('selected', UI.selectedNode === node.id);
     }
   },
-  setVisible(on) { game.view.worldRoot.visible = on; for (const id in game.view.nodeViews) game.view.nodeViews[id].label.visible = on; if (on) this.updateLabels(); },
+  setVisible(on) {
+    game.view.worldRoot.visible = on; for (const id in game.view.nodeViews) game.view.nodeViews[id].label.visible = on;
+    for (const id in game.view.raidViews || {}) game.view.raidViews[id].label.visible = on;
+    if (on) { this.updateLabels(); Raids.syncView(); }
+  },
   // Village labels only near the camera pivot (or when selected); larger places always show.
   updateLabels() {
     const [pq, pr] = game.view.cam.pivotTile();
@@ -1576,6 +1737,15 @@ const Minimap = {
     ctx.imageSmoothingEnabled = !useFull;
     ctx.drawImage(src, 0, 0, src.width, src.height, sx(0), sy(0), src.width * k / v.scale, src.height * k / v.scale);
     if (Blight.sig) { ctx.imageSmoothingEnabled = true; const o = Blight.overlay; ctx.drawImage(o, 0, 0, o.width, o.height, sx(0), sy(0), o.width * 4 / v.scale, o.height * 4 / v.scale); }
+    // War parties: a faction-colored triangle and a dashed line to their target.
+    for (const p of Raids.list()) {
+      if (!Campaign.revealedAt(Math.round(p.q), Math.round(p.r))) continue;
+      const t = NODE_BY_ID[p.targetId], x = sx(p.q), y = sy(p.r);
+      ctx.strokeStyle = DATA.factions[p.faction].color; ctx.lineWidth = 3; ctx.setLineDash([8, 6]);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(sx(t.q), sy(t.r)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = DATA.factions[p.faction].color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y - 11); ctx.lineTo(x + 10, y + 7); ctx.lineTo(x - 10, y + 7); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
     // Places: dots, names when zoomed in.
     ctx.font = '22px "IM Fell English", Georgia, serif';
     ctx.textAlign = 'center';
@@ -2731,6 +2901,7 @@ const Battle = {
       if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       Campaign.addResources(loot);
+      if (node.raidId) Raids.remove(node.raidId);
       if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
       // Special place: artifact into the inventory (auto-equipped while a slot is free).
       const sp = node.special && DATA.specials[node.special];
@@ -2759,7 +2930,9 @@ const Battle = {
         return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: back(i < n - 1 ? u.def.hp : total - (n - 1) * u.def.hp) }));
       });
       const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${v} ${RESOURCE_NAMES[k]}</li>`).join('');
-      html = node.encounter
+      html = node.raidId
+        ? `<h2>${node.name} zerschlagen</h2><p>${b.kills.length} Feinde gefallen. Die Armee kehrt nach ${esc(Campaign.armyNode().name)} zurück.</p>`
+        : node.encounter
         ? `<h2>${node.name} abgewehrt</h2><p>${b.kills.length} Feinde gefallen. Der Weg ist frei, die Reise geht weiter.</p>`
         : `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>`;
       html += `
@@ -2960,7 +3133,12 @@ const UI = {
         <div class="bar"><div style="width:${v}%;background:${DATA.factions[f].color}"></div></div></div>`;
     }).join('');
   },
+  selectRaid(id) {
+    this.selectedRaid = id; this.selectedNode = null; this.selectedTile = null;
+    WorldView.refresh(); this.renderInfo();
+  },
   selectNode(id) {
+    this.selectedRaid = null;
     this.selectedNode = id;
     this.selectedTile = null;
     WorldView.refresh();
@@ -3063,7 +3241,19 @@ const UI = {
     if (game.mode !== 'world' && game.mode !== 'travel') return;
     let html = '';
     const node = this.selectedNode && NODE_BY_ID[this.selectedNode];
-    if (node && Campaign.isRevealed(node)) {
+    const raid = this.selectedRaid && Raids.get(this.selectedRaid);
+    if (raid) {
+      const days = Raids.interceptDays(raid), t = NODE_BY_ID[raid.targetId];
+      const units = Object.entries(raid.garrison).map(([u, n]) => `${n}× ${DATA.units[u].name}`).join('<br>');
+      html += `<h2>⚔ ${esc(Raids.name(raid))}</h2><table>
+        <tr><td>Fraktion</td><td>${DATA.factions[raid.faction].name}</td></tr>
+        <tr><td>Ziel</td><td>${esc(t.name)} (${Math.ceil(hexDistance(Math.round(raid.q), Math.round(raid.r), t.q, t.r) / RAIDS.tilesPerDay)} Tage)</td></tr>
+        <tr><td>Lage</td><td>${raid.holding ? 'Wartet – der Lich ist zu nah' : 'Auf dem Marsch'}</td></tr>
+        <tr><td>Abfangen</td><td>${days} ${days === 1 ? 'Tag' : 'Tage'}, danach zurück nach ${esc(here.name)}</td></tr>
+        <tr><td>Stärke</td><td>${units}</td></tr></table>
+        <p class="small">Erreicht der Trupp sein Ziel, fällt der Ort an die Lebenden zurück und das tote Land dort hört auf zu wachsen. Ist der Lich in der Nähe (${RAIDS.safeRadius} Felder), wagt sich der Trupp nicht weiter.</p>
+        <div class="buttons" id="raidButtons"></div>`;
+    } else if (node && Campaign.isRevealed(node)) {
       const owner = Campaign.owner(node), atNode = here.id === node.id;
       const days = Campaign.travelDays(here, node);
       const enemy = Campaign.isEnemy(node);
@@ -3103,6 +3293,11 @@ const UI = {
     }
     html += this.armyHtml();
     el.innerHTML = html;
+    const rb = $('raidButtons');
+    if (rb && raid) {
+      const b = document.createElement('button'); b.textContent = 'Abfangen'; b.className = 'primary';
+      b.disabled = game.mode !== 'world'; b.onclick = () => { this.selectedRaid = null; Raids.intercept(raid); }; rb.appendChild(b);
+    }
     const bx = $('nodeButtons');
     if (bx && node) {
       const add = (label, fn, primary, disabled) => {
@@ -3442,7 +3637,7 @@ function frame(now) {
     BattleView.ring.position.copy(game.battle.current.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
   }
   miniAcc += dt;
-  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Minimap.draw(); WorldView.updateLabels(); }
+  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Raids.syncView(); Minimap.draw(); WorldView.updateLabels(); }
   Debug.update();
   v.renderer.render(v.scene, v.camera);
   v.labelRenderer.render(v.scene, v.camera);
@@ -3452,7 +3647,7 @@ function newGame() {
   SaveGame.clear();
   if (game.battle) Battle.exit();
   game.campaign = Campaign.create();
-  game.mode = 'world';
+  game.mode = 'world'; UI.selectedRaid = null;
   UI.closeModal();
   WorldView.placeArmy();
   game.view.cam.lookAtTile(PHYLACTERY.q, PHYLACTERY.r);

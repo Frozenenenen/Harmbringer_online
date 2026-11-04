@@ -677,6 +677,14 @@ window.HARMBRINGER_DATA = {
   encounters: { baseChance: 0.03, chancePerDanger: 0.04, maxChance: 0.6, passRadius: 30,
                 danger: { VILLAGE: 0.5, 16: 1, 32: 2, 64: 3 }, unitsBase: 8, unitsPerDanger: 6, maxUnits: 64, size: 16 },
 
+  // Enemy war parties on the world map. Cities and big monasteries (size >= minOriginSize) of
+  // living factions send troops to retake conquered places; a retaken place stops spreading
+  // dead land. Parties stand still while the undead army is within safeRadius tiles (they only
+  // strike where the Lich is not) and can be intercepted there.
+  raids: { startDay: 8, maxParties: 3, minOriginSize: 32, originTypes: ["WORLDLY", "CHRISTIAN"],
+           chanceBase: 0.01, chancePerThreat: 0.0006,   // per origin and day; threat 0..100
+           tilesPerDay: 20, maxRange: 450, safeRadius: 250, strength: 0.5, minUnits: 6, size: 16 },
+
   threat: {
     attackOwnNode: 25,       // faction of the attacked node
     attackOwnVillage: 10,    // faction of an attacked village (small places cause less alarm)

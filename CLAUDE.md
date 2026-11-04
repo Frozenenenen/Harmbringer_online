@@ -40,3 +40,4 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 - Initiative linear: Tick-Kosten `2520 / Initiative`. MagicResist prozentual (5 %/Punkt, max. 50 %).
 - Kampf mit Stapeln wie Heroes of Might and Magic: gleiche Einheiten = eine Figur, Schaden × Anzahl, nur die vorderste angeschlagen. Einheitenmengen und Materialien ×4 gegenüber dem Einzelfiguren-Stand; Gegner bis 3 Stapel pro Typ, max. 8 (erst ab 4 Typen); Lich bekommt Bonus pro belegtem Kommando-Punkt.
 - 193 Orte über die ganze Karte; besondere Orte (`specials`: Einkommen, Vorteil oder Artefakt), Artefakte mit 3 Inventarplätzen (`artifacts`, `artifactSlots`). Neue Orte haben `lat`/`lon`, Feld über `tools/build_game_map.py --tile`.
+- Totes Land (`Blight`, Werte `BLIGHT` in `index.html`) wächst um Hügelgrab und eroberte Orte; Gegnertrupps (`Raids`, Werte `raids` in `world_data.js`) erobern Orte zurück, wenn die Armee weit weg ist (> 250 Felder).
