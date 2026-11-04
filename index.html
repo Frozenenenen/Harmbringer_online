@@ -378,7 +378,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 107, "date": "2026-11-04", "changes": [{"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser brach den Kampfaufbau ab (Hex-Welt); Hinterhalte nur an Land, Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}]};
+const BUILD = {"version": 108, "date": "2026-11-04", "changes": [{"date": "04.11. 21:18", "text": "Kampfbeginn: Bei unerreichbaren Gegnern oder Stadtmauer ohne Belagerung Fenster mit Abziehen-Knopf"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -4206,7 +4206,10 @@ const Battle = {
     if (cut.length) {
       const all = cut.length === b.units.filter(u => u.side === 'enemy' && u.alive).length;
       const msg = `${all ? 'Kein Gegner ist' : `${cut.length} ${cut.length === 1 ? 'Gegnergruppe ist' : 'Gegnergruppen sind'}`} für eure Einheiten erreichbar (${[...new Set(cut.map(u => u.def.name))].join(', ')}). Hier braucht es Flieger, Geister oder Fernkämpfer. „Abziehen“ ist ohne Verluste möglich, solange nicht gekämpft wurde.`;
-      this.log(msg, 'hit'); setTimeout(() => UI.toast(all ? 'Unerreichbar! Abzug ohne Verluste möglich.' : 'Nicht alle Gegner sind erreichbar.', 6), 1200);
+      this.log(msg, 'hit');
+      this.offerWithdraw(all ? 'Unerreichbar' : 'Nicht alle Gegner erreichbar', msg);
+    } else if (b.field.cityWall && !b.units.some(u => u.side === 'player' && (isSiege(u) || u.def.flying || u.def.spectral))) {
+      this.offerWithdraw('Ummauerte Stadt', 'Euch fehlen Belagerungswaffen und Riesen (Balliste, Fleischriese, Knochendrache, Hünenkönig), Flieger und Geister. Die Mauer bleibt zu, nur die Tore lassen sich langsam rammen – unter Beschuss vom Wehrgang.');
     }
     this.nextTurn();
   },
@@ -4722,6 +4725,14 @@ const Battle = {
       used -= x.def.commandPoints * stackCount(x);
     }
     if (lost.length) this.log(`${fallen.def.name} ist gefallen – führerlos: ${lost.join(', ')} (−2 Initiative, kein Konter, Zerfall).`, 'hit');
+  },
+  // At the start: explain the problem and offer the lossless withdrawal right there.
+  offerWithdraw(title, text) {
+    const b = game.battle;
+    if (b.node.encounter) return;
+    setTimeout(() => { if (game.battle !== b || b.over || b.contact) return;
+      UI.modal(`<h2>${esc(title)}</h2><p>${esc(text)}</p><p class="small">Jetzt abziehen kostet nichts: Die ganze Armee verlässt das Feld und bleibt vor ${esc(b.node.name)} stehen. Sobald gekämpft wurde, rettet ein Rückzug nur noch den Lich.</p>`,
+        [{ label: 'Abziehen (ohne Verluste)', primary: true, action: () => this.finish('withdraw') }, { label: 'Weiterkämpfen', action: () => {} }]); }, 900);
   },
   // Enemies that no player unit can ever reach or shoot (water, cliffs), ignoring other units.
   unreachableEnemies() {
