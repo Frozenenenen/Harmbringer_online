@@ -4,6 +4,7 @@ Gefundene Fehler im Spiel (`index.html`). Neueste oben. Status: offen, behoben (
 
 | Datum | Fehler | Status |
 |-|-|-|
+| 2026-11-04 | **Windgeräusch lief nach dem Schließen weiter, PC musste neu gestartet werden.** Ursache vermutlich: Der Audio-Kontext lief weiter, solange die Seite verdeckt, aber nicht entladen war (z. B. eingeklappter Browserbereich). **Behebung:** Ton pausiert bei verdecktem/minimiertem Fenster, wird beim Verlassen geschlossen; Ton ist jetzt standardmäßig aus, und ausgeschaltet existiert gar kein Audio-Kontext mehr. Genaue Ursache noch zu klären (Browser? lief nur der Ton weiter oder hing der PC?). | entschärft |
 | 2026-11-04 | **Kampf gegen Irrlichter endet nie:** Jedes getötete Irrlicht ließ per „Falsches Licht“ ein neues Irrlicht entstehen – auch die beschworenen, also endlos. **Behebung:** Beschworene Einheiten lösen beim Tod nichts mehr aus. | behoben |
 | 2026-11-04 | **Balliste kann nicht ziehen:** Mit Bewegung 1 kam sie auf Böden mit höheren Bewegungskosten (z. B. Schlamm) nicht vom Fleck. **Behebung:** Ein Feld ist immer möglich – der erste Schritt kostet höchstens die ganze Bewegung (danach ist sie verbraucht). | behoben (ungetestet) |
 | 2026-11-04 | **Siegmeldung nach jedem Kampf:** Nach dem Sieg am Brocken und „Weiter umherziehen“ kam der Endbildschirm nach jedem weiteren Kampf. **Ursache:** Der Sieg-Zustand blieb gesetzt und wurde nach jedem Kampf abgefragt. **Behebung:** Der Endbildschirm erscheint nur beim ersten Sieg am Brocken. | behoben (ungetestet) |
