@@ -135,6 +135,17 @@ units = [
    80,0,5,4,14,3,"Blunt",1,T,"Divine",6,8, 7,6,4,4,1,4,F,F,0),
 ]
 
+# Abilities for the mythic factions (reusing the designed ability set): name -> (abilities, energy)
+_EXTRA_AB = {"SaxonWarrior": (("PeasantMob",), 0), "WodanRaven": (("HoundPack",), 0), "WildHunter": (("DeathHunterCharge",), 4),
+             "Hackelberg": (("WodeWildHunt", "WodeHorn", "WodeRideThrough"), 8), "Lutki": (("PeasantMob",), 0),
+             "Vodnik": (("MoorGrip", "FromThePeat"), 4), "Rusalka": (("DruidessGraveRest",), 5), "NoonWitch": (("WitchHex",), 4),
+             "SerpentKing": (("ZombieInfect", "DruidMistletoe", "FleshGiantCrush"), 8), "Drowned": (("ZombieInfect",), 0),
+             "MudfatMaiden": (("WispConfusion", "WitchHex"), 4), "Klabautermann": (("DwarfKingForge",), 4),
+             "BlankerHans": (("FleshGiantCrush", "HeathQueenThorns", "WodeHorn"), 10), "DrownedCorpse": (("MoorGrip", "BogCorpseMire"), 3)}
+for _u in units:
+    if _u["Name"] in _EXTRA_AB:
+        _u["Abilities"] = list(_EXTRA_AB[_u["Name"]][0]); _u["MaxEnergy"] = max(_u["MaxEnergy"], _EXTRA_AB[_u["Name"]][1])
+
 # ---------- Spiel-Export: welche Design-Einheit unter welcher Kennung in data/world_data.js steht ----------
 # Extras sind Werte, die nur das Spiel braucht (Platzhalter-Form, Farbe, Beschreibung, Wissens-Voraussetzung).
 # cost: optional, sonst aus den Design-Kosten (Knochen x BONE_SCALE, weil das Spiel Knochen 60-fach zählt).
@@ -565,7 +576,12 @@ body_pd = note + "  // Percent of damage that arrives. HEAL is not in the matrix
     "  // Corpse quality per killing power type (0..1)\n" + f"  corpseQuality: {js({enum(k): v for k, v in QUALITY.items()})},\n" + \
     "  // Combat rules: tick cost per turn = tickBase / initiative; one round = roundTicks (ini 2.5).\n" + \
     "  // Magic power types are reduced by magicResist * mrPerPoint (capped). soulShield is a pool that absorbs any damage first.\n" + \
-    f"  rules: {js(dict(tickBase=TICK_BASE, roundTicks=1008, magicPowers=sorted(enum(m) for m in MAGIC), mrPerPoint=MR_PER_POINT, mrCap=MR_CAP))},"
+    f"  rules: {js(dict(tickBase=TICK_BASE, roundTicks=1008, magicPowers=sorted(enum(m) for m in MAGIC), mrPerPoint=MR_PER_POINT, mrCap=MR_CAP))}," + \
+    "\n  // Abilities (DT_Abilities): trigger, target, pattern, effect, power, value, status, duration, energy, cooldown.\n" + \
+    "  abilities: {\n" + ",\n".join(f"    {ab['Name']}: " + js(dict(name=ab["AbilityName"], trigger=enum(ab["Trigger"]), target=enum(ab["Target"]), pattern=enum(ab["Pattern"]),
+        area=ab["AreaSize"], range=ab["Range"], effect=enum(ab["Effect"]), power=enum(ab["PowerType"]), value=ab["Value"], status=enum(ab["Status"]),
+        duration=ab["Duration"], energy=ab["EnergyCost"], cooldown=ab["Cooldown"], corpse=ab["RequiresCorpse"], floors=[enum(x) for x in ab["ConditionFloors"]],
+        desc=ab["Description"])) for ab in abilities) + "\n  },"
 wd = put_js(wd, "UNITS", body_u)
 wd = put_js(wd, "RULES", body_pd)
 open(wd_path, "w", encoding="utf-8").write(wd)

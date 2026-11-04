@@ -1254,7 +1254,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Totenlicht | Undead | CannonFodder / Scout | 1 | 6 | 0 | 9 | 5 | 3 | 1 | Arcane | Unarmored | 6 / 2 | 6/3/0 | 0/0 | Spektral/Flug | -1 | 1S |
 | Gefallene Schwester | Undead | Warrior / Support | 2 | 14 | 4 | 5 | 3 | 4 | 2 | Soul | Light | 4 / 2 | 4/3/2 | 1/2 | – | -2 | 1L 1S |
 | Grabdruidin | Undead | Warrior / Caster | 2 | 14 | 5 | 6 | 3 | 7 | 4 | Arcane | Light | 5 / 2 | 4/3/4 | 1/3 | – | -3 | 1L 1K 1S |
-| Wasserleiche | Undead | Warrior / Tank | 2 | 26 | 0 | 3 | 3 | 8 | 1 | Blunt | Unarmored | 3 / 2 | 3/2/4 | 2/4 | – | -3 | 2L 1S |
+| Wasserleiche | Undead | Warrior / Tank | 2 | 26 | 3 | 3 | 3 | 8 | 1 | Blunt | Unarmored | 3 / 2 | 3/2/4 | 2/4 | – | -3 | 2L 1S |
 | Knochenschütze | Undead | CannonFodder / Ranged | 2 | 10 | 0 | 4 | 3 | 8 | 5 | Pierce | Light | 0 / 0 | 5/2/0 | 2/1 | – | -2 | 3K |
 | Totenjäger | Undead | Warrior / Scout | 3 | 22 | 3 | 7 | 6 | 9 | 1 | Pierce | Light | 2 / 0 | 5/4/3 | 3/3 | – | -4 | 3L 2K 1S |
 | Skelett-Bogenschütze | Undead | CannonFodder / Ranged | 1 | 9 | 0 | 4 | 3 | 4 | 4 | Pierce | Light | 0 / 0 | 5/2/1 | 1/1 | – | -2 | 3K |
@@ -1269,17 +1269,17 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Hexenkönigin vom Brocken | Witches | Unique / Caster | 3 | 90 | 0 | 8 | 4 | 14 | 4 | Chaos | Divine | 6 / 6 | 8/8/8 | 2/2 | Flug | +0 | – |
 | Sachsenkrieger | WodanCult | Warrior / Melee | 2 | 20 | 0 | 5 | 3 | 7 | 1 | Pierce | Medium | 2 / 0 | 5/3/2 | 2/2 | – | +0 | – |
 | Wodansrabe | WodanCult | CannonFodder / Scout | 1 | 6 | 0 | 9 | 6 | 3 | 1 | Rend | Unarmored | 3 / 2 | 7/4/2 | 1/1 | Flug | +0 | – |
-| Wilder Jäger | WodanCult | Warrior / Scout | 3 | 26 | 0 | 7 | 6 | 9 | 1 | Pierce | Light | 3 / 2 | 6/5/4 | 3/2 | Spektral | +0 | – |
-| Hackelberg | WodanCult | Unique / Melee | 3 | 60 | 0 | 7 | 6 | 13 | 1 | Pierce | Divine | 5 / 6 | 7/6/5 | 4/2 | – | +0 | – |
+| Wilder Jäger | WodanCult | Warrior / Scout | 3 | 26 | 4 | 7 | 6 | 9 | 1 | Pierce | Light | 3 / 2 | 6/5/4 | 3/2 | Spektral | +0 | – |
+| Hackelberg | WodanCult | Unique / Melee | 3 | 60 | 8 | 7 | 6 | 13 | 1 | Pierce | Divine | 5 / 6 | 7/6/5 | 4/2 | – | +0 | – |
 | Lutki | Spreewald | CannonFodder / Melee | 1 | 7 | 0 | 7 | 3 | 3 | 1 | Blunt | Unarmored | 3 / 0 | 4/4/3 | 1/1 | – | +0 | – |
-| Wassermann | Spreewald | Warrior / Tank | 2 | 32 | 0 | 4 | 3 | 8 | 1 | Blunt | Unarmored | 3 / 2 | 4/4/3 | 2/2 | – | +0 | – |
-| Rusalka | Spreewald | Warrior / Caster | 2 | 14 | 0 | 6 | 3 | 7 | 3 | Arcane | Light | 5 / 3 | 5/4/2 | 0/1 | Spektral | +0 | – |
-| Mittagsfrau | Spreewald | Warrior / Melee | 2 | 22 | 0 | 6 | 4 | 11 | 1 | Rend | Unarmored | 4 / 2 | 5/4/3 | 1/1 | Spektral | +0 | – |
-| Schlangenkönig | Spreewald | Unique / Caster | 3 | 65 | 0 | 6 | 3 | 12 | 3 | Poison | Divine | 6 / 6 | 6/5/6 | 2/2 | – | +0 | – |
+| Wassermann | Spreewald | Warrior / Tank | 2 | 32 | 4 | 4 | 3 | 8 | 1 | Blunt | Unarmored | 3 / 2 | 4/4/3 | 2/2 | – | +0 | – |
+| Rusalka | Spreewald | Warrior / Caster | 2 | 14 | 5 | 6 | 3 | 7 | 3 | Arcane | Light | 5 / 3 | 5/4/2 | 0/1 | Spektral | +0 | – |
+| Mittagsfrau | Spreewald | Warrior / Melee | 2 | 22 | 4 | 6 | 4 | 11 | 1 | Rend | Unarmored | 4 / 2 | 5/4/3 | 1/1 | Spektral | +0 | – |
+| Schlangenkönig | Spreewald | Unique / Caster | 3 | 65 | 8 | 6 | 3 | 12 | 3 | Poison | Divine | 6 / 6 | 6/5/6 | 2/2 | – | +0 | – |
 | Ertrunkener | Wattenmeer | CannonFodder / Melee | 2 | 16 | 0 | 3 | 2 | 6 | 1 | Blunt | Unarmored | 1 / 0 | 3/2/3 | 2/3 | – | +0 | – |
-| Wattjungfrau | Wattenmeer | Warrior / Caster | 2 | 14 | 0 | 6 | 3 | 6 | 3 | Arcane | Light | 5 / 3 | 6/4/2 | 0/1 | Spektral | +0 | – |
-| Klabautermann | Wattenmeer | Warrior / Support | 1 | 12 | 0 | 7 | 3 | 6 | 1 | Blunt | Light | 4 / 2 | 5/5/3 | 2/1 | – | +0 | – |
-| Blanker Hans | Wattenmeer | Unique / Caster | 4 | 80 | 0 | 5 | 4 | 14 | 3 | Blunt | Divine | 6 / 8 | 7/6/4 | 4/1 | – | +0 | – |
+| Wattjungfrau | Wattenmeer | Warrior / Caster | 2 | 14 | 4 | 6 | 3 | 6 | 3 | Arcane | Light | 5 / 3 | 6/4/2 | 0/1 | Spektral | +0 | – |
+| Klabautermann | Wattenmeer | Warrior / Support | 1 | 12 | 4 | 7 | 3 | 6 | 1 | Blunt | Light | 4 / 2 | 5/5/3 | 2/1 | – | +0 | – |
+| Blanker Hans | Wattenmeer | Unique / Caster | 4 | 80 | 10 | 5 | 4 | 14 | 3 | Blunt | Divine | 6 / 8 | 7/6/4 | 4/1 | – | +0 | – |
 <!--GEN:UNITS:END-->
 
 **Neue Lich-Einheiten in Kürze:**
@@ -1321,39 +1321,39 @@ Sonderfälle, die die Tabelle nicht ausdrückt (Zweit-Effekte, Bedingungen wie �
 | `LichSoulDrain` | Seelenentzug | Lich | Active | Enemy / SinglePoint | 3 | Damage (Soul) | 8 | – | 3 / 1 | 8 Seelenschaden; Lich heilt sich um den angerichteten Schaden |
 | `LichRetreat` | Rückzug | Lich | Active | Self / SinglePoint | 0 | Teleport (Arcane) | 0 | Marked (1) | 0 / 0 | Lich verlässt nach 1 Runde das Feld; in der Rückzugsrunde Marked |
 | `SkeletonReassemble` | Wiederzusammensetzen | Skelett | OnDeath | Self / SinglePoint | 0 | Heal (Heal) | 5 | – | 0 / 0 | Einmal pro Kampf mit 5 HP wieder aufstehen; nicht nach Blunt- oder Holy-Tod |
-| `ZombieInfect` | Seuchenbiss | Zombie | OnDamageDealt | Enemy / SinglePoint | 1 | ApplyStatus (Poison) | 2 | Poisoned (2) | 0 / 0 | Getroffenes Ziel wird vergiftet |
+| `ZombieInfect` | Seuchenbiss | Zombie, Schlangenkönig, Ertrunkener | OnDamageDealt | Enemy / SinglePoint | 1 | ApplyStatus (Poison) | 2 | Poisoned (2) | 0 / 0 | Getroffenes Ziel wird vergiftet |
 | `GhoulCorpseEater` | Leichenfresser | Ghul | Active | Ground / SinglePoint | 1 | Heal (Heal) | 8 | – | 0 / 2 | Frisst angrenzende Leiche: +8 HP, die Leiche ist als Beute verloren *(braucht Leiche)* |
 | `DeathKnightShieldWall` | Schildwall | Todesritter | Active | Ally / Radius 1 | 0 | ApplyStatus (Blunt) | 5 | Shielded (1) | 2 / 2 | Todesritter und Nachbarn erhalten Schild 5 bis zum nächsten Zug |
 | `NecroRaiseDead` | Totenruf | Nekromant | Active | Ground / SinglePoint | 3 | Summon (Soul) | 1 | – | 4 / 2 | Verbraucht Leiche auf Zielfeld, erzeugt 1 Skelett *(braucht Leiche)* |
-| `FleshGiantCrush` | Zermalmen | Fleischriese | Active | Enemy / Cone 1 | 1 | Damage (Blunt) | 10 | Stunned (1) | 3 / 2 | Trifft 3 Felder im Kegel, betäubt |
-| `PeasantMob` | Rottenmut | Bauer | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Pierce) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn mind. 2 Bauern angrenzen |
+| `FleshGiantCrush` | Zermalmen | Fleischriese, Schlangenkönig, Blanker Hans | Active | Enemy / Cone 1 | 1 | Damage (Blunt) | 10 | Stunned (1) | 3 / 2 | Trifft 3 Felder im Kegel, betäubt |
+| `PeasantMob` | Rottenmut | Bauer, Sachsenkrieger, Lutki | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Pierce) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn mind. 2 Bauern angrenzen |
 | `CrossbowPavise` | Setzschild | Lüneburger Armbrustschütze, Knochenschütze | Passive | Self / SinglePoint | 0 | ModifyTerrain (Pierce) | 0 | – | 0 / 0 | Wenn nicht bewegt: Kante zur Angriffsrichtung zählt als Cover |
 | `ClericCenser` | Weihrauch | Kleriker | Active | AllEnemies / Radius 1 | 0 | Damage (Holy) | 4 | – | 2 / 1 | 4 Holy-Schaden an alle angrenzenden Feinde |
 | `SisterHolyWater` | Weihwasser | Heideschwester | Active | Ally / SinglePoint | 2 | Heal (Heal) | 6 | – | 2 / 0 | Heilt Verbündeten um 6 HP |
 | `SisterConsecrate` | Geweihter Boden | Heideschwester | Active | Ground / Radius 1 | 2 | ModifyTerrain (Holy) | 2 | – (3) | 3 / 3 | Felder werden 3 Runden HolyGround: 2 Holy-Schaden pro Runde an Untote |
-| `WitchHex` | Hexenschuss | Hexe | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Marked (2) | 2 / 1 | Ziel nimmt 2 Züge lang +25 % Schaden |
-| `DruidMistletoe` | Mistelsegen | Druide | Active | Ally / SinglePoint | 3 | ApplyStatus (Heal) | 3 | Regeneration (3) | 2 / 1 | Verbündeter regeneriert 3 HP pro Zug |
-| `DruidessGraveRest` | Grabesruhe | Hügelgrab-Druidin | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Cursed (2) | 3 / 2 | Nur gegen Untote: -25 % Schaden |
+| `WitchHex` | Hexenschuss | Hexe, Mittagsfrau, Wattjungfrau | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Marked (2) | 2 / 1 | Ziel nimmt 2 Züge lang +25 % Schaden |
+| `DruidMistletoe` | Mistelsegen | Druide, Schlangenkönig | Active | Ally / SinglePoint | 3 | ApplyStatus (Heal) | 3 | Regeneration (3) | 2 / 1 | Verbündeter regeneriert 3 HP pro Zug |
+| `DruidessGraveRest` | Grabesruhe | Hügelgrab-Druidin, Rusalka | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Cursed (2) | 3 / 2 | Nur gegen Untote: -25 % Schaden |
 | `DruidessEarthBind` | Erdbindung | Hügelgrab-Druidin, Grabdruidin | Active | Ground / SinglePoint | 3 | ModifyTerrain (Arcane) | 0 | – (2) | 2 / 3 | Feld wird 2 Runden unpassierbar, Kanten ringsum Cover |
-| `MoorGrip` | Moorgriff | Moorgeist, Moorleiche | Active | Enemy / SinglePoint | 1 | ApplyStatus (Blunt) | 0 | Slowed (2) | 2 / 1 | Slowed 2 Züge; auf Mud/Swamp/Bog zusätzlich Stunned 1 Zug |
-| `FromThePeat` | Aus dem Torf | Moorgeist | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Blunt) | 4 | Shielded (1) | 0 / 0 | Auf Moorboden zu Zugbeginn Schild 4 *(nur auf Mud, Swamp, Bog)* |
-| `WispConfusion` | Verwirrung | Irrlicht | Passive | AllEnemies / Ring 1 | 0 | ApplyStatus (Arcane) | 0 | Confused (1) | 0 / 0 | Feinde auf Nachbarfeldern bewegen sich zufällig |
+| `MoorGrip` | Moorgriff | Moorgeist, Moorleiche, Wasserleiche, Wassermann | Active | Enemy / SinglePoint | 1 | ApplyStatus (Blunt) | 0 | Slowed (2) | 2 / 1 | Slowed 2 Züge; auf Mud/Swamp/Bog zusätzlich Stunned 1 Zug |
+| `FromThePeat` | Aus dem Torf | Moorgeist, Wassermann | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Blunt) | 4 | Shielded (1) | 0 / 0 | Auf Moorboden zu Zugbeginn Schild 4 *(nur auf Mud, Swamp, Bog)* |
+| `WispConfusion` | Verwirrung | Irrlicht, Wattjungfrau | Passive | AllEnemies / Ring 1 | 0 | ApplyStatus (Arcane) | 0 | Confused (1) | 0 / 0 | Feinde auf Nachbarfeldern bewegen sich zufällig |
 | `WispFalseLight` | Falsches Licht | Irrlicht | OnDeath | Ground / SinglePoint | 0 | Summon (Arcane) | 1 | – (1) | 0 / 0 | Trugbild für 1 Runde, zieht Angriffe auf sich |
-| `HoundPack` | Meute | Schwarzer Hund | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Rend) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn ein anderer Schwarzer Hund angrenzt |
-| `WodeWildHunt` | Wilde Jagd | Der Wode | Active | Ground / SinglePoint | 2 | Summon (Soul) | 2 | – | 5 / 4 | Beschwört 2 Schwarze Hunde |
-| `WodeRideThrough` | Durchreiten | Der Wode | Active | Enemy / Line 3 | 3 | Damage (Pierce) | 12 | – | 3 / 2 | Reitet 3 Felder in Linie, trifft alle darauf, endet am Linienende |
-| `WodeHorn` | Jagdhorn | Der Wode | Active | AllAllies / Radius 3 | 0 | ApplyStatus (Arcane) | 0 | Hasted (2) | 2 / 3 | Verbündete im Radius 3 werden beschleunigt |
-| `DwarfKingForge` | Runenschmiede | Hügelgrab-Zwergenkönig | Active | Ally / SinglePoint | 1 | ApplyStatus (Blunt) | 8 | Shielded (2) | 2 / 1 | Verbündeter erhält Schild 8 |
+| `HoundPack` | Meute | Schwarzer Hund, Wodansrabe | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Rend) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn ein anderer Schwarzer Hund angrenzt |
+| `WodeWildHunt` | Wilde Jagd | Der Wode, Hackelberg | Active | Ground / SinglePoint | 2 | Summon (Soul) | 2 | – | 5 / 4 | Beschwört 2 Schwarze Hunde |
+| `WodeRideThrough` | Durchreiten | Der Wode, Hackelberg | Active | Enemy / Line 3 | 3 | Damage (Pierce) | 12 | – | 3 / 2 | Reitet 3 Felder in Linie, trifft alle darauf, endet am Linienende |
+| `WodeHorn` | Jagdhorn | Der Wode, Hackelberg, Blanker Hans | Active | AllAllies / Radius 3 | 0 | ApplyStatus (Arcane) | 0 | Hasted (2) | 2 / 3 | Verbündete im Radius 3 werden beschleunigt |
+| `DwarfKingForge` | Runenschmiede | Hügelgrab-Zwergenkönig, Klabautermann | Active | Ally / SinglePoint | 1 | ApplyStatus (Blunt) | 8 | Shielded (2) | 2 / 1 | Verbündeter erhält Schild 8 |
 | `DwarfKingTreasureCurse` | Schatzfluch | Hügelgrab-Zwergenkönig | OnDamageTaken | Enemy / SinglePoint | 0 | ApplyStatus (Arcane) | 0 | Cursed (2) | 0 / 0 | Wer den Zwergenkönig trifft, wird verflucht |
 | `DwarfKingStoneSkin` | Steinhaut | Hügelgrab-Zwergenkönig | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Blunt) | 4 | Shielded (1) | 0 / 0 | Auf Steinboden zu Zugbeginn Schild 4 *(nur auf StoneFloor, CellarFloor, RawStone)* |
 | `HeathQueenLeyBond` | Ley-Bund | Die Heidekönigin | Passive | Self / SinglePoint | 0 | ApplyStatus (Arcane) | 10 | Shielded (0) | 0 / 0 | Kampfbeginn: +10 SoulShield pro lebendem Randmitglied des Heide-Pantheons |
 | `HeathQueenBloom` | Heideblüte | Die Heidekönigin | Active | AllAllies / Radius 2 | 0 | Heal (Heal) | 6 | – | 4 / 2 | Heilt alle Verbündeten im Radius 2 um 6 HP |
-| `HeathQueenThorns` | Dornenkrone | Die Heidekönigin | Active | Ground / Radius 1 | 4 | ModifyTerrain (Pierce) | 3 | Slowed (3) | 4 / 3 | Dornen-Gelände 3 Runden: Slowed und 3 Pierce-Schaden pro Runde für Feinde darauf |
-| `BogCorpseMire` | Moorheilung | Moorleiche | OnTurnStart | Self / SinglePoint | 0 | Heal (Heal) | 3 | – | 0 / 0 | Heilt sich auf Moorboden zu Zugbeginn um 3 HP *(nur auf Mud, Swamp, Bog)* |
+| `HeathQueenThorns` | Dornenkrone | Die Heidekönigin, Blanker Hans | Active | Ground / Radius 1 | 4 | ModifyTerrain (Pierce) | 3 | Slowed (3) | 4 / 3 | Dornen-Gelände 3 Runden: Slowed und 3 Pierce-Schaden pro Runde für Feinde darauf |
+| `BogCorpseMire` | Moorheilung | Moorleiche, Wasserleiche | OnTurnStart | Self / SinglePoint | 0 | Heal (Heal) | 3 | – | 0 / 0 | Heilt sich auf Moorboden zu Zugbeginn um 3 HP *(nur auf Mud, Swamp, Bog)* |
 | `DeathLightConfusion` | Totenirrlicht | Totenlicht | Passive | AllEnemies / Ring 2 | 0 | ApplyStatus (Arcane) | 0 | Confused (1) | 0 / 0 | Lebende Feinde im Umkreis 2 bewegen sich zufällig |
 | `FallenSisterGraveWater` | Grabwasser | Gefallene Schwester | Active | Ally / SinglePoint | 2 | Heal (Soul) | 6 | – | 2 / 0 | Heilt verbündeten Untoten um 6 HP |
 | `GraveDruidessBind` | Lebensbann | Grabdruidin | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Cursed (2) | 3 / 2 | Nur gegen Lebende: -25 % Schaden |
-| `DeathHunterCharge` | Todesritt | Totenjäger | Active | Enemy / Line 2 | 2 | Damage (Pierce) | 9 | – | 3 / 2 | Reitet 2 Felder in Linie, trifft alle darauf |
+| `DeathHunterCharge` | Todesritt | Totenjäger, Wilder Jäger | Active | Enemy / Line 2 | 2 | Damage (Pierce) | 9 | – | 3 / 2 | Reitet 2 Felder in Linie, trifft alle darauf |
 <!--GEN:ABILITIES:END-->
 
 ### Balancing-Check (automatisch)

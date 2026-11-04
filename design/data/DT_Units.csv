@@ -26,7 +26,7 @@ BogCorpse,Moorleiche,Warrior,Tank,Undead,Untote Version des Moorgeists. Freigesc
 DeathLight,Totenlicht,CannonFodder,Scout,Undead,"Untote Version des Irrlichts. Grünes Licht, verwirrt Lebende.",6,0,9,5,3,1,Arcane,1,False,Unarmored,6,2,6,3,0,0,0,1,True,True,-1,0,0,1,"(""DeathLightConfusion"")"
 FallenSister,Gefallene Schwester,Warrior,Support,Undead,Untote Heideschwester mit erloschener Laterne.,14,4,5,3,4,2,Soul,1,False,Light,4,2,4,3,2,1,2,2,False,False,-2,1,0,1,"(""FallenSisterGraveWater"")"
 GraveDruidess,Grabdruidin,Warrior,Caster,Undead,Mumifizierte Hügelgrab-Druidin.,14,5,6,3,7,4,Arcane,1,False,Light,5,2,4,3,4,1,3,2,False,False,-3,1,1,1,"(""GraveDruidessBind"",""DruidessEarthBind"")"
-DrownedCorpse,Wasserleiche,Warrior,Tank,Undead,Untote Version der Ertrunkenen von Rungholt. Freigeschaltet durch den Sturz der Versunkenen Städte.,26,0,3,3,8,1,Blunt,1,True,Unarmored,3,2,3,2,4,2,4,2,False,False,-3,2,0,1,()
+DrownedCorpse,Wasserleiche,Warrior,Tank,Undead,Untote Version der Ertrunkenen von Rungholt. Freigeschaltet durch den Sturz der Versunkenen Städte.,26,3,3,3,8,1,Blunt,1,True,Unarmored,3,2,3,2,4,2,4,2,False,False,-3,2,0,1,"(""MoorGrip"",""BogCorpseMire"")"
 BoneArcher,Knochenschütze,CannonFodder,Ranged,Undead,Skelett-Armbrustschütze. Wird nie führerlos (kein Leaderless).,10,0,4,3,8,5,Pierce,1,False,Light,0,0,5,2,0,2,1,2,False,False,-2,0,3,0,"(""CrossbowPavise"")"
 DeathHunter,Totenjäger,Warrior,Scout,Undead,Untoter Reiter der Wilden Jagd. Freigeschaltet durch den Sieg über den Wode.,22,3,7,6,9,1,Pierce,1,True,Light,2,0,5,4,3,3,3,3,False,False,-4,3,2,1,"(""DeathHunterCharge"")"
 SkeletonArcher,Skelett-Bogenschütze,CannonFodder,Ranged,Undead,"Fernkampf ohne Wissen. Schwach, trifft aus der Deckung.",9,0,4,3,4,4,Pierce,1,False,Light,0,0,5,2,1,1,1,1,False,False,-2,0,3,0,()
@@ -39,16 +39,16 @@ Monk,Mönch,Warrior,Caster,Clergy,Wirft heilige Worte wie Steine.,12,0,5,3,6,3,H
 Priest,Priester,Warrior,Support,Clergy,Heilt Verbündete. Ohne Verwundete greift er mit 3 Heilig-Schaden an.,16,0,4,3,6,3,Heal,1,False,Unarmored,4,4,5,4,3,1,1,1,False,False,0,0,0,0,()
 PiedPiper,Rattenfänger,Unique,Caster,Witches,Der Rattenfänger von Hameln. Seine Flöte lenkt Ratten und Kinder.,35,0,8,4,9,4,Arcane,1,False,Light,5,3,7,7,3,2,1,2,False,False,0,0,0,0,()
 BrockenQueen,Hexenkönigin vom Brocken,Unique,Caster,Witches,"Herrin der Walpurgisnacht, Finale der Kampagne.",90,0,8,4,14,4,Chaos,1,True,Divine,6,6,8,8,8,2,2,3,False,True,0,0,0,0,()
-SaxonWarrior,Sachsenkrieger,Warrior,Melee,WodanCult,Heidnischer Sachse mit Sax und Rundschild. Schwört bei Irminsul.,20,0,5,3,7,1,Pierce,1,True,Medium,2,0,5,3,2,2,2,2,False,False,0,0,0,0,()
-WodanRaven,Wodansrabe,CannonFodder,Scout,WodanCult,"Schwarm aus Wodans Raben. Fliegt, hackt nach den Augen.",6,0,9,6,3,1,Rend,1,False,Unarmored,3,2,7,4,2,1,1,1,False,True,0,0,0,0,()
-WildHunter,Wilder Jäger,Warrior,Scout,WodanCult,"Geisterreiter der Wilden Jagd. Schnell, kommt mit dem Sturm.",26,0,7,6,9,1,Pierce,1,True,Light,3,2,6,5,4,3,2,3,True,False,0,0,0,0,()
-Hackelberg,Hackelberg,Unique,Melee,WodanCult,Der verfluchte Oberjägermeister. Führt die Wilde Jagd über den Harz.,60,0,7,6,13,1,Pierce,1,True,Divine,5,6,7,6,5,4,2,3,False,False,0,0,0,0,()
-Lutki,Lutki,CannonFodder,Melee,Spreewald,"Kleiner wendischer Hauskobold mit roter Mütze. Flink, schwach, viele.",7,0,7,3,3,1,Blunt,1,True,Unarmored,3,0,4,4,3,1,1,1,False,False,0,0,0,0,()
-Vodnik,Wassermann,Warrior,Tank,Spreewald,Vodnik im grünen Rock. Zieht Lebende unter Wasser.,32,0,4,3,8,1,Blunt,1,True,Unarmored,3,2,4,4,3,2,2,2,False,False,0,0,0,0,()
-Rusalka,Rusalka,Warrior,Caster,Spreewald,Wassergeist einer Ertrunkenen. Ihr Lied lähmt.,14,0,6,3,7,3,Arcane,1,False,Light,5,3,5,4,2,0,1,2,True,False,0,0,0,0,()
-NoonWitch,Mittagsfrau,Warrior,Melee,Spreewald,Pšezpólnica: erscheint in der Mittagshitze auf dem Feld und mäht mit der Sichel.,22,0,6,4,11,1,Rend,1,False,Unarmored,4,2,5,4,3,1,1,2,True,False,0,0,0,0,()
-SerpentKing,Schlangenkönig,Unique,Caster,Spreewald,Herr der Fließe mit goldener Krone. Sein Biss ist Gift.,65,0,6,3,12,3,Poison,1,True,Divine,6,6,6,5,6,2,2,3,False,False,0,0,0,0,()
-Drowned,Ertrunkener,CannonFodder,Melee,Wattenmeer,"Toter aus Rungholt mit Bootshaken. Langsam, zäh, kommt mit der Flut.",16,0,3,2,6,1,Blunt,1,True,Unarmored,1,0,3,2,3,2,3,2,False,False,0,0,0,0,()
-MudfatMaiden,Wattjungfrau,Warrior,Caster,Wattenmeer,Lockt mit falschem Licht ins Watt.,14,0,6,3,6,3,Arcane,1,False,Light,5,3,6,4,2,0,1,2,True,False,0,0,0,0,()
-Klabautermann,Klabautermann,Warrior,Support,Wattenmeer,"Schiffskobold mit Kalfathammer. Klein, flink, schlägt zu, wo es weh tut.",12,0,7,3,6,1,Blunt,1,True,Light,4,2,5,5,3,2,1,1,False,False,0,0,0,0,()
-BlankerHans,Blanker Hans,Unique,Caster,Wattenmeer,Die Sturmflut selbst. Der Blanke Hans holte Rungholt.,80,0,5,4,14,3,Blunt,1,True,Divine,6,8,7,6,4,4,1,4,False,False,0,0,0,0,()
+SaxonWarrior,Sachsenkrieger,Warrior,Melee,WodanCult,Heidnischer Sachse mit Sax und Rundschild. Schwört bei Irminsul.,20,0,5,3,7,1,Pierce,1,True,Medium,2,0,5,3,2,2,2,2,False,False,0,0,0,0,"(""PeasantMob"")"
+WodanRaven,Wodansrabe,CannonFodder,Scout,WodanCult,"Schwarm aus Wodans Raben. Fliegt, hackt nach den Augen.",6,0,9,6,3,1,Rend,1,False,Unarmored,3,2,7,4,2,1,1,1,False,True,0,0,0,0,"(""HoundPack"")"
+WildHunter,Wilder Jäger,Warrior,Scout,WodanCult,"Geisterreiter der Wilden Jagd. Schnell, kommt mit dem Sturm.",26,4,7,6,9,1,Pierce,1,True,Light,3,2,6,5,4,3,2,3,True,False,0,0,0,0,"(""DeathHunterCharge"")"
+Hackelberg,Hackelberg,Unique,Melee,WodanCult,Der verfluchte Oberjägermeister. Führt die Wilde Jagd über den Harz.,60,8,7,6,13,1,Pierce,1,True,Divine,5,6,7,6,5,4,2,3,False,False,0,0,0,0,"(""WodeWildHunt"",""WodeHorn"",""WodeRideThrough"")"
+Lutki,Lutki,CannonFodder,Melee,Spreewald,"Kleiner wendischer Hauskobold mit roter Mütze. Flink, schwach, viele.",7,0,7,3,3,1,Blunt,1,True,Unarmored,3,0,4,4,3,1,1,1,False,False,0,0,0,0,"(""PeasantMob"")"
+Vodnik,Wassermann,Warrior,Tank,Spreewald,Vodnik im grünen Rock. Zieht Lebende unter Wasser.,32,4,4,3,8,1,Blunt,1,True,Unarmored,3,2,4,4,3,2,2,2,False,False,0,0,0,0,"(""MoorGrip"",""FromThePeat"")"
+Rusalka,Rusalka,Warrior,Caster,Spreewald,Wassergeist einer Ertrunkenen. Ihr Lied lähmt.,14,5,6,3,7,3,Arcane,1,False,Light,5,3,5,4,2,0,1,2,True,False,0,0,0,0,"(""DruidessGraveRest"")"
+NoonWitch,Mittagsfrau,Warrior,Melee,Spreewald,Pšezpólnica: erscheint in der Mittagshitze auf dem Feld und mäht mit der Sichel.,22,4,6,4,11,1,Rend,1,False,Unarmored,4,2,5,4,3,1,1,2,True,False,0,0,0,0,"(""WitchHex"")"
+SerpentKing,Schlangenkönig,Unique,Caster,Spreewald,Herr der Fließe mit goldener Krone. Sein Biss ist Gift.,65,8,6,3,12,3,Poison,1,True,Divine,6,6,6,5,6,2,2,3,False,False,0,0,0,0,"(""ZombieInfect"",""DruidMistletoe"",""FleshGiantCrush"")"
+Drowned,Ertrunkener,CannonFodder,Melee,Wattenmeer,"Toter aus Rungholt mit Bootshaken. Langsam, zäh, kommt mit der Flut.",16,0,3,2,6,1,Blunt,1,True,Unarmored,1,0,3,2,3,2,3,2,False,False,0,0,0,0,"(""ZombieInfect"")"
+MudfatMaiden,Wattjungfrau,Warrior,Caster,Wattenmeer,Lockt mit falschem Licht ins Watt.,14,4,6,3,6,3,Arcane,1,False,Light,5,3,6,4,2,0,1,2,True,False,0,0,0,0,"(""WispConfusion"",""WitchHex"")"
+Klabautermann,Klabautermann,Warrior,Support,Wattenmeer,"Schiffskobold mit Kalfathammer. Klein, flink, schlägt zu, wo es weh tut.",12,4,7,3,6,1,Blunt,1,True,Light,4,2,5,5,3,2,1,1,False,False,0,0,0,0,"(""DwarfKingForge"")"
+BlankerHans,Blanker Hans,Unique,Caster,Wattenmeer,Die Sturmflut selbst. Der Blanke Hans holte Rungholt.,80,10,5,4,14,3,Blunt,1,True,Divine,6,8,7,6,4,4,1,4,False,False,0,0,0,0,"(""FleshGiantCrush"",""HeathQueenThorns"",""WodeHorn"")"

@@ -121,6 +121,9 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
+  #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  #abilityBar:empty { display: none; }
+  #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
   #travelClock { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
     background: rgba(233,223,196,.92); color: var(--ink); padding: 10px 26px 12px; border: 1px solid #7a6a4a; box-shadow: 0 4px 18px rgba(0,0,0,.35); text-align: center; }
   #travelClock .tcDate { font-size: 34px; font-family: "IM Fell English", Georgia, serif; }
@@ -138,7 +141,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=17"></script>
+<script src="data/world_data.js?v=19"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=12"></script>
 <script type="importmap">
@@ -175,6 +178,7 @@
   <button id="btnHome" title="Zum Hügelgrab (Taste H)">Hügelgrab</button>
 </div>
 <div id="battleButtons" class="panel hidden">
+  <div id="abilityBar"></div>
   <button id="btnEndTurn">Zug beenden</button>
   <button id="btnRetreat" title="Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.">Rückzug</button>
   <button id="btnEdges">Kanten anzeigen</button>
@@ -1567,18 +1571,18 @@ const Knowledge = {
   }
 };
 
-// Buildings in the barrow (DATA.buildings). One construction at a time, it continues while travelling.
+// Buildings in the barrow (DATA.baseBuildings). One construction at a time, it continues while travelling.
 const Base = {
   levels() {
     const c = game.campaign;
-    if (!c.buildings) { c.buildings = {}; for (const [k, b] of Object.entries(DATA.buildings)) c.buildings[k] = b.start || 0; }
+    if (!c.buildings) { c.buildings = {}; for (const [k, b] of Object.entries(DATA.baseBuildings)) c.buildings[k] = b.start || 0; }
     return c.buildings;
   },
   level(k) { return this.levels()[k] || 0; },
-  built(k) { return DATA.buildings[k].levels.slice(0, this.level(k)); },
-  allBuilt() { return Object.keys(DATA.buildings).flatMap(k => this.built(k)); },
+  built(k) { return DATA.baseBuildings[k].levels.slice(0, this.level(k)); },
+  allBuilt() { return Object.keys(DATA.baseBuildings).flatMap(k => this.built(k)); },
   producer(type) {
-    for (const [k, b] of Object.entries(DATA.buildings)) { const i = b.levels.findIndex(l => (l.produces || []).includes(type)); if (i >= 0) return { k, level: i + 1 }; }
+    for (const [k, b] of Object.entries(DATA.baseBuildings)) { const i = b.levels.findIndex(l => (l.produces || []).includes(type)); if (i >= 0) return { k, level: i + 1 }; }
     return null;
   },
   hasProducer(type) { const p = this.producer(type); return !p || this.level(p.k) >= p.level; },
@@ -1586,19 +1590,19 @@ const Base = {
   lichDeathDays() { const d = this.allBuilt().map(l => l.lichDeathDays).filter(Boolean); return d.length ? Math.min(...d) : ECON.lichDeathDays; },
   // Reason why the next level of k cannot be started, or null.
   blocker(k) {
-    const c = game.campaign, B = DATA.buildings[k], L = this.level(k), next = B.levels[L];
+    const c = game.campaign, B = DATA.baseBuildings[k], L = this.level(k), next = B.levels[L];
     if (!next) return 'Höchste Stufe';
     if (c.construction) return c.construction.k === k ? 'Im Bau' : 'Es wird schon gebaut';
     if (Campaign.armyNode() !== PHYLACTERY) return 'Nur im Hügelgrab';
     if (B.requiresNode && !Campaign.isConquered(NODE_BY_ID[B.requiresNode])) return `Erst ${NODE_BY_ID[B.requiresNode].name} erobern`;
     if (B.requiresPantheon && !Pantheons.assimilated(B.requiresPantheon)) return `Erst ${DATA.pantheons[B.requiresPantheon].name} stürzen`;
-    for (const [rk, rl] of Object.entries(B.requiresBuilding || {})) if (this.level(rk) < rl) return `Benötigt ${DATA.buildings[rk].name}`;
+    for (const [rk, rl] of Object.entries(B.requiresBuilding || {})) if (this.level(rk) < rl) return `Benötigt ${DATA.baseBuildings[rk].name}`;
     for (const [r, v] of Object.entries(next.cost || {})) if ((c.resources[r] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[r]}`;
     return null;
   },
   start(k) {
     if (this.blocker(k)) return;
-    const c = game.campaign, next = DATA.buildings[k].levels[this.level(k)];
+    const c = game.campaign, next = DATA.baseBuildings[k].levels[this.level(k)];
     for (const [r, v] of Object.entries(next.cost || {})) c.resources[r] -= v;
     c.construction = { k, level: this.level(k) + 1, daysLeft: next.days || 1 };
     SaveGame.save(); UI.updateHeader(); this.open();
@@ -1608,7 +1612,7 @@ const Base = {
     if (!w) return;
     if (--w.daysLeft > 0) return;
     this.levels()[w.k] = w.level; c.construction = null;
-    UI.toast(`Fertig: ${DATA.buildings[w.k].name} Stufe ${w.level}.`, 5);
+    UI.toast(`Fertig: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}.`, 5);
     Knowledge.discover();
   },
   producesText(l) {
@@ -1617,7 +1621,7 @@ const Base = {
   },
   open() {
     const c = game.campaign, cost = o => Object.entries(o || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ') || '—';
-    const rows = Object.entries(DATA.buildings).map(([k, B]) => {
+    const rows = Object.entries(DATA.baseBuildings).map(([k, B]) => {
       const L = this.level(k), next = B.levels[L], block = this.blocker(k);
       const have = B.levels.slice(0, L).map(l => [l.text, this.producesText(l)].filter(Boolean).join(' ')).join('<br>');
       const w = c.construction && c.construction.k === k ? ` · <b>im Bau: noch ${c.construction.daysLeft} ${c.construction.daysLeft === 1 ? 'Tag' : 'Tage'}</b>` : '';
@@ -1646,7 +1650,7 @@ const Recruitment = {
     if (!this.candidates(here).some(([k]) => k === type)) return 'Nicht an diesem Ort';
     if (!Knowledge.known(type)) return 'Unbekannt';
     const pr = Base.producer(type);
-    if (pr && Base.level(pr.k) < pr.level) return `Benötigt ${DATA.buildings[pr.k].name} Stufe ${pr.level}`;
+    if (pr && Base.level(pr.k) < pr.level) return `Benötigt ${DATA.baseBuildings[pr.k].name} Stufe ${pr.level}`;
     if (u.requiresPantheon && !Base.level('knowledgeAltar')) return 'Benötigt Wissensaltar';
     for (const [k, v] of Object.entries(u.cost || {})) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
     if (Campaign.commandUsed() + u.commandPoints > Campaign.commandLimit()) return 'Kommandolimit erreicht';
@@ -2391,7 +2395,7 @@ const Pathfinding = {
     return { cost, prev, start: si };
   },
   // Tiles the unit may end its move on (free tiles within its move points), incl. its own.
-  reachable(field, unit, budget = unit.def.move) {
+  reachable(field, unit, budget = moveOf(unit)) {
     const s = this.search(field, unit, budget);
     const tiles = [];
     for (const [i] of s.cost) { const t = field.tiles[i]; if (!t.unit || t.unit === unit) tiles.push(t); }
@@ -2717,7 +2721,7 @@ const Battle = {
     // Load the figures of everyone taking part first (scripts, on demand).
     this.starting = true;
     UI.toast('Die Toten erheben sich …');
-    await Figures.ensure([...c.army.map(a => a.type), ...Campaign.garrisonFor(node)]);
+    await Figures.ensure([...c.army.map(a => a.type), ...Campaign.garrisonFor(node), ...Object.values(SUMMON_TYPE)]);
     this.starting = false;
     if (!node.encounter) Campaign.registerAttack(node);
     const field = new Battlefield(node);
@@ -2729,7 +2733,7 @@ const Battle = {
     const b = game.battle = {
       node, field, dir, units: [], log: [], round: 1, lastTick: null, current: null,
       state: 'fight', busy: false, retreatPending: false, kills: [], reach: null, targets: [],
-      selected: null, hover: null, over: false
+      selected: null, hover: null, over: false, corpses: new Map(), abilityMode: null
     };
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
@@ -2737,6 +2741,12 @@ const Battle = {
     this.applyLichBonus(b);
     const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
     for (const g of splitStacks(groupByType(garrison))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
+    // Ley-Bund: a pantheon leader is shielded by every living member of its pantheon.
+    const pidB = Pantheons.memberOf(node);
+    if (pidB) for (const u of b.units) if (u.side === 'enemy' && (u.def.abilities || []).includes('HeathQueenLeyBond')) {
+      const add = Math.min(20, (Pantheons.living(pidB).length - 1) * DATA.abilities.HeathQueenLeyBond.value);
+      if (add > 0) { u.shield += add; this.log(`Ley-Bund: ${u.def.name} +${add} Seelenschild (${Pantheons.living(pidB).length - 1} Mitglieder leben).`, 'hit'); }
+    }
     this.deploy(b);
 
     // View: lock the tile window on the node, dim everything outside the field.
@@ -2822,8 +2832,10 @@ const Battle = {
   lichCampaignHp(u) { return Math.max(1, Math.round(u.hp / u.def.hp * DATA.units.lich.hp)); },
   makeUnit(type, side, faction, hp) {
     const def = DATA.units[type];
-    return { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, startCount: 1, q: 0, r: 0,
+    const u = { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, startCount: 1, q: 0, r: 0,
       shield: def.soulShield || 0, nextTick: turnTicks(def), alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null };
+    Abilities.init(u);
+    return u;
   },
   // Deployment: player at the side facing the origin, enemies around the center.
   deploy(b) {
@@ -2907,7 +2919,9 @@ const Battle = {
     b.current = u;
     b.selected = u;
     u.hasMoved = false; u.hasAttacked = false; u.movedThisTurn = false;
+    b.abilityMode = null;
     if (u.side === 'player' && u.type === 'lich' && b.retreatPending) { this.finish('retreat'); return; }
+    if (Abilities.turnStart(u)) { if (b.over) return; UI.updateBattle(); await wait(0.5); if (game.battle === b && !b.over) this.endTurn(); return; }
     UI.updateBattle();
     if (u.side === 'player') {
       this.computeOptions();
@@ -2949,6 +2963,8 @@ const Battle = {
     if (!b || b.over || b.busy) return;
     const u = b.current;
     u.nextTick += turnTicks(u.def);
+    Abilities.turnEnd(u);
+    b.abilityMode = null;
     this.clearOptions();
     setTimeout(() => this.nextTurn(), 30);
   },
@@ -2957,7 +2973,7 @@ const Battle = {
     const b = game.battle, u = b.current;
     const from = b.field.get(u.q, u.r);
     // After an attack only MOVE_AFTER_ATTACK of the movement is left (at least 1).
-    b.reach = u.hasMoved ? null : Pathfinding.reachable(b.field, u, u.hasAttacked ? Math.max(1, Math.floor(u.def.move * MOVE_AFTER_ATTACK)) : u.def.move);
+    b.reach = u.hasMoved ? null : Pathfinding.reachable(b.field, u, u.hasAttacked ? Math.max(1, Math.floor(moveOf(u) * MOVE_AFTER_ATTACK)) : moveOf(u));
     b.targets = u.hasAttacked ? [] : b.units.filter(t => Combat.canAttack(b.field, u, from, t).ok);
     this.drawOptions();
     UI.updateBattle();
@@ -3049,7 +3065,9 @@ const Battle = {
     target.shield = (target.shield || 0) - absorbed;
     const before = stackCount(target);
     target.hp -= dmg - absorbed;
-    const deaths = before - stackCount(target);
+    let deaths = before - stackCount(target);
+    if (deaths) { const i = game.battle.field.index(game.battle.field.get(target.q, target.r)); game.battle.corpses.set(i, (game.battle.corpses.get(i) || 0) + deaths); }
+    if (target.hp <= 0 && Abilities.beforeDeath(target, power)) deaths = before - stackCount(target);
     BattleView.updateHp(target);
     BattleView.floatText(target, dmg === 0 ? 'immun' : (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
     // Every fallen creature leaves loot (corpse quality depends on the killing blow).
@@ -3072,11 +3090,12 @@ const Battle = {
       this.log(`${att.def.name} heilt ${target.def.name} (+${h}).`);
       return;
     }
-    const dmg = Combat.damage(prof, target.def, from.level, tt.level, chk.cover);
+    const dmg = Math.round(Combat.damage(prof, target.def, from.level, tt.level, chk.cover) * Abilities.damageMul(att, target));
     if (dmg === 0) this.log(`${target.def.name} ist immun gegen ${POWER_NAMES[prof.power]}-Schaden.`, 'hit');
     else this.log(`${att.def.name} trifft ${target.def.name}: ${dmg} Schaden${chk.cover ? ' (Deckung)' : ''}${surprise ? ' – Überraschung!' : ''}.`, att.side === 'player' ? 'good' : 'hit');
     this.applyDamage(target, dmg, att, prof.power);
     if (b.over) return;
+    Abilities.afterHit(att, target, dmg);
     // Counter: surviving melee targets with counter strike back once at 50 %.
     if (target.alive && chk.dist === 1 && target.def.counter) {
       const back = Combat.canAttack(f, target, tt, att);
@@ -3084,7 +3103,7 @@ const Battle = {
         await wait(0.15);
         const cprof = Combat.profile(target, att);
         const full = Combat.damage(cprof, att.def, tt.level, from.level, back.cover);
-        const cd = full === 0 ? 0 : Math.max(1, Math.round(full * 0.5));
+        const cd = full === 0 ? 0 : Math.max(1, Math.round(full * 0.5 * Abilities.damageMul(target, att)));
         await BattleView.attackAnim(target, att, false);
         this.log(`${target.def.name} kontert: ${cd} Schaden.`, target.side === 'player' ? 'good' : 'hit');
         this.applyDamage(att, cd, target, cprof.power);
@@ -3099,7 +3118,32 @@ const Battle = {
     BattleView.removeUnit(u);
     this.log(u.startCount > 1 ? `Die letzten ${u.def.name} fallen.` : `${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
     if (u.side === 'player' && u.type === 'lich') { this.finish('defeat'); return; }
+    Abilities.afterDeath(u);
     if (!this.alive('enemy').length) this.finish('victory');
+  },
+  // Player picks an ability: immediate ones fire at once, others wait for a target tile.
+  async chooseAbility(id) {
+    const b = game.battle, u = b && b.current;
+    if (!u || u.side !== 'player' || b.busy || b.over || Abilities.blocker(u, id)) return;
+    if (b.abilityMode === id) { b.abilityMode = null; this.computeOptions(); return; }
+    const a = DATA.abilities[id];
+    if (['SELF', 'ALL_ALLIES', 'ALL_ENEMIES'].includes(a.target)) { await this.castAbility(id, b.field.get(u.q, u.r)); return; }
+    b.abilityMode = id;
+    BattleView.setOverlay(BattleView.overlay, Abilities.validTiles(u, id).map(t => ({ t, color: '#a050e0', lift: 0.02 })));
+    UI.updateBattle();
+  },
+  async castAbility(id, tile) {
+    const b = game.battle, u = b.current;
+    b.busy = true; b.abilityMode = null; this.clearOptions();
+    await Abilities.use(u, id, tile);
+    b.busy = false;
+    if (b.over || game.battle !== b) return;
+    if (b.state === 'stealth') this.revealed('Die Magie verrät die Untoten!', 0, 'enemy');
+    if (u.alive && !u.hasMoved && b.current === u) {
+      this.computeOptions();
+      if (b.reach && b.reach.tiles.some(t => !t.unit)) return;
+    }
+    this.endTurn();
   },
   retreat() {
     const b = game.battle;
@@ -3221,6 +3265,220 @@ const Battle = {
 // =============================================================================
 // EnemyAI (PROMPT 8.5)
 // =============================================================================
+// =============================================================================
+// Abilities and status effects in battle (DATA.abilities from DT_Abilities).
+// Every stack has energy (def.energy, +1 per own turn), cooldowns in own turns and statuses
+// that last a number of the stack's own turns. Values scale with the stack size.
+// =============================================================================
+const STATUS_NAMES = { POISONED: 'Vergiftet', BURNING: 'Brennt', BLEEDING: 'Blutet', STUNNED: 'Betäubt', SLOWED: 'Verlangsamt', HASTED: 'Beschleunigt',
+  SHIELDED: 'Geschützt', ENHANCED: 'Gestärkt', CURSED: 'Verflucht', REGENERATION: 'Regeneration', MARKED: 'Gezeichnet', CONFUSED: 'Verwirrt' };
+const STATUS_TIPS = { POISONED: 'verliert LP zu Zugbeginn', BURNING: 'verliert LP zu Zugbeginn', BLEEDING: 'verliert LP zu Zugbeginn', STUNNED: 'setzt den nächsten Zug aus',
+  SLOWED: '−2 Bewegung', HASTED: '+2 Bewegung', SHIELDED: 'Seelenschild erhöht', ENHANCED: '+25 % Schaden', CURSED: '−25 % Schaden',
+  REGENERATION: 'heilt zu Zugbeginn', MARKED: 'erleidet +25 % Schaden', CONFUSED: '−50 % Schaden' };
+const DOT = new Set(['POISONED', 'BURNING', 'BLEEDING']);
+const SUMMON_TYPE = { NecroRaiseDead: 'zombie', WodeWildHunt: 'schwarzer_hund', WispFalseLight: 'irrlicht' };
+
+function moveOf(u) {
+  const s = u.status || {};
+  return Math.max(1, u.def.move + (s.HASTED ? 2 : 0) - (s.SLOWED ? 2 : 0));
+}
+
+const Abilities = {
+  init(u) { u.energy = u.def.energy || 0; u.cd = {}; u.status = {}; u.reassembled = false; },
+  list(u, trigger) { return (u.def.abilities || []).map(id => [id, DATA.abilities[id]]).filter(([, a]) => a && (!trigger || a.trigger === trigger)); },
+  addStatus(u, st, duration, value = 0, quiet = false) {
+    if (!u.alive || st === 'NONE') return;
+    if (st === 'SHIELDED') { u.shield = (u.shield || 0) + value; if (!quiet) BattleView.floatText(u, `Schild +${value}`, true); BattleView.updateHp(u); return; }
+    const old = u.status[st];
+    u.status[st] = { turns: Math.max(duration || 1, old ? old.turns : 0), value: Math.max(value, old ? old.value : 0) };
+    if (!quiet) BattleView.floatText(u, STATUS_NAMES[st], !['POISONED', 'BURNING', 'BLEEDING', 'STUNNED', 'SLOWED', 'CURSED', 'MARKED', 'CONFUSED'].includes(st));
+  },
+  // Damage multiplier from statuses (attacker deals, target takes).
+  damageMul(att, tgt) {
+    let m = 1; const a = att && att.status || {}, t = tgt && tgt.status || {};
+    if (a.ENHANCED) m *= 1.25; if (a.CURSED) m *= 0.75; if (a.CONFUSED) m *= 0.5; if (t.MARKED) m *= 1.25;
+    return m;
+  },
+  floorOk(u, a) { return !a.floors.length || a.floors.includes(game.battle.field.get(u.q, u.r).floor); },
+  // Start of a stack's turn. Returns true when the turn is lost (stunned or died).
+  turnStart(u) {
+    const b = game.battle, n = () => Math.max(1, stackCount(u));
+    u.energy = Math.min(u.def.energy || 0, (u.energy || 0) + 1);
+    for (const k in u.cd) if (u.cd[k] > 0) u.cd[k]--;
+    // Damage and healing over time.
+    for (const st of DOT) if (u.status[st]) {
+      const v = u.status[st].value;
+      Battle.log(`${u.def.name}: ${STATUS_NAMES[st].toLowerCase()} (−${v}).`, u.side === 'player' ? 'hit' : 'good');
+      Battle.applyDamage(u, v, null, st === 'POISONED' ? 'POISON' : st === 'BURNING' ? 'FIRE' : 'REND');
+      if (!u.alive || b.over) return true;
+    }
+    if (u.status.REGENERATION) this.heal(u, u.status.REGENERATION.value, 'Regeneration');
+    // Auras of adjacent enemies (will-o'-wisps confuse).
+    for (const e of Battle.alive(u.side === 'player' ? 'enemy' : 'player'))
+      for (const [, a] of this.list(e, 'PASSIVE'))
+        if (a.status === 'CONFUSED' && hexDistance(e.q, e.r, u.q, u.r) <= Math.max(1, a.area)) this.addStatus(u, 'CONFUSED', 1);
+    // Own triggers at turn start.
+    for (const [id, a] of this.list(u, 'ON_TURN_START')) {
+      if (!this.floorOk(u, a)) continue;
+      if (id === 'PeasantMob' || id === 'HoundPack') {
+        if (Battle.alive(u.side).some(o => o !== u && hexDistance(o.q, o.r, u.q, u.r) === 1)) this.addStatus(u, 'ENHANCED', 1, 0, true);
+        continue;
+      }
+      if (a.effect === 'HEAL') { this.heal(u, a.value * n(), a.name); continue; }
+      if (a.effect === 'APPLY_STATUS') this.addStatus(u, a.status, a.duration, a.value * n(), true);
+    }
+    if (u.status.STUNNED) { Battle.log(`${u.def.name} ist betäubt und setzt aus.`, u.side === 'player' ? 'hit' : 'good'); BattleView.floatText(u, 'betäubt'); return true; }
+    return false;
+  },
+  turnEnd(u) {
+    for (const st of Object.keys(u.status || {})) if (--u.status[st].turns <= 0) delete u.status[st];
+  },
+  heal(u, amount, why) {
+    const cap = stackCount(u) * u.def.hp;
+    const h = Math.max(0, Math.min(Math.round(amount), cap - u.hp));
+    if (!h) return 0;
+    u.hp += h; BattleView.updateHp(u); BattleView.floatText(u, '+' + h, true);
+    Battle.log(`${u.def.name} heilt (+${h}${why ? ', ' + why : ''}).`, u.side === 'player' ? 'good' : 'hit');
+    return h;
+  },
+  // After a hit: poison bites and treasure curses.
+  afterHit(att, tgt, dmg) {
+    if (!dmg) return;
+    if (tgt.alive) for (const [, a] of this.list(att, 'ON_DAMAGE_DEALT'))
+      if (a.effect === 'APPLY_STATUS') { this.addStatus(tgt, a.status, a.duration, Math.max(1, Math.round(a.value * stackCount(att) * 0.5))); Battle.log(`${tgt.def.name} ist ${STATUS_NAMES[a.status].toLowerCase()} (${a.name}).`); }
+    if (att.alive) for (const [, a] of this.list(tgt, 'ON_DAMAGE_TAKEN'))
+      if (a.effect === 'APPLY_STATUS') { this.addStatus(att, a.status, a.duration); Battle.log(`${att.def.name} ist ${STATUS_NAMES[a.status].toLowerCase()} (${a.name}).`); }
+  },
+  // A stack would die: skeletons reassemble once (not after a blunt or holy death).
+  beforeDeath(u, power) {
+    if (u.reassembled || !this.list(u, 'ON_DEATH').some(([id]) => id === 'SkeletonReassemble') || power === 'BLUNT' || power === 'HOLY') return false;
+    u.reassembled = true;
+    const k = Math.max(1, Math.ceil(u.startCount / 4));
+    u.hp = (k - 1) * u.def.hp + DATA.abilities.SkeletonReassemble.value;
+    BattleView.updateHp(u); BattleView.floatText(u, 'setzt sich neu zusammen', true);
+    Battle.log(`${k}× ${u.def.name} setzen sich wieder zusammen.`, u.side === 'player' ? 'good' : 'hit');
+    return true;
+  },
+  afterDeath(u) {
+    for (const [id] of this.list(u, 'ON_DEATH')) if (id === 'WispFalseLight') this.summon(u, id, game.battle.field.get(u.q, u.r), Math.max(1, Math.ceil(u.startCount / 4)));
+  },
+  // ---- active abilities ---------------------------------------------------
+  blocker(u, id) {
+    const a = DATA.abilities[id];
+    if (u.hasAttacked) return 'Schon gehandelt';
+    if ((u.cd[id] || 0) > 0) return `Abklingzeit ${u.cd[id]}`;
+    if ((u.energy || 0) < a.energy) return `Energie ${u.energy}/${a.energy}`;
+    if (a.corpse && !this.corpseTiles(u, a).length) return 'Keine Leiche in Reichweite';
+    if (a.target !== 'SELF' && a.target !== 'ALL_ALLIES' && a.target !== 'ALL_ENEMIES' && !this.validTiles(u, id).length) return 'Kein Ziel';
+    return null;
+  },
+  actives(u) { return this.list(u, 'ACTIVE').filter(([id]) => id !== 'LichRetreat'); },
+  corpseTiles(u, a) {
+    const b = game.battle, f = b.field;
+    return [...(b.corpses || new Map()).entries()].filter(([, c]) => c > 0).map(([i]) => f.tiles[i]).filter(t => t && hexDistance(u.q, u.r, t.q, t.r) <= Math.max(1, a.range));
+  },
+  validTiles(u, id) {
+    const a = DATA.abilities[id], b = game.battle, f = b.field, from = f.get(u.q, u.r);
+    if (a.corpse) return this.corpseTiles(u, a);
+    const inRange = t => { const d = hexDistance(from.q, from.r, t.q, t.r); return d >= (a.target === 'ALLY' ? 0 : 1) && d <= Math.max(1, a.range) && (d <= 1 || Combat.lineOfSight(f, from, t).clear); };
+    if (a.target === 'ENEMY') return Battle.alive(u.side === 'player' ? 'enemy' : 'player').map(e => f.get(e.q, e.r)).filter(inRange);
+    if (a.target === 'ALLY') return Battle.alive(u.side).map(e => f.get(e.q, e.r)).filter(inRange);
+    if (a.target === 'GROUND') return f.tiles.filter(t => t && inRange(t) && (a.effect !== 'SUMMON' || (!t.unit && f.walkable(t))));
+    return [from];
+  },
+  // Units hit by ability a cast by u at tile t.
+  affected(u, a, t) {
+    const b = game.battle, f = b.field;
+    const foes = Battle.alive(u.side === 'player' ? 'enemy' : 'player'), friends = Battle.alive(u.side);
+    const pool = ['ENEMY', 'ALL_ENEMIES'].includes(a.target) || (a.target === 'GROUND' && a.effect !== 'HEAL') ? foes : friends;
+    if (a.target === 'SELF' && a.pattern === 'SINGLE_POINT') return [u];
+    const c = ['SELF', 'ALL_ALLIES', 'ALL_ENEMIES'].includes(a.target) ? f.get(u.q, u.r) : t;
+    if (a.pattern === 'SINGLE_POINT') return pool.filter(x => x.q === c.q && x.r === c.r);
+    if (a.pattern === 'LINE') {
+      const line = hexLine(u.q, u.r, c.q, c.r).slice(1, 1 + Math.max(1, a.area) + hexDistance(u.q, u.r, c.q, c.r));
+      return pool.filter(x => line.some(([q, r]) => q === x.q && r === x.r));
+    }
+    if (a.pattern === 'CONE') return pool.filter(x => hexDistance(x.q, x.r, c.q, c.r) <= a.area && hexDistance(x.q, x.r, u.q, u.r) <= Math.max(1, a.range) + 1);
+    return pool.filter(x => hexDistance(x.q, x.r, c.q, c.r) <= Math.max(1, a.area));   // RADIUS / RING
+  },
+  async use(u, id, t) {
+    const b = game.battle, f = b.field, a = DATA.abilities[id], n = Math.max(1, stackCount(u));
+    if (this.blocker(u, id)) return false;
+    u.energy -= a.energy; u.cd[id] = a.cooldown + 1;      // +1: the cooldown counts from the next own turn
+    u.hasAttacked = true;
+    Battle.log(`${u.def.name}: ${a.name}.`, u.side === 'player' ? 'good' : 'hit');
+    BattleView.floatText(u, a.name, true);
+    if (t && t !== f.get(u.q, u.r)) { const p = hexToWorld(t.q, t.r); BattleView.face(u, p.x, p.z); }
+    await wait(0.25);
+    if (a.effect === 'SUMMON') { this.summon(u, id, t, Math.max(1, a.value * (id === 'WodeWildHunt' ? 4 : 1) * (id === 'NecroRaiseDead' ? Math.min(4 * n, b.corpses.get(f.index(t)) || 1) : 1))); return true; }
+    if (id === 'GhoulCorpseEater') { this.heal(u, a.value * n, a.name); b.corpses.set(f.index(t), Math.max(0, (b.corpses.get(f.index(t)) || 1) - n)); return true; }
+    const targets = this.affected(u, a, t);
+    for (const x of targets) {
+      if (!x.alive || b.over) continue;
+      if (a.effect === 'DAMAGE' || (a.effect === 'MODIFY_TERRAIN' && a.value > 0 && a.power !== 'HEAL')) {
+        const tt = f.get(x.q, x.r), from = f.get(u.q, u.r);
+        const dmg = Math.round(Combat.damage({ power: a.power, damage: a.value * n }, x.def, from.level, tt.level, false) * this.damageMul(u, x));
+        Battle.log(`${a.name} trifft ${x.def.name}: ${dmg} Schaden.`, u.side === 'player' ? 'good' : 'hit');
+        Battle.applyDamage(x, dmg, u, a.power);
+        if (id === 'LichSoulDrain') this.heal(u, dmg, a.name);
+        if (x.alive && a.status !== 'NONE') this.addStatus(x, a.status, a.duration);
+      } else if (a.effect === 'HEAL') this.heal(x, a.value * n, a.name);
+      else if (a.effect === 'APPLY_STATUS' || a.effect === 'STUN') this.addStatus(x, a.effect === 'STUN' ? 'STUNNED' : a.status, a.duration, a.status === 'SHIELDED' ? a.value * n : Math.max(1, Math.round(a.value * n * 0.5)));
+      else if (a.effect === 'MODIFY_TERRAIN') this.addStatus(x, a.status !== 'NONE' ? a.status : (a.power === 'HOLY' ? 'BURNING' : 'SLOWED'), Math.max(1, a.duration), Math.max(1, a.value * n));
+      else if (a.effect === 'TELEPORT') Battle.retreat();
+    }
+    if (!targets.length) Battle.log('… ohne Wirkung.');
+    return true;
+  },
+  summon(u, id, t, count) {
+    const b = game.battle, f = b.field, type = SUMMON_TYPE[id];
+    if (!type || !DATA.units[type]) return;
+    let tile = t && !t.unit && f.walkable(t) ? t : null;
+    if (!tile) tile = f.tilesWithin(t ? t.q : u.q, t ? t.r : u.r, 2).find(x => !x.unit && f.walkable(x) && !f.isWater(x));
+    if (!tile) { Battle.log('Kein Platz für die Gerufenen.'); return; }
+    const s = Battle.makeStack(type, u.side, u.faction, Array(count).fill(DATA.units[type].hp));
+    Abilities.init(s);
+    s.nextTick = (b.lastTick || 0) + turnTicks(s.def);
+    b.units.push(s); Battle.putUnit(s, tile);
+    BattleView.createUnit(s);
+    if (t && b.corpses) b.corpses.delete(f.index(t));
+    Battle.log(`${count}× ${s.def.name} ${count > 1 ? 'erheben sich' : 'erhebt sich'}.`, u.side === 'player' ? 'good' : 'hit');
+    UI.updateBattle();
+  },
+  // ---- enemy use ------------------------------------------------------------
+  async aiUse(u) {
+    const b = game.battle;
+    let best = null;
+    const foes = Battle.alive(u.side === 'player' ? 'enemy' : 'player');
+    const near = foes.some(e => hexDistance(e.q, e.r, u.q, u.r) <= 5);
+    for (const [id, a] of this.actives(u)) {
+      if (this.blocker(u, id)) continue;
+      for (const t of this.validTiles(u, id)) {
+        const hit = a.effect === 'SUMMON' ? [] : this.affected(u, a, t);
+        let score = 0;
+        if (a.effect === 'DAMAGE') score = hit.reduce((s, x) => s + a.value * stackCount(u) + (x.type === 'lich' ? 10 : 0), 0) * 0.8;
+        else if (a.effect === 'HEAL') score = hit.reduce((s, x) => s + Math.min(a.value * stackCount(u), stackCount(x) * x.def.hp - x.hp), 0);
+        else if (a.effect === 'SUMMON') score = near ? 25 : 0;
+        else if (['ALLY', 'ALL_ALLIES', 'SELF'].includes(a.target)) score = near ? hit.filter(x => !(x.status || {})[a.status]).length * 12 : 0;
+        else score = hit.filter(x => !(x.status || {})[a.status]).length * 14;
+        if (score > (best ? best.score : 10)) best = { id, t, score };
+        if (['SELF', 'ALL_ALLIES', 'ALL_ENEMIES'].includes(a.target)) break;
+      }
+    }
+    if (!best) return false;
+    // Compare with a normal attack from here.
+    const f = b.field, here = f.get(u.q, u.r);
+    const normal = Math.max(0, ...foes.filter(p => Combat.canAttack(f, u, here, p).ok).map(p => Combat.expected(f, u, here, p, false)));
+    if (DATA.abilities[best.id].effect === 'DAMAGE' && best.score < normal) return false;
+    await this.use(u, best.id, best.t);
+    return true;
+  },
+  statusHtml(u) {
+    const s = Object.entries(u.status || {});
+    return s.length ? s.map(([k, v]) => `<span title="${STATUS_TIPS[k]}">${STATUS_NAMES[k]} (${v.turns})</span>`).join(', ') : '';
+  }
+};
+
 const EnemyAI = {
   async takeTurn(u) {
     const b = game.battle, f = b.field;
@@ -3231,6 +3489,8 @@ const EnemyAI = {
     const spots = canMove ? reach.tiles : [here];
     await wait(0.2);
     if (game.battle !== b) return;
+    // 0. Abilities (spells, buffs, summons) from where the unit stands.
+    if (await Abilities.aiUse(u)) return;
 
     // 1. Priests heal the wounded ally with the largest deficit.
     if (u.def.power === 'HEAL') {
@@ -3304,7 +3564,7 @@ const EnemyAI = {
           const d = directionTo(path[i - 1].q, path[i - 1].r, t.q, t.r);
           cost += Pathfinding.stepCost(f, u, path[i - 1], d, t, true);
         }
-        if (cost > u.def.move) break;
+        if (cost > moveOf(u)) break;
         if (t.unit && t.unit !== u) { if (u.def.flying) continue; break; }
         dest = t;
       }
@@ -3614,6 +3874,14 @@ const UI = {
     this.renderUnitCard(b.selected || cur);
     const myTurn = cur && cur.side === 'player' && !b.busy && !b.over;
     $('btnEndTurn').disabled = !myTurn;
+    const bar = $('abilityBar');
+    if (myTurn) {
+      bar.innerHTML = Abilities.actives(cur).map(([id, a], i) => {
+        const block = Abilities.blocker(cur, id);
+        return `<button data-ab="${id}" class="${b.abilityMode === id ? 'active' : ''}" ${block ? 'disabled' : ''} title="${esc(a.name)} (Taste ${i + 1}): ${esc(a.desc || '')}${a.energy ? ` · Energie ${a.energy}` : ''}${a.cooldown ? ` · Abklingzeit ${a.cooldown}` : ''}${block ? ' – ' + block : ''}">${esc(a.name)}${a.energy ? ` <span class="small">(${a.energy})</span>` : ''}</button>`;
+      }).join('');
+      bar.querySelectorAll('[data-ab]').forEach(x => x.onclick = () => Battle.chooseAbility(x.dataset.ab));
+    } else bar.innerHTML = '';
     $('btnRetreat').disabled = b.retreatPending || b.over;
     if (cur && cur.alive) {
       BattleView.ring.visible = true;
@@ -3635,6 +3903,9 @@ const UI = {
       <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${u.shield ?? d.soulShield} / ${d.soulShield * u.startCount}</td></tr>
       <tr><td>Sinne</td><td colspan="3">Sicht ${d.sight} · Gehör ${d.hear} · Geruch ${d.smell}</td></tr>
       ${flags ? `<tr><td>Eigenschaften</td><td colspan="3">${flags}</td></tr>` : ''}
+      ${d.energy ? `<tr><td>Energie</td><td colspan="3">${u.energy} / ${d.energy} (+1 pro Zug)</td></tr>` : ''}
+      ${Abilities.statusHtml(u) ? `<tr><td>Zustand</td><td colspan="3">${Abilities.statusHtml(u)}</td></tr>` : ''}
+      ${(d.abilities || []).length ? `<tr><td>Fähigkeiten</td><td colspan="3">${d.abilities.map(id => DATA.abilities[id]).filter(Boolean).map(a => `<span title="${esc(a.desc || '')}">${esc(a.name)}</span>`).join(', ')}</td></tr>` : ''}
       <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</td></tr></table>`;
   }
 };
@@ -3676,6 +3947,11 @@ function onLeftClick(ev) {
   else { const p = game.view.tiles.pick(game.view.raycaster); if (p) tile = b.field.get(p.q, p.r); }
   if (!tile) return;
   const cur = b.current, myTurn = cur && cur.side === 'player' && !b.busy;
+  if (myTurn && b.abilityMode) {
+    if (Abilities.validTiles(cur, b.abilityMode).includes(tile)) Battle.castAbility(b.abilityMode, tile);
+    else { b.abilityMode = null; Battle.computeOptions(); }
+    return;
+  }
   if (myTurn && tile.unit && b.targets.includes(tile.unit)) { Battle.playerAttack(tile.unit); return; }
   if (myTurn && !tile.unit && b.reach && b.reach.tiles.includes(tile)) { Battle.playerMove(tile); return; }
   if (tile.unit) { b.selected = tile.unit; UI.renderUnitCard(tile.unit); }
@@ -3727,6 +4003,15 @@ function onHover(ev) {
   } else if (t) {
     let extra = '';
     if (t.building !== null) extra += `<br>${b.field.buildings[t.building].name}`;
+    // Damage preview against a target.
+    if (myTurn && t.unit && b.targets.includes(t.unit) && t.unit.side !== cur.side) {
+      const from = b.field.get(cur.q, cur.r), chk = Combat.canAttack(b.field, cur, from, t.unit), x = t.unit;
+      const dmg = Math.round(Combat.expected(b.field, cur, from, x, chk.cover) * Abilities.damageMul(cur, x));
+      const through = Math.max(0, dmg - (x.shield || 0)), left = x.hp - through, dies = stackCount(x) - (left > 0 ? Math.ceil(left / x.def.hp) : 0);
+      const eff = DATA.powerDefense[Combat.profile(cur, x).power][x.def.defense];
+      extra += `<br><b>Angriff: ≈ ${dmg} Schaden</b>${x.shield ? ` (Schild ${Math.min(x.shield, dmg)})` : ''} · ${left <= 0 ? 'vernichtet den Stapel' : `~${dies} fallen`}<br><span class="small">${eff >= 125 ? '▲ sehr wirksam' : eff >= 100 ? '► wirksam' : eff > 0 ? '▼ schwach' : '✖ immun'} (${eff} %)${chk.cover ? ' · Deckung' : ''}${x.def.counter && chk.dist === 1 ? ' · Gegner kontert' : ''}</span>`;
+    }
+    if (t.unit && Abilities.statusHtml(t.unit)) extra += `<br><span class="small">${Abilities.statusHtml(t.unit)}</span>`;
     if (myTurn && !t.unit) {
       const c = b.reach.cost.get(b.field.index(t));
       if (b.reach.tiles.includes(t)) extra += `<br>Weg: ${c} von ${cur.def.move} Bewegungspunkten`;
@@ -3786,6 +4071,8 @@ function initInput() {
     if (game.mode === 'battle') {
       if (e.code === 'Space') { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); }
       if (e.code === 'KeyR') Battle.retreat();
+      if (e.code === 'Escape' && game.battle && game.battle.abilityMode) { game.battle.abilityMode = null; Battle.computeOptions(); }
+      if (/^Digit[1-4]$/.test(e.code) && game.battle && game.battle.current) { const ab = Abilities.actives(game.battle.current)[+e.code.slice(5) - 1]; if (ab) Battle.chooseAbility(ab[0]); }
       if (e.code === 'KeyT') toggleEdges();
     }
     if (e.code === 'KeyI' && game.mode === 'world') UI.openInventory();
