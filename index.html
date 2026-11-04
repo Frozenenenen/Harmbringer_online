@@ -133,6 +133,9 @@
   .recruitBtns { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-end; max-width: 210px; }
   .recruitBtns button { padding: 2px 7px; } .recruitBtns input { width: 48px; } .recruitBtns .nowrap { white-space: nowrap; }
   .resIcon { vertical-align: -3px; margin-right: 2px; }
+  .loot .cost { font-size: 16px; margin-right: 12px; } .loot .resIcon { width: 20px; height: 20px; }
+  .losses { display: flex; flex-wrap: wrap; gap: 6px 14px; } .lossRow { display: flex; gap: 6px; align-items: center; min-width: 150px; }
+  .lossRow .portrait { width: 40px; height: 40px; }
   .cost { white-space: nowrap; margin-right: 4px; } .cost.short { color: #b0302a; font-weight: bold; }
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
@@ -256,7 +259,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 81, "date": "2026-11-04", "changes": [{"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}]};
+const BUILD = {"version": 82, "date": "2026-11-04", "changes": [{"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3912,12 +3915,13 @@ const Battle = {
       if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       // A Lich wastes nothing: own fallen (not ghosts, machines or summoned) return half their corpses and bones.
+      const recycled = {};
       for (const u of b.units) {
         if (u.side !== 'player' || u.summoned || u.def.spectral || u.def.rank === 'MACHINE' || u.type === 'lich') continue;
         const lostN = u.startCount - (u.alive ? stackCount(u) : 0);
         if (lostN <= 0) continue;
         const cost = DATA.units[u.type].cost || {};
-        for (const k of ['corpses', 'bones']) if (cost[k]) loot[k] = (loot[k] || 0) + Math.floor(cost[k] * lostN * 0.5);
+        for (const k of ['corpses', 'bones']) if (cost[k]) { const v = Math.floor(cost[k] * lostN * 0.5); loot[k] = (loot[k] || 0) + v; recycled[k] = (recycled[k] || 0) + v; }
       }
       Campaign.addResources(loot);
       if (node.raidId) Raids.remove(node.raidId);
@@ -3980,7 +3984,7 @@ const Battle = {
         ? `<h2>${node.name} abgewehrt</h2><p>${b.kills.length} Feinde gefallen. Der Weg ist frei, die Reise geht weiter.</p>`
         : `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>`;
       html += `
-<h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>
+<h3>Beute</h3><p class="loot">${Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<span class="cost">${resIcon(k, 20)}<b>${v}</b> ${RESOURCE_NAMES[k]}</span>`).join(' ') || 'nichts'}</p>${Object.values(recycled).some(v => v > 0) ? `<p class="small">Davon aus den eigenen Gefallenen zurückgewonnen: ${costHtml(recycled)}</p>` : ''}
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${ancestorText}${pantheonText}`;
       // Show the end screen only once (the campaign may go on afterwards).
       if (node.finale && !c.won) { c.won = true; endNow = true; }
@@ -4017,6 +4021,14 @@ const Battle = {
       if (!e.army.length) { c.expeditions = Expeditions.list().filter(x => x !== e); if (UI.activeArmy === e.id) UI.activeArmy = 'lich'; }
       this.saved = null;
     }
+    // Losses with portraits (own stacks; summoned ones do not count). After a defeat or retreat all stay behind.
+    const losses = [];
+    for (const u of b.units) {
+      if (u.side !== 'player' || u.summoned) continue;
+      const left = u.alive && (result === 'victory' || u.type === b.leader) ? stackCount(u) : 0;
+      if (u.startCount - left > 0) losses.push({ type: u.type, n: u.startCount - left, of: u.startCount });
+    }
+    html += `<h3>Verluste</h3>${losses.length ? `<div class="losses">${losses.map(l => `<div class="lossRow" title="${esc(DATA.units[l.type].name)}: ${l.n} von ${l.of} verloren">${portraitHtml(l.type, DATA.units[l.type])}<span><b>−${l.n}</b> ${esc(DATA.units[l.type].name)}<br><span class="small">${l.of - l.n} von ${l.of} übrig</span></span></div>`).join('')}</div>` : '<p class="small">Keine – alle Untoten haben den Kampf überstanden.</p>'}`;
     if (battleDays > 0) Campaign.advanceDays(battleDays);
     html += `<p class="small">Der Kampf dauerte ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'} (etwa ${hours} Stunden${battleDays ? `, ${battleDays} ${battleDays === 1 ? 'Tag' : 'Tage'} vergehen` : ''}).</p>`;
     Campaign.healAtPhylactery();
