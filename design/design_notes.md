@@ -2348,6 +2348,7 @@ Die Lebenden schlagen zurück, aber nur dort, wo der Lich nicht ist:
 - **Ziel:** der nächste eroberte Ort im Umkreis von 450 Feldern, den die Armee nicht deckt. Marsch: 14 Felder pro Tag (die Armee schafft 39).
 - **Kartenseite:** Steht die Armee höchstens 250 Felder vom Trupp oder von dessen Ziel entfernt, wartet der Trupp. So fallen Orte nur, wenn der Lich anderswo unterwegs ist.
 - **Rückeroberung:** Erreicht ein Trupp sein Ziel, gehört der Ort wieder seiner alten Fraktion; das tote Land dort verschwindet.
+- **Ausgezogene Trupps fehlen daheim:** Schickt ein Ort einen Trupp los, hat er danach nur noch die Hälfte seiner Besatzung und füllt sich in 60 % der Erholungszeit wieder auf. Nur Orte mit voller Stärke schicken Trupps; findet ein Trupp kein Ziel mehr, kehrt er heim (Ort sofort wieder voll).
 - **Erholung:** Ein zurückeroberter Ort startet mit 25 % seiner Besatzung und wächst in 20 + 1,5 × Größe Tagen wieder auf volle Stärke (Dorf ~6 Wochen, große Stadt ~4 Monate; `recovery` in `world_data.js`). **Anführer (Bosse) kehren nie zurück**, sobald ihr Ort einmal gefallen ist.
 - **Abfangen:** Trupps erscheinen auf Karte und Minimap (Dreieck, gestrichelte Linie zum Ziel). Anklicken → „Abfangen“: Kampf gegen den Trupp, danach steht die Armee wieder an ihrem Ort.
 - Werte: `raids` in `data/world_data.js`.

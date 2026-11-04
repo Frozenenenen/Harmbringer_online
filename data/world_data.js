@@ -790,7 +790,8 @@ window.HARMBRINGER_DATA = {
 
   // A place retaken by the living starts with startShare of its garrison and grows back to full
   // strength in baseDays + daysPerSize * size days (village ~6 weeks, big city ~4 months).
-  recovery: { startShare: 0.25, baseDays: 20, daysPerSize: 1.5 },
+  recovery: { startShare: 0.25, baseDays: 20, daysPerSize: 1.5,
+              refillFactor: 0.6 },   // a place that sent a war party refills in 60 % of that time
 
   // Pantheons: groups of mythic places around a ley seat. A region (all places whose nearest
   // pantheon member is within regionRadius) is assimilated once every member is conquered:

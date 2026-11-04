@@ -132,6 +132,8 @@
     transition: opacity .4s; text-align: center; max-width: 80%; }
 
   /* Debug overlay */
+  #debugTools { position: absolute; left: 14px; top: 420px; padding: 6px 10px; font-size: 12px; z-index: 6; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; max-width: 330px; }
+  #debugTools input { width: 56px; } #debugTools button { font-size: 11px; padding: 1px 6px; }
   #debug { pointer-events: auto; cursor: help; position: absolute; left: 14px; top: 120px; padding: 6px 10px; font: 12px/1.45 Consolas, monospace; background: rgba(233,223,196,.92);
     border: 1px solid var(--ink); z-index: 6; white-space: pre; }
 
@@ -184,7 +186,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=30"></script>
+<script src="data/world_data.js?v=31"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -235,6 +237,7 @@
 
 <div id="toast" class="panel hidden"></div>
 <div id="debug" class="hidden"></div>
+<div id="debugTools" class="panel hidden"></div>
 
 <!-- Modals -->
 <div id="loading" class="modal"><div class="panel">
@@ -275,7 +278,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 89, "date": "2026-11-04", "changes": [{"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}]};
+const BUILD = {"version": 90, "date": "2026-11-04", "changes": [{"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1262,7 +1265,7 @@ const Campaign = {
   armyNode() { return NODE_BY_ID[game.campaign.nodeId]; },
   commandLimit() {
     const mythic = DATA.nodes.filter(n => n.type === 'MYTHIC' && this.isConquered(n)).length;
-    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0) + Base.sum('command');
+    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0) + Base.sum('command') + (game.campaign.debugCommand || 0);
   },
   // Sum of all active bonuses: equipped artifacts plus buffs of owned special places.
   effects() {
@@ -1392,8 +1395,12 @@ const Campaign = {
   recoveryDays(node) { const R = DATA.recovery; return Math.round(R.baseDays + R.daysPerSize * (node.size || 16)); },
   recovery(node) {
     const c = game.campaign, day = (c.retaken || {})[node.id];
-    if (day === undefined || !this.isEnemy(node)) return 1;
-    return Math.min(1, DATA.recovery.startShare + (1 - DATA.recovery.startShare) * (c.dayCount - day) / this.recoveryDays(node));
+    if (!this.isEnemy(node)) return 1;
+    let share = day === undefined ? 1 : Math.min(1, DATA.recovery.startShare + (1 - DATA.recovery.startShare) * (c.dayCount - day) / this.recoveryDays(node));
+    // A place that sent out a war party is weaker until it has refilled its ranks.
+    const w = (c.weakened || {})[node.id];
+    if (w) share = Math.min(share, Math.min(1, w.share + (1 - w.share) * (c.dayCount - w.day) / (this.recoveryDays(node) * DATA.recovery.refillFactor)));
+    return share;
   },
   // Threat rises when a node is attacked.
   registerAttack(node) {
@@ -1517,7 +1524,7 @@ const Raids = {
       if (!t || !Campaign.isConquered(t)) {                     // target lost its point: look for another one
         const taken = this.targeted(); taken.delete(p.targetId);
         t = this.pickTarget(p.q, p.r, taken, p.region);
-        if (!t) { this.remove(p.id); continue; }
+        if (!t) { if (c.weakened) delete c.weakened[p.originId]; this.remove(p.id); continue; }   // nothing to take: they go home
         p.targetId = t.id;
       }
       p.holding = this.armyNear(p.q, p.r) || this.armyNear(t.q, t.r);
@@ -1542,6 +1549,7 @@ const Raids = {
       if (!city && !pid) continue;
       if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id) || Pantheons.fallenFaction(o.faction)) continue;
       if (c.raidFactionDay[o.faction] !== undefined && c.dayCount - c.raidFactionDay[o.faction] < RAIDS.factionCooldown) continue;
+      if (Campaign.recovery(o) < 1) continue;                    // only places at full strength send troops
       const chance = (pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0)) * (alliance && !pid ? 2 : 1);
       if (Math.random() >= chance) continue;
       const t = this.pickTarget(o.q, o.r, taken, pid || null, Campaign.strength(Object.entries(o.garrison).filter(([u]) => DATA.units[u].rank !== 'UNIQUE').flatMap(([u, n]) => Array(Math.round(n * RAIDS.strength)).fill(u))));
@@ -1550,6 +1558,7 @@ const Raids = {
       const p = this.create(o, t); if (pid) p.region = pid;
       list.push(p);
       c.lastRaidDay = c.dayCount; c.raidFactionDay[o.faction] = c.dayCount;
+      (c.weakened = c.weakened || {})[o.id] = { day: c.dayCount, share: 1 - RAIDS.strength };   // the troops are missing at home
       break;                                             // at most one new party per day
     }
   },
@@ -4911,7 +4920,7 @@ const UI = {
           ${atNode ? '' : (() => { const risk = Campaign.travelRisk(here, node);
             return `<tr><td>Unterwegs</td><td>${risk.places.length} unbesiegte Orte am Weg · Hinterhalt ${Math.round(risk.chance * 100)} %</td></tr>`; })()}
           ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
-          <tr><td>Besatzung</td><td>${garrison}${enemy && Campaign.recovery(node) < 1 ? `<br><span class="small">Zurückerobert, erholt sich: ${Math.round(Campaign.recovery(node) * 100)} % (voll in ${Math.ceil((1 - Campaign.recovery(node)) / (1 - DATA.recovery.startShare) * Campaign.recoveryDays(node))} Tagen)</span>` : ''}${enemy && (c.plundered || {})[node.id] && Object.keys(node.garrison).some(t => DATA.units[t].rank === 'UNIQUE') ? '<br><span class="small">Der Anführer ist gefallen und kehrt nicht zurück.</span>' : ''}</td></tr>
+          <tr><td>Besatzung</td><td>${garrison}${enemy && Campaign.recovery(node) < 1 ? `<br><span class="small">${(c.weakened || {})[node.id] && !(c.retaken || {})[node.id] ? 'Ein Trupp ist ausgezogen, die Besatzung füllt sich auf' : 'Zurückerobert, erholt sich'}: ${Math.round(Campaign.recovery(node) * 100)} % (voll in ${Math.ceil((1 - Campaign.recovery(node)) / (1 - DATA.recovery.startShare) * Campaign.recoveryDays(node))} Tagen)</span>` : ''}${enemy && (c.plundered || {})[node.id] && Object.keys(node.garrison).some(t => DATA.units[t].rank === 'UNIQUE') ? '<br><span class="small">Der Anführer ist gefallen und kehrt nicht zurück.</span>' : ''}</td></tr>
           ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
           ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
           ${Pantheons.infoRow(node)}
@@ -5258,7 +5267,7 @@ function initInput() {
   window.addEventListener('keyup', e => { if (e.code === 'Space') game.hurry = false; });
   window.addEventListener('blur', () => { game.hurry = false; });
   window.addEventListener('keydown', e => {
-    if (e.code === 'F3') { e.preventDefault(); game.debug = !game.debug; UI.show('debug', game.debug); return; }
+    if (e.code === 'F3') { e.preventDefault(); game.debug = !game.debug; UI.show('debug', game.debug); Debug.tools(game.debug); return; }
     if (e.target && e.target.tagName === 'INPUT') return;
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     inp.keys.add(e.code);
@@ -5317,6 +5326,18 @@ const Debug = {
     const g = Object.entries(n.garrison || {}).map(([t, c]) => `${c}× ${DATA.units[t].name}`).join(', ');
     return `${n.name} [${n.id}]\n           ${NODE_TYPE_NAMES[n.type] || n.type} · ${DATA.factions[Campaign.owner(n)]?.name || Campaign.owner(n)} · (${n.q}, ${n.r})` +
       `${Campaign.isRevealed(n) ? '' : ' · unentdeckt'}${g ? `\n           ${g}` : ''}`;
+  },
+  // Cheats for testing (F3): change the command limit directly.
+  tools(on) {
+    const el = $('debugTools'); el.classList.toggle('hidden', !on); if (!on || !game.campaign) return;
+    const c = game.campaign, extra = c.debugCommand || 0;
+    el.innerHTML = `<b>Debug</b> Kommandolimit ${Campaign.commandLimit()} (Zusatz <input type="number" id="dbgCmd" value="${extra}">)
+      <button data-dc="-10">−10</button><button data-dc="10">+10</button><button data-dc="100">+100</button><button data-dc="set">Setzen</button><button data-dc="0">Zurück</button>`;
+    const apply = v => { c.debugCommand = v; SaveGame.save(); UI.updateHeader(); UI.renderInfo(); this.tools(true); };
+    el.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => {
+      const k = b.dataset.dc;
+      apply(k === 'set' ? Math.floor(+$('dbgCmd').value || 0) : k === '0' ? 0 : (c.debugCommand || 0) + +k);
+    });
   },
   update() {
     if (!game.debug) return;
