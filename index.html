@@ -175,6 +175,8 @@
   #travelClock .tcHint { font-size: 11px; opacity: .6; margin-top: 4px; }
   .nodeLabel.raidLabel { background: rgba(90,24,20,.88); color: #f2e6cf; font-size: 13px; }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
+  .unitLabel .alertMark { display: block; text-align: center; font: bold 18px Georgia, serif; text-shadow: 0 0 4px #000; }
+  .alertMark.unaware { color: #c8c8c8; font-size: 13px; font-style: italic; } .alertMark.suspicious { color: #f0d040; } .alertMark.alarmed { color: #ff4030; }
   .unitLabel .stIcons { font-size: 12px; color: #fff; text-shadow: 0 0 3px #000; margin-right: 2px; }
   .unitLabel .tokName { display: none; } body.tokens .unitLabel { width: 70px; } body.tokens .unitLabel .tokName { display: block; font-size: 11px; color: #fff; text-shadow: 0 0 3px #000; white-space: nowrap; }
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
@@ -279,7 +281,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 95, "date": "2026-11-04", "changes": [{"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}]};
+const BUILD = {"version": 96, "date": "2026-11-04", "changes": [{"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3413,7 +3415,7 @@ const BattleView = {
     group.add(ped, body, token);
     const el = document.createElement('div');
     el.className = 'unitLabel';
-    el.innerHTML = `<span class="tokName">${esc(def.name)}</span><span class="stIcons"></span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
+    el.innerHTML = `<span class="alertMark"></span><span class="tokName">${esc(def.name)}</span><span class="stIcons"></span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
     label.position.y = body.position.y + (tpl ? tpl.userData.height * body.scale.y + 0.5 : 3.2 * s);
     group.add(label);
@@ -3436,6 +3438,8 @@ const BattleView = {
     u.view.el.querySelector('.stackCount').textContent = n > 1 ? '×' + n : '';
     const st = u.view.el.querySelector('.stIcons');
     if (st) st.textContent = Object.keys(u.status || {}).map(k => STATUS_ICONS[k] || '').join('');
+    const al = u.view.el.querySelector('.alertMark');
+    if (al) { al.textContent = u.side !== 'enemy' ? '' : u.alert === 'unaware' ? 'z' : u.alert === 'suspicious' ? '?' : '!'; al.className = 'alertMark ' + (u.alert || ''); }
   },
   floatText(u, text, heal) {
     const el = document.createElement('div');
@@ -3510,6 +3514,19 @@ const BattleView = {
       body.position.y = body.userData.y0 + Math.sin(t * speed + ph) * amp - (wounded ? 0.08 : 0);
       body.scale.y = body.userData.s0 * (1 + 0.012 * Math.sin(t * speed * 1.3 + ph));
       body.rotation.z = wounded ? 0.1 * Math.sin(t * 0.7 + ph) : 0;
+      // Stench: rising, drifting puffs over strongly smelling units (scent 3+), blown by the wind.
+      if ((u.def.scent || 0) >= 3) {
+        if (!u.view.stink) {
+          const mat = new THREE.MeshBasicMaterial({ color: 0x8a9a4a, transparent: true, opacity: 0.35, depthWrite: false });
+          u.view.stink = Array.from({ length: 6 }, (_, i) => { const m = new THREE.Mesh(this.puffGeo || (this.puffGeo = new THREE.SphereGeometry(0.45, 6, 4)), mat.clone()); m.userData.ph = i / 6; u.view.group.add(m); return m; });
+        }
+        const wd = edgeDirection(b.wind), len = 1 + (u.def.scent - 2) * 0.8;
+        for (const m of u.view.stink) {
+          const k = (t * 0.35 + m.userData.ph) % 1;
+          m.position.set(wd.x * k * 3 * len + Math.sin(t + m.userData.ph * 9) * 0.3, 1.6 + k * 3.2, wd.z * k * 3 * len);
+          m.scale.setScalar(0.5 + k * 1.4); m.material.opacity = 0.32 * (1 - k) * Math.min(1, k * 5);
+        }
+      }
     }
   }
 };
@@ -3541,8 +3558,9 @@ const Stealth = {
   detects(field, enemy, u) {
     const dist = hexDistance(enemy.q, enemy.r, u.q, u.r);
     if (this.sees(field, enemy, u.q, u.r)) return 'Sicht';
-    if (dist <= enemy.def.hear && u.def.size >= 2 && u.movedThisTurn) return 'Gehör';
-    if (dist <= Weather.smellOf(game.battle, enemy, u) && !u.def.spectral) return 'Geruch';
+    const k = Alarm.sense(enemy);
+    if (dist <= enemy.def.hear * k && u.def.size >= 2 && u.movedThisTurn) return 'Gehör';
+    if (dist <= Weather.smellOf(game.battle, enemy, u) * k && !u.def.spectral) return 'Geruch';
     return null;
   },
   check(battle, units) {
@@ -3559,9 +3577,11 @@ const Stealth = {
   coneTiles(battle) {
     const set = new Map();
     for (const e of battle.units) {
-      if (e.side !== 'enemy' || !e.alive) continue;
+      if (e.side !== 'enemy' || !e.alive || e.alert === 'alarmed') continue;
       for (const t of battle.field.tilesWithin(e.q, e.r, Weather.sightOf(battle, e))) {
-        if (this.sees(battle.field, e, t.q, t.r)) set.set(battle.field.index(t), t);
+        if (!this.sees(battle.field, e, t.q, t.r)) continue;
+        const k = battle.field.index(t);
+        if (!set.has(k) || e.alert === 'suspicious') set.set(k, Object.assign(t, { _alert: e.alert }));
       }
     }
     return [...set.values()];
@@ -3702,6 +3722,91 @@ const Sfx = {
 };
 
 // =============================================================================
+// Alarm: defenders are unaware (z), suspicious (?) or alarmed (!). Only suspicious and alarmed
+// stacks take turns. Whoever spots the undead is alarmed alone; on his next turn he shouts and
+// wakes everyone within twice his hearing; then the alarm spreads 4 tiles per round. An alarmed
+// defender on or next to a church or watch tower rings the bell: the whole field is awake.
+// Unaware targets take +25 % damage and cannot strike back. Priests, witches and druids sense
+// the dead: double hearing and smell, they start suspicious and shout twice as far.
+// =============================================================================
+const SENSE_TYPES = new Set(['hexe', 'brockenhexe', 'druidin', 'druide', 'heidekoenigin', 'zwergenkoenig', 'priester', 'moench', 'kleriker', 'heideschwester']);
+const ALARM = { spreadPerRound: 4, surpriseBonus: 1.25, restlessAfterRounds: 3, combatNoise: 3 };
+const Alarm = {
+  enemies(state) { return Battle.alive('enemy').filter(e => !state || e.alert === state); },
+  sense(e) { return SENSE_TYPES.has(e.type) ? 2 : 1; },
+  awake(e) { return e.alert === 'alarmed'; },
+  set(e, state, why) {
+    const b = game.battle; if (!e.alive || e.alert === 'alarmed' || e.alert === state) return;
+    const was = e.alert; e.alert = state;
+    if (was === 'unaware') e.nextTick = Math.max(e.nextTick, (b.lastTick || 0) + Math.round(turnTicks(e.def) * 0.5));
+    if (state === 'alarmed') { e.shouted = false; BattleView.floatText(e, '!'); }
+    else BattleView.floatText(e, '?');
+    BattleView.updateHp(e);
+    if (why) Battle.log(why, 'hit');
+    if (state === 'alarmed' && b.state === 'stealth') { b.state = 'fight'; UI.toast('Alarm! Die Verteidiger sind aufgeschreckt.'); }
+  },
+  // After a move or an attack: does any defender notice one of these undead?
+  check(units) {
+    const b = game.battle;
+    for (const e of this.enemies()) {
+      if (e.alert === 'alarmed') continue;
+      for (const u of units) {
+        if (!u.alive) continue;
+        const sense = Stealth.detects(b.field, e, u);
+        if (!sense) continue;
+        if (sense === 'Sicht' || e.alert === 'suspicious') this.set(e, 'alarmed', `${e.def.name} entdeckt ${u.def.name} (${sense})!`);
+        else this.set(e, 'suspicious', `${e.def.name} wird misstrauisch (${sense}).`);
+        break;
+      }
+    }
+    Battle.refreshCones();
+  },
+  // Fighting is loud: defenders within earshot of a fight grow suspicious.
+  noise(at) {
+    for (const e of this.enemies('unaware')) if (hexDistance(e.q, e.r, at.q, at.r) <= Math.max(ALARM.combatNoise, e.def.hear * this.sense(e))) this.set(e, 'suspicious', `${e.def.name} hört Kampflärm.`);
+  },
+  // An alarmed defender's first turn: shout, maybe ring the bell.
+  shout(e) {
+    const b = game.battle; if (e.shouted) return; e.shouted = true;
+    const r = Math.max(2, e.def.hear * 2 * this.sense(e)); let woke = 0;
+    for (const o of this.enemies()) if (o !== e && o.alert !== 'alarmed' && hexDistance(o.q, o.r, e.q, e.r) <= r) { this.set(o, 'alarmed'); woke++; }
+    Battle.log(`${e.def.name} schlägt Alarm${woke ? ` – ${woke} ${woke === 1 ? 'Gruppe wacht' : 'Gruppen wachen'} auf` : ''}.`, 'hit');
+    const f = b.field, here = f.get(e.q, e.r);
+    const bellTile = [here, ...[0, 1, 2, 3, 4, 5].map(d => f.neighborTile(here, d))].find(t => t && t.building !== null && ['church', 'tower'].includes(f.buildings[t.building].key));
+    if (bellTile && this.enemies().some(o => o.alert !== 'alarmed')) {
+      for (const o of this.enemies()) this.set(o, 'alarmed');
+      Battle.log(`Die Glocke im ${f.buildings[bellTile.building].name} läutet – das ganze Feld ist wach!`, 'hit'); UI.toast('Die Glocke läutet!');
+      Sfx.ensure() && Sfx.tone(660, 1.5, 'sine', 0.2);
+    }
+  },
+  roundEnd() {
+    const b = game.battle;
+    const awake = this.enemies('alarmed');
+    for (const e of this.enemies()) if (e.alert !== 'alarmed' && awake.some(a => a.shouted && hexDistance(a.q, a.r, e.q, e.r) <= ALARM.spreadPerRound * Math.max(1, b.round - (a.alarmRound || b.round))))
+      this.set(e, 'alarmed');
+    for (const a of awake) a.alarmRound = a.alarmRound || b.round;
+    if (!awake.length && b.round > ALARM.restlessAfterRounds && !b.restless) {
+      b.restless = true;
+      for (const e of this.enemies('unaware')) this.set(e, 'suspicious');
+      Battle.log('Die Wachen werden unruhig – etwas stimmt nicht.', 'hit');
+    }
+  },
+  // Suspicious defenders look around and walk towards what they heard.
+  async investigate(e) {
+    const b = game.battle, f = b.field, pl = Battle.alive('player');
+    const near = pl.sort((x, y) => hexDistance(x.q, x.r, e.q, e.r) - hexDistance(y.q, y.r, e.q, e.r))[0];
+    if (!near) return;
+    const pa = hexToWorld(near.q, near.r), pe = hexToWorld(e.q, e.r);
+    e.facing = vectorToDirection(pa.x - pe.x, pa.z - pe.z); BattleView.face(e, pa.x, pa.z);
+    const reach = Pathfinding.reachable(f, e, Math.min(2, moveOf(e)));
+    const dest = reach.tiles.filter(t => !t.unit || t.unit === e).sort((x, y) => hexDistance(x.q, x.r, near.q, near.r) - hexDistance(y.q, y.r, near.q, near.r))[0];
+    if (dest && dest !== f.get(e.q, e.r)) await Battle.moveAlong(e, Pathfinding.path(f, reach, dest));
+    for (const u of pl) { const s = Stealth.detects(f, e, u); if (s) { this.set(e, 'alarmed', `${e.def.name} findet ${u.def.name} (${s})!`); break; } }
+    Battle.refreshCones();
+  }
+};
+
+// =============================================================================
 // Battle
 // Initiative, turns, movement, attacks, round effects, victory and defeat.
 // Rules work on plain data objects; BattleView only mirrors them.
@@ -3785,29 +3890,31 @@ const Battle = {
     this.log(`${T.name}${T.foggy ? ', Nebel' : ''} · ${windTxt}. ${b.time === 0 ? 'Die Toten sind in ihrem Element.' : b.time === 2 ? 'Das Tageslicht stärkt die Lebenden.' : ''}`);
     const alarm = !node.encounter && ((game.campaign.threat[node.faction] || 0) >= 50 || Raids.list().some(r => r.faction === node.faction));
     const senses = Object.keys(node.garrison || {}).some(t => ['hexe', 'brockenhexe', 'druidin', 'heidekoenigin', 'zwergenkoenig', 'priester'].includes(t));
-    const found = Stealth.check(b, b.units.filter(u => u.side === 'player'));
     const quiet = Weather.noise(b) <= 2 && (b.time === 0 || T.foggy);
-    if (node.encounter && !node.raidId) {
-      // Ambush on the road: the enemy strikes first and the column is still in marching order.
-      b.arrival = 'AMBUSH'; b.state = 'fight';
-      for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(4); else Abilities.addStatus(u, 'SLOWED', 1, 0, true);
-      UI.toast('Hinterhalt! Der Feind ist zuerst am Zug, eure Reihen sind ungeordnet.', 5);
-      this.log('Hinterhalt: Gegner handeln zuerst, eure Einheiten sind im ersten Zug verlangsamt.', 'hit');
-    } else if (alarm || senses) {
+    const enemies = b.units.filter(u => u.side === 'enemy');
+    if (node.encounter) {
+      // Ambush on the road (or an intercepted war party): everyone is awake.
+      b.arrival = node.raidId ? 'STANDARD' : 'AMBUSH'; b.state = 'fight';
+      for (const u of enemies) { u.alert = 'alarmed'; u.shouted = true; }
+      if (!node.raidId) {
+        for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(4); else Abilities.addStatus(u, 'SLOWED', 1, 0, true);
+        UI.toast('Hinterhalt! Der Feind ist zuerst am Zug, eure Reihen sind ungeordnet.', 5);
+        this.log('Hinterhalt: Gegner handeln zuerst, eure Einheiten sind im ersten Zug verlangsamt.', 'hit');
+      }
+    } else if (alarm) {
       b.arrival = 'WARNED'; b.state = 'fight';
-      for (const u of b.units) if (u.side === 'enemy') { u.nextTick -= roundFrac(2); Abilities.addStatus(u, 'SHIELDED', 1, 2 * stackCount(u), true); }
-      const why = senses ? 'Sie spüren die Toten' : 'Die Verteidiger sind gewarnt';
-      UI.toast(`Vorwarnung! ${why} – sie stehen in Stellung.`, 5);
-      this.log(`Vorwarnung (${why}): Gegner in Stellung, etwas geschützt und früher am Zug.`, 'hit');
-    } else if (found && !quiet) {
-      b.state = 'fight';
-      for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(3);
-      UI.toast(`Entdeckt! ${found.enemy.def.name} bemerkt ${found.unit.def.name} (${found.sense}).`);
-      this.log(`Entdeckt durch ${found.sense}: Die Verteidiger handeln zuerst.`, 'hit');
+      for (const u of enemies) { u.alert = 'alarmed'; u.shouted = true; u.nextTick -= roundFrac(2); Abilities.addStatus(u, 'SHIELDED', 1, 2 * stackCount(u), true); }
+      UI.toast('Vorwarnung! Die Verteidiger sind gewarnt und stehen in Stellung.', 5);
+      this.log('Vorwarnung: Gegner in Stellung, etwas geschützt und früher am Zug.', 'hit');
     } else {
+      // Normal arrival: everyone unaware, those who sense the dead suspicious; then who notices whom.
       b.arrival = 'SURPRISE'; b.state = 'stealth';
-      UI.toast(`${quiet ? (b.time === 0 ? 'Die Nacht deckt euch.' : 'Der Nebel deckt euch.') : 'Der Wind steht günstig.'} Die Wachen haben euch nicht bemerkt.`, 5);
-      this.log('Schleich-Modus: Die Gegner haben euch nicht bemerkt. Ein Angriff aus dem Verborgenen ist ein Überraschungsangriff.', 'good');
+      for (const u of enemies) u.alert = SENSE_TYPES.has(u.type) ? 'suspicious' : 'unaware';
+      if (!quiet) Alarm.check(b.units.filter(u => u.side === 'player'));
+      const awake = enemies.filter(u => u.alert === 'alarmed').length, wary = enemies.filter(u => u.alert === 'suspicious').length;
+      if (awake) UI.toast(`Entdeckt! ${awake} ${awake === 1 ? 'Gruppe ist' : 'Gruppen sind'} alarmiert – die übrigen ahnen noch nichts.`, 5);
+      else UI.toast(`${quiet ? (b.time === 0 ? 'Die Nacht deckt euch.' : 'Der Nebel deckt euch.') : 'Unbemerkt.'} Die Wachen ahnen nichts${wary ? `, ${wary} sind misstrauisch` : ''}.`, 5);
+      this.log(`Schleichen: ${enemies.length - awake - wary} ahnungslos (z), ${wary} misstrauisch (?), ${awake} alarmiert (!). Ahnungslose handeln nicht; Treffer auf sie sind Überraschungstreffer (+25 %, kein Konter). Wer Alarm schlägt, weckt die anderen.`, 'good');
     }
     this.refreshCones();
     if (!exp) SaveGame.save();
@@ -3862,7 +3969,8 @@ const Battle = {
   makeUnit(type, side, faction, hp) {
     const def = DATA.units[type];
     const u = { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, startCount: 1, q: 0, r: 0,
-      shield: def.soulShield || 0, nextTick: turnTicks(def), alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null };
+      shield: def.soulShield || 0, nextTick: turnTicks(def), alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null,
+      alert: 'alarmed', shouted: true };          // the battle start decides who is unaware
     Abilities.init(u);
     return u;
   },
@@ -3919,7 +4027,7 @@ const Battle = {
   },
   candidates() {
     const b = game.battle;
-    return this.alive(b.state === 'stealth' ? 'player' : null);
+    return this.alive().filter(u => u.side === 'player' || u.alert !== 'unaware');
   },
   // Predicts the next n turns for the initiative bar.
   forecast(n) { return this.forecastRounds(n).map(x => x.u); },
@@ -3970,6 +4078,7 @@ const Battle = {
     b.round++;
     this.log(`— Runde ${b.round} —`);
     UI.roundBanner(b.round);
+    Alarm.roundEnd();
     Abilities.roundEnd();
     if ((b.round - 1) % ROUNDS_PER_TIME === 0) {
       b.time = (b.time + 1) % 4; Weather.apply(b);
@@ -4032,7 +4141,7 @@ const Battle = {
   },
   refreshCones() {
     const b = game.battle;
-    BattleView.setOverlay(BattleView.coneOverlay, b.state === 'stealth' ? Stealth.coneTiles(b).map(t => ({ t, color: '#ff8a2a' })) : []);
+    BattleView.setOverlay(BattleView.coneOverlay, Stealth.coneTiles(b).map(t => ({ t, color: t._alert === 'suspicious' ? '#ffd23a' : '#ff8a2a' })));
   },
   // Animated movement along a path of tiles.
   async moveAlong(u, path) {
@@ -4063,11 +4172,7 @@ const Battle = {
     await this.moveAlong(u, path);
     u.hasMoved = true;
     b.busy = false;
-    if (b.state === 'stealth') {
-      const found = Stealth.check(b, [u]);
-      if (found) this.revealed(`${found.enemy.def.name} bemerkt ${u.def.name} (${found.sense})!`, -3, 'enemy');
-      this.refreshCones();
-    }
+    Alarm.check([u]);
     this.computeOptions();
     if (!b.targets.length) { await wait(0.25); this.endTurn(); }
   },
@@ -4086,12 +4191,13 @@ const Battle = {
     const b = game.battle, u = b.current;
     b.busy = true;
     this.clearOptions();
-    const surprise = b.state === 'stealth' && target.side !== u.side;
+    const surprise = target.side === 'enemy' && target.alert !== 'alarmed';
     await this.performAttack(u, target, surprise);
     u.hasAttacked = true;
     b.busy = false;
     if (b.over) return;
-    if (surprise) this.revealed('Überraschungsangriff! Die Untoten sind im Vorteil.', -5, 'player');
+    if (target.alive) Alarm.set(target, 'alarmed', surprise ? `${target.def.name} schreckt auf!` : '');
+    Alarm.noise(b.field.get(target.q, target.r)); Alarm.check([u]);
     // Attack first, move afterwards: the unit keeps its turn while it still has its move.
     if (u.alive && !u.hasMoved && b.current === u) {
       this.computeOptions();
@@ -4132,14 +4238,14 @@ const Battle = {
       this.log(`${att.def.name} heilt ${target.def.name} (+${h}).`);
       return;
     }
-    const dmg = Math.round(Combat.damage(prof, target.def, from.level, tt.level, chk.cover) * Abilities.damageMul(att, target));
+    const dmg = Math.round(Combat.damage(prof, target.def, from.level, tt.level, chk.cover) * Abilities.damageMul(att, target) * (surprise ? ALARM.surpriseBonus : 1));
     if (dmg === 0) this.log(`${target.def.name} ist immun gegen ${POWER_NAMES[prof.power]}-Schaden.`, 'hit');
     else this.log(`${att.def.name} trifft ${target.def.name}: ${dmg} Schaden${chk.cover ? ' (Deckung)' : ''}${surprise ? ' – Überraschung!' : ''}.`, att.side === 'player' ? 'good' : 'hit');
     this.applyDamage(target, dmg, att, prof.power);
     if (b.over) return;
     Abilities.afterHit(att, target, dmg);
     // Counter: surviving melee targets with counter strike back once at 50 %.
-    if (target.alive && chk.dist === 1 && target.def.counter && !(target.status && target.status.LEADERLESS)) {
+    if (target.alive && chk.dist === 1 && target.def.counter && !surprise && !(target.status && target.status.LEADERLESS)) {
       const back = Combat.canAttack(f, target, tt, att);
       if (back.ok) {
         await wait(0.15);
@@ -4189,7 +4295,8 @@ const Battle = {
     await Abilities.use(u, id, tile);
     b.busy = false;
     if (b.over || game.battle !== b) return;
-    if (b.state === 'stealth') this.revealed('Die Magie verrät die Untoten!', 0, 'enemy');
+    for (const e of Alarm.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, tile.q, tile.r) <= 2) Alarm.set(e, 'alarmed');
+    Alarm.noise(tile); Alarm.check([u]);
     if (u.alive && !u.hasMoved && b.current === u) {
       this.computeOptions();
       if (b.reach && b.reach.tiles.some(t => !t.unit)) return;
@@ -4659,6 +4766,9 @@ const EnemyAI = {
     const spots = canMove ? reach.tiles : [here];
     await wait(0.2);
     if (game.battle !== b) return;
+    // Suspicious defenders only investigate; alarmed ones shout on their first turn.
+    if (u.alert === 'suspicious') { await Alarm.investigate(u); return; }
+    if (u.alert === 'alarmed' && !u.shouted) Alarm.shout(u);
     // 0. Abilities (spells, buffs, summons) from where the unit stands.
     if (await Abilities.aiUse(u)) return;
 
@@ -5282,7 +5392,10 @@ function onHover(ev) {
   if (!myTurn) { BattleView.setOverlay(BattleView.pathOverlay, []); return; }
   if (t && b.reach.tiles.includes(t) && !t.unit) {
     const path = Pathfinding.path(b.field, b.reach, t) || [];
-    BattleView.setOverlay(BattleView.pathOverlay, path.slice(1).map(x => ({ t: x, color: '#f0d870', lift: 0.03 })));
+    // Tiles on which a defender who is not yet alarmed would notice this unit: red.
+    const watchers = Alarm.enemies().filter(e => e.alert !== 'alarmed'), oq = cur.q, or = cur.r, om = cur.movedThisTurn;
+    const seen = x => { cur.q = x.q; cur.r = x.r; cur.movedThisTurn = true; const r = watchers.some(e => Stealth.detects(b.field, e, cur)); cur.q = oq; cur.r = or; cur.movedThisTurn = om; return r; };
+    BattleView.setOverlay(BattleView.pathOverlay, path.slice(1).map(x => ({ t: x, color: watchers.length && seen(x) ? '#e02828' : '#f0d870', lift: 0.03 })));
   } else BattleView.setOverlay(BattleView.pathOverlay, []);
 }
 function initInput() {

@@ -2198,6 +2198,25 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
+### Alarm schlagen (umgesetzt 04.11.2026)
+
+Nicht gleich alle Verteidiger kämpfen. Jeder Gegner hat einen Zustand:
+
+| Zustand | Marke | Verhalten |
+|-|-|-|
+| ahnungslos | z | steht still, handelt nicht |
+| misstrauisch | ? | geht dem Verdacht nach (Schritt zur nächsten Untoten-Einheit), noch kein Angriff |
+| alarmiert | ! | kämpft; ruft im ersten Zug (weckt alle im doppelten Hörradius) |
+
+- Entdeckt ein Wächter eine Einheit (Sicht, Gehör, Geruch), wird er alarmiert. Kampflärm (3 Felder) und Fähigkeiten (2 Felder) wecken Nachbarn.
+- **Glocken:** Ruft ein Wächter in oder neben Kirche/Turm, ist sofort das ganze Feld alarmiert.
+- Alarm breitet sich pro Runde 4 Felder aus; nach 3 ruhigen Runden werden die Wachen unruhig (misstrauisch).
+- **Überraschungstreffer:** Angriff auf nicht alarmierte Gegner +25 % Schaden, kein Konter.
+- **Spürer** (Priester, Mönche, Kleriker, Heideschwestern, Hexen, Druiden, Heidekönigin, Zwergenkönig): doppelte Hör- und Riechweite, beginnen misstrauisch, rufen doppelt so weit.
+- Begegnungen unterwegs: alle alarmiert. Hohe Bedrohung (≥ 50) oder Trupp derselben Fraktion: gewarnt, alle alarmiert.
+- Anzeige: Sichtkegel (orange ahnungslos, gelb misstrauisch), Pfadvorschau rot auf Feldern, auf denen die Einheit bemerkt würde. Stinkende Einheiten (Geruch 3+, Ghule, Zombies) ziehen eine Stinkfahne mit dem Wind.
+- Messung (70 Orte): Startarmee 30 % Überraschungstreffer (vorher 9 %), Geisterarmee 31 % (vorher 53 %, Spürer bemerken Geister früher).
+
 ---
 
 ## Mythologie-Wissen als Belohnung

@@ -576,7 +576,7 @@ def game_unit(gid, row, extra):
              rank=enum(u["Rank"]), role=enum(u["Role"]), hp=u["HP"], initiative=u["Initiative"], move=u["MoveRange"],
              damage=u["AttackDamage"], range=u["AttackRange"], power=enum(u["PowerType"]), counter=u["CanCounter"],
              defense=enum(u["DefenseType"]), magicResist=u["MagicResist"], soulShield=u["SoulShield"],
-             sight=u["SightRange"], hear=u["HearRadius"], smell=u["SmellRadius"], size=u["Size"],
+             sight=u["SightRange"], hear=u["HearRadius"], smell=u["SmellRadius"], size=u["Size"], scent=u["ScentLevel"], noise=u["NoiseLevel"],
              spectral=u["IsSpectral"], flying=u["IsFlying"], abilities=u["Abilities"])
     if d["side"] == "undead":
         d["commandPoints"] = -u["CommandPoints"]; d["cost"] = cost
