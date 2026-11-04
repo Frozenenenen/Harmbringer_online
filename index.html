@@ -121,6 +121,12 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
+  #travelClock { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
+    background: rgba(233,223,196,.92); color: var(--ink); padding: 10px 26px 12px; border: 1px solid #7a6a4a; box-shadow: 0 4px 18px rgba(0,0,0,.35); text-align: center; }
+  #travelClock .tcDate { font-size: 34px; font-family: "IM Fell English", Georgia, serif; }
+  #travelClock .tcDays { font-size: 14px; margin-top: 2px; }
+  #travelClock .tcBar { height: 5px; background: rgba(0,0,0,.15); margin-top: 6px; } #travelClock .tcBar div { height: 100%; background: #5a2d82; }
+  #travelClock .tcHint { font-size: 11px; opacity: .6; margin-top: 4px; }
   .nodeLabel.raidLabel { background: rgba(90,24,20,.88); color: #f2e6cf; font-size: 13px; }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
@@ -230,7 +236,8 @@ const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'A
 const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', knowledge: 'Wissen' };
 const REVEAL_DISTANCE = 165;           // tiles, from PROMPT section 7.1
 const VILLAGE_LABEL_DISTANCE = 85;     // village names only show near the camera, to keep the map readable
-const TRAVEL_SECONDS = 2.5;            // animation length of a journey
+const TRAVEL_SECONDS = 2.5;            // animation length of short moves (interception)
+const DAY_SECONDS = 1.6;               // a travel day on the world map (hold Space to hurry)
 const STEP_SECONDS = 0.15;             // battle movement per tile
 const AI_PAUSE = 0.4;                  // pause between AI move and attack
 const MOVE_AFTER_ATTACK = 2 / 3;       // share of the movement left when a unit attacks first and moves afterwards
@@ -1117,13 +1124,13 @@ function initScene(ground) {
 
 // Simple tween system: every animation is a promise resolved by the render loop.
 const tweens = [];
-function tween(duration, fn) {
-  return new Promise(resolve => tweens.push({ t: 0, duration, fn, resolve }));
+function tween(duration, fn, fast = false) {
+  return new Promise(resolve => tweens.push({ t: 0, duration, fn, resolve, fast }));
 }
 function updateTweens(dt) {
   for (let i = tweens.length - 1; i >= 0; i--) {
     const tw = tweens[i];
-    tw.t += dt;
+    tw.t += dt * (tw.fast && game.hurry ? 4 : 1);
     const k = Math.min(1, tw.t / tw.duration);
     tw.fn(k);
     if (k >= 1) { tweens.splice(i, 1); tw.resolve(); }
@@ -1255,7 +1262,14 @@ const Campaign = {
     if (hexDistance(q, r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
     return DATA.nodes.some(n => this.isConquered(n) && hexDistance(q, r, n.q, n.r) <= REVEAL_DISTANCE);
   },
-  travelDays(from, to) { return Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / (ECON.travelTilesPerDay * (1 + (this.effects().travelPct || 0)))); },
+  // Travel speed follows the slowest marching unit (the Lich and commanders ride ahead and do not count):
+  // factor (2 + move) / 5, so move 3 = normal speed, a ballista (1) = 60 %, a raven host (6) = 160 %.
+  slowestMove() {
+    const moves = game.campaign.army.map(a => DATA.units[a.type]).filter(u => u.type !== 'lich' && u.rank !== 'COMMANDER' && u.rank !== 'UNIQUE' && u.name !== DATA.units.lich.name).map(u => u.move);
+    return moves.length ? Math.min(...moves) : 3;
+  },
+  tilesPerDay() { return ECON.travelTilesPerDay * (2 + this.slowestMove()) / 5 * (1 + (this.effects().travelPct || 0)); },
+  travelDays(from, to) { return Math.max(1, Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / this.tilesPerDay())); },
   // Garrison incl. threat reinforcements: +1 of the most common unit per full reinforcementPer %.
   garrisonFor(node) {
     const list = [];
@@ -1459,7 +1473,7 @@ const Raids = {
   },
   interceptDays(p) {
     const a = Campaign.armyNode();
-    return Math.max(1, Math.ceil(hexDistance(a.q, a.r, Math.round(p.q), Math.round(p.r)) / (ECON.travelTilesPerDay * (1 + (Campaign.effects().travelPct || 0)))));
+    return Math.max(1, Math.ceil(hexDistance(a.q, a.r, Math.round(p.q), Math.round(p.r)) / Campaign.tilesPerDay()));
   },
   // World view: a banner with the leading unit's figure per visible party.
   syncView() {
@@ -1769,18 +1783,27 @@ async function startTravel(target, resume = null) {
   // Where the encounter happens (fraction of the road), decided up front.
   const plan = resume ? null : Campaign.rollEncounter(from, target, days);
   const k0 = resume ? resume.at : 0, k1 = plan ? plan.at : 1;
+  // Days of this leg: up to the ambush, the rest of an interrupted journey, or the whole way.
+  const daysSoFar = plan ? Math.max(1, Math.round(days * plan.at)) : 0;
+  const legDays = plan ? daysSoFar : resume ? resume.daysLeft : days;
   cam.follow = fig;
-  await tween(TRAVEL_SECONDS * Math.max(0.2, k1 - k0), k => {
-    const t = k0 + (k1 - k0) * (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);   // ease in-out
+  // Constant march; every passed day is counted at once (raids move, buildings grow, the date runs).
+  let counted = 0;
+  TravelClock.show(legDays);
+  await tween(Math.max(1.5, legDays * DAY_SECONDS), k => {
+    const t = k0 + (k1 - k0) * k;
     fig.position.x = a.x + (b.x - a.x) * t;
     fig.position.z = a.z + (b.z - a.z) * t;
     fig.position.y = game.world.groundAt(fig.position.x, fig.position.z);
-  });
+    const d = Math.min(legDays, Math.floor(k * legDays + 1e-6));
+    while (counted < d) { counted++; Campaign.advanceDays(1); UI.updateHeader(); TravelClock.update(counted, legDays); }
+  }, true);
+  while (counted < legDays) { counted++; Campaign.advanceDays(1); }
+  TravelClock.hide();
+  UI.updateHeader();
   cam.follow = null;
   if (plan) {
-    // Ambush on the road: days so far pass, then the battle. Victory continues the journey.
-    const daysSoFar = Math.max(1, Math.round(days * plan.at));
-    Campaign.advanceDays(daysSoFar);
+    // Ambush on the road: the days so far have passed, then the battle. Victory continues the journey.
     c.travel = { targetId: target.id, at: plan.at, daysLeft: Math.max(0, days - daysSoFar) };
     c.prevNodeId = from.id;
     UI.toast(`Hinterhalt! ${plan.node.name}.`);
@@ -1792,7 +1815,6 @@ async function startTravel(target, resume = null) {
   c.prevNodeId = from.id;
   c.nodeId = target.id;
   c.travel = null;
-  Campaign.advanceDays(resume ? resume.daysLeft : days);
   Campaign.healAtPhylactery();
   game.mode = 'world';
   WorldView.placeArmy();
@@ -1802,6 +1824,22 @@ async function startTravel(target, resume = null) {
   SaveGame.save();
   if (target.id === PHYLACTERY.id) UI.toast('Im Hügelgrab: Die Untoten sind geheilt.');
 }
+// Big date in the middle of the screen while the army marches.
+const TravelClock = {
+  el() {
+    let e = document.getElementById('travelClock');
+    if (!e) { e = document.createElement('div'); e.id = 'travelClock'; document.body.appendChild(e); }
+    return e;
+  },
+  show(total) { const e = this.el(); e.style.display = 'block'; this.update(0, total); },
+  update(done, total) {
+    const c = game.campaign;
+    this.el().innerHTML = `<div class="tcDate">${Campaign.dateString(c.dayCount)}</div>
+      <div class="tcDays">Tag ${done} von ${total} · ${total - done === 0 ? 'Ankunft' : `noch ${total - done} ${total - done === 1 ? 'Tag' : 'Tage'}`}</div>
+      <div class="tcBar"><div style="width:${total ? done / total * 100 : 100}%"></div></div><div class="tcHint">Leertaste halten: schneller</div>`;
+  },
+  hide() { this.el().style.display = 'none'; }
+};
 // Continues an interrupted journey after a won encounter.
 function resumeTravel() {
   const c = game.campaign, t = c.travel && NODE_BY_ID[c.travel.targetId];
@@ -3736,6 +3774,10 @@ function initInput() {
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
+  // Space during a journey: hurry (4x).
+  window.addEventListener('keydown', e => { if (e.code === 'Space' && game.mode === 'travel') { game.hurry = true; e.preventDefault(); } });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') game.hurry = false; });
+  window.addEventListener('blur', () => { game.hurry = false; });
   window.addEventListener('keydown', e => {
     if (e.code === 'F3') { e.preventDefault(); game.debug = !game.debug; UI.show('debug', game.debug); return; }
     if (e.target && e.target.tagName === 'INPUT') return;

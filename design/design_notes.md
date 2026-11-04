@@ -2224,6 +2224,19 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Reisen auf der Karte (umgesetzt 04.11.2026)
+
+- Reisen laufen Tag für Tag: 1,6 Sekunden pro Reisetag (Leertaste halten: 4× schneller). Ein großes Datum mit Tageszähler zeigt, wie die Zeit vergeht; Trupps ziehen, Bauten wachsen, Bedrohung sinkt währenddessen.
+- **Reisetempo nach der langsamsten marschierenden Einheit** (Lich, Kommandeure und Anführer zählen nicht): Felder pro Tag = 39 × (2 + Bewegung) / 5. Bewegung 3 = normal, Balliste (1) = 60 %, schnelle Armeen bis 160 %.
+- **Geplant für mehrere Kommandeure:** Befehlsphase – jedem Kommandeur ein Ziel geben, dann „Los“; erst dann läuft die Zeit für alle gleichzeitig (Ereignisse unterwegs unterbrechen für alle).
+
+### Wissen und Gebäude (umgesetzt 04.11.2026)
+
+- **Wissen** wird nicht verbraucht. Einheiten sind entweder nur an eine Wissensmenge gebunden oder zusätzlich an den Sturz eines Pantheons. **Unbekannte Einheiten bleiben verborgen** – Rekrutieren und Bauen zeigen nur „Nächste Erkenntnis bei X Wissen“ und ob noch Geheimnisse bei ungestürzten Pantheons liegen. Erreicht man die Schwelle, meldet das Spiel die neue Einheit.
+- Nur Wissen: Schleuderer 2, Geist 3, Knochenschütze 4, Fleischriese 5, Gefallene Schwester 6, Todesritter 7, Nekromant 9, Knochenballiste 10.
+- Pantheon + Wissen: Moorleiche (Heide, 3), Totenlicht (Heide, 5), Grabdruidin (Heide, 8), Wasserleiche (Versunkene Städte, 6), Totenjäger (Wilde Jagd, 10), Knochendrache (Wendische Geister, 16). Diese brauchen zusätzlich den **Wissensaltar**.
+- **Gebäude im Hügelgrab** (`buildings` in `world_data.js`, aus `DT_Buildings` auf die Spielwirtschaft umgerechnet): Phylakterium (kürzere Rückkehr nach dem Tod), Knochenwerkstatt, Leichengrube, Seelenzwinger (+12 Kommando je Stufe), Totenhalle, Wissensaltar, Knochenschmiede (nach Eroberung Iberg: Todesritter +2 Seelenschild), Heidealtar (nach Sturz des Heide-Pantheons: Heilung auf Heide). Jede Einheit braucht die Gebäudestufe, die sie erhebt. Ein Bau zur Zeit, er läuft während der Reise weiter.
+
 ### Pantheons, Ley-Knoten und Trupps (umgesetzt 04.11.2026)
 
 Erste spielbare Fassung von „Einfluss auf Regionen“, Ley-Linien-Teleportation und Pantheon-Fall:
