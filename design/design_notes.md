@@ -2290,7 +2290,7 @@ Erste spielbare Fassung von „Einfluss auf Regionen“, Ley-Linien-Teleportatio
 | Walpurgis-Zirkel | Brocken | + Hexentanzplatz, Teufelsmauer, Hameln |
 
 - **Region:** jeder Ort gehört zum Pantheon mit dem nächsten Mitglied (höchstens 260 Felder).
-- **Halb erobert:** Lebende Mitglieder schicken Trupps in ihre eigene Region (3 % pro Tag und Mitglied) und stärken den Sitz (Ley-Bund: +4 Einheiten pro lebendem Mitglied).
+- **Halb erobert:** Lebende Mitglieder schicken Trupps in ihre eigene Region (0,8 % pro Tag und Mitglied) und stärken den Sitz (Ley-Bund: +4 Einheiten pro lebendem Mitglied).
 - **Assimiliert** (alle Mitglieder erobert): Trupps erobern in der Region nichts mehr zurück; der Sitz wird Ley-Knoten. Zwischen aktiven Ley-Knoten und dem Hügelgrab: **Ley-Sprung** (1 Tag, 4 Seelen). Minimap zeigt die Ley-Linien violett, Karte markiert Knoten mit ✦.
 - **Pantheon-Fall:** Die Fraktionen des Pantheons schicken keine Trupps mehr, ihre übrigen Orte haben nur noch 60 % Besatzung (Anführer bleiben).
 - Noch offen: Portalbau als eigener Schritt, Lichtsäulen am Sitz, Heimvorteil im Kampf.
@@ -2300,8 +2300,8 @@ Erste spielbare Fassung von „Einfluss auf Regionen“, Ley-Linien-Teleportatio
 
 Die Lebenden schlagen zurück, aber nur dort, wo der Lich nicht ist:
 
-- **Auszug:** Ab Tag 8 schicken Städte und große Klöster (Größe ≥ 32, noch in eigener Hand) Trupps aus. Chance pro Ort und Tag 1 % + 0,06 % je Prozent Bedrohung der Fraktion; höchstens 3 Trupps gleichzeitig. Stärke: die Hälfte der Besatzung des Ausgangsorts (ohne Anführer), mindestens 6 Einheiten.
-- **Ziel:** der nächste eroberte Ort im Umkreis von 450 Feldern, den die Armee nicht deckt. Marsch: 20 Felder pro Tag (die Armee schafft 39).
+- **Auszug:** Ab Tag 20 schicken Städte und große Klöster (Größe ≥ 32, noch in eigener Hand) Trupps aus. Chance pro Ort und Tag 0,2 % + 0,02 % je Prozent Bedrohung der Fraktion; höchstens 2 Trupps gleichzeitig, auf der ganzen Karte höchstens ein neuer Trupp alle 10 Tage, dieselbe Fraktion höchstens alle 25 Tage (angepasst 04.11.: vorher viel zu schnell). Stärke: die Hälfte der Besatzung des Ausgangsorts (ohne Anführer), mindestens 6 Einheiten.
+- **Ziel:** der nächste eroberte Ort im Umkreis von 450 Feldern, den die Armee nicht deckt. Marsch: 14 Felder pro Tag (die Armee schafft 39).
 - **Kartenseite:** Steht die Armee höchstens 250 Felder vom Trupp oder von dessen Ziel entfernt, wartet der Trupp. So fallen Orte nur, wenn der Lich anderswo unterwegs ist.
 - **Rückeroberung:** Erreicht ein Trupp sein Ziel, gehört der Ort wieder seiner alten Fraktion; das tote Land dort verschwindet.
 - **Erholung:** Ein zurückeroberter Ort startet mit 25 % seiner Besatzung und wächst in 20 + 1,5 × Größe Tagen wieder auf volle Stärke (Dorf ~6 Wochen, große Stadt ~4 Monate; `recovery` in `world_data.js`). **Anführer (Bosse) kehren nie zurück**, sobald ihr Ort einmal gefallen ist.

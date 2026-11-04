@@ -784,10 +784,12 @@ window.HARMBRINGER_DATA = {
   // living factions send troops to retake conquered places; a retaken place stops spreading
   // dead land. Parties stand still while the undead army is within safeRadius tiles (they only
   // strike where the Lich is not) and can be intercepted there.
-  raids: { startDay: 8, maxParties: 3, minOriginSize: 32, originTypes: ["WORLDLY", "CHRISTIAN"],
-           chanceBase: 0.01, chancePerThreat: 0.0006,   // per origin and day; threat 0..100
-           mythicChance: 0.03,                        // living pantheon members rebuild their region (own region only)
-           tilesPerDay: 20, maxRange: 450, safeRadius: 250, strength: 0.5, minUnits: 6, size: 16 },
+  raids: { startDay: 20, maxParties: 2, minOriginSize: 32, originTypes: ["WORLDLY", "CHRISTIAN"],
+           chanceBase: 0.002, chancePerThreat: 0.0002,  // per origin and day; threat 0..100 (50 % threat: 1.2 %)
+           mythicChance: 0.008,                       // living pantheon members rebuild their region (own region only)
+           globalCooldown: 10,                        // days between two new parties anywhere on the map
+           factionCooldown: 25,                       // days before the same faction sends the next party
+           tilesPerDay: 14, maxRange: 450, safeRadius: 250, strength: 0.5, minUnits: 6, size: 16 },
 
   threat: {
     attackOwnNode: 25,       // faction of the attacked node

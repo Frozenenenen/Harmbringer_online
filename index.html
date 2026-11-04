@@ -149,7 +149,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=23"></script>
+<script src="data/world_data.js?v=24"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=13"></script>
 <script type="importmap">
@@ -237,7 +237,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 69, "date": "2026-11-04", "changes": [{"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}, {"date": "04.11. 11:51", "text": "Fähigkeiten und Zustände im Kampf, Schadensvorschau; Fix: Gebäude im Hügelgrab überschrieben die Kampffeld-Gebäude"}, {"date": "04.11. 11:44", "text": "Reisen Tag für Tag mit großem Datum, Tempo nach langsamster Einheit; Doku Wissen/Gebäude"}]};
+const BUILD = {"version": 70, "date": "2026-11-04", "changes": [{"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}, {"date": "04.11. 11:51", "text": "Fähigkeiten und Zustände im Kampf, Schadensvorschau; Fix: Gebäude im Hügelgrab überschrieben die Kampffeld-Gebäude"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1470,6 +1470,9 @@ const Raids = {
     if (alliance && !c.alliance) Narrator.say('Die Glocken läuten von Lübeck bis Magdeburg. Hanse, Welfen und Kirche schließen ein Bündnis gegen den Lich: Mehr Trupps ziehen aus.');
     c.alliance = alliance;
     if (list.length >= RAIDS.maxParties + (alliance ? 2 : 0)) return;
+    // Cooldowns: one new party per globalCooldown days on the whole map (half in an alliance).
+    if (c.lastRaidDay !== undefined && c.dayCount - c.lastRaidDay < RAIDS.globalCooldown / (alliance ? 2 : 1)) return;
+    c.raidFactionDay = c.raidFactionDay || {};
     const taken = this.targeted();
     for (const o of DATA.nodes) {
       if (list.length >= RAIDS.maxParties + (alliance ? 2 : 0)) break;
@@ -1477,6 +1480,7 @@ const Raids = {
       const pid = Pantheons.memberOf(o), city = RAIDS.originTypes.includes(o.type) && (o.size || 0) >= RAIDS.minOriginSize;
       if (!city && !pid) continue;
       if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id) || Pantheons.fallenFaction(o.faction)) continue;
+      if (c.raidFactionDay[o.faction] !== undefined && c.dayCount - c.raidFactionDay[o.faction] < RAIDS.factionCooldown) continue;
       const chance = (pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0)) * (alliance && !pid ? 2 : 1);
       if (Math.random() >= chance) continue;
       const t = this.pickTarget(o.q, o.r, taken, pid || null);
@@ -1484,6 +1488,8 @@ const Raids = {
       taken.add(t.id);
       const p = this.create(o, t); if (pid) p.region = pid;
       list.push(p);
+      c.lastRaidDay = c.dayCount; c.raidFactionDay[o.faction] = c.dayCount;
+      break;                                             // at most one new party per day
     }
   },
   create(o, t) {
