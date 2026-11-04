@@ -3774,6 +3774,8 @@ const Abilities = {
     return true;
   },
   afterDeath(u) {
+    // Summoned creatures never summon again on death (a false light would otherwise rise forever).
+    if (u.summoned) return;
     for (const [id] of this.list(u, 'ON_DEATH')) if (id === 'WispFalseLight') this.summon(u, id, game.battle.field.get(u.q, u.r), Math.max(1, Math.ceil(u.startCount / 4)));
   },
   // ---- active abilities ---------------------------------------------------
@@ -3872,6 +3874,7 @@ const Abilities = {
     if (!tile) { Battle.log('Kein Platz für die Gerufenen.'); return; }
     const s = Battle.makeStack(type, u.side, u.faction, Array(count).fill(DATA.units[type].hp));
     Abilities.init(s);
+    s.summoned = true;
     s.nextTick = (b.lastTick || 0) + turnTicks(s.def);
     b.units.push(s); Battle.putUnit(s, tile);
     BattleView.createUnit(s); game.tokensShown = null;
