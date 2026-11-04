@@ -2214,7 +2214,7 @@ Nicht gleich alle Verteidiger kämpfen. Jeder Gegner hat einen Zustand:
 - **Überraschungstreffer:** Angriff auf nicht alarmierte Gegner +25 % Schaden, kein Konter.
 - **Spürer** (Priester, Mönche, Kleriker, Heideschwestern, Hexen, Druiden, Heidekönigin, Zwergenkönig): doppelte Hör- und Riechweite, beginnen misstrauisch, rufen doppelt so weit.
 - Begegnungen unterwegs: alle alarmiert. Hohe Bedrohung (≥ 50) oder Trupp derselben Fraktion: gewarnt, alle alarmiert.
-- Anzeige: Sichtkegel (orange ahnungslos, gelb misstrauisch), Pfadvorschau rot auf Feldern, auf denen die Einheit bemerkt würde. Stinkende Einheiten (Geruch 3+, Ghule, Zombies) ziehen eine Stinkfahne mit dem Wind.
+- Anzeige: Sichtkegel (gelb ahnungslos, orange misstrauisch), Pfadvorschau rot auf Feldern, auf denen die Einheit bemerkt würde. Stinkende Einheiten (Geruch 3+, Ghule, Zombies) ziehen eine Stinkfahne mit dem Wind.
 - Messung (70 Orte): Startarmee 30 % Überraschungstreffer (vorher 9 %), Geisterarmee 31 % (vorher 53 %, Spürer bemerken Geister früher).
 
 ---
