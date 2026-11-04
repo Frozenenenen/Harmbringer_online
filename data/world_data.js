@@ -757,6 +757,10 @@ window.HARMBRINGER_DATA = {
   // They join the conquering army once and may lead an expedition.
   ancestors: { pestrup: "reiterfuerst", sieben_steinhaeuser: "huenenkoenig", externsteine: "widukind", rungholt: "ratsherr" },
 
+  // A place retaken by the living starts with startShare of its garrison and grows back to full
+  // strength in baseDays + daysPerSize * size days (village ~6 weeks, big city ~4 months).
+  recovery: { startShare: 0.25, baseDays: 20, daysPerSize: 1.5 },
+
   // Pantheons: groups of mythic places around a ley seat. A region (all places whose nearest
   // pantheon member is within regionRadius) is assimilated once every member is conquered:
   // war parties no longer retake places there, the seat becomes a ley node for the Lich

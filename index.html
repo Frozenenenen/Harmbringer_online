@@ -149,7 +149,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=22"></script>
+<script src="data/world_data.js?v=23"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=13"></script>
 <script type="importmap">
@@ -237,7 +237,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 68, "date": "2026-11-04", "changes": [{"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}, {"date": "04.11. 11:51", "text": "Fähigkeiten und Zustände im Kampf, Schadensvorschau; Fix: Gebäude im Hügelgrab überschrieben die Kampffeld-Gebäude"}, {"date": "04.11. 11:44", "text": "Reisen Tag für Tag mit großem Datum, Tempo nach langsamster Einheit; Doku Wissen/Gebäude"}, {"date": "04.11. 11:41", "text": "Wissen und Gebäude: unbekannte Einheiten, Erkenntnis-Schwellen, Pantheon-Varianten, Bauen im Hügelgrab, Wasserleiche"}]};
+const BUILD = {"version": 69, "date": "2026-11-04", "changes": [{"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}, {"date": "04.11. 11:51", "text": "Fähigkeiten und Zustände im Kampf, Schadensvorschau; Fix: Gebäude im Hügelgrab überschrieben die Kampffeld-Gebäude"}, {"date": "04.11. 11:44", "text": "Reisen Tag für Tag mit großem Datum, Tempo nach langsamster Einheit; Doku Wissen/Gebäude"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1314,12 +1314,26 @@ const Campaign = {
     // Ley-Bund: the pantheon seat grows with every living member.
     const pid = Pantheons.memberOf(node);
     if (pid && DATA.pantheons[pid].seat === node.id) for (let i = 0; i < (Pantheons.living(pid).length - 1) * LEY.seatBonusPerMember; i++) list.push(best);
-    // A fallen pantheon leaves its factions weakened (leaders stay).
-    if (Pantheons.fallenFaction(node.faction)) {
-      const keep = list.filter(t => DATA.units[t].rank === 'UNIQUE'), rest = list.filter(t => DATA.units[t].rank !== 'UNIQUE');
-      return [...keep, ...rest.filter((t, i) => (i % 10) < LEY.fallenGarrison * 10)];
+    // Leaders who fell to the Lich never come back (bosses do not respawn).
+    const c = game.campaign, once = (c.plundered || {})[node.id];
+    let keep = once ? [] : list.filter(t => DATA.units[t].rank === 'UNIQUE');
+    let rest = list.filter(t => DATA.units[t].rank !== 'UNIQUE');
+    // A fallen pantheon leaves its factions weakened.
+    if (Pantheons.fallenFaction(node.faction)) rest = rest.filter((t, i) => (i % 10) < LEY.fallenGarrison * 10);
+    // A retaken place grows back to full strength over weeks or months.
+    const share = this.recovery(node);
+    if (share < 1) {
+      const counts = {}; for (const t of rest) counts[t] = (counts[t] || 0) + 1;
+      rest = Object.entries(counts).flatMap(([t, n]) => Array(Math.max(1, Math.ceil(n * share))).fill(t));
     }
-    return list;
+    return [...keep, ...rest];
+  },
+  // Strength share of a retaken place: starts low and grows linearly until full (DATA.recovery).
+  recoveryDays(node) { const R = DATA.recovery; return Math.round(R.baseDays + R.daysPerSize * (node.size || 16)); },
+  recovery(node) {
+    const c = game.campaign, day = (c.retaken || {})[node.id];
+    if (day === undefined || !this.isEnemy(node)) return 1;
+    return Math.min(1, DATA.recovery.startShare + (1 - DATA.recovery.startShare) * (c.dayCount - day) / this.recoveryDays(node));
   },
   // Threat rises when a node is attacked.
   registerAttack(node) {
@@ -1490,6 +1504,7 @@ const Raids = {
     const back = t.faction === p.faction || Campaign.isLiving(t.faction) ? t.faction : p.faction;
     c.owners[t.id] = back;
     if (c.conqueredDay) delete c.conqueredDay[t.id];
+    (c.retaken = c.retaken || {})[t.id] = c.dayCount;      // the place grows back to full strength from here
     this.remove(p.id);
     UI.toast(`${t.name} ist verloren! Ein Trupp aus ${NODE_BY_ID[p.originId].name} hat den Ort zurückerobert.`, 6);
     if (game.view && game.view.nodeViews) WorldView.refresh();
@@ -4223,7 +4238,7 @@ const UI = {
           ${atNode ? '' : (() => { const risk = Campaign.travelRisk(here, node);
             return `<tr><td>Unterwegs</td><td>${risk.places.length} unbesiegte Orte am Weg · Hinterhalt ${Math.round(risk.chance * 100)} %</td></tr>`; })()}
           ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
-          <tr><td>Besatzung</td><td>${garrison}</td></tr>
+          <tr><td>Besatzung</td><td>${garrison}${enemy && Campaign.recovery(node) < 1 ? `<br><span class="small">Zurückerobert, erholt sich: ${Math.round(Campaign.recovery(node) * 100)} % (voll in ${Math.ceil((1 - Campaign.recovery(node)) / (1 - DATA.recovery.startShare) * Campaign.recoveryDays(node))} Tagen)</span>` : ''}${enemy && (c.plundered || {})[node.id] && Object.keys(node.garrison).some(t => DATA.units[t].rank === 'UNIQUE') ? '<br><span class="small">Der Anführer ist gefallen und kehrt nicht zurück.</span>' : ''}</td></tr>
           ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
           ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
           ${Pantheons.infoRow(node)}
