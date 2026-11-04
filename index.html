@@ -386,7 +386,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 116, "date": "2026-11-04", "changes": [{"date": "04.11. 22:33", "text": "Spielstände: geladene Dateien werden bereinigt (kein HTML/Skript, nur bekannte Einheiten, Orte, Artefakte)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}]};
+const BUILD = {"version": 117, "date": "2026-11-04", "changes": [{"date": "04.11. 22:37", "text": "Esc schließt Fenster und Menüs"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -5597,7 +5597,7 @@ const UI = {
     this.modal(`<h2>Steuerung</h2><h3>Weltkarte</h3><table>${row('W A S D', 'Kamera bewegen (oder Maus an den Rand)')}${row('Q E / rechte Maus', 'drehen und neigen')}${row('Mausrad', 'Zoom')}
       ${row('Klick', 'Ort, Trupp oder Gelände auswählen')}${row('H', 'Hügelgrab')}${row('R', 'nächster Ort zum Rekrutieren')}${row('B', 'Bauen')}${row('I', 'Inventar')}${row('N', 'Chronik der Weltereignisse')}${row('G', 'Los (Befehle mehrerer Armeen)')}${row('Leertaste halten', 'Reise beschleunigen')}</table>
       <h3>Kampf</h3><table>${row('Klick', 'bewegen, angreifen, auswählen')}${row('1–4', 'Fähigkeiten')}${row('Leertaste', 'Zug beenden')}${row('R', 'Rückzug')}${row('T', 'Feldkanten')}${row('K', 'Token-Modus')}</table>
-      <h3>Allgemein</h3><table>${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
+      <h3>Allgemein</h3><table>${row('Esc', 'Fenster schließen, Auswahl aufheben')}${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
   },
   // Build button: a running construction shows its days left, otherwise a dot when something can be started.
   buildBadge() {
@@ -6247,6 +6247,12 @@ function initInput() {
   window.addEventListener('click', () => { ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)); Minimap.highlight = null; });
   $('btnHelp').onclick = () => { UI.show('menuPop', false); UI.openHelp(); };
   $('btnNews').onclick = () => UI.openNews();
+  // Esc closes the open window (same as its × / Schließen), before any other Esc use.
+  window.addEventListener('keydown', e => {
+    if (e.code !== 'Escape') return;
+    if (!$('modal').classList.contains('hidden')) { const x = $('modalBody').querySelector('.modalClose'); if (x) x.click(); e.stopImmediatePropagation(); e.preventDefault(); return; }
+    if (!$('menuPop').classList.contains('hidden') || !$('threatPop').classList.contains('hidden')) { ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)); Minimap.highlight = null; e.stopImmediatePropagation(); }
+  }, true);
   window.addEventListener('keydown', e => { if (e.code === 'KeyN' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT') && $('modal').classList.contains('hidden')) UI.openNews(); });
   $('btnBattleHelp').onclick = () => UI.openHelp();
   $('btnDebugMenu').onclick = () => { UI.show('menuPop', false); game.debug = !game.debug; UI.show('debug', game.debug); Debug.tools(game.debug); };
