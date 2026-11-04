@@ -2224,6 +2224,33 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Kampfsystem-Tiefe (umgesetzt 04.11.2026)
+
+- **Fähigkeiten** aus `DT_Abilities` wirken im Kampf (`DATA.abilities`, erzeugt von `gen_data.py`): aktive Fähigkeiten mit Energie (+1 pro eigenem Zug) und Abklingzeit (Knöpfe über „Zug beenden“, Tasten 1–4, Ziel anklicken, Esc bricht ab), Auslöser zu Zugbeginn, bei Treffer, bei erlittenem Schaden und beim Tod (Skelette setzen sich einmal neu zusammen, Irrlichter hinterlassen falsches Licht), Auren (Verwirrung). Die Gegner-KI nutzt sie ebenfalls. Werte skalieren mit der Stapelgröße. Die neuen Mythen-Einheiten nutzen den vorhandenen Fähigkeiten-Satz.
+- **Zustände:** Vergiftet, Brennt, Blutet (Schaden zu Zugbeginn), Betäubt (Zug fällt aus), Verlangsamt/Beschleunigt (±2 Bewegung), Geschützt (Seelenschild), Gestärkt (+25 %), Verflucht (−25 %), Gezeichnet (+25 % erlittener Schaden), Verwirrt (−50 %), Regeneration. Dauer in eigenen Zügen der Einheit.
+- **Leichen** bleiben auf dem Feld (Totenruf des Nekromanten, Leichenfresser des Ghuls).
+- **Schadensvorschau** beim Überfahren eines Ziels: erwarteter Schaden, Schild, wie viele fallen, Wirksamkeit laut Schadensmatrix, Konter.
+- **Tageszeit** (Nacht, Morgen, Tag, Abend; Wechsel alle 3 Runden): Nacht Untote +15 %, Gegner −2 Sicht; Tag Lebende +15 %; Morgen Nebel (Sicht −3, Fernkampf −1 Reichweite). Licht und Nebel der Szene folgen der Tageszeit. Die Wilde Jagd kämpft immer nachts.
+- **Wind:** Gegner riechen die Untoten mit dem Wind 1,5× so weit, gegen den Wind nur halb so weit.
+- **Ankunft:** Hinterhalt (Begegnung unterwegs: Gegner zuerst, eigene Einheiten im ersten Zug verlangsamt), Vorwarnung (Bedrohung ≥ 50 %, Trupps derselben Fraktion unterwegs, oder Gegner, die Tote spüren: Hexen, Druidinnen, Priester, Zwergenkönig), Überraschung (unbemerkt; leise Armee bei Nacht oder Nebel bleibt immer unbemerkt), sonst entdeckt.
+- **Token-Modus:** Taste K (automatisch / an / aus); automatisch ab weitem Zoom. Scheiben in Einheitenfarbe mit Namen statt Figuren.
+
+### Expeditionen und Kommandeure (umgesetzt 04.11.2026)
+
+- Mit der **Totenhalle** kann ein Nekromant oder Todesritter aus der Lich-Armee einen eigenen Zug führen (bis 30 Kommando): „Expedition aufstellen“ an einem Rekrutierungsort.
+- **Befehlsphase:** Sobald es mehr als eine Armee gibt, wählt man die Armee in der Liste unten rechts, gibt ihr per Ortsinfo ein Ziel und startet mit **„Los“** (Taste G). Dann läuft die Zeit für alle gleichzeitig; Angriffe danach über die Ortsinfo („Angreifen (Nekromant-Zug)“).
+- Fällt der Kommandeur, ist der Zug verloren (der Lich lebt weiter). Rückzug: der Kommandeur flieht ins Hügelgrab. „Vereinen“ führt einen Zug zurück in die Lich-Armee.
+- Trupps meiden auch die Orte, an denen Expeditionen stehen; Expeditionen decken die Karte auf.
+- Noch offen: Begegnungen unterwegs für Expeditionen, einzigartige Ahnen aus Gräbern, Führerlos-Regel.
+
+### Kampagne: Späher, Gefahr, Bedrohung, verbrannte Erde (umgesetzt 04.11.2026)
+
+- **Späher:** Leichenhunde in der Armee decken 40 Felder weiter auf, Geister oder Totenlichter 60 Felder – und sehen durch die Verhüllung der Klöster.
+- **Gefahrenfarbe** an den Ortsnamen (links): grün = deutlich schwächer als die Armee, gelb = ebenbürtig, rot = stärker; verhüllte Klöster ohne Farbe.
+- **Bedrohung:** Der Tod eines Anführers (Unique) hebt die Bedrohung seiner Fraktion um 15, aller anderen um 5. Bei 90 % schließen die Lebenden ein **Bündnis**: doppelt so viele Trupps (bis 5 gleichzeitig), 1,5× so stark.
+- **Verbrannte Erde:** Jede weitere Eroberung desselben Orts bringt nur die halbe feste Beute der vorigen.
+- **Chronist:** kurze Erzählzeilen bei ersten Eroberungen, Trupps, Bündnis und Pantheon-Fall.
+
 ### Reisen auf der Karte (umgesetzt 04.11.2026)
 
 - Reisen laufen Tag für Tag: 1,6 Sekunden pro Reisetag (Leertaste halten: 4× schneller). Ein großes Datum mit Tageszähler zeigt, wie die Zeit vergeht; Trupps ziehen, Bauten wachsen, Bedrohung sinkt währenddessen.

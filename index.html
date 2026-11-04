@@ -121,11 +121,16 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
+  .nodeLabel[data-danger="low"] { border-left: 5px solid #4a9a3a; } .nodeLabel[data-danger="mid"] { border-left: 5px solid #d0a020; } .nodeLabel[data-danger="high"] { border-left: 5px solid #c0302a; }
   #armyList { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; } #armyList:empty { display: none; }
   #armyList button { font-size: 12px; text-align: left; } #armyList button.on { outline: 2px solid var(--gold); }
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
   #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
+  #narrator { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); max-width: 620px; z-index: 31; padding: 10px 18px;
+    background: rgba(30,24,20,.88); color: #efe4c8; font: italic 17px/1.4 "IM Fell English", Georgia, serif; border: 1px solid #7a6a4a;
+    opacity: 0; pointer-events: none; transition: opacity .6s; } #narrator.on { opacity: 1; pointer-events: auto; cursor: pointer; }
+  #narrator .small { font-style: normal; opacity: .7; }
   #travelClock { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
     background: rgba(233,223,196,.92); color: var(--ink); padding: 10px 26px 12px; border: 1px solid #7a6a4a; box-shadow: 0 4px 18px rgba(0,0,0,.35); text-align: center; }
   #travelClock .tcDate { font-size: 34px; font-family: "IM Fell English", Georgia, serif; }
@@ -134,6 +139,7 @@
   #travelClock .tcHint { font-size: 11px; opacity: .6; margin-top: 4px; }
   .nodeLabel.raidLabel { background: rgba(90,24,20,.88); color: #f2e6cf; font-size: 13px; }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
+  .unitLabel .tokName { display: none; } body.tokens .unitLabel { width: 70px; } body.tokens .unitLabel .tokName { display: block; font-size: 11px; color: #fff; text-shadow: 0 0 3px #000; white-space: nowrap; }
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
   .dmgText { font-size: 22px; color: #a01818; text-shadow: 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; font-weight: bold; }
   .dmgText.heal { color: #1f6a2a; }
@@ -245,6 +251,7 @@ const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', 
 const REVEAL_DISTANCE = 165;           // tiles, from PROMPT section 7.1
 const VILLAGE_LABEL_DISTANCE = 85;     // village names only show near the camera, to keep the map readable
 const TRAVEL_SECONDS = 2.5;            // animation length of short moves (interception)
+const TOKEN_ZOOM = 125;                // camera distance from which battles switch to tokens (auto)
 const DAY_SECONDS = 1.6;               // a travel day on the world map (hold Space to hurry)
 const STEP_SECONDS = 0.15;             // battle movement per tile
 const AI_PAUSE = 0.4;                  // pause between AI move and attack
@@ -1264,7 +1271,21 @@ const Campaign = {
   ownedSpecials() { return DATA.nodes.filter(n => n.special && this.isConquered(n)); },
   commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
   isRevealed(node) { return this.revealedAt(node.q, node.r); },
+  // Scouts in the army: hounds smell further, ghosts and death lights see through monastery veils.
+  scoutRange() { const t = new Set(game.campaign.army.map(u => u.type)); return (t.has('leichenhund') ? 40 : 0) + (t.has('geist') || t.has('totenlicht') ? 60 : 0); },
+  seesThroughVeil() { const t = new Set(game.campaign.army.map(u => u.type)); return t.has('geist') || t.has('totenlicht'); },
+  // Rough strength for the danger color: HP plus weighted damage of every creature.
+  strength(types) { return types.reduce((s, t) => { const u = DATA.units[t]; return s + u.hp + u.damage * 3 * Math.max(1, u.range > 1 ? 1.2 : 1); }, 0); },
+  danger(node) {
+    if (!this.isEnemy(node)) return null;
+    if (node.type === 'CHRISTIAN' && !this.seesThroughVeil() && this.armyNode() !== node) return null;
+    const own = this.strength(game.campaign.army.map(u => u.type)), foe = this.strength(this.garrisonFor(node));
+    const k = foe / Math.max(1, own);
+    return k < 0.5 ? 'low' : k < 1 ? 'mid' : 'high';
+  },
   revealedAt(q, r) {
+    const lich = this.armyNode();
+    if (hexDistance(q, r, lich.q, lich.r) <= REVEAL_DISTANCE + this.scoutRange()) return true;
     if (Expeditions.armyNodes().some(a => hexDistance(q, r, a.q, a.r) <= REVEAL_DISTANCE)) return true;
     if (hexDistance(q, r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
     return DATA.nodes.some(n => this.isConquered(n) && hexDistance(q, r, n.q, n.r) <= REVEAL_DISTANCE);
@@ -1411,15 +1432,19 @@ const Raids = {
       if (dist <= RAIDS.tilesPerDay) { this.retake(p, t); continue; }
       p.q += dq / dist * RAIDS.tilesPerDay; p.r += dr / dist * RAIDS.tilesPerDay;
     }
-    if (list.length >= RAIDS.maxParties) return;
+    // Alliance: once a faction is at 90 % threat, the living stand together (more and stronger parties).
+    const alliance = ENEMY_FACTIONS.some(f => c.threat[f] >= 90 && Campaign.isLiving(f));
+    if (alliance && !c.alliance) Narrator.say('Die Glocken läuten von Lübeck bis Magdeburg. Hanse, Welfen und Kirche schließen ein Bündnis gegen den Lich: Mehr Trupps ziehen aus.');
+    c.alliance = alliance;
+    if (list.length >= RAIDS.maxParties + (alliance ? 2 : 0)) return;
     const taken = this.targeted();
     for (const o of DATA.nodes) {
-      if (list.length >= RAIDS.maxParties) break;
+      if (list.length >= RAIDS.maxParties + (alliance ? 2 : 0)) break;
       // Cities and big monasteries strike anywhere; living pantheon members rebuild their own region.
       const pid = Pantheons.memberOf(o), city = RAIDS.originTypes.includes(o.type) && (o.size || 0) >= RAIDS.minOriginSize;
       if (!city && !pid) continue;
       if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id) || Pantheons.fallenFaction(o.faction)) continue;
-      const chance = pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0);
+      const chance = (pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0)) * (alliance && !pid ? 2 : 1);
       if (Math.random() >= chance) continue;
       const t = this.pickTarget(o.q, o.r, taken, pid || null);
       if (!t) continue;
@@ -1431,12 +1456,14 @@ const Raids = {
   create(o, t) {
     const garrison = {};
     const types = Object.entries(o.garrison).filter(([u]) => DATA.units[u].rank !== 'UNIQUE');
-    for (const [u, n] of types) { const k = Math.round(n * RAIDS.strength); if (k > 0) garrison[u] = k; }
+    const strength = RAIDS.strength * (game.campaign.alliance ? 1.5 : 1);
+    for (const [u, n] of types) { const k = Math.round(n * strength); if (k > 0) garrison[u] = k; }
     let total = Object.values(garrison).reduce((a, b) => a + b, 0);
     if (total < RAIDS.minUnits && types.length) garrison[types[0][0]] = (garrison[types[0][0]] || 0) + RAIDS.minUnits - total;
     if (!Object.keys(garrison).length) garrison.bauer = RAIDS.minUnits;
     const c = game.campaign; c.raidCounter = (c.raidCounter || 0) + 1;
     UI.toast(`${DATA.factions[o.faction].name}: Ein Trupp zieht aus ${o.name} gegen ${t.name}.`, 5);
+    Narrator.say('Die Lebenden wehren sich. Wo der Lich nicht ist, ziehen ihre Trupps aus und holen sich zurück, was er nahm.', 'firstRaid');
     return { id: 'raid' + c.raidCounter, faction: o.faction, originId: o.id, targetId: t.id, q: o.q, r: o.r, garrison };
   },
   retake(p, t) {
@@ -1754,6 +1781,8 @@ const WorldView = {
       nv.pillar.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
       nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') : '?';
       nv.el.classList.toggle('unknown', !revealed);
+      const dg = revealed ? Campaign.danger(node) : null;
+      nv.el.dataset.danger = dg || '';
       nv.el.classList.toggle('selected', UI.selectedNode === node.id);
     }
   },
@@ -1987,6 +2016,18 @@ const Expeditions = {
   }
 };
 
+// Narrator: short story lines at the bottom of the screen (each story beat only once).
+const Narrator = {
+  say(text, key) {
+    const c = game.campaign;
+    if (key) { c.told = c.told || []; if (c.told.includes(key)) return; c.told.push(key); }
+    let el = document.getElementById('narrator');
+    if (!el) { el = document.createElement('div'); el.id = 'narrator'; document.body.appendChild(el); el.onclick = () => el.classList.remove('on'); }
+    el.innerHTML = `<span class="small">Der Chronist:</span><br>${esc(text)}`;
+    el.classList.add('on');
+    clearTimeout(this.timer); this.timer = setTimeout(() => el.classList.remove('on'), 11000);
+  }
+};
 // Big date in the middle of the screen while the army marches.
 const TravelClock = {
   el() {
@@ -2754,15 +2795,18 @@ const BattleView = {
     const ped = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 0.35, 6), new THREE.MeshStandardMaterial({ color: pedColor, roughness: 0.7 }));
     ped.rotation.y = Math.PI / 6; ped.position.y = 0.17;
     body.userData.unitId = ped.userData.unitId = u.id;
-    group.add(ped, body);
+    // Token mode: a flat disc in the unit color instead of the figure.
+    const token = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.3, 16), new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.6 }));
+    token.position.y = 0.5; token.visible = false; token.userData.unitId = u.id;
+    group.add(ped, body, token);
     const el = document.createElement('div');
     el.className = 'unitLabel';
-    el.innerHTML = `<span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
+    el.innerHTML = `<span class="tokName">${esc(def.name)}</span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
     label.position.y = body.position.y + (tpl ? tpl.userData.height * body.scale.y + 0.5 : 3.2 * s);
     group.add(label);
     game.view.battleRoot.add(group);
-    u.view = { group, body, el, label };
+    u.view = { group, body, el, label, token };
     this.placeUnit(u);
     // Initial facing: enemies look where their sight cone points, the undead towards the field center.
     if (u.side === 'enemy') { const d = edgeDirection(u.facing); this.face(u, group.position.x + d.x, group.position.z + d.z); }
@@ -3363,6 +3407,12 @@ const Battle = {
   kill(u, killer, power) {
     const b = game.battle;
     if (!u.alive) return;
+    // A fallen leader alarms the living.
+    if (u.side === 'enemy' && u.def.rank === 'UNIQUE') {
+      const c = game.campaign;
+      for (const f of ENEMY_FACTIONS) if (Campaign.isLiving(f)) c.threat[f] = Math.min(100, c.threat[f] + (f === u.faction ? 15 : 5));
+      this.log(`Der Tod von ${u.def.name} erschüttert die Lebenden (Bedrohung steigt).`, 'hit');
+    }
     u.alive = false;
     b.field.get(u.q, u.r).unit = null;
     BattleView.removeUnit(u);
@@ -3415,7 +3465,11 @@ const Battle = {
       const bones = Math.floor(b.kills.length * ECON.bonesPerKill * (1 + (fx.lootBonesPct || 0)));
       const souls = b.kills.filter(k => k.soul).length * ECON.soulsPerSoulKill + (fx.soulsPerVictory || 0);
       const knowledgeBonus = fx.knowledgePerVictory || 0;
-      const reward = (ECON.nodeRewards[node.type] || {})[node.size] || {};
+      // Burnt earth: a place plundered before yields only half of its fixed reward each time.
+      const plundered = (c.plundered = c.plundered || {})[node.id] || 0;
+      const reward0 = (ECON.nodeRewards[node.type] || {})[node.size] || {}, reward = {};
+      for (const [k, v] of Object.entries(reward0)) reward[k] = Math.floor(v * Math.pow(0.5, plundered));
+      if (!node.encounter) c.plundered[node.id] = plundered + 1;
       const loot = { corpses, bones, souls };
       if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
@@ -3423,12 +3477,14 @@ const Battle = {
       if (node.raidId) Raids.remove(node.raidId);
       const pidWon = !node.encounter && Pantheons.memberOf(node), wasLiving = pidWon && Pantheons.living(pidWon).length;
       if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
+      if (!node.encounter) setTimeout(() => Narrator.say(`Wo die Toten gehen, welkt die Heide. Um ${node.name} wird das Land grau, und es wird nicht wieder grün.`, 'firstConquest'), 2500);
       let pantheonText = '';
       if (pidWon && wasLiving && Pantheons.assimilated(pidWon)) {
         const P = DATA.pantheons[pidWon];
         pantheonText = `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, ${esc(NODE_BY_ID[P.seat].name)} ist ein Ley-Knoten (Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
         c.raids = Raids.list().filter(r => !P.factions.includes(r.faction));
         setTimeout(() => Knowledge.discover(), 1500);
+        setTimeout(() => Narrator.say(`${P.name} ist gefallen. Die alten Mächte dieser Gegend schweigen, und die Ley-Linien singen nun für den Lich.`), 2500);
       } else if (pidWon) {
         const live = Pantheons.living(pidWon).length;
         pantheonText = `<p class="small">${esc(DATA.pantheons[pidWon].name)}: noch ${live} ${live === 1 ? 'Mitglied' : 'Mitglieder'}. Solange sie leben, schicken sie Trupps in ihre Region.</p>`;
@@ -3708,7 +3764,7 @@ const Abilities = {
     Abilities.init(s);
     s.nextTick = (b.lastTick || 0) + turnTicks(s.def);
     b.units.push(s); Battle.putUnit(s, tile);
-    BattleView.createUnit(s);
+    BattleView.createUnit(s); game.tokensShown = null;
     if (t && b.corpses) b.corpses.delete(f.index(t));
     Battle.log(`${count}× ${s.def.name} ${count > 1 ? 'erheben sich' : 'erhebt sich'}.`, u.side === 'player' ? 'good' : 'hit');
     UI.updateBattle();
@@ -3911,8 +3967,9 @@ const UI = {
   },
   // Fixed reward for conquering a place (kills add corpses, bones and souls on top).
   rewardText(node) {
-    const r = (ECON.nodeRewards[node.type] || {})[node.size] || {};
-    const parts = Object.entries(r).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`);
+    const r = (ECON.nodeRewards[node.type] || {})[node.size] || {}, pl = (game.campaign.plundered || {})[node.id] || 0;
+    const parts = Object.entries(r).map(([k, v]) => [k, Math.floor(v * Math.pow(0.5, pl))]).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`);
+    if (pl) parts.push(`<span class="small">(schon ${pl}× geplündert – verbrannte Erde)</span>`);
     if (node.type === 'MYTHIC') parts.push(`+${ECON.commandLimitPerMythicNode} Kommando`);
     return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
   },
@@ -4034,7 +4091,7 @@ const UI = {
       const enemy = Campaign.isEnemy(node);
       let garrison;
       if (!enemy) garrison = '—';
-      else if (node.type === 'CHRISTIAN' && !atNode) garrison = '<i>Verhüllt – Späher sehen nichts</i>';
+      else if (node.type === 'CHRISTIAN' && !atNode && !Campaign.seesThroughVeil()) garrison = '<i>Verhüllt – nur Geister und Totenlichter sehen hindurch</i>';
       else {
         const counts = {};
         for (const t of Campaign.garrisonFor(node)) counts[t] = (counts[t] || 0) + 1;
@@ -4140,7 +4197,7 @@ const UI = {
     ['header', 'info', 'minimap', 'worldButtons'].forEach(id => this.show(id, false));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'hint'].forEach(id => this.show(id, true));
     $('battleLog').innerHTML = '';
-    $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Maus über Feld: Boden und Bewegungskosten · Leertaste: Zug beenden · R: Rückzug · T: Kanten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
+    $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Maus über Feld: Boden und Bewegungskosten · Leertaste: Zug beenden · R: Rückzug · T: Kanten · K: Token-Modus · 1–4: Fähigkeiten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
     $('btnEdges').textContent = game.showEdges ? 'Kanten ausblenden' : 'Kanten anzeigen';
   },
   appendLog(text, cls) {
@@ -4367,6 +4424,7 @@ function initInput() {
       if (e.code === 'Escape' && game.battle && game.battle.abilityMode) { game.battle.abilityMode = null; Battle.computeOptions(); }
       if (/^Digit[1-4]$/.test(e.code) && game.battle && game.battle.current) { const ab = Abilities.actives(game.battle.current)[+e.code.slice(5) - 1]; if (ab) Battle.chooseAbility(ab[0]); }
       if (e.code === 'KeyT') toggleEdges();
+      if (e.code === 'KeyK') { game.tokenMode = game.tokenMode === 'auto' || !game.tokenMode ? 'on' : game.tokenMode === 'on' ? 'off' : 'auto'; UI.toast(`Token-Modus: ${{ auto: 'automatisch (weit herausgezoomt)', on: 'an', off: 'aus' }[game.tokenMode]}`); }
     }
     if (e.code === 'KeyI' && game.mode === 'world') UI.openInventory();
     if (e.code === 'KeyR' && game.mode === 'world') UI.findRecruitSite();
@@ -4447,7 +4505,15 @@ function frame(now) {
   v.terrain.visible = !inBattle;
   v.vegetation.visible = !inBattle;
   for (const m of v.tiles.meshes) m.visible = inBattle;
-  if (inBattle) { const [pq, pr] = v.cam.pivotTile(); v.tiles.update(pq, pr); }
+  if (inBattle) {
+    const [pq, pr] = v.cam.pivotTile(); v.tiles.update(pq, pr);
+    // Token mode: K cycles auto / on / off; auto switches on when zoomed far out.
+    const tok = game.tokenMode === 'on' || ((game.tokenMode || 'auto') === 'auto' && v.cam.distance > TOKEN_ZOOM);
+    if (tok !== game.tokensShown) {
+      game.tokensShown = tok; document.body.classList.toggle('tokens', tok);
+      for (const u of game.battle.units) if (u.view && u.alive) { u.view.body.visible = !tok; if (u.view.token) u.view.token.visible = tok; }
+    }
+  } else if (game.tokensShown) { game.tokensShown = false; document.body.classList.remove('tokens'); }
   updateTweens(dt);
   // Fog: dense enough that the edge of the tile window disappears.
   v.scene.fog.density = 1.35 / (v.cam.distance + 160);
