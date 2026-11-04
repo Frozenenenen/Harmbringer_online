@@ -373,7 +373,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 103, "date": "2026-11-04", "changes": [{"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, Meldung bei unerreichbaren Gegnern, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}]};
+const BUILD = {"version": 104, "date": "2026-11-04", "changes": [{"date": "04.11. 20:03", "text": "Kampf: Klick auf erreichbaren Gegner läuft hin und greift an (eine Aktion)"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -4276,6 +4276,20 @@ const Battle = {
     // After an attack only MOVE_AFTER_ATTACK of the movement is left (at least 1).
     b.reach = u.hasMoved ? null : Pathfinding.reachable(b.field, u, u.hasAttacked ? Math.max(1, Math.floor(moveOf(u) * MOVE_AFTER_ATTACK)) : moveOf(u));
     b.targets = u.hasAttacked ? [] : b.units.filter(t => Combat.canAttack(b.field, u, from, t).ok);
+    // Enemies that can be reached by moving first: one click walks there and strikes.
+    b.approach = new Map();
+    if (b.reach && !u.hasAttacked) for (const e of b.units) {
+      if (!e.alive || e.side === u.side || b.targets.includes(e)) continue;
+      let best = null;
+      for (const t of b.reach.tiles) {
+        if (t.unit && t.unit !== u) continue;
+        const chk = Combat.canAttack(b.field, u, t, e); if (!chk.ok) continue;
+        // Cheapest way; then no counter (window/range), cover not relevant for the attacker, higher ground.
+        const score = b.reach.cost.get(b.field.index(t)) * 10 - (e.def.counter && chk.dist === 1 && !chk.window ? 0 : 3) - t.level;
+        if (!best || score < best.score) best = { t, score };
+      }
+      if (best) b.approach.set(e, best.t);
+    }
     this.drawOptions();
     UI.updateBattle();
   },
@@ -4289,6 +4303,7 @@ const Battle = {
     const b = game.battle, list = [];
     if (b.reach) for (const t of b.reach.tiles) if (t.unit !== b.current) list.push({ t, color: '#3b6fd8' });
     for (const u of b.targets) list.push({ t: b.field.get(u.q, u.r), color: u.side === b.current.side ? '#3fae4a' : '#d03030', lift: 0.02 });
+    for (const u of (b.approach || new Map()).keys()) list.push({ t: b.field.get(u.q, u.r), color: '#e07a5a', lift: 0.02 });
     BattleView.setOverlay(BattleView.overlay, list);
   },
   refreshCones() {
@@ -4316,6 +4331,21 @@ const Battle = {
     BattleView.placeUnit(u);
   },
   // Player clicks a reachable tile.
+  // Walk to the chosen tile next to (or in range of) the target and strike in one action.
+  async moveAndAttack(target) {
+    const b = game.battle, u = b.current, t = b.approach && b.approach.get(target);
+    if (!t) return;
+    const path = Pathfinding.path(b.field, b.reach, t);
+    b.busy = true;
+    this.clearOptions();
+    await this.moveAlong(u, path);
+    u.hasMoved = true;
+    b.busy = false;
+    Alarm.check([u]);
+    this.computeOptions();
+    if (target.alive && b.targets.includes(target)) await this.playerAttack(target);
+    else if (!b.targets.length) { await wait(0.25); this.endTurn(); }
+  },
   async playerMove(t) {
     const b = game.battle, u = b.current;
     const path = Pathfinding.path(b.field, b.reach, t);
@@ -5630,6 +5660,7 @@ function onLeftClick(ev) {
     return;
   }
   if (myTurn && tile.unit && b.targets.includes(tile.unit)) { Battle.playerAttack(tile.unit); return; }
+  if (myTurn && tile.unit && b.approach && b.approach.has(tile.unit)) { Battle.moveAndAttack(tile.unit); return; }
   if (myTurn && !tile.unit && b.reach && b.reach.tiles.includes(tile)) { Battle.playerMove(tile); return; }
   if (tile.unit) { b.selected = tile.unit; UI.renderUnitCard(tile.unit); }
 }
@@ -5681,12 +5712,13 @@ function onHover(ev) {
     let extra = '';
     if (t.building !== null) extra += `<br>${b.field.buildings[t.building].name}`;
     // Damage preview against a target.
-    if (myTurn && t.unit && b.targets.includes(t.unit) && t.unit.side !== cur.side) {
-      const from = b.field.get(cur.q, cur.r), chk = Combat.canAttack(b.field, cur, from, t.unit), x = t.unit;
+    const via = myTurn && t.unit && b.approach && b.approach.get(t.unit);
+    if (myTurn && t.unit && (b.targets.includes(t.unit) || via) && t.unit.side !== cur.side) {
+      const from = via || b.field.get(cur.q, cur.r), chk = Combat.canAttack(b.field, cur, from, t.unit), x = t.unit;
       const dmg = Math.round(Combat.expected(b.field, cur, from, x, chk.cover) * Abilities.damageMul(cur, x));
       const through = Math.max(0, dmg - (x.shield || 0)), left = x.hp - through, dies = stackCount(x) - (left > 0 ? Math.ceil(left / x.def.hp) : 0);
       const eff = DATA.powerDefense[Combat.profile(cur, x).power][x.def.defense];
-      extra += `<br><b>Angriff: ≈ ${dmg} Schaden</b>${x.shield ? ` (Schild ${Math.min(x.shield, dmg)})` : ''} · ${left <= 0 ? 'vernichtet den Stapel' : `~${dies} fallen`}<br><span class="small">${eff >= 125 ? '▲ sehr wirksam' : eff >= 100 ? '► wirksam' : eff > 0 ? '▼ schwach' : '✖ immun'} (${eff} %)${chk.cover ? ' · Deckung' : ''}${chk.window ? ' · durchs Fenster' : ''}${x.def.counter && chk.dist === 1 && !chk.window ? ' · Gegner kontert' : ''}</span>`;
+      extra += `<br><b>${via ? 'Hinlaufen und angreifen' : 'Angriff'}: ≈ ${dmg} Schaden</b>${x.shield ? ` (Schild ${Math.min(x.shield, dmg)})` : ''} · ${left <= 0 ? 'vernichtet den Stapel' : `~${dies} fallen`}<br><span class="small">${eff >= 125 ? '▲ sehr wirksam' : eff >= 100 ? '► wirksam' : eff > 0 ? '▼ schwach' : '✖ immun'} (${eff} %)${chk.cover ? ' · Deckung' : ''}${chk.window ? ' · durchs Fenster' : ''}${x.def.counter && chk.dist === 1 && !chk.window ? ' · Gegner kontert' : ''}</span>`;
     }
     UI.renderHoverCard(t.unit && t.unit.alive ? t.unit : null);
     if (myTurn && !t.unit) {
@@ -5696,7 +5728,7 @@ function onHover(ev) {
       if (cur.def.flying) extra += ' <span class="small">(fliegt: jedes Feld kostet 1)</span>';
     }
     // With a unit on the tile its card shows everything (ground included); the cursor keeps only the attack preview.
-    if (t.unit && t.unit.alive) { if (extra.includes('Angriff:')) showTip(ev, extra.slice(extra.indexOf('<b>Angriff'))); else tip.classList.add('hidden'); }
+    if (t.unit && t.unit.alive) { const k = extra.indexOf('<br><b>'); if (k >= 0 && /angreifen|Angriff/.test(extra)) showTip(ev, extra.slice(k + 4)); else tip.classList.add('hidden'); }
     else showTip(ev, groundTip(t.floor, t.level, extra));
   } else if (p) {
     showTip(ev, groundTip(game.world.floorKeyAt(p.q, p.r), game.world.levelAt(p.q, p.r), '<br><i>außerhalb des Kampffelds</i>'));
@@ -5704,8 +5736,9 @@ function onHover(ev) {
   if (!t || !t.unit) UI.renderHoverCard(null);
   // Path preview.
   if (!myTurn) { BattleView.setOverlay(BattleView.pathOverlay, []); return; }
-  if (t && b.reach.tiles.includes(t) && !t.unit) {
-    const path = Pathfinding.path(b.field, b.reach, t) || [];
+  const dest = t && b.reach.tiles.includes(t) && !t.unit ? t : t && t.unit && b.approach && b.approach.get(t.unit);
+  if (dest) {
+    const path = Pathfinding.path(b.field, b.reach, dest) || [];
     // Tiles on which a defender who is not yet alarmed would notice this unit: red.
     const watchers = Alarm.enemies().filter(e => e.alert !== 'alarmed'), oq = cur.q, or = cur.r, om = cur.movedThisTurn;
     const seen = x => { cur.q = x.q; cur.r = x.r; cur.movedThisTurn = true; const r = watchers.some(e => Stealth.detects(b.field, e, cur)); cur.q = oq; cur.r = or; cur.movedThisTurn = om; return r; };
