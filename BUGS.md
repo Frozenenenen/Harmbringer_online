@@ -4,6 +4,7 @@ Gefundene Fehler im Spiel (`index.html`). Neueste oben. Status: offen, behoben (
 
 | Datum | Fehler | Status |
 |-|-|-|
+| 2026-11-04 | **Balliste kann nicht ziehen:** Mit Bewegung 1 kam sie auf Böden mit höheren Bewegungskosten (z. B. Schlamm) nicht vom Fleck. **Behebung:** Ein Feld ist immer möglich – der erste Schritt kostet höchstens die ganze Bewegung (danach ist sie verbraucht). | behoben (ungetestet) |
 | 2026-11-04 | **Siegmeldung nach jedem Kampf:** Nach dem Sieg am Brocken und „Weiter umherziehen“ kam der Endbildschirm nach jedem weiteren Kampf. **Ursache:** Der Sieg-Zustand blieb gesetzt und wurde nach jedem Kampf abgefragt. **Behebung:** Der Endbildschirm erscheint nur beim ersten Sieg am Brocken. | behoben (ungetestet) |
 | 2026-11-04 | **Reise endet nach Begegnung am Startort:** Nach dem Brocken-Sieg führte eine Begegnung unterwegs (z. B. zurück zum Hügelgrab) zum Endbildschirm statt zur Weiterreise; die Armee blieb am letzten Ort. Gleiche Ursache und Behebung wie oben. | behoben (ungetestet) |
 | 2026-11-03 | **Geist kann nicht aufs Wasser:** Die Wegfindung erlaubte es schon, aber Wasserfelder liegen unter der Wasserfläche – die Markierung der erreichbaren Felder und fliegende Figuren waren dort unsichtbar. **Behebung:** Markierungen und Figuren sitzen auf Wasserfeldern jetzt auf der Wasseroberfläche. | behoben (ungetestet) |

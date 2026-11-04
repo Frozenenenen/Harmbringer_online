@@ -1994,7 +1994,9 @@ const Pathfinding = {
         const n = field.neighborTile(t, d);
         const sc = this.stepCost(field, unit, t, d, n, ignoreUnits);
         if (sc === null || sc === undefined) continue;
-        const nc = c + sc;
+        // One step is always possible: the first step from the start costs at most the whole budget
+        // (a ballista with 1 movement can still cross mud).
+        const nc = t === start && maxCost >= 1 ? Math.min(c + sc, maxCost) : c + sc;
         if (nc > maxCost) continue;
         const ni = field.index(n);
         if (!cost.has(ni) || nc < cost.get(ni)) { cost.set(ni, nc); prev.set(ni, field.index(t)); heap.push(nc, n); }
