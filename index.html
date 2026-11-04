@@ -386,7 +386,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 117, "date": "2026-11-04", "changes": [{"date": "04.11. 22:37", "text": "Esc schließt Fenster und Menüs"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}]};
+const BUILD = {"version": 118, "date": "2026-11-04", "changes": [{"date": "04.11. 22:46", "text": "Debug: Ressourcen herbeirufen, Rekrutieren aus der Ferne"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2021,14 +2021,16 @@ const Base = {
 };
 const Recruitment = {
   canRecruitAt(node) { return node && node.type in RECRUIT_AT && (node.type === 'PHYLACTERY' || Campaign.isConquered(node)); },
-  candidates(node = Campaign.armyNode()) {
+  candidates(node = this.site()) {
     const allow = RECRUIT_AT[node.type];
     return Object.entries(DATA.units).filter(([k, u]) => u.side === 'undead' && k !== 'lich' && (!allow || allow.includes(k)) && Knowledge.known(k));
   },
   // Returns null if recruitable, otherwise a German reason.
+  // Where recruiting happens: where the army stands, or the barrow (debug: recruiting from afar).
+  site() { return this.remote ? PHYLACTERY : Campaign.armyNode(); },
   blocker(type) {
     const u = DATA.units[type], c = game.campaign;
-    const here = Campaign.armyNode();
+    const here = this.site();
     if (!this.canRecruitAt(here)) return 'Hier kann nicht rekrutiert werden';
     if (!this.candidates(here).some(([k]) => k === type)) return 'Nicht an diesem Ort';
     if (!Knowledge.known(type)) return 'Unbekannt';
@@ -5899,12 +5901,12 @@ const UI = {
           <div class="small">${block || ''}</div></div></div>`;
     }).join('');
     const r = c.resources;
-    const place = Campaign.armyNode();
+    const place = Recruitment.site();
     this.modal(`<h2>${esc(place.name)} – Rekrutieren</h2>
       <p class="small">${Knowledge.hint()}</p>
       ${place.type !== 'PHYLACTERY' ? '<p class="small">Eroberte Orte erheben nur, was ihre Gräber hergeben. Alle Einheiten gibt es im Hügelgrab, Geister auch an mythischen Orten.</p>' : ''}
       <div class="stickyRes">${resSummary(r)} <span class="cost" title="Kommando">${resIcon('command')}${Campaign.commandUsed()} / ${Campaign.commandLimit()}</span></div>
-      <div class="recLayout">${side}<div class="recList">${rows || '<p class="small">Keine Einheit in dieser Kategorie.</p>'}${this.armyHtml()}</div></div>`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
+      <div class="recLayout">${side}<div class="recList">${rows || '<p class="small">Keine Einheit in dieser Kategorie.</p>'}${this.armyHtml()}</div></div>`, [{ label: 'Schließen', primary: true, action: () => { Recruitment.remote = false; this.renderInfo(); this.updateHeader(); } }]);
     $('modalBody').classList.add('wide');
     $('modalBody').querySelectorAll('[data-rcat]').forEach(b => b.onclick = () => { this.recruitCat = b.dataset.rcat; this.openRecruit(); });
     $('modalBody').querySelectorAll('[data-rsort]').forEach(b => b.onclick = () => {
@@ -6302,7 +6304,18 @@ const Debug = {
     const el = $('debugTools'); el.classList.toggle('hidden', !on); if (!on || !game.campaign) return;
     const c = game.campaign, extra = c.debugCommand || 0;
     el.innerHTML = `<b>Debug</b> Kommandolimit ${Campaign.commandLimit()} (Zusatz <input type="number" id="dbgCmd" value="${extra}">)
-      <button data-dc="-10">−10</button><button data-dc="10">+10</button><button data-dc="100">+100</button><button data-dc="set">Setzen</button><button data-dc="0">Zurück</button>`;
+      <button data-dc="-10">−10</button><button data-dc="10">+10</button><button data-dc="100">+100</button><button data-dc="set">Setzen</button><button data-dc="0">Zurück</button>
+      <div style="flex-basis:100%"></div><b>Ressourcen</b>
+      ${[['corpses', 100], ['bones', 1000], ['souls', 20], ['knowledge', 5]].map(([k, v]) => `<button data-dres="${k}" data-v="${v}" title="+${v} ${RESOURCE_NAMES[k]}">${resIcon(k)}+${v}</button>`).join('')}
+      <button data-dres="all" title="Von allem viel">Alles ×10</button>
+      <div style="flex-basis:100%"></div><button id="dbgRecruit" title="Rekrutieren wie im Hügelgrab, egal wo die Armee steht">Rekrutieren aus der Ferne</button>`;
+    el.querySelectorAll('[data-dres]').forEach(b => b.onclick = () => {
+      const r = c.resources;
+      if (b.dataset.dres === 'all') { r.corpses += 1000; r.bones += 10000; r.souls += 200; r.knowledge += 50; Knowledge.discover(); }
+      else { r[b.dataset.dres] = (r[b.dataset.dres] || 0) + +b.dataset.v; if (b.dataset.dres === 'knowledge') Knowledge.discover(); }
+      SaveGame.save(); UI.updateHeader(); UI.renderInfo(); this.tools(true);
+    });
+    $('dbgRecruit').onclick = () => { if (game.mode !== 'world') return; Recruitment.remote = true; UI.openRecruit(); };
     const apply = v => { c.debugCommand = v; SaveGame.save(); UI.updateHeader(); UI.renderInfo(); this.tools(true); };
     el.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => {
       const k = b.dataset.dc;
