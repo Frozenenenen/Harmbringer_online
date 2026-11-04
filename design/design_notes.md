@@ -2223,6 +2223,25 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Pantheons, Ley-Knoten und Trupps (umgesetzt 04.11.2026)
+
+Erste spielbare Fassung von „Einfluss auf Regionen“, Ley-Linien-Teleportation und Pantheon-Fall:
+
+| Pantheon | Sitz (Ley-Knoten) | Mitglieder |
+|-|-|-|
+| Heide-Pantheon | Oldendorfer Totenstatt | + Pestrup, Iberg, Sieben Steinhäuser, Teufelsmoor, Dümmer, Arendsee |
+| Wilde Jagd | Kyffhäuser | + Hackelbergs Grab, Externsteine |
+| Wendische Geister | Spreewald | + Kap Arkona |
+| Versunkene Städte | Rungholt | + Vineta |
+| Walpurgis-Zirkel | Brocken | + Hexentanzplatz, Teufelsmauer, Hameln |
+
+- **Region:** jeder Ort gehört zum Pantheon mit dem nächsten Mitglied (höchstens 260 Felder).
+- **Halb erobert:** Lebende Mitglieder schicken Trupps in ihre eigene Region (3 % pro Tag und Mitglied) und stärken den Sitz (Ley-Bund: +4 Einheiten pro lebendem Mitglied).
+- **Assimiliert** (alle Mitglieder erobert): Trupps erobern in der Region nichts mehr zurück; der Sitz wird Ley-Knoten. Zwischen aktiven Ley-Knoten und dem Hügelgrab: **Ley-Sprung** (1 Tag, 4 Seelen). Minimap zeigt die Ley-Linien violett, Karte markiert Knoten mit ✦.
+- **Pantheon-Fall:** Die Fraktionen des Pantheons schicken keine Trupps mehr, ihre übrigen Orte haben nur noch 60 % Besatzung (Anführer bleiben).
+- Noch offen: Portalbau als eigener Schritt, Lichtsäulen am Sitz, Heimvorteil im Kampf.
+- Werte: `pantheons`, `ley`, `raids.mythicChance` in `data/world_data.js`.
+
 ### Gegnertrupps (umgesetzt 04.11.2026)
 
 Die Lebenden schlagen zurück, aber nur dort, wo der Lich nicht ist:

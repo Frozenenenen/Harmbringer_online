@@ -677,12 +677,30 @@ window.HARMBRINGER_DATA = {
   encounters: { baseChance: 0.03, chancePerDanger: 0.04, maxChance: 0.6, passRadius: 30,
                 danger: { VILLAGE: 0.5, 16: 1, 32: 2, 64: 3 }, unitsBase: 8, unitsPerDanger: 6, maxUnits: 64, size: 16 },
 
+  // Pantheons: groups of mythic places around a ley seat. A region (all places whose nearest
+  // pantheon member is within regionRadius) is assimilated once every member is conquered:
+  // war parties no longer retake places there, the seat becomes a ley node for the Lich
+  // (jumps between active ley nodes and the barrow), and the pantheon's factions weaken.
+  // While members live they strengthen the seat (Ley-Bund) and send parties into their region.
+  pantheons: {
+    heide:      { name: "Heide-Pantheon",      seat: "oldendorf",   factions: ["HEATHSPIRITS"],
+                  members: ["oldendorf", "pestrup", "iberg", "sieben_steinhaeuser", "teufelsmoor", "duemmer", "arendsee"] },
+    wodan:      { name: "Wilde Jagd",          seat: "kyffhaeuser", factions: ["WODAN"],      members: ["kyffhaeuser", "hackelberg", "externsteine"] },
+    spreewald:  { name: "Wendische Geister",   seat: "spreewald",   factions: ["SPREEWALD"],  members: ["spreewald", "arkona"] },
+    wattenmeer: { name: "Versunkene Städte",   seat: "rungholt",    factions: ["WATTENMEER"], members: ["rungholt", "vineta"] },
+    harz:       { name: "Walpurgis-Zirkel",    seat: "brocken",     factions: ["WITCHES"],    members: ["brocken", "hexentanzplatz", "teufelsmauer", "hameln"] }
+  },
+  ley: { regionRadius: 260, jumpDays: 1, jumpCost: { souls: 4 },
+         seatBonusPerMember: 4,          // Ley-Bund: extra units of the seat's main type per living member
+         fallenGarrison: 0.6 },          // garrison share of a fallen pantheon's factions
+
   // Enemy war parties on the world map. Cities and big monasteries (size >= minOriginSize) of
   // living factions send troops to retake conquered places; a retaken place stops spreading
   // dead land. Parties stand still while the undead army is within safeRadius tiles (they only
   // strike where the Lich is not) and can be intercepted there.
   raids: { startDay: 8, maxParties: 3, minOriginSize: 32, originTypes: ["WORLDLY", "CHRISTIAN"],
            chanceBase: 0.01, chancePerThreat: 0.0006,   // per origin and day; threat 0..100
+           mythicChance: 0.03,                        // living pantheon members rebuild their region (own region only)
            tilesPerDay: 20, maxRange: 450, safeRadius: 250, strength: 0.5, minUnits: 6, size: 16 },
 
   threat: {

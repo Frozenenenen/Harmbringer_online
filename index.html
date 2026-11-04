@@ -132,7 +132,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=15"></script>
+<script src="data/world_data.js?v=16"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=11"></script>
 <script type="importmap">
@@ -1265,6 +1265,14 @@ const Campaign = {
     let best = null, bestN = -1;
     for (const [type, n] of Object.entries(node.garrison)) if (n > bestN) { best = type; bestN = n; }
     for (let i = 0; i < extra * (THREAT.reinforcementUnits || 1); i++) list.push(best);
+    // Ley-Bund: the pantheon seat grows with every living member.
+    const pid = Pantheons.memberOf(node);
+    if (pid && DATA.pantheons[pid].seat === node.id) for (let i = 0; i < (Pantheons.living(pid).length - 1) * LEY.seatBonusPerMember; i++) list.push(best);
+    // A fallen pantheon leaves its factions weakened (leaders stay).
+    if (Pantheons.fallenFaction(node.faction)) {
+      const keep = list.filter(t => DATA.units[t].rank === 'UNIQUE'), rest = list.filter(t => DATA.units[t].rank !== 'UNIQUE');
+      return [...keep, ...rest.filter((t, i) => (i % 10) < LEY.fallenGarrison * 10)];
+    }
     return list;
   },
   // Threat rises when a node is attacked.
@@ -1285,6 +1293,61 @@ const Campaign = {
 };
 
 // =============================================================================
+// Pantheons and ley lines (DATA.pantheons, DATA.ley)
+// =============================================================================
+const LEY = DATA.ley;
+const Pantheons = {
+  regionOf: {},           // node id -> pantheon id (nearest member within LEY.regionRadius)
+  init() {
+    const members = Object.entries(DATA.pantheons).flatMap(([id, p]) => p.members.map(m => [id, NODE_BY_ID[m]]));
+    for (const n of DATA.nodes) {
+      let best = null, bd = Infinity;
+      for (const [id, m] of members) { const d = hexDistance(n.q, n.r, m.q, m.r); if (d < bd) { bd = d; best = id; } }
+      if (best && bd <= LEY.regionRadius) this.regionOf[n.id] = best;
+    }
+  },
+  living(pid) { return DATA.pantheons[pid].members.filter(m => !Campaign.isConquered(NODE_BY_ID[m])); },
+  assimilated(pid) { return this.living(pid).length === 0; },
+  regionAssimilated(node) { const pid = this.regionOf[node.id]; return !!pid && this.assimilated(pid); },
+  // Factions whose pantheon has fallen (their places weaken, they send no parties).
+  fallenFaction(f) { return Object.keys(DATA.pantheons).some(pid => DATA.pantheons[pid].factions.includes(f) && this.assimilated(pid)); },
+  memberOf(node) { return Object.keys(DATA.pantheons).find(pid => DATA.pantheons[pid].members.includes(node.id)); },
+  // Active ley nodes: the barrow and the seats of assimilated pantheons.
+  leyNodes() { return [PHYLACTERY, ...Object.keys(DATA.pantheons).filter(pid => this.assimilated(pid)).map(pid => NODE_BY_ID[DATA.pantheons[pid].seat])]; },
+  isLeyNode(node) { return this.leyNodes().includes(node); },
+  canJump() {
+    const c = game.campaign;
+    return Object.entries(LEY.jumpCost).every(([k, v]) => (c.resources[k] || 0) >= v);
+  },
+  async jump(target) {
+    const c = game.campaign;
+    if (game.mode !== 'world' || !this.canJump()) return;
+    for (const [k, v] of Object.entries(LEY.jumpCost)) c.resources[k] -= v;
+    c.prevNodeId = c.nodeId; c.nodeId = target.id; c.travel = null;
+    Campaign.advanceDays(LEY.jumpDays);
+    Campaign.healAtPhylactery();
+    WorldView.placeArmy(); WorldView.refresh();
+    game.view.cam.lookAtTile(target.q, target.r);
+    UI.closeModal(); UI.selectNode(target.id); UI.updateHeader(); SaveGame.save();
+    UI.toast(`Ley-Sprung nach ${target.name}.`);
+  },
+  openJump() {
+    const here = Campaign.armyNode(), cost = Object.entries(LEY.jumpCost).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
+    const rows = this.leyNodes().filter(n => n !== here).map(n => `<p><button data-ley="${n.id}" ${this.canJump() ? '' : 'disabled'}>${esc(n.name)}</button></p>`).join('');
+    UI.modal(`<h2>Ley-Sprung</h2><p class="small">Von ${esc(here.name)} über die Ley-Linien zu einem anderen aktiven Ley-Knoten: ${LEY.jumpDays} Tag, ${cost}. Aktiv sind das Hügelgrab und die Sitze besiegter Pantheons.</p>
+      ${rows || '<p class="small">Noch kein anderer Ley-Knoten aktiv. Besiege ein ganzes Pantheon, um seinen Sitz zu öffnen.</p>'}`, [{ label: 'Schließen', primary: true, action: () => {} }]);
+    document.querySelectorAll('[data-ley]').forEach(b => b.onclick = () => this.jump(NODE_BY_ID[b.dataset.ley]));
+  },
+  infoRow(node) {
+    const pid = this.regionOf[node.id]; if (!pid) return '';
+    const P = DATA.pantheons[pid], live = this.living(pid), n = P.members.length;
+    const state = live.length ? `${n - live.length} von ${n} Mitgliedern besiegt` : 'assimiliert – sicher vor Trupps';
+    const extra = this.memberOf(node) ? (node.id === P.seat ? ' · <b>Sitz</b> (Ley-Knoten)' : ' · Mitglied') : '';
+    return `<tr><td>Pantheon</td><td>${esc(P.name)}${extra}<br><span class="small">${state}</span></td></tr>`;
+  }
+};
+
+// =============================================================================
 // Raids: enemy war parties on the world map (DATA.raids). They march from their cities to
 // a conquered place and take it back unless the Lich is near; then they wait and can be
 // intercepted. A retaken place belongs to its old faction again (dead land shrinks).
@@ -1296,10 +1359,11 @@ const Raids = {
   armyNear(q, r) { const a = Campaign.armyNode(); return hexDistance(Math.round(q), Math.round(r), a.q, a.r) <= RAIDS.safeRadius; },
   targeted() { return new Set(this.list().map(p => p.targetId)); },
   // Best target for a party at (q, r): the nearest conquered place within range that the army does not guard.
-  pickTarget(q, r, taken) {
+  pickTarget(q, r, taken, region = null) {
     let best = null, bd = Infinity;
     for (const n of DATA.nodes) {
-      if (!Campaign.isConquered(n) || taken.has(n.id) || this.armyNear(n.q, n.r)) continue;
+      if (!Campaign.isConquered(n) || taken.has(n.id) || this.armyNear(n.q, n.r) || Pantheons.regionAssimilated(n)) continue;
+      if (region && Pantheons.regionOf[n.id] !== region) continue;
       const d = hexDistance(Math.round(q), Math.round(r), n.q, n.r);
       if (d <= RAIDS.maxRange && d < bd) { best = n; bd = d; }
     }
@@ -1314,7 +1378,7 @@ const Raids = {
       let t = NODE_BY_ID[p.targetId];
       if (!t || !Campaign.isConquered(t)) {                     // target lost its point: look for another one
         const taken = this.targeted(); taken.delete(p.targetId);
-        t = this.pickTarget(p.q, p.r, taken);
+        t = this.pickTarget(p.q, p.r, taken, p.region);
         if (!t) { this.remove(p.id); continue; }
         p.targetId = t.id;
       }
@@ -1328,14 +1392,17 @@ const Raids = {
     const taken = this.targeted();
     for (const o of DATA.nodes) {
       if (list.length >= RAIDS.maxParties) break;
-      if (!RAIDS.originTypes.includes(o.type) || (o.size || 0) < RAIDS.minOriginSize) continue;
-      if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id)) continue;
-      const chance = RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0);
+      // Cities and big monasteries strike anywhere; living pantheon members rebuild their own region.
+      const pid = Pantheons.memberOf(o), city = RAIDS.originTypes.includes(o.type) && (o.size || 0) >= RAIDS.minOriginSize;
+      if (!city && !pid) continue;
+      if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id) || Pantheons.fallenFaction(o.faction)) continue;
+      const chance = pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0);
       if (Math.random() >= chance) continue;
-      const t = this.pickTarget(o.q, o.r, taken);
+      const t = this.pickTarget(o.q, o.r, taken, pid || null);
       if (!t) continue;
       taken.add(t.id);
-      list.push(this.create(o, t));
+      const p = this.create(o, t); if (pid) p.region = pid;
+      list.push(p);
     }
   },
   create(o, t) {
@@ -1557,7 +1624,7 @@ const WorldView = {
       nv.pillar.scale.set(village ? 0.6 : 1, revealed ? (village ? 18 : 40) : 10, village ? 0.6 : 1);
       nv.el.classList.toggle('village', village);
       nv.pillar.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
-      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') : '?';
+      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') : '?';
       nv.el.classList.toggle('unknown', !revealed);
       nv.el.classList.toggle('selected', UI.selectedNode === node.id);
     }
@@ -1737,6 +1804,10 @@ const Minimap = {
     ctx.imageSmoothingEnabled = !useFull;
     ctx.drawImage(src, 0, 0, src.width, src.height, sx(0), sy(0), src.width * k / v.scale, src.height * k / v.scale);
     if (Blight.sig) { ctx.imageSmoothingEnabled = true; const o = Blight.overlay; ctx.drawImage(o, 0, 0, o.width, o.height, sx(0), sy(0), o.width * 4 / v.scale, o.height * 4 / v.scale); }
+    // Ley lines between active ley nodes (barrow to every open seat).
+    const ley = Pantheons.leyNodes();
+    ctx.strokeStyle = 'rgba(170,110,230,0.85)'; ctx.lineWidth = 3;
+    for (const n of ley.slice(1)) { ctx.beginPath(); ctx.moveTo(sx(PHYLACTERY.q), sy(PHYLACTERY.r)); ctx.lineTo(sx(n.q), sy(n.r)); ctx.stroke(); }
     // War parties: a faction-colored triangle and a dashed line to their target.
     for (const p of Raids.list()) {
       if (!Campaign.revealedAt(Math.round(p.q), Math.round(p.r))) continue;
@@ -2902,7 +2973,17 @@ const Battle = {
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       Campaign.addResources(loot);
       if (node.raidId) Raids.remove(node.raidId);
+      const pidWon = !node.encounter && Pantheons.memberOf(node), wasLiving = pidWon && Pantheons.living(pidWon).length;
       if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
+      let pantheonText = '';
+      if (pidWon && wasLiving && Pantheons.assimilated(pidWon)) {
+        const P = DATA.pantheons[pidWon];
+        pantheonText = `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, ${esc(NODE_BY_ID[P.seat].name)} ist ein Ley-Knoten (Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
+        c.raids = Raids.list().filter(r => !P.factions.includes(r.faction));
+      } else if (pidWon) {
+        const live = Pantheons.living(pidWon).length;
+        pantheonText = `<p class="small">${esc(DATA.pantheons[pidWon].name)}: noch ${live} ${live === 1 ? 'Mitglied' : 'Mitglieder'}. Solange sie leben, schicken sie Trupps in ihre Region.</p>`;
+      }
       // Special place: artifact into the inventory (auto-equipped while a slot is free).
       const sp = node.special && DATA.specials[node.special];
       let found = '';
@@ -2937,7 +3018,7 @@ const Battle = {
         : `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>`;
       html += `
 <h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>
-        <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}`;
+        <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${pantheonText}`;
       // Show the end screen only once (the campaign may go on afterwards).
       if (node.finale && !c.won) { c.won = true; endNow = true; }
     } else if (result === 'defeat') {
@@ -3277,6 +3358,7 @@ const UI = {
           <tr><td>Besatzung</td><td>${garrison}</td></tr>
           ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
           ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
+          ${Pantheons.infoRow(node)}
         </table>
         ${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}
         <div class="buttons" id="nodeButtons"></div>`;
@@ -3308,6 +3390,7 @@ const UI = {
       if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
       else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
       if (here.id === node.id && Recruitment.canRecruitAt(node)) add('Rekrutieren', () => this.openRecruit(), true);
+      if (here.id === node.id && Pantheons.isLeyNode(node)) add('Ley-Sprung', () => Pantheons.openJump(), false);
     }
   },
   openRecruit() {
@@ -3686,6 +3769,7 @@ function startGame(campaign) {
 async function boot() {
   const bar = $('loadingBar'), text = $('loadingText');
   game.world = new WorldData();
+  Pantheons.init();
   const t0 = performance.now();
   text.textContent = `Berechne Höhen und Bodentypen für ${(WIDTH * HEIGHT).toLocaleString('de-DE')} Felder …`;
   await game.world.build(p => { bar.style.width = (p * 100).toFixed(0) + '%'; });
