@@ -181,6 +181,9 @@
   .portrait.none { display: block; }
   #unitCard .portrait { float: right; width: 64px; height: 64px; margin: 0 0 4px 8px; }
   .recruitRow.locked { opacity: .5; }
+  .buildRow { padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
+  .buildRow .bHead { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px; }
+  .buildRow .bBtn { margin-left: auto; }
   .armyList { font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
   .armyCards { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 300px; overflow-y: auto; }
   .aCard { position: relative; display: flex; gap: 6px; align-items: center; padding: 3px; border: 1px solid rgba(0,0,0,.12); background: rgba(255,255,255,.25); }
@@ -363,7 +366,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 100, "date": "2026-11-04", "changes": [{"date": "04.11. 19:35", "text": "Kampf: Einheitenkarte bei Mouseover über der eigenen Karte, Bodeninfo nur auf leeren Feldern"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}]};
+const BUILD = {"version": 101, "date": "2026-11-04", "changes": [{"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite, Bauen-Knopf in der Kopfzeile"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1969,11 +1972,12 @@ const Base = {
       const L = this.level(k), next = B.levels[L], block = this.blocker(k);
       const have = B.levels.slice(0, L).map(l => [l.text, this.producesText(l)].filter(Boolean).join(' ')).join('<br>');
       const w = c.construction && c.construction.k === k ? ` · <b>im Bau: noch ${c.construction.daysLeft} ${c.construction.daysLeft === 1 ? 'Tag' : 'Tage'}</b>` : '';
-      return `<div class="recruitRow"><div></div><div><b>${B.name}</b> <span class="small">· Stufe ${L} / ${B.levels.length}${w}</span><br>
-        ${have ? `<span class="small">${have}</span><br>` : ''}
-        ${next ? `<span class="small">Nächste Stufe: ${[next.text, this.producesText(next)].filter(Boolean).join(' ')} · Kosten: ${cost(next.cost)} · ${next.days} ${next.days === 1 ? 'Tag' : 'Tage'}</span>` : ''}</div>
-        ${Upgrades.html(k)}</div>
-        <div>${next ? `<button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button><div class="small">${block || ''}</div>` : ''}</div></div>`;
+      // Name, level and the build button in one line; the text uses the full width below.
+      return `<div class="buildRow"><div class="bHead"><b>${B.name}</b> <span class="small">· Stufe ${L} / ${B.levels.length}${w}</span>
+          ${next ? `<span class="bBtn"><button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button>${block ? ` <span class="small">${esc(block)}</span>` : ''}</span>` : ''}</div>
+        ${have ? `<div class="small">${have}</div>` : ''}
+        ${next ? `<div class="small">Nächste Stufe: ${[next.text, this.producesText(next)].filter(Boolean).join(' ')} · Kosten: ${cost(next.cost)} · ${next.days} ${next.days === 1 ? 'Tag' : 'Tage'}</div>` : ''}
+        ${Upgrades.html(k)}</div>`;
     }).join('');
     const r = c.resources;
     UI.modal(`<h2>Hügelgrab – Bauen</h2><p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. Die Diener im Hügelgrab bauen auch, wenn der Lich fort ist.</p>
