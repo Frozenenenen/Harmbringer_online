@@ -275,7 +275,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 87, "date": "2026-11-04", "changes": [{"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}]};
+const BUILD = {"version": 88, "date": "2026-11-04", "changes": [{"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2483,6 +2483,21 @@ const BOSS_LINES = {
   blanker_hans: 'Ich habe Rungholt geholt. Was glaubst du, was ich mit einem Haufen Knochen mache?',
   hackelberg: 'Bis zum Jüngsten Tag soll ich jagen. Heute jage ich dich.'
 };
+// Chronicle lines when a faction is wiped out (others get a generic line).
+const FACTION_END = {
+  HANSE: 'Die Kontore der Hanse stehen leer. In Lübeck läutet keine Glocke mehr, und die Koggen faulen im Hafen.',
+  GUELPHS: 'Das Haus der Welfen ist erloschen. Der Löwe von Braunschweig brüllt nicht mehr.',
+  ASKANIER: 'Die Askanier sind gefallen. In Berlin und Wittenberg herrscht nun eine kältere Hand.',
+  CLERGY: 'Die letzte Messe ist gelesen. In den Domen beten nur noch die Toten.',
+  WITCHES: 'Die Zirkel sind zerschlagen. Auf dem Blocksberg tanzt niemand mehr – außer den Gebeinen.',
+  GRAFEN: 'Die Grafen sind fort, ihre Burgen leer. Ihre Wappen hängen verkehrt herum.',
+  MECKLENBURG: 'Mecklenburg ist gefallen. Zwischen den Seen herrscht Stille.',
+  WETTINER: 'Die Wettiner sind ausgelöscht. Meißen und Leipzig gehören den Toten.',
+  WODAN: 'Die Wilde Jagd reitet nicht mehr. Nur der Wind heult noch über den Kyffhäuser.',
+  SPREEWALD: 'Die wendischen Geister sind verstummt. In den Fließen treibt nur noch Laub.',
+  WATTENMEER: 'Das Watt ist still. Die Glocken von Rungholt läuten nun für den Lich.',
+  HEATHSPIRITS: 'Die alten Geister der Heide sind vergangen. Nur der Lich wacht noch über die Gräber.'
+};
 const LICH_LINES = {
   awaken: 'Wie lange … Die Heide riecht noch wie damals. Erde, Rauch und Angst. Steht auf, meine Diener. Wir haben viel nachzuholen.',
   bossDown: 'Noch eine alte Macht, die schweigt. Ihre Kraft gehört jetzt mir.'
@@ -4180,10 +4195,22 @@ const Battle = {
       Campaign.addResources(loot);
       if (node.raidId) Raids.remove(node.raidId);
       const pidWon = !node.encounter && Pantheons.memberOf(node), wasLiving = pidWon && Pantheons.living(pidWon).length;
+      const factionWasLiving = !node.encounter && Campaign.isLiving(Campaign.owner(node)) ? Campaign.owner(node) : null;
       if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
       setTimeout(() => Narrator.hint('Nach dem Sieg: Im Hügelgrab (Taste H) kannst du neue Untote rekrutieren und Gebäude bauen. Eroberte Orte wie Städte und Klöster sind auch Rekrutierungsorte.', 'victory'), 3200);
       if (!node.encounter) setTimeout(() => Narrator.say(`Wo die Toten gehen, welkt die Heide. Um ${node.name} wird das Land grau, und es wird nicht wieder grün.`, 'firstConquest'), 2500);
       let pantheonText = '';
+      // A faction that just lost its last place is wiped out: chronicle line and a reward (once).
+      if (factionWasLiving && factionWasLiving !== 'UNDEAD' && !Campaign.isLiving(factionWasLiving) && !(c.extinct = c.extinct || []).includes(factionWasLiving)) {
+        c.extinct.push(factionWasLiving);
+        const F = DATA.factions[factionWasLiving], had = DATA.nodes.filter(n => n.faction === factionWasLiving).length;
+        const prize = { knowledge: 2 + Math.floor(had / 5), souls: 5 + had, corpses: 5 * had };
+        Campaign.addResources(prize);
+        c.threat[factionWasLiving] = 0;
+        pantheonText += `<h3>${esc(F.name)} ausgelöscht</h3><p>Kein Ort gehört mehr ${esc(F.name)}. Was von ihnen blieb, nimmt der Lich: ${costHtml(prize)}</p>`;
+        setTimeout(() => Narrator.say(FACTION_END[factionWasLiving] || `Von ${F.name} ist nichts geblieben als Namen auf Grabsteinen. Der Lich hat sie alle gezählt.`), 2000);
+        Sfx.ensure() && Sfx.tone(110, 1.6, 'sine', 0.3, 0.5);
+      }
       if (pidWon && wasLiving && Pantheons.assimilated(pidWon)) {
         const P = DATA.pantheons[pidWon];
         pantheonText = `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, in ${esc(NODE_BY_ID[P.seat].name)} kann der Lich ein Portal errichten (danach Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
