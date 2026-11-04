@@ -253,7 +253,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 79, "date": "2026-11-04", "changes": [{"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}]};
+const BUILD = {"version": 80, "date": "2026-11-04", "changes": [{"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3067,6 +3067,8 @@ const BattleView = {
       body.scale.setScalar(s);
     }
     body.position.y = 0.35 + (def.flying ? 1.2 : 0);
+    body.rotation.order = 'YXZ';                       // turn first, then lean forward/back (animations)
+    body.userData.y0 = body.position.y; body.userData.s0 = body.scale.y;
     body.traverse(o => { if (o.isMesh) o.userData.unitId = u.id; });
     const pedColor = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color;
     // Friend or foe is readable from the shape, not only the color: smooth hexagon vs. jagged star.
@@ -3123,11 +3125,15 @@ const BattleView = {
   async attackAnim(att, tgt, ranged) {
     const a = att.view.group.position.clone(), b = tgt.view.group.position.clone();
     this.face(att, b.x, b.z); this.face(tgt, a.x, a.z);
+    const body = att.view.body;
+    // Anticipation: lean back, then strike.
+    await tween(0.16, k => { body.rotation.x = -0.28 * k; });
     if (!ranged) {
-      await tween(0.25, k => { const f = Math.sin(k * Math.PI) * 0.45; att.view.group.position.lerpVectors(a, b, f); });
-      att.view.group.position.copy(a);
+      await tween(0.22, k => { const f = Math.sin(k * Math.PI) * 0.45; att.view.group.position.lerpVectors(a, b, f); body.rotation.x = -0.28 + 0.6 * Math.sin(k * Math.PI); });
+      att.view.group.position.copy(a); body.rotation.x = 0;
       return;
     }
+    tween(0.18, k => { body.rotation.x = -0.28 * (1 - k); });
     const proj = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), new THREE.MeshBasicMaterial({ color: att.def.color }));
     game.view.battleRoot.add(proj);
     const dist = a.distanceTo(b);
@@ -3138,9 +3144,41 @@ const BattleView = {
     game.view.battleRoot.remove(proj);
   },
   removeUnit(u) {
-    const g = u.view.group;
-    u.view.label.visible = false;
-    tween(0.4, k => { g.scale.setScalar(1 - k * 0.9); }).then(() => removeWithLabels(g));
+    const g = u.view.group, body = u.view.body;
+    u.view.label.visible = false; u.view.dying = true;
+    // Fall over, sink into the ground, then vanish.
+    tween(0.7, k => {
+      body.rotation.x = Math.min(1, k * 1.6) * 1.45;
+      body.position.y = body.userData.y0 - k * k * 1.2;
+      if (k > 0.6) g.scale.setScalar(1 - (k - 0.6) / 0.4 * 0.95);
+    }).then(() => removeWithLabels(g));
+  },
+  // Ability: an expanding ring in the power color at the caster's feet.
+  castFlash(u, power) {
+    if (!u.view) return;
+    const mat = new THREE.MeshBasicMaterial({ color: POWER_COLORS[power] || 0xffffff, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide });
+    const m = new THREE.Mesh(new THREE.RingGeometry(0.6, 0.9, 24), mat); m.rotation.x = -Math.PI / 2;
+    m.position.copy(u.view.group.position).add(new THREE.Vector3(0, 0.4, 0)); game.view.battleRoot.add(m);
+    tween(0.6, k => { m.scale.setScalar(1 + k * 3); mat.opacity = 0.8 * (1 - k); }).then(() => { game.view.battleRoot.remove(m); mat.dispose(); });
+  },
+  // Flinch when hit.
+  recoil(u) {
+    if (!u.view || u.view.dying) return;
+    const body = u.view.body, x0 = body.position.x;
+    tween(0.24, k => { body.rotation.x = -0.32 * Math.sin(k * Math.PI); body.position.x = x0 + Math.sin(k * Math.PI * 5) * 0.08 * (1 - k); }).then(() => { body.position.x = x0; });
+  },
+  // Every frame: breathing / hovering idle; badly wounded stacks sway and slump.
+  animate(now) {
+    const b = game.battle; if (!b) return;
+    const t = now / 1000;
+    for (const u of b.units) {
+      if (!u.alive || !u.view || u.view.dying) continue;
+      const body = u.view.body, ph = u.id * 1.7, wounded = topHp(u) / u.def.hp < 0.35 || stackCount(u) <= u.startCount * 0.3;
+      const speed = wounded ? 0.8 : 1.6, amp = u.def.flying ? 0.18 : 0.035;
+      body.position.y = body.userData.y0 + Math.sin(t * speed + ph) * amp - (wounded ? 0.08 : 0);
+      body.scale.y = body.userData.s0 * (1 + 0.012 * Math.sin(t * speed * 1.3 + ph));
+      body.rotation.z = wounded ? 0.1 * Math.sin(t * 0.7 + ph) : 0;
+    }
   }
 };
 
@@ -3211,6 +3249,7 @@ const TIMES = [
   { key: 'EVENING', name: 'Abend', sight: -1, undead: 1.05, living: 1.0, sun: [0xffa070, 1.2], hemi: [0xb89880, 0.85], fog: 0x5a4a44 }
 ];
 const ROUNDS_PER_TIME = 3;
+const BATTLE_HOURS_PER_ROUND = 2;       // 3 rounds = 6 hours = one time of day
 const DIR_NAMES = ['Norden', 'Nordosten', 'Südosten', 'Süden', 'Südwesten', 'Nordwesten'];   // vectorToDirection: 0 = north, clockwise
 const Weather = {
   time(b) { return TIMES[b.time]; },
@@ -3723,7 +3762,7 @@ const Battle = {
     if (deaths) { const i = game.battle.field.index(game.battle.field.get(target.q, target.r)); game.battle.corpses.set(i, (game.battle.corpses.get(i) || 0) + deaths); }
     if (target.hp <= 0 && Abilities.beforeDeath(target, power)) deaths = before - stackCount(target);
     BattleView.updateHp(target);
-    if (dmg > 0 && power) { BattleView.burst(target, power); Sfx.hit(power); }
+    if (dmg > 0 && power) { BattleView.burst(target, power); Sfx.hit(power); if (target.hp > 0) BattleView.recoil(target); }
     BattleView.syncCorpses();
     BattleView.floatText(target, dmg === 0 ? 'immun' : (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
     // Every fallen creature leaves loot (corpse quality depends on the killing blow).
@@ -3839,6 +3878,8 @@ const Battle = {
     b.over = true;
     c.battles++;
     let html = '', endNow = false;
+    // Time scale: a round lasts BATTLE_HOURS_PER_ROUND hours (time of day turns every 3 rounds = 6 h).
+    const hours = b.round * BATTLE_HOURS_PER_ROUND, battleDays = Math.floor(hours / 24);
     if (result === 'victory') {
       const fx = Campaign.effects();
       const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0) * (1 + (fx.lootCorpsesPct || 0)));
@@ -3959,6 +4000,8 @@ const Battle = {
       if (!e.army.length) { c.expeditions = Expeditions.list().filter(x => x !== e); if (UI.activeArmy === e.id) UI.activeArmy = 'lich'; }
       this.saved = null;
     }
+    if (battleDays > 0) Campaign.advanceDays(battleDays);
+    html += `<p class="small">Der Kampf dauerte ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'} (etwa ${hours} Stunden${battleDays ? `, ${battleDays} ${battleDays === 1 ? 'Tag' : 'Tage'} vergehen` : ''}).</p>`;
     Campaign.healAtPhylactery();
     SaveGame.save();
     setTimeout(() => {
@@ -4142,7 +4185,7 @@ const Abilities = {
     u.energy -= a.energy; u.cd[id] = a.cooldown + 1;      // +1: the cooldown counts from the next own turn
     u.hasAttacked = true;
     Battle.log(`${u.def.name}: ${a.name}.`, u.side === 'player' ? 'good' : 'hit');
-    BattleView.floatText(u, a.name, true); Sfx.ability();
+    BattleView.floatText(u, a.name, true); Sfx.ability(); BattleView.castFlash(u, a.power);
     if (t && t !== f.get(u.q, u.r)) { const p = hexToWorld(t.q, t.r); BattleView.face(u, p.x, p.z); }
     await wait(0.25);
     if (a.effect === 'SUMMON') { this.summon(u, id, t, Math.max(1, a.value * (id === 'WodeWildHunt' ? 4 : 1) * (id === 'NecroRaiseDead' ? Math.min(4 * n, b.corpses.get(f.index(t)) || 1) : 1))); return true; }
@@ -4988,6 +5031,7 @@ function frame(now) {
   for (const m of v.tiles.meshes) m.visible = inBattle;
   if (inBattle) {
     const [pq, pr] = v.cam.pivotTile(); v.tiles.update(pq, pr);
+    BattleView.animate(now);
     // Token mode: K cycles auto / on / off; auto switches on when zoomed far out.
     const tok = game.tokenMode === 'on' || ((game.tokenMode || 'auto') === 'auto' && v.cam.distance > TOKEN_ZOOM);
     if (tok !== game.tokensShown) {

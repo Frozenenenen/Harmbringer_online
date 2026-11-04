@@ -2231,6 +2231,11 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Animationen und Zeitskala (umgesetzt 04.11.2026)
+
+- **Animationen** (prozedural, die Figuren haben kein Skelett): leichtes Atmen bzw. Schweben im Stand, schwer angeschlagene Stapel schwanken und sacken ab; Ausholen vor jedem Angriff (zurücklehnen, dann zustoßen), Zurückzucken bei Treffern, Umkippen und Versinken beim Tod; Fähigkeiten zeigen einen Ring in der Farbe der Schadensart.
+- **Zeitskala:** Eine Kampfrunde dauert 2 Stunden (3 Runden = eine Tageszeit). Volle 24 Stunden Kampf kosten einen Tag auf der Karte; das Ergebnisfenster nennt die Dauer.
+
 ### Oberfläche, Klang, Spielstände (umgesetzt 04.11.2026)
 
 - **Initiative-Leiste** mit Portraits: aktive Einheit groß, Rahmenform wie der Sockel (Sechseck = Untote, Stern = Gegner), Anzahl, Zustands-Symbole, Energie der aktiven Einheit, Verblassen nach hinten. Maus über ein Portrait hebt die Einheit auf dem Feld hervor, Klick schwenkt die Kamera hin.
