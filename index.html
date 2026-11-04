@@ -378,7 +378,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 106, "date": "2026-11-04", "changes": [{"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken je Fraktion, Hover lässt ihre Orte auf der Minimap blinken"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}]};
+const BUILD = {"version": 107, "date": "2026-11-04", "changes": [{"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser brach den Kampfaufbau ab (Hex-Welt); Hinterhalte nur an Land, Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1417,7 +1417,12 @@ const Campaign = {
   // A temporary place for the road battle. Enemies: unit types of the most dangerous place passed.
   encounterNode(from, to, at, passed, danger) {
     const E = DATA.encounters;
-    const q = Math.round(from.q + (to.q - from.q) * at), r = Math.round(from.r + (to.r - from.r) * at);
+    // On the road, but never in the water (rivers, the Elbe estuary): the nearest land point along the way.
+    const onLand = k => { const q = Math.round(from.q + (to.q - from.q) * k), r = Math.round(from.r + (to.r - from.r) * k), f = game.world.floorKeyAt(q, r);
+      return inMap(q, r) && !DATA.floorTypes[f].water ? [q, r] : null; };
+    let qr = onLand(at);
+    for (let s = 0.02; !qr && s <= 0.6; s += 0.02) qr = onLand(Math.min(1, at + s)) || onLand(Math.max(0, at - s));
+    const [q, r] = qr || [from.q, from.r];
     const src = passed.length ? passed.reduce((x, y) => (y.danger > x.danger ? y : x)).node : (this.isEnemy(to) ? to : null);
     const faction = src ? src.faction : 'GUELPHS';
     const types = Object.entries(src ? src.garrison : { bauer: 1 }).filter(([t]) => DATA.units[t].rank !== 'UNIQUE');
@@ -4075,7 +4080,17 @@ const Alarm = {
 // =============================================================================
 let unitIdCounter = 1;
 const Battle = {
+  // Safety net: if setting up a battle fails, go back to the world map instead of a half-built field.
   async start(node, exp = null) {
+    try { return await this.startBattle(node, exp); }
+    catch (e) {
+      console.error(e);
+      if (this.saved) { const c = game.campaign, sv = this.saved; c.army = sv.army; c.nodeId = sv.nodeId; c.prevNodeId = sv.prevNodeId; c.travel = sv.travel; this.saved = null; }
+      try { this.exit(); } catch (e2) { console.error(e2); game.mode = 'world'; UI.enterWorld(); WorldView.setVisible(true); }
+      UI.toast(`Der Kampf konnte nicht beginnen (${e.message}). Bitte melden.`, 8, false);
+    }
+  },
+  async startBattle(node, exp = null) {
     const c = game.campaign;
     if (this.starting) return;
     // An expedition fights with its own army: swap it in as the campaign army for the battle.
@@ -4301,7 +4316,15 @@ const Battle = {
       this.putUnit(u, t);
     }
   },
-  putUnit(u, t) { u.q = t.q; u.r = t.r; t.unit = u; },
+  putUnit(u, t) {
+    if (!t) {
+      // No free land left (a field almost all water): raise a sandbank next to the center.
+      const f = game.battle.field;
+      t = f.tiles.filter(x => x && !x.unit).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
+      t.floor = 'SAND';
+    }
+    u.q = t.q; u.r = t.r; t.unit = u;
+  },
   alive(side) { return game.battle.units.filter(u => u.alive && (!side || u.side === side)); },
   log(text, cls) {
     const b = game.battle;
