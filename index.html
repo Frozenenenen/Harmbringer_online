@@ -386,7 +386,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 115, "date": "2026-11-04", "changes": [{"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix: Anführer machten den Lich negativ (Kommando-Last)"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}]};
+const BUILD = {"version": 116, "date": "2026-11-04", "changes": [{"date": "04.11. 22:33", "text": "Spielstände: geladene Dateien werden bereinigt (kein HTML/Skript, nur bekannte Einheiten, Orte, Artefakte)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2074,11 +2074,45 @@ const SaveGame = {
   load() {
     try { return this.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
   },
+  // A save file may come from anywhere: strip markup from every string (no HTML or script can get into
+  // the page), drop prototype keys, force numbers to be numbers and keep only units, places, factions
+  // and artifacts the game knows. Values themselves (resources, army size) are not checked: it is a
+  // single-player game, editing one's own save is allowed.
+  sanitize(raw) {
+    const clean = v => {
+      if (typeof v === 'string') return v.replace(/[<>"&`]/g, '');
+      if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+      if (Array.isArray(v)) return v.map(clean);
+      if (v && typeof v === 'object') { const o = {}; for (const [k, x] of Object.entries(v)) if (!['__proto__', 'constructor', 'prototype'].includes(k)) o[k.replace(/[<>"&`]/g, '')] = clean(x); return o; }
+      return typeof v === 'boolean' || v === null ? v : undefined;
+    };
+    const c = clean(raw);
+    if (!c || typeof c !== 'object') return null;
+    const num = (v, min = 0) => { const n = Number(v); return Number.isFinite(n) ? Math.max(min, n) : min; };
+    const army = a => (Array.isArray(a) ? a : []).filter(u => u && DATA.units[u.type] && DATA.units[u.type].side === 'undead')
+      .map(u => ({ type: u.type, hp: Math.max(1, Math.min(num(u.hp, 1), DATA.units[u.type].hp * 10)) }));
+    for (const k of ['dayCount', 'hour', 'battles', 'newsUnread', 'debugCommand', 'econVersion']) if (k in c) c[k] = num(c[k], k === 'debugCommand' ? -9999 : 0);
+    for (const k of ['resources', 'threat']) if (c[k] && typeof c[k] === 'object') for (const r of Object.keys(c[k])) c[k][r] = num(c[k][r]);
+    c.army = army(c.army);
+    if (c.owners) for (const [id, f] of Object.entries(c.owners)) if (!NODE_BY_ID[id] || !DATA.factions[f]) delete c.owners[id];
+    for (const k of ['garrisons', 'stranded']) if (c[k] && typeof c[k] === 'object') for (const id of Object.keys(c[k])) { if (!NODE_BY_ID[id]) delete c[k][id]; else c[k][id] = army(c[k][id]); }
+    if (Array.isArray(c.expeditions)) c.expeditions = c.expeditions.filter(e => e && DATA.units[e.leader] && NODE_BY_ID[e.nodeId]).map(e => ({ ...e, army: army(e.army) }));
+    for (const k of ['inventory', 'equipped']) if (k in c) c[k] = (Array.isArray(c[k]) ? c[k] : []).filter(id => DATA.artifacts[id]);
+    if ('upgrades' in c) c.upgrades = (Array.isArray(c.upgrades) ? c.upgrades : []).filter(id => DATA.upgrades.some(u => u.id === id));
+    if (c.buildings && typeof c.buildings === 'object') for (const k of Object.keys(c.buildings)) { if (!DATA.baseBuildings[k]) delete c.buildings[k]; else c.buildings[k] = Math.min(num(c.buildings[k]), DATA.baseBuildings[k].levels.length); }
+    if (Array.isArray(c.raids)) c.raids = c.raids.filter(r => r && DATA.factions[r.faction] && NODE_BY_ID[r.targetId] && r.garrison && typeof r.garrison === 'object')
+      .map(r => { for (const t of Object.keys(r.garrison)) if (!DATA.units[t]) delete r.garrison[t]; else r.garrison[t] = num(r.garrison[t]); return r; });
+    if (Array.isArray(c.news)) c.news = c.news.slice(-400);
+    if (c.construction && !(c.construction.k && DATA.baseBuildings[c.construction.k])) c.construction = null;
+    if (c.order && !NODE_BY_ID[c.order]) c.order = null;
+    if (c.march && !(Array.isArray(c.march.legs) && c.march.legs.every(l => l && NODE_BY_ID[l.fromId] && NODE_BY_ID[l.toId]))) c.march = null;
+    return c;
+  },
   // Turns a saved JSON string into a campaign (with migration of older saves), or null.
   parse(s) {
     try {
       if (!s) return null;
-      const c = JSON.parse(s);
+      const c = this.sanitize(JSON.parse(s));
       if (!c || !Array.isArray(c.army) || !c.owners || !NODE_BY_ID[c.nodeId]) return null;
       // Fill in fields that may be missing in older saves.
       const fresh = Campaign.create();
@@ -2131,10 +2165,10 @@ const SaveGame = {
     const auto = this.load(), inGame = !fromIntro && game.campaign && (game.mode === 'world');
     const row = (label, info, btns) => `<div class="recruitRow"><div></div><div><b>${label}</b><br><span class="small">${info || 'leer'}</span></div><div class="recruitBtns">${btns}</div></div>`;
     let html = `<h2>Spielstände</h2><p class="small">Gespeichert wird automatisch nach Kämpfen, Reisen und Aktionen. Zusätzlich gibt es ${this.SLOTS} feste Plätze und die Sicherung als Datei (z. B. für einen anderen Browser oder Rechner).</p>`;
-    html += row('Automatisch', this.info(auto), auto && fromIntro ? `<button data-sv="loadauto">Laden</button>` : '');
+    html += row('Automatisch', auto ? esc(this.info(auto)) : null, auto && fromIntro ? `<button data-sv="loadauto">Laden</button>` : '');
     for (let i = 0; i < this.SLOTS; i++) {
       const sl = this.readSlot(i);
-      html += row(`Platz ${i + 1}`, sl ? `${sl.at} · ${this.info(sl.c)}` : null,
+      html += row(`Platz ${i + 1}`, sl ? `${esc(sl.at)} · ${esc(this.info(sl.c))}` : null,
         `${inGame ? `<button data-sv="save" data-i="${i}">Speichern</button>` : ''}${sl ? `<button data-sv="load" data-i="${i}">Laden</button><button data-sv="del" data-i="${i}">Löschen</button>` : ''}`);
     }
     html += `<p>${inGame ? '<button data-sv="export">Als Datei sichern</button> ' : ''}<button data-sv="import">Datei laden</button></p>`;
