@@ -454,6 +454,28 @@ def build(unit):
         for x, y in ((0.1, 1.3), (-0.12, 1.05), (0.15, 0.9)): m.B((x, y, 0.12), (0.06, 0.22, 0.01), "#3a6a3a")         # seaweed
         spear(m, (0.27, 1.0, 0.2), wood="#5a4a3a", tip="#6a4a3a", length=1.7); m.C((0.27, 1.85, 0.2), (0.4, 1.75, 0.2), 0.015, 0.0, "#6a4a3a", seg=3)
         return m
+    # --- ancestors (unique undead leaders from graves) -----------------------
+    if unit == "reiterfuerst":
+        m = Mesh(); horse(m, "#cfc4a8", "#6a5a40", eye="#7aff9a", saddle="#7a4a1a")
+        rider(m, "#d8d0b8", "#8a6a30", "#5a4a30", "#3a2a1a", eyes="#7aff9a")
+        m.O((0, 2.2, 0), (0.13, 0.08, 0.13), "#b08a4a"); m.C((0, 2.26, 0), (0, 2.4, 0), 0.03, 0.0, "#b08a4a", seg=4)   # bronze helmet
+        shield(m, (-0.27, 1.6, 0.25), face="#b08a4a", rim="#7a5a2a", r=0.22); spear(m, (0.27, 1.6, 0.25), wood="#5a4020", tip="#b08a4a", length=2.4); return m
+    if unit == "huenenkoenig":
+        m = Mesh(); skeleton(m, bone="#cfc4a8"); arms(m, "#cfc4a8", "#cfc4a8", rr=0.035); crown(m, "#8a7a4a", 1.62, 0.11, 6)
+        cloak(m, "#4a4038", w=0.5); hammer(m, head_="#7a746a", length=1.2); m.B((0, 1.2, 0.04), (0.3, 0.3, 0.06), "#6a6050")   # stone breastplate
+        return scaled(m, 1.35)
+    if unit == "widukind":
+        m = human(skin="#9aa08a", shirt="#5a6a5a", pants="#3a3a30", boots="#2a2a20", hair="#c8c0a0", beard="#c8c0a0", belt="#3a2a1a")
+        m.B((0, 1.12, 0.0), (0.4, 0.56, 0.25), "#7a7a80"); cloak(m, "#2a3a2a", w=0.56); crown(m, "#c9a227", 1.64, 0.11, 5)
+        for sx in (-1, 1): m.B((sx * 0.04, 1.54, 0.125), (0.03, 0.02, 0.01), "#7aff9a")
+        sword(m, length=0.8, blade="#8a9a8a"); shield(m, face="#e8e0d0", rim="#5a4a2a", r=0.26); m.B((L_HAND[0] - 0.03, L_HAND[1] + 0.05, L_HAND[2] + 0.105), (0.12, 0.12, 0.01), "#2a2a2a")   # horse emblem
+        return m
+    if unit == "ratsherr":
+        m = robed("#2a3a44", skin="#8a9aa0", sleeve="#1e2a30", hair="#4a5a50", eyes="#7aff9a", belt="#c9a227")
+        m.C((0, 1.42, 0.1), (0, 1.42, 0.12), 0.14, 0.14, "#c9a227", seg=10); m.O((0, 1.28, 0.13), (0.05, 0.05, 0.02), "#c9a227", 2, 6)   # chain of office
+        for x, y in ((0.12, 1.2), (-0.14, 1.0), (0.08, 0.7)): m.B((x, y, 0.2), (0.06, 0.22, 0.01), "#2a5a2a")
+        m.O((0, 1.66, -0.02), (0.17, 0.07, 0.16), "#5a1a1a")   # alderman's beret
+        staff(m, wood="#3a3428", length=1.8); lantern(m, (0.27, 1.9, 0.12), glow="#9be05a"); return m
     if unit == "wasserleiche":
         m = human(skin="#7a8a80", shirt="#3a4440", pants="#2a302c", boots="#1e2220", hair="#2a3a2a", r=(0.24, 1.2, 0.42), l=(-0.24, 1.2, 0.42))
         for x, y in ((0.1, 1.3), (-0.12, 1.05), (0.15, 0.9), (0.0, 1.45)): m.B((x, y, 0.12), (0.06, 0.24, 0.01), "#2a5a2a")
@@ -536,7 +558,7 @@ UNITS = ["lich", "ghul", "skelett", "bogner", "leichenhund", "zombie", "schleude
          "moorleiche", "todesritter", "totenlicht", "gefallene_schwester", "grabdruidin", "nekromant", "knochenballiste",
          "fleischriese", "totenjaeger", "knochendrache",
          "sachsenkrieger", "wodansrabe", "wilder_jaeger", "hackelberg", "lutki", "wassermann", "rusalka", "mittagsfrau",
-         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche"]
+         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche", "reiterfuerst", "huenenkoenig", "widukind", "ratsherr"]
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)

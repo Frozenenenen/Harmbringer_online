@@ -1237,6 +1237,10 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Nekromant | Undead | Commander / Caster | 2 | 18 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 5 / 4 | 4/3/2 | 1/2 | – | +4 | 2L 2S |
 | Fleischriese | Undead | Warrior / Tank | 4 | 70 | 3 | 2 | 2 | 14 | 1 | Blunt | Medium | 1 / 0 | 3/2/2 | 4/4 | – | -8 | 15L |
 | Knochendrache | Undead | Warrior / Tank | 4 | 120 | 4 | 5 | 6 | 18 | 2 | Soul | Heavy | 4 / 4 | 6/4/3 | 4/2 | Flug | -16 | 30K 6S |
+| Bronzezeitlicher Reiterfürst | Undead | Unique / Commander | 3 | 45 | 6 | 7 | 6 | 12 | 1 | Pierce | Medium | 3 / 4 | 6/4/3 | 3/2 | – | +6 | – |
+| Hünenkönig | Undead | Unique / Commander | 3 | 60 | 5 | 4 | 3 | 14 | 1 | Blunt | Heavy | 4 / 4 | 4/3/2 | 4/2 | – | +6 | – |
+| Widukinds Schatten | Undead | Unique / Commander | 2 | 50 | 6 | 6 | 4 | 12 | 1 | Pierce | Medium | 4 / 6 | 5/4/3 | 2/2 | – | +8 | – |
+| Ratsherr von Rungholt | Undead | Unique / Commander | 2 | 35 | 8 | 5 | 3 | 9 | 3 | Soul | Light | 6 / 6 | 5/4/3 | 1/3 | – | +6 | – |
 | Bauer | Hanse | CannonFodder / Melee | 2 | 10 | 0 | 4 | 3 | 4 | 1 | Pierce | Unarmored | 0 / 0 | 4/3/2 | 2/2 | – | +0 | – |
 | Lüneburger Armbrustschütze | Hanse | CannonFodder / Ranged | 2 | 15 | 0 | 4 | 3 | 9 | 5 | Pierce | Medium | 1 / 0 | 6/3/2 | 2/2 | – | +0 | – |
 | Kleriker | Clergy | Warrior / Support | 2 | 14 | 4 | 5 | 3 | 4 | 2 | Holy | Light | 4 / 6 | 4/3/2 | 1/1 | – | +0 | – |
@@ -1323,10 +1327,10 @@ Sonderfälle, die die Tabelle nicht ausdrückt (Zweit-Effekte, Bedingungen wie �
 | `SkeletonReassemble` | Wiederzusammensetzen | Skelett | OnDeath | Self / SinglePoint | 0 | Heal (Heal) | 5 | – | 0 / 0 | Einmal pro Kampf mit 5 HP wieder aufstehen; nicht nach Blunt- oder Holy-Tod |
 | `ZombieInfect` | Seuchenbiss | Zombie, Schlangenkönig, Ertrunkener | OnDamageDealt | Enemy / SinglePoint | 1 | ApplyStatus (Poison) | 2 | Poisoned (2) | 0 / 0 | Getroffenes Ziel wird vergiftet |
 | `GhoulCorpseEater` | Leichenfresser | Ghul | Active | Ground / SinglePoint | 1 | Heal (Heal) | 8 | – | 0 / 2 | Frisst angrenzende Leiche: +8 HP, die Leiche ist als Beute verloren *(braucht Leiche)* |
-| `DeathKnightShieldWall` | Schildwall | Todesritter | Active | Ally / Radius 1 | 0 | ApplyStatus (Blunt) | 5 | Shielded (1) | 2 / 2 | Todesritter und Nachbarn erhalten Schild 5 bis zum nächsten Zug |
-| `NecroRaiseDead` | Totenruf | Nekromant | Active | Ground / SinglePoint | 3 | Summon (Soul) | 1 | – | 4 / 2 | Verbraucht Leiche auf Zielfeld, erzeugt 1 Skelett *(braucht Leiche)* |
-| `FleshGiantCrush` | Zermalmen | Fleischriese, Schlangenkönig, Blanker Hans | Active | Enemy / Cone 1 | 1 | Damage (Blunt) | 10 | Stunned (1) | 3 / 2 | Trifft 3 Felder im Kegel, betäubt |
-| `PeasantMob` | Rottenmut | Bauer, Sachsenkrieger, Lutki | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Pierce) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn mind. 2 Bauern angrenzen |
+| `DeathKnightShieldWall` | Schildwall | Todesritter, Hünenkönig | Active | Ally / Radius 1 | 0 | ApplyStatus (Blunt) | 5 | Shielded (1) | 2 / 2 | Todesritter und Nachbarn erhalten Schild 5 bis zum nächsten Zug |
+| `NecroRaiseDead` | Totenruf | Nekromant, Ratsherr von Rungholt | Active | Ground / SinglePoint | 3 | Summon (Soul) | 1 | – | 4 / 2 | Verbraucht Leiche auf Zielfeld, erzeugt 1 Skelett *(braucht Leiche)* |
+| `FleshGiantCrush` | Zermalmen | Fleischriese, Hünenkönig, Schlangenkönig, Blanker Hans | Active | Enemy / Cone 1 | 1 | Damage (Blunt) | 10 | Stunned (1) | 3 / 2 | Trifft 3 Felder im Kegel, betäubt |
+| `PeasantMob` | Rottenmut | Widukinds Schatten, Bauer, Sachsenkrieger, Lutki | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Pierce) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn mind. 2 Bauern angrenzen |
 | `CrossbowPavise` | Setzschild | Lüneburger Armbrustschütze, Knochenschütze | Passive | Self / SinglePoint | 0 | ModifyTerrain (Pierce) | 0 | – | 0 / 0 | Wenn nicht bewegt: Kante zur Angriffsrichtung zählt als Cover |
 | `ClericCenser` | Weihrauch | Kleriker | Active | AllEnemies / Radius 1 | 0 | Damage (Holy) | 4 | – | 2 / 1 | 4 Holy-Schaden an alle angrenzenden Feinde |
 | `SisterHolyWater` | Weihwasser | Heideschwester | Active | Ally / SinglePoint | 2 | Heal (Heal) | 6 | – | 2 / 0 | Heilt Verbündeten um 6 HP |
@@ -1335,14 +1339,14 @@ Sonderfälle, die die Tabelle nicht ausdrückt (Zweit-Effekte, Bedingungen wie �
 | `DruidMistletoe` | Mistelsegen | Druide, Schlangenkönig | Active | Ally / SinglePoint | 3 | ApplyStatus (Heal) | 3 | Regeneration (3) | 2 / 1 | Verbündeter regeneriert 3 HP pro Zug |
 | `DruidessGraveRest` | Grabesruhe | Hügelgrab-Druidin, Rusalka | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Cursed (2) | 3 / 2 | Nur gegen Untote: -25 % Schaden |
 | `DruidessEarthBind` | Erdbindung | Hügelgrab-Druidin, Grabdruidin | Active | Ground / SinglePoint | 3 | ModifyTerrain (Arcane) | 0 | – (2) | 2 / 3 | Feld wird 2 Runden unpassierbar, Kanten ringsum Cover |
-| `MoorGrip` | Moorgriff | Moorgeist, Moorleiche, Wasserleiche, Wassermann | Active | Enemy / SinglePoint | 1 | ApplyStatus (Blunt) | 0 | Slowed (2) | 2 / 1 | Slowed 2 Züge; auf Mud/Swamp/Bog zusätzlich Stunned 1 Zug |
+| `MoorGrip` | Moorgriff | Ratsherr von Rungholt, Moorgeist, Moorleiche, Wasserleiche, Wassermann | Active | Enemy / SinglePoint | 1 | ApplyStatus (Blunt) | 0 | Slowed (2) | 2 / 1 | Slowed 2 Züge; auf Mud/Swamp/Bog zusätzlich Stunned 1 Zug |
 | `FromThePeat` | Aus dem Torf | Moorgeist, Wassermann | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Blunt) | 4 | Shielded (1) | 0 / 0 | Auf Moorboden zu Zugbeginn Schild 4 *(nur auf Mud, Swamp, Bog)* |
 | `WispConfusion` | Verwirrung | Irrlicht, Wattjungfrau | Passive | AllEnemies / Ring 1 | 0 | ApplyStatus (Arcane) | 0 | Confused (1) | 0 / 0 | Feinde auf Nachbarfeldern bewegen sich zufällig |
 | `WispFalseLight` | Falsches Licht | Irrlicht | OnDeath | Ground / SinglePoint | 0 | Summon (Arcane) | 1 | – (1) | 0 / 0 | Trugbild für 1 Runde, zieht Angriffe auf sich |
 | `HoundPack` | Meute | Schwarzer Hund, Wodansrabe | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Rend) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn ein anderer Schwarzer Hund angrenzt |
 | `WodeWildHunt` | Wilde Jagd | Der Wode, Hackelberg | Active | Ground / SinglePoint | 2 | Summon (Soul) | 2 | – | 5 / 4 | Beschwört 2 Schwarze Hunde |
 | `WodeRideThrough` | Durchreiten | Der Wode, Hackelberg | Active | Enemy / Line 3 | 3 | Damage (Pierce) | 12 | – | 3 / 2 | Reitet 3 Felder in Linie, trifft alle darauf, endet am Linienende |
-| `WodeHorn` | Jagdhorn | Der Wode, Hackelberg, Blanker Hans | Active | AllAllies / Radius 3 | 0 | ApplyStatus (Arcane) | 0 | Hasted (2) | 2 / 3 | Verbündete im Radius 3 werden beschleunigt |
+| `WodeHorn` | Jagdhorn | Bronzezeitlicher Reiterfürst, Widukinds Schatten, Der Wode, Hackelberg, Blanker Hans | Active | AllAllies / Radius 3 | 0 | ApplyStatus (Arcane) | 0 | Hasted (2) | 2 / 3 | Verbündete im Radius 3 werden beschleunigt |
 | `DwarfKingForge` | Runenschmiede | Hügelgrab-Zwergenkönig, Klabautermann | Active | Ally / SinglePoint | 1 | ApplyStatus (Blunt) | 8 | Shielded (2) | 2 / 1 | Verbündeter erhält Schild 8 |
 | `DwarfKingTreasureCurse` | Schatzfluch | Hügelgrab-Zwergenkönig | OnDamageTaken | Enemy / SinglePoint | 0 | ApplyStatus (Arcane) | 0 | Cursed (2) | 0 / 0 | Wer den Zwergenkönig trifft, wird verflucht |
 | `DwarfKingStoneSkin` | Steinhaut | Hügelgrab-Zwergenkönig | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Blunt) | 4 | Shielded (1) | 0 / 0 | Auf Steinboden zu Zugbeginn Schild 4 *(nur auf StoneFloor, CellarFloor, RawStone)* |
@@ -1353,7 +1357,7 @@ Sonderfälle, die die Tabelle nicht ausdrückt (Zweit-Effekte, Bedingungen wie �
 | `DeathLightConfusion` | Totenirrlicht | Totenlicht | Passive | AllEnemies / Ring 2 | 0 | ApplyStatus (Arcane) | 0 | Confused (1) | 0 / 0 | Lebende Feinde im Umkreis 2 bewegen sich zufällig |
 | `FallenSisterGraveWater` | Grabwasser | Gefallene Schwester | Active | Ally / SinglePoint | 2 | Heal (Soul) | 6 | – | 2 / 0 | Heilt verbündeten Untoten um 6 HP |
 | `GraveDruidessBind` | Lebensbann | Grabdruidin | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Cursed (2) | 3 / 2 | Nur gegen Lebende: -25 % Schaden |
-| `DeathHunterCharge` | Todesritt | Totenjäger, Wilder Jäger | Active | Enemy / Line 2 | 2 | Damage (Pierce) | 9 | – | 3 / 2 | Reitet 2 Felder in Linie, trifft alle darauf |
+| `DeathHunterCharge` | Todesritt | Bronzezeitlicher Reiterfürst, Totenjäger, Wilder Jäger | Active | Enemy / Line 2 | 2 | Damage (Pierce) | 9 | – | 3 / 2 | Reitet 2 Felder in Linie, trifft alle darauf |
 <!--GEN:ABILITIES:END-->
 
 ### Balancing-Check (automatisch)
@@ -2223,6 +2227,15 @@ Beispiele:
 - *Valkyre (aktiv):* "Letzter Atemzug" – gefallene eigene Einheit gibt noch einen Angriff ab
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
+
+### Ahnen, Portale, Marsch-Hinterhalte, Gelände-Fähigkeiten (umgesetzt 04.11.2026)
+
+- **Ahnen:** Vier einzigartige untote Anführer erheben sich, wenn ihr Grab erobert wird, und schließen sich der siegreichen Armee an: Bronzezeitlicher Reiterfürst (Pestruper Gräberfeld), Hünenkönig (Sieben Steinhäuser), Widukinds Schatten (Externsteine), Ratsherr von Rungholt (Rungholt). Nicht rekrutierbar, geben Kommando, können auch ohne Totenhalle einen eigenen Zug führen. Werte: Zeilen `BronzeRider`, `BarrowKing`, `WidukindShade`, `RungholtAlderman` in `gen_data.py`; Gräber in `ancestors` (`world_data.js`).
+- **Portalbau:** Nach dem Sturz eines Pantheons wird sein Sitz erst zum Ley-Knoten, wenn der Lich dort ein Portal errichtet (20 Leichen, 10 Seelen, 3 Tage).
+- **Lichtsäulen:** Über jedem Pantheon-Sitz steht eine violette Lichtsäule pro lebendem Mitglied; sie erlöschen, wenn Mitglieder fallen.
+- **Heimvorteil:** Am Sitz eines Pantheons erhalten die Verteidiger +2 Seelenschild je Kreatur (zusätzlich zum Ley-Bund).
+- **Gemeinsamer Marsch:** Bei „Los“ kann jede Armee unterwegs in einen Hinterhalt geraten; alle halten an, der Kampf wird geschlagen, danach geht der Marsch weiter („Weiterziehen“ setzt auch nach dem Laden fort). Fällt eine Armee, scheidet sie aus dem Marsch aus.
+- **Gelände-Fähigkeiten** verändern den Boden für ihre Dauer: Geweihter Boden (Heideschwester) macht Felder zu geweihtem Boden, Erdbindung und Dornenkrone zu Schlamm.
 
 ### Kampfsystem-Tiefe (umgesetzt 04.11.2026)
 

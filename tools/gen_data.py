@@ -42,6 +42,15 @@ units = [
    70,3,2,2,14,1,"Blunt",1,T,"Medium",1,0, 3,2,2,4,4,4,F,F,-8, l=15, ab=("FleshGiantCrush",)),
  U("BoneDragon","Knochendrache","Warrior","Tank","Undead","Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",
    120,4,5,6,18,2,"Soul",1,T,"Heavy",4,4, 6,4,3,4,2,4,F,T,-16, k=30, s=6),
+ # --- Ahnen: einzigartige untote Anführer aus besonderen Gräbern (nicht rekrutierbar, schließen sich bei der Eroberung an) ---
+ U("BronzeRider","Bronzezeitlicher Reiterfürst","Unique","Commander","Undead","Ahne aus dem Pestruper Gräberfeld. Reitet seit dreitausend Jahren mit der Wilden Jagd.",
+   45,6,7,6,12,1,"Pierce",1,T,"Medium",3,4, 6,4,3,3,2,3,F,F,6, ab=("DeathHunterCharge","WodeHorn")),
+ U("BarrowKing","Hünenkönig","Unique","Commander","Undead","Ahne aus den Sieben Steinhäusern. Riesige Gebeine unter den Decksteinen.",
+   60,5,4,3,14,1,"Blunt",1,T,"Heavy",4,4, 4,3,2,4,2,3,F,F,6, ab=("FleshGiantCrush","DeathKnightShieldWall")),
+ U("WidukindShade","Widukinds Schatten","Unique","Commander","Undead","Der Sachsenherzog, der Karl trotzte. An den Externsteinen erhebt er sich erneut.",
+   50,6,6,4,12,1,"Pierce",1,T,"Medium",4,6, 5,4,3,2,2,2,F,F,8, ab=("PeasantMob","WodeHorn")),
+ U("RungholtAlderman","Ratsherr von Rungholt","Unique","Commander","Undead","Der Ratsherr, der Gott verspottete. Die Flut nahm ihn, der Lich gibt ihn zurück.",
+   35,8,5,3,9,3,"Soul",1,F,"Light",6,6, 5,4,3,1,3,2,F,F,6, ab=("NecroRaiseDead","MoorGrip")),
  # --- Gegner Basis ---
  U("Peasant","Bauer","CannonFodder","Melee","Hanse","Mistgabel, rot-weißer Wappenrock.",
    10,0,4,3,4,1,"Pierce",1,T,"Unarmored",0,0, 4,3,2,2,2,2,F,F,0, ab=("PeasantMob",)),
@@ -184,6 +193,10 @@ GAME_UNITS = [
  ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=5)),
  ("knochendrache", "BoneDragon", dict(shape="octahedron", color="#d8d0b8", requiresKnowledge=16, requiresPantheon="spreewald")),
  ("wasserleiche", "DrownedCorpse", dict(shape="capsule", color="#5a6a70", requiresKnowledge=6, requiresPantheon="wattenmeer")),
+ ("reiterfuerst", "BronzeRider", dict(shape="octahedron", color="#b08a4a", ancestor=True)),
+ ("huenenkoenig", "BarrowKing", dict(shape="octahedron", color="#cfc4a8", ancestor=True)),
+ ("widukind", "WidukindShade", dict(shape="octahedron", color="#5a6a5a", ancestor=True)),
+ ("ratsherr", "RungholtAlderman", dict(shape="octahedron", color="#4a6a7a", ancestor=True)),
  ("totenjaeger", "DeathHunter", dict(shape="box", color="#3a2a2a", requiresKnowledge=10, requiresPantheon="wodan")),
  # Heath pantheon and clergy units for the mythic places of the wider map
  ("kleriker", "Cleric", dict(shape="cone", color="#cfc6a8")),
@@ -389,7 +402,7 @@ for b in buildings:
         assert p in UN and UN[p]["Faction"] == "Undead", (b["Name"], p)
         produced.setdefault(p, []).append(b["Name"])
 for u in units:
-    if u["Faction"] == "Undead" and u["Name"] != "Lich":
+    if u["Faction"] == "Undead" and u["Name"] != "Lich" and u["Rank"] != "Unique":
         assert u["Name"] in produced, ("nicht produzierbar", u["Name"])
 for k in knowledge:
     assert k["SourceUnit"] in UN, k["Name"]
@@ -555,6 +568,7 @@ def game_unit(gid, row, extra):
         d["commandPoints"] = -u["CommandPoints"]; d["cost"] = cost
     if "requiresKnowledge" in extra: d["requiresKnowledge"] = extra["requiresKnowledge"]
     if "requiresPantheon" in extra: d["requiresPantheon"] = extra["requiresPantheon"]
+    if extra.get("ancestor"): d["ancestor"] = True
     d["energy"] = u["MaxEnergy"]
     d["shape"], d["color"] = extra["shape"], extra["color"]
     d["desc"] = extra.get("desc") or u["DescriptionText"]

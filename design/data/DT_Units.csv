@@ -9,6 +9,10 @@ Ballista,Balliste,Machine,Siege,Undead,Knochen-Belagerungsgeschütz.,25,0,2,1,20
 Necromancer,Nekromant,Commander,Caster,Undead,"Generischer Kommandeur, ruft Tote.",18,8,5,3,6,4,Soul,1,False,Light,5,4,4,3,2,1,2,2,False,False,4,2,0,2,"(""NecroRaiseDead"")"
 FleshGiant,Fleischriese,Warrior,Tank,Undead,Aus 15 Leichen vernäht.,70,3,2,2,14,1,Blunt,1,True,Medium,1,0,3,2,2,4,4,4,False,False,-8,15,0,0,"(""FleshGiantCrush"")"
 BoneDragon,Knochendrache,Warrior,Tank,Undead,"Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",120,4,5,6,18,2,Soul,1,True,Heavy,4,4,6,4,3,4,2,4,False,True,-16,0,30,6,()
+BronzeRider,Bronzezeitlicher Reiterfürst,Unique,Commander,Undead,Ahne aus dem Pestruper Gräberfeld. Reitet seit dreitausend Jahren mit der Wilden Jagd.,45,6,7,6,12,1,Pierce,1,True,Medium,3,4,6,4,3,3,2,3,False,False,6,0,0,0,"(""DeathHunterCharge"",""WodeHorn"")"
+BarrowKing,Hünenkönig,Unique,Commander,Undead,Ahne aus den Sieben Steinhäusern. Riesige Gebeine unter den Decksteinen.,60,5,4,3,14,1,Blunt,1,True,Heavy,4,4,4,3,2,4,2,3,False,False,6,0,0,0,"(""FleshGiantCrush"",""DeathKnightShieldWall"")"
+WidukindShade,Widukinds Schatten,Unique,Commander,Undead,"Der Sachsenherzog, der Karl trotzte. An den Externsteinen erhebt er sich erneut.",50,6,6,4,12,1,Pierce,1,True,Medium,4,6,5,4,3,2,2,2,False,False,8,0,0,0,"(""PeasantMob"",""WodeHorn"")"
+RungholtAlderman,Ratsherr von Rungholt,Unique,Commander,Undead,"Der Ratsherr, der Gott verspottete. Die Flut nahm ihn, der Lich gibt ihn zurück.",35,8,5,3,9,3,Soul,1,False,Light,6,6,5,4,3,1,3,2,False,False,6,0,0,0,"(""NecroRaiseDead"",""MoorGrip"")"
 Peasant,Bauer,CannonFodder,Melee,Hanse,"Mistgabel, rot-weißer Wappenrock.",10,0,4,3,4,1,Pierce,1,True,Unarmored,0,0,4,3,2,2,2,2,False,False,0,0,0,0,"(""PeasantMob"")"
 Crossbowman,Lüneburger Armbrustschütze,CannonFodder,Ranged,Hanse,Armbrust mit Setzschild.,15,0,4,3,9,5,Pierce,1,False,Medium,1,0,6,3,2,2,2,2,False,False,0,0,0,0,"(""CrossbowPavise"")"
 Cleric,Kleriker,Warrior,Support,Clergy,Weihrauchfass und Buch.,14,4,5,3,4,2,Holy,1,False,Light,4,6,4,3,2,1,1,2,False,False,0,0,0,0,"(""ClericCenser"")"
