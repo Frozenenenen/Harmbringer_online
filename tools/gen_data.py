@@ -23,7 +23,7 @@ T, F = True, False
 units = [
  # --- Lich-Armee ---
  U("Lich","Lich","Unique","Commander","Undead","Der Spieler. Unsterblich durch das Phylakterium.",
-   40,10,6,3,8,3,"Soul",1,F,"Unarmored",8,10, 5,4,2,1,3,2,F,F,0, ab=("LichSoulDrain","LichRetreat")),
+   60,10,6,3,12,3,"Soul",1,F,"Unarmored",8,20, 5,4,2,1,3,2,F,F,0, ab=("LichSoulDrain","LichRetreat")),
  U("Skeleton","Skelett","CannonFodder","Melee","Undead","Speer und Rundschild. Billig, leise, zerbrechlich.",
    10,0,5,3,5,1,"Pierce",1,T,"Light",0,0, 3,2,0,2,1,1,F,F,-1, k=2, ab=("SkeletonReassemble",)),
  U("Zombie","Zombie","CannonFodder","Melee","Undead","Langsam, zäh, stinkt.",

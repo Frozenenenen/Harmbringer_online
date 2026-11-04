@@ -1,5 +1,5 @@
 Name,UnitName,Rank,Role,Faction,DescriptionText,HP,MaxEnergy,Initiative,MoveRange,AttackDamage,AttackRange,PowerType,AttacksPerTurn,CanCounter,DefenseType,MagicResist,SoulShield,SightRange,HearRadius,SmellRadius,NoiseLevel,ScentLevel,Size,IsSpectral,IsFlying,CommandPoints,CorpsesCost,BonesCost,SoulsCost,Abilities
-Lich,Lich,Unique,Commander,Undead,Der Spieler. Unsterblich durch das Phylakterium.,40,10,6,3,8,3,Soul,1,False,Unarmored,8,10,5,4,2,1,3,2,False,False,0,0,0,0,"(""LichSoulDrain"",""LichRetreat"")"
+Lich,Lich,Unique,Commander,Undead,Der Spieler. Unsterblich durch das Phylakterium.,60,10,6,3,12,3,Soul,1,False,Unarmored,8,20,5,4,2,1,3,2,False,False,0,0,0,0,"(""LichSoulDrain"",""LichRetreat"")"
 Skeleton,Skelett,CannonFodder,Melee,Undead,"Speer und Rundschild. Billig, leise, zerbrechlich.",10,0,5,3,5,1,Pierce,1,True,Light,0,0,3,2,0,2,1,1,False,False,-1,0,2,0,"(""SkeletonReassemble"")"
 Zombie,Zombie,CannonFodder,Melee,Undead,"Langsam, zäh, stinkt.",20,0,3,2,6,1,Blunt,1,True,Unarmored,0,0,2,2,3,2,4,2,False,False,-1,1,0,0,"(""ZombieInfect"")"
 Ghoul,Ghul,CannonFodder,Melee,Undead,Vierbeiniger Aasfresser mit Krallen.,18,0,5,3,6,1,Rend,1,True,Unarmored,1,0,3,2,4,2,4,2,False,False,-2,1,0,0,"(""GhoulCorpseEater"")"

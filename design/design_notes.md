@@ -1227,7 +1227,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 <!--GEN:UNITS:BEGIN-->
 | Einheit | Fraktion | Rang / Rolle | Size | HP | En | Ini | Bew | Schaden | Reichw. | Typ | Rüstung | MR / SS | Sinne | Signatur | Spektral/Flug | KP | Kosten |
 |-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|
-| Lich | Undead | Unique / Commander | 2 | 40 | 10 | 6 | 3 | 8 | 3 | Soul | Unarmored | 8 / 10 | 5/4/2 | 1/3 | – | +0 | – |
+| Lich | Undead | Unique / Commander | 2 | 60 | 10 | 6 | 3 | 12 | 3 | Soul | Unarmored | 8 / 20 | 5/4/2 | 1/3 | – | +0 | – |
 | Skelett | Undead | CannonFodder / Melee | 1 | 10 | 0 | 5 | 3 | 5 | 1 | Pierce | Light | 0 / 0 | 3/2/0 | 2/1 | – | -1 | 2K |
 | Zombie | Undead | CannonFodder / Melee | 2 | 20 | 0 | 3 | 2 | 6 | 1 | Blunt | Unarmored | 0 / 0 | 2/2/3 | 2/4 | – | -1 | 1L |
 | Ghul | Undead | CannonFodder / Melee | 2 | 18 | 0 | 5 | 3 | 6 | 1 | Rend | Unarmored | 1 / 0 | 3/2/4 | 2/4 | – | -2 | 1L |
@@ -1384,7 +1384,7 @@ Treffer bis Tod = aufrunden((HP + SoulShield) / Schaden)
 | Geist | 1 | 2 | 3 | 3 | 4 | 2 |
 | Nekromant | 2 | 3 | 4 | 4 | 4 | 2 |
 | Fleischriese | 1 | 2 | 2 | 2 | 3 | 1 |
-| Lich | 1 | 2 | 3 | 3 | 4 | 2 |
+| Lich | 1 | 2 | 2 | 2 | 3 | 1 |
 <!--GEN:BAL_HITS_P:END-->
 
 **Heide-Gegner greifen eigene Einheiten an:**
@@ -1392,12 +1392,12 @@ Treffer bis Tod = aufrunden((HP + SoulShield) / Schaden)
 <!--GEN:BAL_HITS_E:BEGIN-->
 | Angreifer ↓ / Ziel → | Skelett | Zombie | Ghul | Todesritter | Geist | Nekromant | Fleischriese | Lich |
 |-|-|-|-|-|-|-|-|-|
-| Bauer | 3 | 5 | 5 | 13 | 4 | 6 | 18 | 13 |
-| Lüneburger Armbrustschütze | 2 | 3 | 2 | 6 | 2 | 3 | 8 | 6 |
-| Heideschwester | 2 | 4 | 3 | 13 | 4 | 6 | 18 | 13 |
-| Hügelgrab-Druidin | 2 | 3 | 3 | 7 | 3 | 5 | 10 | 13 |
-| Moorgeist | 2 | 3 | 3 | 5 | 2 | 3 | 12 | 7 |
-| Irrlicht | 4 | 7 | 6 | 13 | 8 | 11 | 24 | 25 |
+| Bauer | 3 | 5 | 5 | 13 | 4 | 6 | 18 | 20 |
+| Lüneburger Armbrustschütze | 2 | 3 | 2 | 6 | 2 | 3 | 8 | 9 |
+| Heideschwester | 2 | 4 | 3 | 13 | 4 | 6 | 18 | 20 |
+| Hügelgrab-Druidin | 2 | 3 | 3 | 7 | 3 | 5 | 10 | 20 |
+| Moorgeist | 2 | 3 | 3 | 5 | 2 | 3 | 12 | 10 |
+| Irrlicht | 4 | 7 | 6 | 13 | 8 | 11 | 24 | 40 |
 <!--GEN:BAL_HITS_E:END-->
 
 **Kosten-Nutzen eigener Einheiten** (gegen den Durchschnitt der 6 Heide-Gegner). Zähigkeit = Treffer, die Gegner im Schnitt brauchen. Schlagkraft = Initiative × Angriffe ÷ benötigte Treffer. Kampfwert = Zähigkeit × Schlagkraft.
@@ -2228,6 +2228,13 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Lich gestärkt (04.11.2026)
+
+- Grundwerte: 60 LP, 12 Seelenschaden, 20 Seelenschild (vorher 40 / 8 / 10).
+- Pro belegtem Kommando-Punkt: +4 LP, +0,5 Schaden, +1 Seelenschild (vorher 2 / 0,25 / 0,25). Neu pro erobertem Ort: +4 LP, +0,5 Schaden, +1 Seelenschild – der Lich wächst mit dem Feldzug.
+- Seelenentzug trifft mit dem 1,5-fachen Schaden des Lichs (statt fest 8) und heilt ihn um den Schaden.
+- Startarmee (32 Kommando): 188 LP, 28 Schaden, 52 Seelenschild.
+
 ### Ahnen, Portale, Marsch-Hinterhalte, Gelände-Fähigkeiten (umgesetzt 04.11.2026)
 
 - **Ahnen:** Vier einzigartige untote Anführer erheben sich, wenn ihr Grab erobert wird, und schließen sich der siegreichen Armee an: Bronzezeitlicher Reiterfürst (Pestruper Gräberfeld), Hünenkönig (Sieben Steinhäuser), Widukinds Schatten (Externsteine), Ratsherr von Rungholt (Rungholt). Nicht rekrutierbar, geben Kommando, können auch ohne Totenhalle einen eigenen Zug führen. Werte: Zeilen `BronzeRider`, `BarrowKing`, `WidukindShade`, `RungholtAlderman` in `gen_data.py`; Gräber in `ancestors` (`world_data.js`).
@@ -2560,27 +2567,27 @@ Phase 2 nutzt die ersten drei als lineare Mini-Kampagne (Hof → Kirche → Moor
 <!--GEN:ENC_RESULTS:BEGIN-->
 | Begegnung | Armee | Siegchance | Dauer | Verluste | Netto Leichen | Netto Seelen |
 |-|-|-|-|-|-|-|
-| Einzelhof bei Wilsede | Start | 100% | 10 min | 0.1 | +6.5 | +1.9 |
+| Einzelhof bei Wilsede | Start | 100% | 10 min | 0.0 | +6.6 | +1.9 |
 | Einzelhof bei Wilsede | Ausgebaut | 100% | 9 min | 0.0 | +7.0 | +4.0 |
 | Einzelhof bei Wilsede | Stark | 100% | 9 min | 0.0 | +7.0 | +4.2 |
-| Alte Kirche Bispingen | Start | 100% | 18 min | 6.4 | +5.9 | +3.0 |
-| Alte Kirche Bispingen | Ausgebaut | 100% | 14 min | 1.1 | +9.7 | +3.8 |
-| Alte Kirche Bispingen | Stark | 100% | 13 min | 0.5 | +9.9 | +3.7 |
-| Pietzmoor bei Schneverdingen | Start | 100% | 13 min | 2.5 | +4.1 | +0.7 |
-| Pietzmoor bei Schneverdingen | Ausgebaut | 100% | 11 min | 1.2 | +5.7 | +2.4 |
-| Pietzmoor bei Schneverdingen | Stark | 100% | 10 min | 0.6 | +5.6 | +2.4 |
-| Die Wilde Jagd | Start | 57% | 15 min | 11.0 | +2.4 | +4.5 |
-| Die Wilde Jagd | Ausgebaut | 100% | 14 min | 7.8 | +4.4 | +2.0 |
-| Die Wilde Jagd | Stark | 100% | 14 min | 4.9 | +3.7 | +0.4 |
-| Hügelgrab des Zwergenkönigs | Start | 100% | 20 min | 11.0 | +4.5 | +1.4 |
-| Hügelgrab des Zwergenkönigs | Ausgebaut | 100% | 17 min | 6.2 | +8.4 | -0.5 |
-| Hügelgrab des Zwergenkönigs | Stark | 100% | 16 min | 4.8 | +5.9 | -3.2 |
-| Wilseder Berg | Start | 0% | 23 min | alle | – (Niederlage) | – |
-| Wilseder Berg | Ausgebaut | 100% | 22 min | 9.1 | +2.1 | +3.2 |
-| Wilseder Berg | Stark | 100% | 21 min | 6.5 | +1.1 | +1.9 |
-| Wilseder Berg **mit vollem Ley-Bund** | Start | 0% | 23 min | alle | – (Niederlage) | – |
-| Wilseder Berg **mit vollem Ley-Bund** | Ausgebaut | 82% | 26 min | 10.6 | +0.4 | +1.8 |
-| Wilseder Berg **mit vollem Ley-Bund** | Stark | 100% | 22 min | 7.0 | +0.7 | +1.8 |
+| Alte Kirche Bispingen | Start | 100% | 17 min | 5.4 | +6.6 | +3.3 |
+| Alte Kirche Bispingen | Ausgebaut | 100% | 14 min | 1.0 | +9.8 | +3.9 |
+| Alte Kirche Bispingen | Stark | 100% | 12 min | 0.5 | +9.9 | +4.1 |
+| Pietzmoor bei Schneverdingen | Start | 100% | 12 min | 2.4 | +4.2 | +1.0 |
+| Pietzmoor bei Schneverdingen | Ausgebaut | 100% | 11 min | 0.8 | +5.7 | +3.0 |
+| Pietzmoor bei Schneverdingen | Stark | 100% | 10 min | 0.4 | +5.8 | +2.6 |
+| Die Wilde Jagd | Start | 100% | 15 min | 10.9 | +2.3 | +4.3 |
+| Die Wilde Jagd | Ausgebaut | 100% | 14 min | 7.7 | +4.6 | +2.1 |
+| Die Wilde Jagd | Stark | 100% | 14 min | 4.8 | +3.9 | +0.6 |
+| Hügelgrab des Zwergenkönigs | Start | 100% | 19 min | 10.7 | +4.7 | +1.5 |
+| Hügelgrab des Zwergenkönigs | Ausgebaut | 100% | 17 min | 6.2 | +8.4 | +0.2 |
+| Hügelgrab des Zwergenkönigs | Stark | 100% | 16 min | 4.6 | +6.0 | -3.1 |
+| Wilseder Berg | Start | 95% | 24 min | 11.0 | +0.9 | +7.5 |
+| Wilseder Berg | Ausgebaut | 100% | 21 min | 8.2 | +3.2 | +4.3 |
+| Wilseder Berg | Stark | 100% | 20 min | 6.4 | +1.3 | +2.1 |
+| Wilseder Berg **mit vollem Ley-Bund** | Start | 0% | 25 min | alle | – (Niederlage) | – |
+| Wilseder Berg **mit vollem Ley-Bund** | Ausgebaut | 100% | 23 min | 9.6 | +1.5 | +3.0 |
+| Wilseder Berg **mit vollem Ley-Bund** | Stark | 100% | 21 min | 6.7 | +0.9 | +2.2 |
 <!--GEN:ENC_RESULTS:END-->
 
 **Was die Zahlen sagen:**

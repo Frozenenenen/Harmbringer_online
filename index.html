@@ -149,7 +149,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=24"></script>
+<script src="data/world_data.js?v=25"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=13"></script>
 <script type="importmap">
@@ -237,7 +237,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 70, "date": "2026-11-04", "changes": [{"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}, {"date": "04.11. 11:51", "text": "Fähigkeiten und Zustände im Kampf, Schadensvorschau; Fix: Gebäude im Hügelgrab überschrieben die Kampffeld-Gebäude"}]};
+const BUILD = {"version": 71, "date": "2026-11-04", "changes": [{"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3190,13 +3190,14 @@ const Battle = {
     const lich = b.units.find(u => u.type === 'lich'), B = ECON.lichArmyBonus;
     if (!lich || !B) return;
     const cp = Campaign.commandUsed(), base = lich.def;
-    const fx = Campaign.effects();
-    const add = { hp: Math.round(cp * B.hpPerCommand) + (fx.lichHp || 0), damage: Math.round(cp * B.damagePerCommand) + (fx.lichDamage || 0),
-      soulShield: Math.round(cp * B.shieldPerCommand) + (fx.lichShield || 0) };
+    const fx = Campaign.effects(), won = DATA.nodes.filter(n => Campaign.isConquered(n)).length;
+    const add = { hp: Math.round(cp * B.hpPerCommand + won * (B.hpPerConquest || 0)) + (fx.lichHp || 0),
+      damage: Math.round(cp * B.damagePerCommand + won * (B.damagePerConquest || 0)) + (fx.lichDamage || 0),
+      soulShield: Math.round(cp * B.shieldPerCommand + won * (B.shieldPerConquest || 0)) + (fx.lichShield || 0) };
     lich.def = { ...base, hp: base.hp + add.hp, damage: base.damage + add.damage, soulShield: base.soulShield + add.soulShield };
     lich.hp = Math.max(1, Math.round(lich.hp / base.hp * lich.def.hp));
     lich.maxHp = lich.def.hp; lich.shield = lich.def.soulShield;
-    if (cp > 0 || add.hp) this.log(`Der Lich zieht Kraft aus Armee (${cp} Kommando) und Artefakten: +${add.hp} LP, +${add.damage} Schaden, +${add.soulShield} Seelenschild.`, 'good');
+    if (cp > 0 || add.hp) this.log(`Der Lich zieht Kraft aus Armee (${cp} Kommando), ${won} eroberten Orten und Artefakten: +${add.hp} LP, +${add.damage} Schaden, +${add.soulShield} Seelenschild.`, 'good');
   },
   // Artifacts and owned special places strengthen every undead stack (copied defs, battle only).
   applyArmyEffects(b) {
@@ -3858,7 +3859,8 @@ const Abilities = {
       if (!x.alive || b.over) continue;
       if (a.effect === 'DAMAGE' || (a.effect === 'MODIFY_TERRAIN' && a.value > 0 && a.power !== 'HEAL')) {
         const tt = f.get(x.q, x.r), from = f.get(u.q, u.r);
-        const dmg = Math.round(Combat.damage({ power: a.power, damage: a.value * n }, x.def, from.level, tt.level, false) * this.damageMul(u, x));
+        const base = id === 'LichSoulDrain' ? Math.max(a.value, Math.round(u.def.damage * 1.5)) : a.value * n;   // the drain grows with the Lich
+        const dmg = Math.round(Combat.damage({ power: a.power, damage: base }, x.def, from.level, tt.level, false) * this.damageMul(u, x));
         Battle.log(`${a.name} trifft ${x.def.name}: ${dmg} Schaden.`, u.side === 'player' ? 'good' : 'hit');
         Battle.applyDamage(x, dmg, u, a.power);
         if (id === 'LichSoulDrain') this.heal(u, dmg, a.name);
