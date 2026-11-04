@@ -3063,6 +3063,7 @@ Vorbild: Heroes of Might and Magic (Seitenleiste, Ressourcenleiste unten, Kampfk
 | Leiste unten | Ressourcen (Symbol + Zahl, Erklärung im Tooltip), Bedrohung als ein Chip (Mini-Balken, „gewarnt“ ab 50 %), Zeit: Tageszeit-Uhr, **Tag N seit dem Erwachen**, Uhrzeit, nächste Tageszeit, Datum klein | Bedrohung aller Fraktionen (Klick), verstrichene Zeit einer Aktion („+1 T. 5 Std.“) |
 | Ortsinfo | – | nur mit Auswahl: Name, Fraktion, Aktionen oben, dann Ankunft, Hinterhalt, Besatzung, Beute, Besonderheit, Pantheon; Kampffeld, Bedrohung, Beschreibung unter „Mehr zum Ort“; × oder Esc schließt |
 | Menü | – | Ton, Spielstände, Tastenkürzel, Debug, Neues Spiel |
+| Chronik (unten, Taste N) | Knopf mit Zahl ungelesener Meldungen | alle Meldungen, die von selbst verschwinden (Trupps, Rückeroberung, Bündnis, gefallene Pantheons, ausgelöschte Fraktionen, Bauten, Erkenntnisse, Kämpfe, Erzähler), nach Tag gruppiert, filterbar; reine Bedienhinweise werden nicht verzeichnet |
 | Kampf | Initiativeleiste oben, Rundenzeile, Konsole unten (Chronik, Fähigkeiten, Zug beenden, Rückzug, Kanten, Token, Hilfe), Einheitenkarte kompakt links | Chronik aufklappen (Klick) |
 
 Die Tastenhilfe-Zeile am unteren Rand entfällt; Tasten stehen in den Tooltips und unter Menü → Tastenkürzel.

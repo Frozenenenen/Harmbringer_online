@@ -67,6 +67,12 @@
   #threatChip .mini { display: flex; gap: 2px; align-items: flex-end; height: 20px; background: linear-gradient(to top, rgba(0,0,0,.25) 1px, transparent 1px); }
   #threatChip .mini i { width: 4px; display: block; min-height: 2px; }
   #threatChip.warn { color: var(--blood); }
+  #btnNews { height: 30px; position: relative; white-space: nowrap; }
+  #btnNews .badge { display: inline-block; margin-left: 5px; min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--blood); color: #f4ecd6; font-size: 11px; line-height: 15px; }
+  .newsDay { margin: 10px 0 2px; font-size: 13px; color: var(--ink-soft); border-bottom: 1px solid rgba(43,33,22,.25); }
+  .newsItem { display: grid; grid-template-columns: 52px 20px 1fr; gap: 4px; font-size: 14px; padding: 2px 0; }
+  .newsItem .h { color: var(--ink-soft); font-size: 12px; padding-top: 2px; } .newsItem.unread { font-weight: bold; }
+  .newsFilter { display: flex; gap: 4px; margin-bottom: 6px; } .newsFilter button { font-size: 12px; padding: 1px 8px; } .newsFilter button.on { outline: 2px solid var(--gold); background: #f4ecd6; }
   #threatPop { position: absolute; bottom: calc(var(--bar) + 10px); width: 300px; padding: 10px 14px; }
   #threatPop .threat { display: grid; grid-template-columns: 1fr 44px; gap: 0 6px; font-size: 13px; margin: 3px 0; }
   #threatPop .threat .bar { grid-column: 1 / 3; }
@@ -273,6 +279,7 @@
   <div id="bottomBar" class="panel">
     <div id="resources"></div>
     <button id="threatChip" title="Bedrohung der Fraktionen (Klick für alle)"></button>
+    <button id="btnNews" title="Chronik: alle Meldungen der Welt (N)">📜 Chronik</button>
     <div class="spacer"></div>
     <div id="status"><div id="dial"></div><div id="dayNo"></div><div id="clock"></div><div id="date" class="small"></div></div>
     <div id="timeDelta"></div>
@@ -366,7 +373,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 101, "date": "2026-11-04", "changes": [{"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite, Bauen-Knopf in der Kopfzeile"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}]};
+const BUILD = {"version": 102, "date": "2026-11-04", "changes": [{"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen (Taste N), filterbar, mit Ungelesen-Zähler"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1562,7 +1569,7 @@ const Pantheons = {
     for (const [k, v] of Object.entries(LEY.portalCost)) c.resources[k] -= v;
     Campaign.advanceDays(LEY.portalDays);
     (c.portals = c.portals || {})[node.id] = true;
-    UI.toast(`Portal in ${node.name} errichtet: Ley-Sprung möglich.`, 5);
+    UI.toast(`Portal in ${node.name} errichtet: Ley-Sprung möglich.`, 5, 'world');
     Narrator.say(`In ${node.name} reißt der Lich die Erde auf. Die Ley-Linie, die hier zutage tritt, gehorcht nun ihm.`);
     SaveGame.save(); WorldView.refresh(); UI.updateHeader(); UI.renderInfo();
   },
@@ -1643,6 +1650,8 @@ const Raids = {
     }
     // Alliance: once a faction is at 90 % threat, the living stand together (more and stronger parties).
     const alliance = ENEMY_FACTIONS.some(f => c.threat[f] >= 90 && Campaign.isLiving(f));
+    if (alliance && !c.alliance) UI.news('Bündnis: Hanse, Welfen und Kirche schließen sich gegen den Lich zusammen. Mehr Trupps ziehen aus.', 'world');
+    if (!alliance && c.alliance) UI.news('Das Bündnis gegen den Lich zerfällt.', 'world');
     if (alliance && !c.alliance) Narrator.say('Die Glocken läuten von Lübeck bis Magdeburg. Hanse, Welfen und Kirche schließen ein Bündnis gegen den Lich: Mehr Trupps ziehen aus.');
     c.alliance = alliance;
     if (list.length >= RAIDS.maxParties + (alliance ? 2 : 0)) return;
@@ -1679,7 +1688,7 @@ const Raids = {
     if (total < RAIDS.minUnits && types.length) garrison[types[0][0]] = (garrison[types[0][0]] || 0) + RAIDS.minUnits - total;
     if (!Object.keys(garrison).length) garrison.bauer = RAIDS.minUnits;
     const c = game.campaign; c.raidCounter = (c.raidCounter || 0) + 1;
-    UI.toast(`${DATA.factions[o.faction].name}: Ein Trupp zieht aus ${o.name} gegen ${t.name}.`, 5);
+    UI.toast(`${DATA.factions[o.faction].name}: Ein Trupp zieht aus ${o.name} gegen ${t.name}.`, 5, 'world');
     Narrator.say('Die Lebenden wehren sich. Wo der Lich nicht ist, ziehen ihre Trupps aus und holen sich zurück, was er nahm.', 'firstRaid');
     return { id: 'raid' + c.raidCounter, faction: o.faction, originId: o.id, targetId: t.id, q: o.q, r: o.r, garrison };
   },
@@ -1691,7 +1700,7 @@ const Raids = {
     if (c.conqueredDay) delete c.conqueredDay[t.id];
     (c.retaken = c.retaken || {})[t.id] = c.dayCount;      // the place grows back to full strength from here
     this.remove(p.id);
-    UI.toast(`${t.name} ist verloren! Ein Trupp aus ${NODE_BY_ID[p.originId].name} hat den Ort zurückerobert.`, 6);
+    UI.toast(`${t.name} ist verloren! Ein Trupp aus ${NODE_BY_ID[p.originId].name} hat den Ort zurückerobert.`, 6, 'world');
     if (game.view && game.view.nodeViews) WorldView.refresh();
   },
   remove(id) { const c = game.campaign; c.raids = this.list().filter(p => p.id !== id); },
@@ -1825,11 +1834,11 @@ const Garrisons = {
     if (def.length) {
       this.all()[node.id] = def;
       Narrator.say(`Vor ${node.name} brach der Trupp aus ${NODE_BY_ID[party.originId].name} an der Besatzung der Toten. ${lost ? lost + ' Untote fielen, ' : ''}${def.length} halten den Ort.`);
-      UI.toast(`${node.name} gehalten! Die Besatzung schlug den Trupp zurück (${lost} verloren).`, 6);
+      UI.toast(`${node.name} gehalten! Die Besatzung schlug den Trupp zurück (${lost} verloren).`, 6, 'world');
       return true;
     }
     delete this.all()[node.id];
-    UI.toast(`${node.name}: Die Besatzung ist gefallen (${lost} Untote).`, 6);
+    UI.toast(`${node.name}: Die Besatzung ist gefallen (${lost} Untote).`, 6, 'world');
     return false;
   },
   infoRow(node) {
@@ -1884,7 +1893,7 @@ const Knowledge = {
     if (!fresh.length) return;
     c.known.push(...fresh);
     const names = fresh.map(t => DATA.units[t].name).join(', ');
-    UI.toast(`Erkenntnis: ${names}. ${fresh.some(t => !Base.hasProducer(t)) ? 'Das passende Gebäude im Hügelgrab fehlt noch.' : 'Jetzt rekrutierbar.'}`, 7);
+    UI.toast(`Erkenntnis: ${names}. ${fresh.some(t => !Base.hasProducer(t)) ? 'Das passende Gebäude im Hügelgrab fehlt noch.' : 'Jetzt rekrutierbar.'}`, 7, 'world');
   }
 };
 
@@ -1959,7 +1968,7 @@ const Base = {
     if (!w) return;
     if (--w.daysLeft > 0) return;
     this.levels()[w.k] = w.level; c.construction = null;
-    UI.toast(`Fertig: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}.`, 5);
+    UI.toast(`Fertig: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}.`, 5, 'world');
     Knowledge.discover();
   },
   producesText(l) {
@@ -2071,8 +2080,8 @@ const SaveGame = {
   },
   readSlot(i) { try { const raw = localStorage.getItem(this.slotKey(i)); if (!raw) return null; const w = JSON.parse(raw); return { at: w.at, name: w.name, c: this.parse(JSON.stringify(w.c)) }; } catch (e) { return null; } },
   writeSlot(i) {
-    try { localStorage.setItem(this.slotKey(i), JSON.stringify({ at: new Date().toLocaleString('de-DE'), name: `Platz ${i + 1}`, c: game.campaign })); UI.toast(`Gespeichert in Platz ${i + 1}.`); }
-    catch (e) { UI.toast('Speichern nicht möglich (Browser-Speicher voll oder gesperrt).'); }
+    try { localStorage.setItem(this.slotKey(i), JSON.stringify({ at: new Date().toLocaleString('de-DE'), name: `Platz ${i + 1}`, c: game.campaign })); UI.toast(`Gespeichert in Platz ${i + 1}.`, 3.5, false); }
+    catch (e) { UI.toast('Speichern nicht möglich (Browser-Speicher voll oder gesperrt).', 3.5, false); }
   },
   deleteSlot(i) { try { localStorage.removeItem(this.slotKey(i)); } catch (e) { /* ignore */ } },
   // Download the current campaign as a file (works under file:// too).
@@ -2089,8 +2098,8 @@ const SaveGame = {
       try {
         const w = JSON.parse(await f.text()), c = this.parse(JSON.stringify(w.c || w));
         if (!c) throw new Error('bad');
-        UI.closeModal(); if (game.battle) Battle.exit(); startGame(c); UI.toast(`Spielstand geladen: ${this.info(c)}`, 5);
-      } catch (e) { UI.toast('Diese Datei ist kein Harmbringer-Spielstand.'); }
+        UI.closeModal(); if (game.battle) Battle.exit(); startGame(c); UI.toast(`Spielstand geladen: ${this.info(c)}`, 5, false);
+      } catch (e) { UI.toast('Diese Datei ist kein Harmbringer-Spielstand.', 3.5, false); }
     };
     inp.click();
   },
@@ -2111,7 +2120,7 @@ const SaveGame = {
       const i = +b.dataset.i, k = b.dataset.sv;
       if (k === 'save') { this.writeSlot(i); this.open(fromIntro); }
       else if (k === 'del') { this.deleteSlot(i); this.open(fromIntro); }
-      else if (k === 'load') { const sl = this.readSlot(i); if (sl && sl.c) { UI.closeModal(); if (game.battle) Battle.exit(); startGame(sl.c); UI.toast(`Platz ${i + 1} geladen.`); } else UI.toast('Dieser Stand passt nicht mehr zum Spiel.'); }
+      else if (k === 'load') { const sl = this.readSlot(i); if (sl && sl.c) { UI.closeModal(); if (game.battle) Battle.exit(); startGame(sl.c); UI.toast(`Platz ${i + 1} geladen.`, 3.5, false); } else UI.toast('Dieser Stand passt nicht mehr zum Spiel.'); }
       else if (k === 'loadauto') { UI.closeModal(); startGame(auto); }
       else if (k === 'export') this.exportFile();
       else if (k === 'import') this.importFile();
@@ -2377,7 +2386,7 @@ async function startTravel(target, resume = null) {
     // Ambush on the road: the days so far have passed, then the battle. Victory continues the journey.
     c.travel = { targetId: target.id, at: plan.at, hoursLeft: Math.max(0, hours - hoursSoFar) };
     c.prevNodeId = from.id;
-    UI.toast(`Hinterhalt! ${plan.node.name}.`);
+    UI.toast(`Hinterhalt! ${plan.node.name}.`, 3.5, 'battle');
     UI.updateHeader();
     game.mode = 'world';
     await Battle.start(plan.node);
@@ -2452,7 +2461,7 @@ const Expeditions = {
     const army = [], rest = [];
     for (const u of c.army) { if (u.type !== 'lich' && take[u.type] > 0) { take[u.type]--; army.push(u); } else rest.push(u); }
     const cmd = this.command(army.filter((u, i) => !(u.type === leader && i === army.findIndex(x => x.type === leader))));
-    if (cmd > EXPEDITION.commandLimit) { UI.toast(`Zu viel: ${cmd} von ${EXPEDITION.commandLimit} Kommando.`); return; }
+    if (cmd > EXPEDITION.commandLimit) { UI.toast(`Zu viel: ${cmd} von ${EXPEDITION.commandLimit} Kommando.`, 3.5, false); return; }
     c.army = rest;
     c.expCounter = (c.expCounter || 0) + 1;
     const e = { id: 'exp' + c.expCounter, leader, army, nodeId: c.nodeId, prevNodeId: c.prevNodeId, order: null };
@@ -2534,7 +2543,7 @@ const Expeditions = {
     if (nextAmbush && nextAmbush.done < nextAmbush.days) {
       nextAmbush.ambush.fired = true;
       const node = nextAmbush.ambush.node, who = nextAmbush.id === 'lich' ? 'Lich-Armee' : this.name(this.get(nextAmbush.id));
-      UI.toast(`Hinterhalt gegen ${who}! ${node.name}.`, 5);
+      UI.toast(`Hinterhalt gegen ${who}! ${node.name}.`, 5, 'battle');
       UI.updateHeader(); SaveGame.save();
       if (nextAmbush.id === 'lich') { c.prevNodeId = nextAmbush.fromId; await Battle.start(node); }
       else await Battle.start(node, this.get(nextAmbush.id));
@@ -2633,6 +2642,7 @@ const Narrator = {
   push(m) {
     const c = game.campaign;
     if (m.key && c) { c.told = c.told || []; if (c.told.includes(m.key)) return; c.told.push(m.key); }
+    if (!m.hint && (!m.type || game.mode !== 'battle')) UI.news((m.type && DATA.units[m.type] ? DATA.units[m.type].name + ': ' : '') + String(m.text).replace(/<[^>]+>/g, ''), 'story');
     this.queue.push(m); if (!this.busy) this.next();
   },
   el() {
@@ -4420,6 +4430,7 @@ const Battle = {
     if (b.over) return;
     b.over = true;
     c.battles++;
+    UI.news(`${result === 'victory' ? 'Sieg' : result === 'retreat' ? 'Rückzug' : 'Niederlage'}: ${node.name}${node.encounter ? ' (unterwegs)' : ''} nach ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'}.`, 'battle');
     let html = '', endNow = false;
     // Time scale: a round lasts BATTLE_HOURS_PER_ROUND hours (time of day turns every 3 rounds = 6 h).
     const hours = b.round * BATTLE_HOURS_PER_ROUND, battleDays = Math.floor(hours / 24);
@@ -4461,12 +4472,14 @@ const Battle = {
         const prize = { knowledge: 2 + Math.floor(had / 5), souls: 5 + had, corpses: 5 * had };
         Campaign.addResources(prize);
         c.threat[factionWasLiving] = 0;
+        UI.news(`${F.name} ausgelöscht: Kein Ort gehört ihnen mehr.`, 'world');
         pantheonText += `<h3>${esc(F.name)} ausgelöscht</h3><p>Kein Ort gehört mehr ${esc(F.name)}. Was von ihnen blieb, nimmt der Lich: ${costHtml(prize)}</p>`;
         setTimeout(() => Narrator.say(FACTION_END[factionWasLiving] || `Von ${F.name} ist nichts geblieben als Namen auf Grabsteinen. Der Lich hat sie alle gezählt.`), 2000);
         Sfx.ensure() && Sfx.tone(110, 1.6, 'sine', 0.3, 0.5);
       }
       if (pidWon && wasLiving && Pantheons.assimilated(pidWon)) {
         const P = DATA.pantheons[pidWon];
+        UI.news(`${P.name} ist gefallen: Die Region ist assimiliert, in ${NODE_BY_ID[P.seat].name} ist ein Portal möglich.`, 'world');
         pantheonText += `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, in ${esc(NODE_BY_ID[P.seat].name)} kann der Lich ein Portal errichten (danach Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
         c.raids = Raids.list().filter(r => !P.factions.includes(r.faction));
         setTimeout(() => Knowledge.discover(), 1500);
@@ -4958,11 +4971,42 @@ const UI = {
   selectedNode: null,
   toastTimer: null,
   show(id, on) { $(id).classList.toggle('hidden', !on); },
-  toast(text, seconds = 3.5) {
+  // kind: chronicle category ('info', 'world', 'battle'); false = do not log (pure UI feedback).
+  toast(text, seconds = 3.5, kind = 'info') {
+    if (kind && game.mode !== 'battle') this.news(text, kind);
     const t = $('toast');
     t.textContent = text; t.classList.remove('hidden'); t.style.opacity = '1';
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.classList.add('hidden'), 400); }, seconds * 1000);
+  },
+  // World chronicle: every message that vanishes on its own is kept here (c.news, newest last).
+  news(text, kind = 'info') {
+    const c = game.campaign; if (!c || !text) return;
+    const list = c.news = c.news || [], h = Campaign.hour(), last = list[list.length - 1];
+    if (last && last.t === text && last.d === c.dayCount && last.h === h) return;
+    list.push({ d: c.dayCount, h, t: String(text), k: kind });
+    if (list.length > 400) list.splice(0, list.length - 400);
+    c.newsUnread = (c.newsUnread || 0) + 1;
+    this.newsBadge();
+  },
+  newsBadge() {
+    const c = game.campaign, b = $('btnNews'); if (!c || !b) return;
+    b.innerHTML = '📜 Chronik' + (c.newsUnread ? `<span class="badge">${c.newsUnread}</span>` : '');
+  },
+  openNews(filter = 'all') {
+    const c = game.campaign, list = (c.news || []).map((n, i) => ({ ...n, i })), unreadFrom = list.length - (c.newsUnread || 0);
+    const ICON = { info: '✉', battle: '⚔', story: '❦', world: '⚑' };
+    const show = list.filter(n => filter === 'all' || n.k === filter).reverse();
+    let html = '', day = null;
+    for (const n of show) {
+      if (n.d !== day) { day = n.d; html += `<div class="newsDay">Tag ${n.d + 1} · ${Campaign.dateString(n.d)}</div>`; }
+      html += `<div class="newsItem ${n.i >= unreadFrom ? 'unread' : ''}"><span class="h">${n.h} Uhr</span><span>${ICON[n.k] || '✉'}</span><span>${esc(n.t)}</span></div>`;
+    }
+    const F = [['all', 'Alles'], ['world', 'Welt'], ['battle', 'Kämpfe'], ['story', 'Erzählung'], ['info', 'Sonstiges']];
+    this.modal(`<h2>Chronik</h2><div class="newsFilter">${F.map(([k, n]) => `<button data-nf="${k}" class="${k === filter ? 'on' : ''}">${n}</button>`).join('')}</div>
+      ${html || '<p class="small">Noch nichts verzeichnet.</p>'}`, [{ label: 'Schließen', primary: true, action: () => {} }]);
+    document.querySelectorAll('[data-nf]').forEach(b => b.onclick = () => this.openNews(b.dataset.nf));
+    c.newsUnread = 0; this.newsBadge();
   },
   modal(html, buttons) {
     $('modalBody').innerHTML = html + '<div class="buttons"></div>';
@@ -5005,7 +5049,7 @@ const UI = {
     const chip = (k, v, lbl, cls = '') => `<span class="chip ${cls}" title="${tip(k)}">${resIcon(k, 18)}<b>${v}</b> <span class="lbl">${lbl}</span></span>`;
     $('resources').innerHTML = chip('corpses', r.corpses, 'Leichen') + chip('bones', r.bones, 'Knochen') + chip('souls', r.souls, 'Seelen')
       + chip('knowledge', r.knowledge, 'Wissen') + chip('command', `${used}/${lim}`, 'Kommando', used >= lim ? 'full' : '');
-    this.buildBadge();
+    this.buildBadge(); this.newsBadge();
     // Threat: one chip (mini bars + the highest faction), the full list on click.
     const list = ENEMY_FACTIONS.map(f => ({ f, v: Math.round(c.threat[f] || 0), living: Campaign.isLiving(f) })).sort((x, y) => (y.living - x.living) || (y.v - x.v));
     const top = list.find(x => x.living), warned = list.filter(x => x.living && x.v >= 50);
@@ -5049,7 +5093,7 @@ const UI = {
   openHelp() {
     const row = (k, t) => `<tr><td><kbd>${k}</kbd></td><td>${t}</td></tr>`;
     this.modal(`<h2>Steuerung</h2><h3>Weltkarte</h3><table>${row('W A S D', 'Kamera bewegen (oder Maus an den Rand)')}${row('Q E / rechte Maus', 'drehen und neigen')}${row('Mausrad', 'Zoom')}
-      ${row('Klick', 'Ort, Trupp oder Gelände auswählen')}${row('H', 'Hügelgrab')}${row('R', 'nächster Ort zum Rekrutieren')}${row('B', 'Bauen')}${row('I', 'Inventar')}${row('G', 'Los (Befehle mehrerer Armeen)')}${row('Leertaste halten', 'Reise beschleunigen')}</table>
+      ${row('Klick', 'Ort, Trupp oder Gelände auswählen')}${row('H', 'Hügelgrab')}${row('R', 'nächster Ort zum Rekrutieren')}${row('B', 'Bauen')}${row('I', 'Inventar')}${row('N', 'Chronik der Weltereignisse')}${row('G', 'Los (Befehle mehrerer Armeen)')}${row('Leertaste halten', 'Reise beschleunigen')}</table>
       <h3>Kampf</h3><table>${row('Klick', 'bewegen, angreifen, auswählen')}${row('1–4', 'Fähigkeiten')}${row('Leertaste', 'Zug beenden')}${row('R', 'Rückzug')}${row('T', 'Feldkanten')}${row('K', 'Token-Modus')}</table>
       <h3>Allgemein</h3><table>${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
   },
@@ -5105,7 +5149,7 @@ const UI = {
     const n = sites[this.recruitCycle];
     this.focusNode(n);
     const d = Campaign.travelDays(here, n);
-    this.toast(`${n.name}: ${n.id === here.id ? 'Armee steht hier' : d + (d === 1 ? ' Tag' : ' Tage') + ' entfernt'} (${this.recruitCycle + 1}/${sites.length})`);
+    this.toast(`${n.name}: ${n.id === here.id ? 'Armee steht hier' : d + (d === 1 ? ' Tag' : ' Tage') + ' entfernt'} (${this.recruitCycle + 1}/${sites.length})`, 3.5, false);
   },
   // Mouse-over help for the resources in the header: how to get them and what they are for.
   resourceTip(k) {
@@ -5651,6 +5695,8 @@ function initInput() {
   ['menuPop', 'threatPop'].forEach(id => $(id).addEventListener('click', e => e.stopPropagation()));
   window.addEventListener('click', () => ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)));
   $('btnHelp').onclick = () => { UI.show('menuPop', false); UI.openHelp(); };
+  $('btnNews').onclick = () => UI.openNews();
+  window.addEventListener('keydown', e => { if (e.code === 'KeyN' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT') && $('modal').classList.contains('hidden')) UI.openNews(); });
   $('btnBattleHelp').onclick = () => UI.openHelp();
   $('btnDebugMenu').onclick = () => { UI.show('menuPop', false); game.debug = !game.debug; UI.show('debug', game.debug); Debug.tools(game.debug); };
   $('btnTokens').onclick = () => { game.tokenMode = game.tokenMode === 'auto' || !game.tokenMode ? 'on' : game.tokenMode === 'on' ? 'off' : 'auto'; UI.toast(`Token-Modus: ${{ auto: 'automatisch (weit herausgezoomt)', on: 'an', off: 'aus' }[game.tokenMode]}`); };
@@ -5663,7 +5709,7 @@ function initInput() {
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnSound').onclick = () => Sfx.toggle();
   $('btnSound').textContent = Sfx.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
-  $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.'); };
+  $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.', 3.5, false); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
 }
