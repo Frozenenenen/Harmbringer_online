@@ -179,6 +179,8 @@
   .modal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(30,25,18,.55); z-index: 20; }
   .modal .panel { max-width: 560px; width: calc(100% - 32px); max-height: calc(100% - 40px); overflow: auto; padding: 20px 26px; }
   .modal p { line-height: 1.45; font-size: 17px; }
+  .modal .panel { position: relative; }
+  .modalClose { position: sticky; top: -12px; float: right; margin: -8px -14px 0 8px; width: 30px; height: 30px; padding: 0; font-size: 18px; line-height: 1; z-index: 2; }
   .modal .buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
   #loading .bar { height: 12px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 10px; }
   #loading .bar div { height: 100%; width: 0; background: var(--undead); }
@@ -259,7 +261,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=32"></script>
+<script src="data/world_data.js?v=33"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -373,7 +375,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 104, "date": "2026-11-04", "changes": [{"date": "04.11. 20:03", "text": "Kampf: Klick auf erreichbaren Gegner läuft hin und greift an (eine Aktion)"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}]};
+const BUILD = {"version": 105, "date": "2026-11-04", "changes": [{"date": "04.11. 20:25", "text": "Stadtmauern mit Wehrgang, Türmen, Toren; Belagerung bricht Mauern; Palisaden; neue Gebäude; Kommandeure zäher; Flieger ohne Bodenwirkung; Schließen-Kreuz in Fenstern"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -384,7 +386,7 @@ const NODE_BY_ID = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
 const PHYLACTERY = DATA.nodes.find(n => n.type === 'PHYLACTERY');
 const ENEMY_FACTIONS = Object.keys(DATA.factions).filter(f => f !== 'UNDEAD');
 const NODE_TYPE_NAMES = { ENCOUNTER: 'Zufallsbegegnung', MYTHIC: 'Mythisch', WORLDLY: 'Weltlich', CHRISTIAN: 'Christlich', PHYLACTERY: 'Hügelgrab', VILLAGE: 'Dorf' };
-const EDGE_NAMES = { OPEN: 'Offen', COVER: 'Deckung (halber Schaden)', WALL: 'Mauer', WALL_DESTRUCTIBLE: 'Zerstörbare Mauer', WALL_TRANSPARENT: 'Durchsichtige Wand' };
+const EDGE_NAMES = { OPEN: 'Offen', COVER: 'Deckung (halber Schaden)', WALL: 'Mauer', WALL_DESTRUCTIBLE: 'Palisade', WALL_TRANSPARENT: 'Fenster', GATE: 'Tor' };
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', knowledge: 'Wissen' };
 // Small inline SVG icons (no files, readable on light and dark panels).
@@ -672,7 +674,9 @@ class TileRenderer {
         const mesh = this.meshes[fi], slot = counts[fi]++;
         this.slots[fi][slot] = ti;
         // Matrix = translation * rotationY(k * 60deg), written directly (column-major).
-        const p = hexToWorld(q, r), y = world.height[ti] - HEX.tileDepth / 2;
+        let hy = world.height[ti];
+        if (this.heightOverride) { const o = this.heightOverride(q, r); if (o !== null) hy = o; }
+        const p = hexToWorld(q, r), y = hy - HEX.tileDepth / 2;
         const a = Math.floor(hash2(q, r, 2) * 6) * Math.PI / 3, c = Math.cos(a), s = Math.sin(a);
         const m = mesh.instanceMatrix.array, o = slot * 16;
         m[o] = c;  m[o+1] = 0; m[o+2] = -s; m[o+3] = 0;
@@ -2412,6 +2416,9 @@ async function startTravel(target, resume = null) {
 // c.expeditions = [{ id, leader, army: [{type, hp}], nodeId, prevNodeId, order }].
 // =============================================================================
 const COMMANDER_TYPES = ['nekromant', 'todesritter', ...Object.keys(DATA.units).filter(k => DATA.units[k].ancestor)];
+// Commanders in battle: HP x3 plus 2 per conquered place, +10 soul shield.
+const COMMANDER_BONUS = { hpFactor: 3, hpPerConquest: 2, shield: 10 };
+const commanderHp = (type, won, baseHp = DATA.units[type].hp) => Math.round(baseHp * COMMANDER_BONUS.hpFactor + won * COMMANDER_BONUS.hpPerConquest);
 const EXPEDITION = { commandLimit: 30, requiresBuilding: 'deadHall' };
 const Expeditions = {
   list() { const c = game.campaign; return c ? (c.expeditions = c.expeditions || []) : []; },
@@ -2884,8 +2891,18 @@ const Minimap = {
 const POWER_NAMES = { PIERCE: 'Stich', BLUNT: 'Wucht', SIEGE: 'Belagerung', FIRE: 'Feuer', POISON: 'Gift', ARCANE: 'Arkan',
   REND: 'Reißen', SOUL: 'Seele', HOLY: 'Heilig', CHAOS: 'Chaos', HEAL: 'Heilung' };
 const DEFENSE_NAMES = { UNARMORED: 'Ungerüstet', LIGHT: 'Leicht', MEDIUM: 'Mittel', HEAVY: 'Schwer', FORTIFIED: 'Befestigt', DIVINE: 'Göttlich' };
-const BLOCKS_MELEE = new Set(['WALL', 'WALL_DESTRUCTIBLE', 'WALL_TRANSPARENT']);
-const BLOCKS_SIGHT = new Set(['WALL', 'WALL_DESTRUCTIBLE']);
+const BLOCKS_MELEE = new Set(['WALL', 'WALL_DESTRUCTIBLE', 'WALL_TRANSPARENT', 'GATE']);
+const BLOCKS_SIGHT = new Set(['WALL', 'WALL_DESTRUCTIBLE', 'GATE']);
+// Breakable edges (field.edgeInfo): hit points and who can break them. Siege units (ballistas, giants)
+// break everything; others only ram gates (slowly) and hack palisades. Walls of houses and the city wall
+// fall only to siege.
+const SIEGE_EDGES = {
+  city:     { name: 'Stadtmauer', hp: 120, other: 0 },
+  gate:     { name: 'Stadttor',   hp: 90,  other: 0.25 },
+  palisade: { name: 'Palisade',   hp: 40,  other: 0.5 },
+  house:    { name: 'Hauswand',   hp: 50,  other: 0 }
+};
+const isSiege = u => u.def.role === 'SIEGE' || u.def.size >= 4 || u.type === 'huenenkoenig';
 // PROMPT 8.5: a priest without wounded allies attacks with 3 HOLY damage.
 const PRIEST_ATTACK = { power: 'HOLY', damage: 3 };
 const RULES = DATA.rules;
@@ -3015,6 +3032,14 @@ class Battlefield {
     for (const t of this.tiles) if (t && hexDistance(q, r, t.q, t.r) <= rad) out.push(t);
     return out;
   }
+  edgeKey(t, d) { const n = this.neighborTile(t, d), a = this.index(t), b = n ? this.index(n) : -1 - d; return a < b ? `${a}|${b}` : `${b}|${a}`; }
+  // Marks a wall edge as breakable (kind from SIEGE_EDGES); null removes the entry.
+  setEdgeInfo(t, d, kind) {
+    this.edgeInfo = this.edgeInfo || new Map();
+    if (!kind) { this.edgeInfo.delete(this.edgeKey(t, d)); return; }
+    this.edgeInfo.set(this.edgeKey(t, d), { kind, hp: SIEGE_EDGES[kind].hp, max: SIEGE_EDGES[kind].hp, t, d });
+  }
+  edgeInfoOf(t, d) { return this.edgeInfo ? this.edgeInfo.get(this.edgeKey(t, d)) : undefined; }
   // Sets an edge on both sides (the tile and its neighbor across edge d).
   setEdge(t, d, type) {
     t.edges[d] = type;
@@ -3036,6 +3061,7 @@ class Battlefield {
     if (type === 'WORLDLY') {
       for (const t of this.tilesWithin(this.cq, this.cr, 3)) if (!this.isWater(t)) t.floor = 'COBBLESTONE';
       if (size >= set.cityWallMinSize) this.placeCityWall(set.cityWallRadius, set.gates);
+      else if (set.palisadeRadius && size >= 16) this.placePalisade(set.palisadeRadius, set.palisadeGaps);
     }
     if (set) {
       const count = set.count ?? set.countPer16 * size / 16;
@@ -3126,7 +3152,7 @@ class Battlefield {
     const anchor = this.randomTileWithin(radius), rot = Math.floor(this.rng() * 6);
     const parts = this.shapeTiles(tpl, anchor, rot);
     if (!parts) return false;
-    if (parts.some(t => t.building !== null || this.isWater(t))) return false;
+    if (parts.some(t => t.building !== null || this.isWater(t) || t.walkway || t.stair)) return false;
     const levels = parts.map(t => t.level);
     if (Math.max(...levels) - Math.min(...levels) >= 2) return false;
     // Must not touch another building, and no wall (e.g. the city wall) may run through it.
@@ -3154,8 +3180,8 @@ class Battlefield {
     const id = this.buildings.length;
     for (const t of parts) { t.building = id; t.floor = tpl.floor; }
     const wall = tpl.wall || 'WALL';
-    for (const o of outward) if (!doors.includes(o)) this.setEdge(o.t, o.e, wall);
-    for (const d of doors) this.setEdge(d.t, d.e, 'OPEN');
+    for (const o of outward) if (!doors.includes(o)) { this.setEdge(o.t, o.e, wall); this.setEdgeInfo(o.t, o.e, 'house'); }
+    for (const d of doors) { this.setEdge(d.t, d.e, 'OPEN'); this.setEdgeInfo(d.t, d.e, null); }
     // Windows: some outer walls become transparent.
     const walls = outward.filter(o => !doors.includes(o) && o.n && o.t.edges[o.e] === 'WALL');
     for (let i = 0; i < (tpl.windows || 0) && walls.length; i++) {
@@ -3201,27 +3227,76 @@ class Battlefield {
       if (!this.isWater(t) && t.building === null && !holy.has(t)) t.floor = 'GRAVEYARD_GROUND';
   }
 
-  // City wall: a ring of walls at the given hex radius with evenly spaced open gates.
+  // Angle of a tile around the field center (for rings).
+  angleOf(t) { const c = hexToWorld(this.cq, this.cr), p = hexToWorld(t.q, t.r); return Math.atan2(p.x - c.x, p.z - c.z); }
+  // Tiles of the ring at `radius` sorted by angle, and which of them lie in one of `gates` gaps.
+  ring(radius, gates, halfWidth) {
+    const offset = this.rng() * Math.PI * 2;
+    const tiles = this.tiles.filter(t => t && hexDistance(t.q, t.r, this.cq, this.cr) === radius).sort((x, y) => this.angleOf(x) - this.angleOf(y));
+    const inGap = t => { for (let g = 0; g < gates; g++) { const ga = offset + g * Math.PI * 2 / gates, a = this.angleOf(t);
+      if (Math.abs(Math.atan2(Math.sin(a - ga), Math.cos(a - ga))) < halfWidth) return true; } return false; };
+    return { tiles, inGap };
+  }
+  // City wall: a stone ring with a raised walkway (+2 levels) behind the battlements, towers (+3) every few
+  // tiles and beside the gates, stairs up from the inside, and closed gates that can be rammed.
+  // Defenders on the walkway see and shoot over the wall (with cover); everybody else's sight is blocked.
   placeCityWall(radius, gates) {
-    const cpos = hexToWorld(this.cq, this.cr), offset = this.rng() * Math.PI * 2;
-    const halfGate = 1.6 / radius;                 // about one tile to each side of the gate center
-    for (const t of this.tiles) {
-      if (!t || hexDistance(t.q, t.r, this.cq, this.cr) !== radius) continue;
-      const p = hexToWorld(t.q, t.r);
-      const ang = Math.atan2(p.x - cpos.x, p.z - cpos.z);
-      let inGate = false;
-      for (let g = 0; g < gates; g++) {
-        const ga = offset + g * Math.PI * 2 / gates;
-        const diff = Math.abs(Math.atan2(Math.sin(ang - ga), Math.cos(ang - ga)));
-        if (diff < halfGate) inGate = true;
+    const { tiles, inGap } = this.ring(radius, gates, 1.6 / radius);
+    const out = (t, d) => { const n = this.neighborTile(t, d); return n && hexDistance(n.q, n.r, this.cq, this.cr) === radius + 1 ? n : null; };
+    let k = 0;
+    const walk = [];
+    for (const t of tiles) {
+      if (this.isWater(t)) continue;
+      const gap = inGap(t);
+      for (let d = 0; d < 6; d++) {
+        const n = out(t, d); if (!n || this.isWater(n)) continue;
+        this.setEdge(t, d, gap ? 'GATE' : 'WALL'); this.setEdgeInfo(t, d, gap ? 'gate' : 'city');
       }
-      if (inGate || this.isWater(t)) continue;
+      if (gap) { t.floor = 'COBBLESTONE'; t.gate = true; continue; }
+      t.ground = t.y; t.y += 2; t.level = Math.round(t.y); t.floor = 'STONE_FLOOR'; t.walkway = true; walk.push(t);
+    }
+    // Towers: every 6th walkway tile and the ones beside a gate.
+    walk.forEach((t, i) => {
+      const nextToGate = [0, 1, 2, 3, 4, 5].some(d => { const n = this.neighborTile(t, d); return n && n.gate; });
+      if (i % 6 !== 0 && !nextToGate) return;
+      t.y += 1; t.level = Math.round(t.y); t.tower = true;
+      const id = this.buildings.length; t.building = id;
+      this.buildings.push({ id, key: 'walltower', name: 'Mauerturm', tiles: [t], doors: [] });
+    });
+    // Stairs: an inner tile one level below the walkway, every 5th walkway tile (not at towers).
+    walk.forEach((t, i) => {
+      if (t.tower || i % 5 !== 2) return;
       for (let d = 0; d < 6; d++) {
         const n = this.neighborTile(t, d);
-        if (n && !this.isWater(n) && hexDistance(n.q, n.r, this.cq, this.cr) === radius + 1) this.setEdge(t, d, 'WALL');
+        if (!n || n.walkway || n.gate || n.building !== null || this.isWater(n) || hexDistance(n.q, n.r, this.cq, this.cr) !== radius - 1) continue;
+        n.y = t.y - 1; n.level = Math.round(n.y); n.floor = 'STONE_FLOOR'; n.stair = true; break;
+      }
+    });
+    this.cityWall = radius;
+  }
+  // Palisade: a wooden ring with a few open gaps; any unit can hack it down.
+  placePalisade(radius, gaps) {
+    const { tiles, inGap } = this.ring(radius, gaps, 1.3 / radius);
+    for (const t of tiles) {
+      if (this.isWater(t) || inGap(t) || t.building !== null) continue;
+      for (let d = 0; d < 6; d++) {
+        const n = this.neighborTile(t, d);
+        if (!n || this.isWater(n) || n.building !== null || hexDistance(n.q, n.r, this.cq, this.cr) !== radius + 1 || t.edges[d] !== 'OPEN') continue;
+        this.setEdge(t, d, 'WALL_DESTRUCTIBLE'); this.setEdgeInfo(t, d, 'palisade');
       }
     }
-    this.cityWall = radius;
+  }
+  // A breakable edge falls: it opens (rubble gives cover); a walkway behind a breached city wall
+  // collapses into a ramp so the breach can be climbed.
+  breach(t, d) {
+    const info = this.edgeInfoOf(t, d), n = this.neighborTile(t, d);
+    this.setEdgeInfo(t, d, null);
+    this.setEdge(t, d, info && (info.kind === 'city' || info.kind === 'house') ? 'COVER' : 'OPEN');
+    if (info && info.kind === 'city') for (const x of [t, n]) {
+      if (!x || !(x.walkway || x.tower)) continue;
+      // The wall section (or tower) collapses into a ramp of rubble.
+      x.y = (x.ground ?? x.y - 2) + 1; x.level = Math.round(x.y); x.walkway = false; x.tower = false; x.floor = 'GRAVEL'; x.rubble = true;
+    }
   }
 
   // Fences: lines of 4-6 tiles in direction d; edge (d+1)%6 becomes cover on both sides.
@@ -3273,7 +3348,11 @@ const Pathfinding = {
   stepCost(field, unit, A, d, B, ignoreUnits = false) {
     if (!B) return null;
     const def = unit.def;
-    if (!def.spectral && (A.edges[d] !== 'OPEN' || B.edges[opposite(d)] !== 'OPEN')) return null;
+    if (!def.spectral && (A.edges[d] !== 'OPEN' || B.edges[opposite(d)] !== 'OPEN')) {
+      // Flyers cross city walls, gates and palisades (not house walls: roofs).
+      const info = def.flying && field.edgeInfoOf(A, d);
+      if (!(info && info.kind !== 'house') && !(field.passBreakable && field.edgeInfoOf(A, d) && field.passBreakable(field.edgeInfoOf(A, d)))) return null;
+    }
     if (!def.flying && Math.abs(A.level - B.level) >= 2) return null;
     if (B.unit && B.unit !== unit && !def.flying && !ignoreUnits) return null;     // flyers may pass over units
     if (def.flying) return 1;
@@ -3364,7 +3443,13 @@ const Combat = {
       const p = field.get(line[i - 1][0], line[i - 1][1]), c = field.get(line[i][0], line[i][1]);
       if (!p || !c) continue;
       const e = this.edgeBetween(field, p, c);
-      if (e && (BLOCKS_SIGHT.has(e[0]) || BLOCKS_SIGHT.has(e[1]))) return { clear: false };
+      if (e && (BLOCKS_SIGHT.has(e[0]) || BLOCKS_SIGHT.has(e[1]))) {
+        // Battlements: whoever stands on the walkway (or a wall tower) right behind the city wall sees over it.
+        const info = e[0] === 'WALL' && field.edgeInfoOf(p, directionTo(p.q, p.r, c.q, c.r));
+        const high = x => x.walkway || x.tower;
+        if (info && info.kind === 'city' && ((i === 1 && high(A)) || (i === line.length - 1 && high(B)))) { if (i === line.length - 1) cover = true; continue; }
+        return { clear: false };
+      }
       if (i < line.length - 1 && c.level > maxLevel) return { clear: false };
       if (i === line.length - 1 && e && (e[0] === 'COVER' || e[1] === 'COVER')) cover = true;
     }
@@ -3464,7 +3549,10 @@ const BattleView = {
       WALL: new THREE.MeshStandardMaterial({ color: 0x9a2a22, roughness: 0.8 }),
       COVER: new THREE.MeshStandardMaterial({ color: 0xd8b830, roughness: 0.8 }),
       WALL_DESTRUCTIBLE: new THREE.MeshStandardMaterial({ color: 0xd8742a, roughness: 0.8 }),
-      WALL_TRANSPARENT: new THREE.MeshStandardMaterial({ color: 0x4a7ad0, transparent: true, opacity: 0.45 })
+      WALL_TRANSPARENT: new THREE.MeshStandardMaterial({ color: 0x4a7ad0, transparent: true, opacity: 0.45 }),
+      GATE: new THREE.MeshStandardMaterial({ color: 0x6a4424, roughness: 0.9 }),
+      city: new THREE.MeshStandardMaterial({ color: 0x8c877c, roughness: 0.95, flatShading: true }),
+      palisade: new THREE.MeshStandardMaterial({ color: 0x7a5a32, roughness: 0.95 })
     };
     for (const t of field.tiles) {
       if (!t) continue;
@@ -3473,11 +3561,17 @@ const BattleView = {
         if (type === 'OPEN') continue;
         const n = field.neighborTile(t, d);
         if (n && n.edges[opposite(d)] === type && field.index(n) < field.index(t)) continue;   // draw shared edges once
-        const mesh = new THREE.Mesh(type === 'COVER' ? coverGeo : wallGeo, mats[type]);
+        const info = field.edgeInfoOf(t, d), kind = info && info.kind;
+        const mat = kind === 'city' ? mats.city : kind === 'palisade' ? mats.palisade : mats[type];
+        // Per-mesh material so breakable targets can glow; walls span from the lower to the higher tile.
+        const mesh = new THREE.Mesh(type === 'COVER' ? coverGeo : wallGeo, info ? mat.clone() : mat);
         const ed = edgeDirection(d), p = hexToWorld(t.q, t.r);
-        mesh.position.set(p.x + ed.x * INRADIUS, Math.max(t.y, n ? n.y : t.y), p.z + ed.z * INRADIUS);
+        const lo = Math.min(t.y, n ? n.y : t.y), hi = Math.max(t.y, n ? n.y : t.y);
+        mesh.position.set(p.x + ed.x * INRADIUS, type === 'COVER' ? hi : lo, p.z + ed.z * INRADIUS);
+        if (type !== 'COVER') mesh.scale.y = (hi - lo + (kind === 'city' ? 1.3 : kind === 'gate' ? 2.2 : 1.5)) / 1.5;
+        if (kind === 'city' || kind === 'gate') mesh.scale.z = 2.2;
         mesh.rotation.y = -d * Math.PI / 3;
-        mesh.userData.edge = { type, q: t.q, r: t.r, d };
+        mesh.userData.edge = { type, q: t.q, r: t.r, d, kind };
         // Walls (buildings, city wall) are always shown; fences and stones only with the edge display.
         const alwaysShown = type !== 'COVER' || t.building !== null || (n && n.building !== null);
         (alwaysShown ? game.view.battleRoot : this.optionalEdges).add(mesh);
@@ -3485,6 +3579,20 @@ const BattleView = {
       }
     }
     this.optionalEdges.visible = game.showEdges;
+  },
+  rebuildEdges(field) {
+    for (const m of this.edgeMeshes) if (m.parent) m.parent.remove(m);
+    if (this.optionalEdges && this.optionalEdges.parent) this.optionalEdges.parent.remove(this.optionalEdges);
+    this.buildEdges(field);
+  },
+  // Breakable edges the current unit can hit glow red.
+  markEdges(list) {
+    const keys = new Set((list || []).map(x => x.key));
+    for (const m of this.edgeMeshes) {
+      if (!m.material.emissive || !m.userData.edge.kind) continue;
+      const f = game.battle.field, t = f.get(m.userData.edge.q, m.userData.edge.r);
+      m.material.emissive.setHex(t && keys.has(f.edgeKey(t, m.userData.edge.d)) ? 0x7a1010 : 0x000000);
+    }
   },
   hoverRing(u) {
     if (!this.hring) {
@@ -3989,7 +4097,7 @@ const Battle = {
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
     this.applyArmyEffects(b);
-    this.applyLichBonus(b);
+    this.applyLichBonus(b); this.applyCommanderBonus(b);
     const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
     for (const g of splitStacks(groupByType(garrison))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
     // Ley-Bund: a pantheon leader is shielded by every living member of its pantheon.
@@ -4007,6 +4115,7 @@ const Battle = {
     // View: lock the tile window on the node, dim everything outside the field.
     const tr = game.view.tiles;
     tr.floorOverride = (q, r) => { const t = field.get(q, r); return t ? FLOOR_INDEX[t.floor] : -1; };
+    tr.heightOverride = (q, r) => { const t = field.get(q, r); return t ? t.y : null; };
     tr.dimOutside = (q, r) => !field.contains(q, r);
     tr.locked = true;
     tr.center = [node.q, node.r];
@@ -4066,6 +4175,8 @@ const Battle = {
     UI.roundBanner(1, `${node.name} · ${TIMES[b.time].name}`);
     Narrator.hint('Kampf: Die Einheit mit dem goldenen Ring ist am Zug. Blaue Felder = Bewegung, rote = angreifbare Gegner, über einem Gegner siehst du den erwarteten Schaden. Fähigkeiten unten rechts (Tasten 1–4), Leertaste beendet den Zug.', 'battle');
     Narrator.hint('Solange die Gegner euch nicht bemerkt haben (Schleich-Modus), ist der erste Angriff ein Überraschungsangriff. Der Wind trägt den Geruch der Toten.', 'stealth');
+    if (b.field.cityWall) this.log('Die Stadt ist ummauert: Schützen stehen auf dem Wehrgang und in den Türmen. Tore lassen sich rammen (jede Einheit, langsam), die Mauer brechen nur Belagerungswaffen und Riesen (Balliste, Fleischriese, Knochendrache, Hünenkönig). Flieger fliegen hinüber, Geister gehen hindurch.', 'hit');
+    else if (b.field.edgeInfo && [...b.field.edgeInfo.values()].some(x => x.kind === 'palisade')) this.log('Eine Palisade umgibt den Ort: Lücken lassen sich nutzen, das Holz lässt sich einschlagen.', 'hit');
     // Some places need special troops (flyers, ghosts, swimmers). Say so at once – withdrawal costs nothing yet.
     const cut = this.unreachableEnemies();
     if (cut.length) {
@@ -4098,6 +4209,16 @@ const Battle = {
     lich.hp = Math.max(1, Math.round(lich.hp / base.hp * lich.def.hp));
     lich.maxHp = lich.def.hp; lich.shield = lich.def.soulShield;
     if (cp > 0 || add.hp) this.log(`Der Lich zieht Kraft aus Armee (${cp} Kommando), ${won} eroberten Orten und Artefakten: +${add.hp} LP, +${add.damage} Schaden, +${add.soulShield} Seelenschild.`, 'good');
+  },
+  // Commanders (necromancer, death knight, ancestors) are leaders too: much tougher than their kind.
+  applyCommanderBonus(b) {
+    const won = DATA.nodes.filter(n => Campaign.isConquered(n)).length;
+    for (const u of b.units) {
+      if (u.side !== 'player' || !COMMANDER_TYPES.includes(u.type)) continue;
+      const base = u.def, n = stackCount(u), hp = commanderHp(u.type, won, base.hp);
+      u.def = { ...base, hp, soulShield: (base.soulShield || 0) + COMMANDER_BONUS.shield };
+      u.hp = Math.max(1, Math.round(u.hp / base.hp * hp)); u.maxHp = n * hp; u.shield = (u.shield || 0) + COMMANDER_BONUS.shield * n;
+    }
   },
   // Artifacts and owned special places strengthen every undead stack (copied defs, battle only).
   applyArmyEffects(b) {
@@ -4159,7 +4280,12 @@ const Battle = {
       let t = null;
       if (u.def.rank === 'UNIQUE') t = area.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
       // Machines: on a watch tower if there is one, otherwise in the open (never inside houses).
-      if (!t && u.def.rank === 'MACHINE') t = ordered.find(x => canStand(u, x) && x.building !== null && f.buildings[x.building].key === 'tower' && !perBuilding[x.building]);
+      if (!t && u.def.rank === 'MACHINE') t = ordered.find(x => canStand(u, x) && x.building !== null && ['tower', 'walltower'].includes(f.buildings[x.building].key) && !perBuilding[x.building]);
+      // Archers and machines man the city wall, facing the attackers.
+      if (!t && u.def.range > 1 && f.cityWall) {
+        const towardsPlayer = x => { const p = hexToWorld(x.q, x.r), c = hexToWorld(f.cq, f.cr); return (p.x - c.x) * b.dir.x + (p.z - c.z) * b.dir.z; };
+        t = f.tiles.filter(x => x && (x.walkway || x.tower) && canStand(u, x) && !(x.building !== null && perBuilding[x.building])).sort((x, y) => towardsPlayer(y) - towardsPlayer(x) + (hash2(x.q, x.r, f.seed) - hash2(y.q, y.r, f.seed)) * 20)[0] || null;
+      }
       if (!t) t = ordered.find(x => canStand(u, x) && (x.building === null || (u.def.rank !== 'MACHINE' && (perBuilding[x.building] || 0) < 2)));
       if (!t) t = f.tiles.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
       if (t && t.building !== null) perBuilding[t.building] = (perBuilding[t.building] || 0) + 1;
@@ -4247,7 +4373,7 @@ const Battle = {
         u.hp += h; BattleView.updateHp(u); BattleView.floatText(u, '+' + h, true);
         this.log(`${u.def.name} heilt auf der Heide (+${h}, Heidealtar).`, 'good');
       }
-      if (!eff) continue;
+      if (!eff || u.def.flying) continue;           // flyers do not touch the ground
       if (eff.damageUndeadPerRound) {
         this.applyDamage(u, eff.damageUndeadPerRound, null, null);
         this.log(`${u.def.name} brennt auf geweihtem Boden (−${eff.damageUndeadPerRound}).`, 'hit');
@@ -4290,12 +4416,24 @@ const Battle = {
       }
       if (best) b.approach.set(e, best.t);
     }
+    // Breakable walls and gates in reach (from here, or after a move for melee).
+    b.edgeTargets = u.hasAttacked ? [] : this.edgeTargetsFrom(u, from);
+    b.edgeApproach = new Map();
+    if (b.reach && !u.hasAttacked) for (const t of b.reach.tiles) {
+      if (t.unit && t.unit !== u) continue;
+      for (const x of this.edgeTargetsFrom(u, t, true)) {
+        if (b.edgeTargets.some(y => y.key === x.key)) continue;
+        const c = b.reach.cost.get(b.field.index(t)), old = b.edgeApproach.get(x.key);
+        if (!old || c < old.cost) b.edgeApproach.set(x.key, { ...x, via: t, cost: c });
+      }
+    }
     this.drawOptions();
     UI.updateBattle();
   },
   clearOptions() {
     const b = game.battle;
-    b.reach = null; b.targets = [];
+    b.reach = null; b.targets = []; b.edgeTargets = []; b.edgeApproach = new Map();
+    BattleView.markEdges([]);
     BattleView.setOverlay(BattleView.overlay, []);
     BattleView.setOverlay(BattleView.pathOverlay, []);
   },
@@ -4304,6 +4442,7 @@ const Battle = {
     if (b.reach) for (const t of b.reach.tiles) if (t.unit !== b.current) list.push({ t, color: '#3b6fd8' });
     for (const u of b.targets) list.push({ t: b.field.get(u.q, u.r), color: u.side === b.current.side ? '#3fae4a' : '#d03030', lift: 0.02 });
     for (const u of (b.approach || new Map()).keys()) list.push({ t: b.field.get(u.q, u.r), color: '#e07a5a', lift: 0.02 });
+    BattleView.markEdges([...(b.edgeTargets || []), ...(b.edgeApproach || new Map()).values()]);
     BattleView.setOverlay(BattleView.overlay, list);
   },
   refreshCones() {
@@ -4331,6 +4470,57 @@ const Battle = {
     BattleView.placeUnit(u);
   },
   // Player clicks a reachable tile.
+  // Breakable edges the unit could hit standing on `tile`: its own edges (melee, everybody who can
+  // damage that kind) and, for siege units with range, any breakable edge in range and in sight.
+  edgeTargetsFrom(u, tile, meleeOnly = false) {
+    const f = game.battle.field, out = [];
+    if (!f.edgeInfo) return out;
+    const factor = info => isSiege(u) ? 1 : SIEGE_EDGES[info.kind].other;
+    for (let d = 0; d < 6; d++) {
+      const info = f.edgeInfoOf(tile, d);
+      if (info && factor(info) > 0) out.push({ key: f.edgeKey(tile, d), t: tile, d, info, factor: factor(info) });
+    }
+    if (meleeOnly || u.def.range < 2 || !isSiege(u)) return out;
+    for (const [key, info] of f.edgeInfo) {
+      if (out.some(x => x.key === key)) continue;
+      const n = f.neighborTile(info.t, info.d);
+      const near = !n || hexDistance(tile.q, tile.r, info.t.q, info.t.r) <= hexDistance(tile.q, tile.r, n.q, n.r) ? info.t : n;
+      if (hexDistance(tile.q, tile.r, near.q, near.r) > u.def.range) continue;
+      if (near !== tile && !Combat.lineOfSight(f, tile, near).clear) continue;
+      out.push({ key, t: info.t, d: info.d, info, factor: 1 });
+    }
+    return out;
+  },
+  edgeDamage(u, x) { return Math.max(1, Math.round(u.def.damage * stackCount(u) * x.factor)); },
+  // Hit a wall, gate or palisade; when it falls, the field changes (breach, ramp) and the noise wakes the town.
+  async attackEdge(x) {
+    const b = game.battle, u = b.current, f = b.field;
+    if (x.via && x.via !== f.get(u.q, u.r)) {
+      const path = Pathfinding.path(f, b.reach, x.via);
+      b.busy = true; this.clearOptions();
+      await this.moveAlong(u, path); u.hasMoved = true; b.busy = false; Alarm.check([u]);
+    }
+    b.busy = true; this.clearOptions();
+    const m = BattleView.edgeMeshes.find(mm => { const e = mm.userData.edge, t = f.get(e.q, e.r); return t && f.edgeKey(t, e.d) === x.key; });
+    const fake = { view: { group: new THREE.Object3D(), body: new THREE.Object3D() } };
+    if (m) fake.view.group.position.copy(m.position);
+    await BattleView.attackAnim(u, fake, hexDistance(u.q, u.r, x.t.q, x.t.r) > 1);
+    const dmg = this.edgeDamage(u, x), S = SIEGE_EDGES[x.info.kind];
+    x.info.hp -= dmg; Sfx.hit && Sfx.hit('BLUNT');
+    this.log(`${u.def.name} trifft ${S.name}: −${dmg} (${Math.max(0, x.info.hp)} / ${x.info.max}).`, 'good');
+    for (const e of Alarm.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, x.t.q, x.t.r) <= 8) Alarm.set(e, 'alarmed', `${e.def.name} hört das Krachen!`);
+    if (x.info.hp <= 0) {
+      f.breach(x.t, x.d);
+      game.view.tiles.rebuild(); BattleView.rebuildEdges(f);
+      for (const v of b.units) if (v.alive && v.view) v.view.group.position.y = surfaceY(f.get(v.q, v.r));
+      this.log(x.info.kind === 'gate' ? 'Das Tor bricht!' : x.info.kind === 'city' ? 'Bresche in der Stadtmauer!' : `${S.name} bricht ein.`, 'good');
+      UI.toast(x.info.kind === 'gate' ? 'Das Tor bricht!' : x.info.kind === 'city' ? 'Bresche!' : `${S.name} bricht ein.`, 3, false);
+    }
+    u.hasAttacked = true; b.busy = false;
+    if (b.over) return;
+    if (u.alive && !u.hasMoved && b.current === u) { this.computeOptions(); if (b.reach && b.reach.tiles.some(t => !t.unit)) return; }
+    this.endTurn();
+  },
   // Walk to the chosen tile next to (or in range of) the target and strike in one action.
   async moveAndAttack(target) {
     const b = game.battle, u = b.current, t = b.approach && b.approach.get(target);
@@ -4504,7 +4694,12 @@ const Battle = {
   // Enemies that no player unit can ever reach or shoot (water, cliffs), ignoring other units.
   unreachableEnemies() {
     const b = game.battle, f = b.field, en = b.units.filter(u => u.side === 'enemy' && u.alive);
-    const reach = b.units.filter(u => u.side === 'player' && u.alive).map(u => ({ u, tiles: [...Pathfinding.search(f, u, 9999, true).cost.keys()].map(i => f.tiles[i]) }));
+    // Gates and palisades can be broken by anybody, walls by siege units: count them as passable.
+    const siege = b.units.some(u => u.side === 'player' && u.alive && isSiege(u));
+    f.passBreakable = info => info.kind === 'gate' || info.kind === 'palisade' || siege;
+    let reach;
+    try { reach = b.units.filter(u => u.side === 'player' && u.alive).map(u => ({ u, tiles: [...Pathfinding.search(f, u, 9999, true).cost.keys()].map(i => f.tiles[i]) })); }
+    finally { f.passBreakable = null; }
     return en.filter(e => !reach.some(({ u, tiles }) => tiles.some(t => hexDistance(t.q, t.r, e.q, e.r) <= Math.max(1, u.def.range))));
   },
   // Withdrawal without losses: before any blow was struck, or when no enemy can be reached at all.
@@ -4702,7 +4897,7 @@ const Battle = {
     while (root.children.length) removeWithLabels(root.children[0]);
     game.battle = null;
     Weather.reset();
-    tr.floorOverride = null; tr.dimOutside = null; tr.locked = false;
+    tr.floorOverride = null; tr.heightOverride = null; tr.dimOutside = null; tr.locked = false;
     game.view.cam.setMapBounds();
     const n = Campaign.armyNode();
     game.view.cam.lookAtTile(n.q, n.r);
@@ -4891,6 +5086,7 @@ const Abilities = {
         if (x.alive && a.status !== 'NONE') this.addStatus(x, a.status, a.duration);
       } else if (a.effect === 'HEAL') this.heal(x, a.value * n, a.name);
       else if (a.effect === 'APPLY_STATUS' || a.effect === 'STUN') this.addStatus(x, a.effect === 'STUN' ? 'STUNNED' : a.status, a.duration, a.status === 'SHIELDED' ? a.value * n : Math.max(1, Math.round(a.value * n * 0.5)));
+      else if (a.effect === 'MODIFY_TERRAIN' && x.def.flying) Battle.log(`${x.def.name} fliegt darüber hinweg.`);
       else if (a.effect === 'MODIFY_TERRAIN') this.addStatus(x, a.status !== 'NONE' ? a.status : (a.power === 'HOLY' ? 'BURNING' : 'SLOWED'), Math.max(1, a.duration), Math.max(1, a.value * n));
       else if (a.effect === 'TELEPORT') Battle.retreat();
     }
@@ -5127,6 +5323,13 @@ const UI = {
       el.onclick = () => { if (!b.keepOpen) this.closeModal(); b.action && b.action(); };
       box.appendChild(el);
     }
+    // A close cross at the top as well (same as the cancel/close button, or the only button).
+    const cancel = buttons.find(b => /^(Schließen|Abbrechen|Weiterkämpfen|Nein|Zurück)/.test(b.label)) || (buttons.length === 1 ? buttons[0] : null);
+    if (cancel) {
+      const x = document.createElement('button'); x.className = 'modalClose'; x.textContent = '×'; x.title = cancel.label;
+      x.onclick = () => { if (!cancel.keepOpen) this.closeModal(); cancel.action && cancel.action(); };
+      $('modalBody').prepend(x);
+    }
     this.show('modal', true);
   },
   closeModal() { this.show('modal', false); },
@@ -5328,7 +5531,8 @@ const UI = {
     const stat = (ic, v, t) => `<span class="st" title="${t}">${ic}${v}</span>`;
     const cards = groupByType(army).map(g => {
       const d = DATA.units[g.type], n = g.hps.length, sum = g.hps.reduce((a, h) => a + h, 0), isLich = g.type === 'lich';
-      const um = Upgrades.mods(g.type), hp = isLich ? L.hp : Math.round(d.hp * (1 + um.hpPct)), dmg = isLich ? L.damage : Math.round(d.damage * (1 + um.damagePct));
+      const um = Upgrades.mods(g.type), isCmd = COMMANDER_TYPES.includes(g.type);
+      const hp = isLich ? L.hp : Math.round((isCmd ? commanderHp(g.type, L.level - 1) : d.hp) * (1 + um.hpPct)), dmg = isLich ? L.damage : Math.round(d.damage * (1 + um.damagePct));
       const cur = Math.round(sum / d.hp * hp), max = n * hp;
       return `<div class="aCard ${isLich ? 'lich' : ''}" title="${esc(d.name)}: ${esc(d.desc || '')}">${portraitHtml(g.type, d)}${n > 1 ? `<span class="aCnt">${n}</span>` : ''}
         <div class="aBody"><div class="aName">${esc(d.name)}${isLich ? ` <span class="lvl" title="Stufe = 1 + eroberte Orte; jede Stufe +${ECON.lichArmyBonus.hpPerConquest} LP, +${ECON.lichArmyBonus.damagePerConquest} Schaden">Stufe ${L.level}</span>` : ''}</div>
@@ -5613,7 +5817,7 @@ const UI = {
       ${Abilities.statusHtml(u) ? `<div class="ucRow"><span>Zustand</span> ${Abilities.statusHtml(u)}</div>` : ''}
       ${(d.abilities || []).length ? `<div class="ucRow"><span>Fähigkeiten</span> ${d.abilities.map(id => DATA.abilities[id]).filter(Boolean).map(a => `<span title="${esc(a.desc || '')}" style="border-bottom:1px dotted">${esc(a.name)}</span>`).join(', ')}</div>` : ''}
       <div class="ucRow"><span>Feld</span> ${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}${(() => { const e = DATA.floorTypes[t.floor].effect || {};
-        return e.damageUndeadPerRound ? ` · Untote −${e.damageUndeadPerRound} LP/Runde` : e.healUndeadPerRound ? ` · Untote +${e.healUndeadPerRound} LP/Runde` : ''; })()}</div>`;
+        return u.def.flying ? '' : e.damageUndeadPerRound ? ` · Untote −${e.damageUndeadPerRound} LP/Runde` : e.healUndeadPerRound ? ` · Untote +${e.healUndeadPerRound} LP/Runde` : ''; })()}</div>`;
   }
 };
 
@@ -5649,6 +5853,16 @@ function onLeftClick(ev) {
   const b = game.battle;
   if (!b || b.over) return;
   const unit = pickUnit();
+  // Breakable edge under the mouse (walls, gates, palisades) – when the current unit can hit it.
+  const me = b.current;
+  if (!unit && me && me.side === 'player' && !b.busy && !b.abilityMode) {
+    const eh = game.view.raycaster.intersectObjects(BattleView.edgeMeshes.filter(m => m.parent && m.userData.edge.kind), false)[0];
+    if (eh) {
+      const e = eh.object.userData.edge, et = b.field.get(e.q, e.r), key = et && b.field.edgeKey(et, e.d);
+      const x = (b.edgeTargets || []).find(y => y.key === key) || (b.edgeApproach && b.edgeApproach.get(key));
+      if (x) { Battle.attackEdge(x); return; }
+    }
+  }
   let tile = null;
   if (unit) tile = b.field.get(unit.q, unit.r);
   else { const p = game.view.tiles.pick(game.view.raycaster); if (p) tile = b.field.get(p.q, p.r); }
@@ -5706,8 +5920,15 @@ function onHover(ev) {
   const t = p && b.field.get(p.q, p.r);
   const cur = b.current, myTurn = b.reach && !b.busy && cur && cur.side === 'player';
   if (eh) {
-    const e = eh.object.userData.edge;
-    showTip(ev, `Kante: <b>${EDGE_NAMES[e.type]}</b> (${e.type})`);
+    const e = eh.object.userData.edge, et = b.field.get(e.q, e.r), info = et && b.field.edgeInfoOf(et, e.d);
+    let html = `<b>${info ? SIEGE_EDGES[info.kind].name : EDGE_NAMES[e.type]}</b>`;
+    if (info) {
+      html += ` · ${Math.max(0, info.hp)} / ${info.max} LP`;
+      const key = b.field.edgeKey(et, e.d), x = myTurn && ((b.edgeTargets || []).find(y => y.key === key) || (b.edgeApproach && b.edgeApproach.get(key)));
+      if (x) html += `<br><b>${x.via ? 'Hinlaufen und angreifen' : 'Angreifen'}: ≈ ${Battle.edgeDamage(cur, x)}</b>${x.factor < 1 ? ` <span class="small">(ohne Belagerung nur ${Math.round(x.factor * 100)} %)</span>` : ''}`;
+      else html += `<br><span class="small">${SIEGE_EDGES[info.kind].other ? 'Jede Einheit kann sie angreifen (Belagerung voll, sonst schwach).' : 'Nur Belagerung bricht sie: Balliste, Fleischriese, Knochendrache, Hünenkönig.'}</span>`;
+    } else if (e.type === 'WALL_TRANSPARENT') html += '<br><span class="small">Hält auf, Sicht und Fernkampf gehen durch.</span>';
+    showTip(ev, html);
   } else if (t) {
     let extra = '';
     if (t.building !== null) extra += `<br>${b.field.buildings[t.building].name}`;

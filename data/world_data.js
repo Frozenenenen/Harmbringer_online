@@ -670,16 +670,25 @@ window.HARMBRINGER_DATA = {
     hall:      { name: "Gildehalle",  tiles: [[], [0], [0, 0], [0, 0, 2], [0, 0, 2, 2]], floor: "STONE_FLOOR", doors: 2, windows: 2 },
     tower:     { name: "Wachturm",    tiles: [[]],                                   floor: "STONE_FLOOR", doors: 1, windows: 0, wall: "WALL_TRANSPARENT" },
     chapel:    { name: "Kapelle",     tiles: [[], [0]],                              floor: "STONE_FLOOR", doors: 1, windows: 1 },
-    church:    { name: "Kirche",      tiles: [[], [0], [1], [2], [3], [4], [5]],     floor: "STONE_FLOOR", doors: 2, windows: 2 }
+    church:    { name: "Kirche",      tiles: [[], [0], [1], [2], [3], [4], [5]],     floor: "STONE_FLOOR", doors: 2, windows: 2 },
+    barn:      { name: "Scheune",     tiles: [[], [0], [0, 0]],                      floor: "WOOD_FLOOR",  doors: 2, windows: 0 },
+    smithy:    { name: "Schmiede",    tiles: [[], [1]],                              floor: "STONE_FLOOR", doors: 1, windows: 1 },
+    inn:       { name: "Krug",        tiles: [[], [0], [1], [2]],                    floor: "WOOD_FLOOR",  doors: 2, windows: 2 },
+    granary:   { name: "Kornspeicher",tiles: [[], [0], [0, 1]],                      floor: "WOOD_FLOOR",  doors: 1, windows: 0 },
+    // Closed blocks: no door, a solid obstacle to walk around.
+    keep:      { name: "Bergfried",   tiles: [[], [0], [1]],                         floor: "STONE_FLOOR", doors: 0, windows: 0 },
+    stonetower:{ name: "Steinturm",   tiles: [[]],                                   floor: "STONE_FLOOR", doors: 0, windows: 0 },
+    cloister:  { name: "Kreuzgang",   tiles: [[], [0], [1], [2], [3]],               floor: "STONE_FLOOR", doors: 2, windows: 3 }
   },
   // Which buildings appear where. count = fixed number, countPer16 = per 16 tiles of field edge.
   // first: placed before the random mix. mix: [building, weight].
   buildingSets: {
-    VILLAGE:   { count: 2, fences: 1, mix: [["hut", 3], ["house", 3], ["longhouse", 2], ["chapel", 1]] },
-    WORLDLY:   { countPer16: 3, fencesPer16: 2, mix: [["house", 4], ["longhouse", 2], ["manor", 2], ["hall", 2], ["tower", 1], ["hut", 1]],
-                 // Fields of at least this size get a city wall: a ring at cityWallRadius tiles with open gates.
-                 cityWallMinSize: 32, cityWallRadius: 9, gates: 4 },
-    CHRISTIAN: { countPer16: 3, fencesPer16: 2, first: "church", mix: [["house", 3], ["hut", 2], ["longhouse", 1], ["chapel", 1]],
+    VILLAGE:   { count: 4, fences: 2, mix: [["hut", 3], ["house", 3], ["longhouse", 2], ["barn", 2], ["smithy", 1], ["granary", 1], ["chapel", 1]] },
+    WORLDLY:   { countPer16: 5, fencesPer16: 2, mix: [["house", 4], ["longhouse", 2], ["manor", 2], ["hall", 2], ["tower", 1], ["hut", 1], ["inn", 2], ["smithy", 2], ["granary", 1], ["keep", 1], ["stonetower", 2]],
+                 // Fields of at least this size get a city wall with walkway, towers and closed gates;
+                 // smaller towns a palisade with open gaps.
+                 cityWallMinSize: 32, cityWallRadius: 9, gates: 4, palisadeRadius: 6, palisadeGaps: 3 },
+    CHRISTIAN: { countPer16: 4, fencesPer16: 2, first: "church", mix: [["house", 3], ["hut", 2], ["longhouse", 1], ["chapel", 1], ["cloister", 2], ["barn", 1], ["stonetower", 1]],
                  holyRadius: 3, graveyardRadius: 2 }
   },
 

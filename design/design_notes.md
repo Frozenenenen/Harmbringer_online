@@ -2198,6 +2198,27 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
+### Mauern, Belagerung, Gebäude (umgesetzt 04.11.2026)
+
+- **Stadtmauer** (Felder ab 32): Ring aus Stein mit **Wehrgang** (+2 Stufen) dahinter, **Mauertürmen** (+3, jedes 6. Feld und neben jedem Tor), **Treppen** von innen und **geschlossenen Toren**. Schützen und Ballisten stehen auf Wehrgang und Türmen. Wer auf dem Wehrgang direkt hinter der Mauer steht, sieht und schießt darüber (und hat Deckung); sonst nimmt die Mauer die Sicht.
+- **Palisade** (kleinere Städte): Holzring mit Lücken.
+- **Brechbare Kanten** mit Lebenspunkten:
+
+| Kante | LP | Belagerung | andere |
+|-|-|-|-|
+| Stadtmauer | 120 | voll | – |
+| Stadttor | 90 | voll | 25 % |
+| Palisade | 40 | voll | 50 % |
+| Hauswand | 50 | voll | – |
+
+- Belagerung: Rolle SIEGE (Balliste), Größe 4 (Fleischriese, Knochendrache) und Hünenkönig. Schaden = Schaden × Anzahl × Anteil. Fernkampf-Belagerung trifft Kanten in Reichweite und Sicht.
+- Fällt eine Stadtmauer, wird der Wehrgang (oder Turm) dahinter zur Trümmerrampe (+1, Kies), die Kante zu Deckung (Trümmer). Krachen alarmiert alle im Umkreis von 8.
+- Bedienung: angreifbare Kanten leuchten rot; Klick greift an (auch hinlaufen und angreifen); Tooltip zeigt LP und Schaden.
+- Flieger fliegen über Stadtmauer, Tor und Palisade (nicht über Häuser), Geister gehen hindurch.
+- **Neue Gebäude:** Scheune, Schmiede, Krug, Kornspeicher, Kreuzgang; geschlossene Blöcke ohne Tür (Bergfried, Steinturm) als Hindernisse, die Umwege erzwingen. Mehr Gebäude je Ort.
+- **Kommandeure** (Nekromant, Todesritter, Ahnen) im Kampf: LP ×3 + 2 je erobertem Ort, +10 Seelenschild.
+- **Flieger** sind von Bodenwirkungen (geweihter Boden, Gelände-Fähigkeiten) nicht betroffen.
+
 ### Abziehen, unerreichbare Gegner, Wasser (umgesetzt 04.11.2026)
 
 - **Abziehen** (statt Rückzug, Taste R): Solange kein Schlag geführt wurde oder kein Gegner erreichbar ist, verlässt die ganze Armee das Feld ohne Verluste und bleibt vor dem Ort stehen. Keine Beute, die Kampfzeit vergeht. Bei Begegnungen unterwegs nicht möglich. Danach gilt der alte Rückzug (nur der Lich entkommt).
