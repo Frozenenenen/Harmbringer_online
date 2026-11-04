@@ -727,24 +727,24 @@ window.HARMBRINGER_DATA = {
       { cost: { corpses: 30, bones: 1200, souls: 5 }, days: 3, lichDeathDays: 2, text: "Rückkehr nach dem Tod in 2 Tagen." },
       { cost: { corpses: 60, bones: 2400, souls: 10 }, days: 5, lichDeathDays: 1, text: "Rückkehr nach dem Tod in 1 Tag." } ] },
     boneWorkshop:  { name: "Knochenwerkstatt", start: 1, levels: [
-      { produces: ["skelett", "bogner", "schleuderer"], text: "Skelette und Schützen." },
-      { cost: { corpses: 15, bones: 600 }, days: 2, produces: ["knochenschuetze"], text: "Knochenschützen." },
-      { cost: { corpses: 30, bones: 1800, souls: 2 }, days: 4, produces: ["knochenballiste", "knochendrache"], text: "Belagerung und Größeres." } ] },
+      { produces: ["skelett", "bogner", "schleuderer"], text: "Grundwerkstatt." },
+      { cost: { corpses: 15, bones: 600 }, days: 2, produces: ["knochenschuetze"], text: "Feinere Knochenarbeit." },
+      { cost: { corpses: 30, bones: 1800, souls: 2 }, days: 4, produces: ["knochenballiste", "knochendrache"], text: "Große Gestelle." } ] },
     corpsePit:     { name: "Leichengrube", start: 1, levels: [
-      { produces: ["zombie", "ghul", "leichenhund"], text: "Zombies, Ghule, Leichenhunde." },
-      { cost: { corpses: 24, bones: 600 }, days: 2, produces: ["moorleiche", "wasserleiche"], text: "Leichen aus Moor und Meer." },
-      { cost: { corpses: 45, bones: 1200, souls: 5 }, days: 4, produces: ["fleischriese"], text: "Fleischriesen." } ] },
+      { produces: ["zombie", "ghul", "leichenhund"], text: "Grube der Frischtoten." },
+      { cost: { corpses: 24, bones: 600 }, days: 2, produces: ["moorleiche", "wasserleiche"], text: "Tiefere, nasse Gruben." },
+      { cost: { corpses: 45, bones: 1200, souls: 5 }, days: 4, produces: ["fleischriese"], text: "Nähstube der Toten." } ] },
     soulKennel:    { name: "Seelenzwinger", start: 0, levels: [
-      { cost: { corpses: 15, bones: 600, souls: 3 }, days: 2, produces: ["geist"], command: 12, text: "Geister. +12 Kommando." },
+      { cost: { corpses: 15, bones: 600, souls: 3 }, days: 2, produces: ["geist"], command: 12, text: "Seelen binden. +12 Kommando." },
       { cost: { corpses: 30, bones: 1200, souls: 6 }, days: 3, produces: ["totenlicht"], command: 12, text: "+12 Kommando." },
       { cost: { corpses: 60, bones: 2400, souls: 12 }, days: 5, command: 12, text: "+12 Kommando." } ] },
     deadHall:      { name: "Totenhalle", start: 0, levels: [
-      { cost: { corpses: 24, bones: 1200, souls: 3 }, days: 3, produces: ["todesritter", "nekromant"], text: "Todesritter und Nekromanten." },
-      { cost: { corpses: 36, bones: 1800, souls: 6 }, days: 4, produces: ["gefallene_schwester", "grabdruidin", "totenjaeger"], text: "Gefallene der Lebenden und Mythen." } ] },
+      { cost: { corpses: 24, bones: 1200, souls: 3 }, days: 3, produces: ["todesritter", "nekromant"], text: "Halle der Anführer: erlaubt Expeditionen." },
+      { cost: { corpses: 36, bones: 1800, souls: 6 }, days: 4, produces: ["gefallene_schwester", "grabdruidin", "totenjaeger"], text: "Halle der Gefallenen." } ] },
     knowledgeAltar: { name: "Wissensaltar", start: 0, levels: [
       { cost: { corpses: 8, bones: 300 }, days: 1, unlocksVariants: true, text: "Wandelt erbeutetes Wissen in Erkenntnis: nötig für alle Untoten aus gestürzten Pantheons." } ] },
     boneForge:     { name: "Knochenschmiede", start: 0, requiresNode: "iberg", requiresBuilding: { boneWorkshop: 1 }, levels: [
-      { cost: { corpses: 30, bones: 1800, souls: 4 }, days: 3, deathKnightShield: 2, text: "Zwergenschmiede: Todesritter +2 Seelenschild." } ] },
+      { cost: { corpses: 30, bones: 1800, souls: 4 }, days: 3, deathKnightShield: 2, text: "Zwergenschmiede: die schwersten Krieger der Toten tragen +2 Seelenschild." } ] },
     heathAltar:    { name: "Heidealtar", start: 0, requiresPantheon: "heide", requiresBuilding: { knowledgeAltar: 1 }, levels: [
       { cost: { corpses: 45, bones: 1200, souls: 10 }, days: 5, heathHeal: 2, text: "Eigene Untote heilen auf Heide-Feldern 2 LP pro Runde." } ] }
   },
