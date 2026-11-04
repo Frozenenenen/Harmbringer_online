@@ -61,6 +61,8 @@
   #info table { width: 100%; border-collapse: collapse; font-size: 14px; }
   #info td { padding: 2px 0; vertical-align: top; }
   #info td:first-child { color: var(--ink-soft); width: 45%; }
+  #btnBuild .badge { display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 3px; border-radius: 8px; background: var(--undead); color: #f4ecd6; font-size: 12px; line-height: 16px; }
+  #btnBuild .badge.busy { background: #8a6a2a; }
   #info .buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 
   /* Hint line (bottom) */
@@ -281,7 +283,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 97, "date": "2026-11-04", "changes": [{"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}]};
+const BUILD = {"version": 98, "date": "2026-11-04", "changes": [{"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige (im Bau / baubar), Reisebalken verrät keinen Hinterhalt"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1193,6 +1195,7 @@ function initScene(ground) {
   window.addEventListener('resize', () => {
     v.camera.aspect = window.innerWidth / window.innerHeight;
     v.camera.updateProjectionMatrix();
+    if (typeof UI !== 'undefined' && UI.layoutInfo) UI.layoutInfo();
     v.renderer.setSize(window.innerWidth, window.innerHeight);
     v.labelRenderer.setSize(window.innerWidth, window.innerHeight);
   });
@@ -2271,14 +2274,16 @@ async function startTravel(target, resume = null) {
   cam.follow = fig;
   // Constant march; the clock runs hour by hour (every midnight: raids move, buildings grow).
   let counted = 0;
-  TravelClock.show(legHours);
+  // The clock shows the whole journey, so an ambush halfway is not given away by the bar.
+  const shownHours = resume ? legHours : hours;
+  TravelClock.show(shownHours);
   await tween(Math.max(1.5, legHours / 24 * DAY_SECONDS), k => {
     const t = k0 + (k1 - k0) * k;
     fig.position.x = a.x + (b.x - a.x) * t;
     fig.position.z = a.z + (b.z - a.z) * t;
     fig.position.y = game.world.groundAt(fig.position.x, fig.position.z);
     const d = Math.min(legHours, Math.floor(k * legHours + 1e-6));
-    if (d > counted) { Campaign.advanceHours(d - counted); counted = d; UI.updateHeader(); TravelClock.update(counted, legHours); }
+    if (d > counted) { Campaign.advanceHours(d - counted); counted = d; UI.updateHeader(); TravelClock.update(counted, shownHours); }
   }, true);
   if (counted < legHours) Campaign.advanceHours(legHours - counted);
   TravelClock.hide();
@@ -4906,11 +4911,28 @@ const UI = {
     $('resources').innerHTML = `<span title="${tip('corpses')}">${resIcon('corpses', 18)}Leichen <b>${r.corpses}</b></span><span title="${tip('bones')}">${resIcon('bones', 18)}Knochen <b>${r.bones}</b></span>
       <span title="${tip('souls')}">${resIcon('souls', 18)}Seelen <b>${r.souls}</b></span><span title="${tip('knowledge')}">${resIcon('knowledge', 18)}Wissen <b>${r.knowledge}</b></span>
       <span title="${tip('command')}">${resIcon('command', 18)}Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
+    this.buildBadge(); this.layoutInfo();
     $('threats').innerHTML = ENEMY_FACTIONS.map(f => {
       const v = Math.round(c.threat[f]), living = Campaign.isLiving(f);
       return `<div class="threat ${living ? '' : 'dead'}" title="Bedrohung ${DATA.factions[f].name}: ${v} %">${DATA.factions[f].name} ${v} %
         <div class="bar"><div style="width:${v}%;background:${DATA.factions[f].color}"></div></div></div>`;
     }).join('');
+  },
+  // Build button: a running construction shows its days left, otherwise a dot when something can be started.
+  buildBadge() {
+    const c = game.campaign, btn = $('btnBuild'); if (!c || !btn) return;
+    const w = c.construction;
+    const open = Object.keys(DATA.baseBuildings).filter(k => !Base.blocker(k)).length + DATA.upgrades.filter(u => !Upgrades.blocker(u)).length;
+    btn.innerHTML = 'Bauen' + (w ? ` <span class="badge busy">⚒ ${w.daysLeft} T.</span>` : open ? ` <span class="badge">${open}</span>` : '');
+    btn.title = (w ? `Im Bau: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}, noch ${w.daysLeft} ${w.daysLeft === 1 ? 'Tag' : 'Tage'}. ` : '')
+      + (open ? `${open} ${open === 1 ? 'Gebäude oder Verbesserung kann' : 'Gebäude oder Verbesserungen können'} jetzt gebaut werden. ` : '')
+      + 'Gebäude im Hügelgrab bauen – geht von überall (Taste B)';
+  },
+  // The info panel starts below the header (it wraps to several lines on narrow screens).
+  layoutInfo() {
+    const h = $('header'); if (!h || h.classList.contains('hidden')) return;
+    $('info').style.top = Math.round(h.getBoundingClientRect().bottom + 8) + 'px';
+    $('info').style.maxHeight = `calc(100% - ${Math.round(h.getBoundingClientRect().bottom + 70)}px)`;
   },
   selectRaid(id) {
     this.selectedRaid = id; this.selectedNode = null; this.selectedTile = null;
@@ -5050,6 +5072,7 @@ const UI = {
     el.querySelectorAll('[data-army]').forEach(b => b.onclick = () => { this.activeArmy = b.dataset.army; const a = Expeditions.active(); this.focusNode(a.node); this.renderArmies(); Expeditions.syncView(); });
   },
   renderInfo() {
+    this.layoutInfo();
     this.renderArmies();
     const el = $('info'), c = game.campaign, here = Campaign.armyNode();
     if (game.mode !== 'world' && game.mode !== 'travel') return;
