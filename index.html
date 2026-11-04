@@ -140,6 +140,7 @@
     opacity: 0; pointer-events: none; transition: opacity .6s; } #narrator.on { opacity: 1; pointer-events: auto; cursor: pointer; }
   #narrator .nn { font: 600 12px/1.2 Georgia, serif; font-variant: small-caps; letter-spacing: .08em; opacity: .8; margin-bottom: 3px; }
   #narrator.chron { border-left: 5px solid #7a1e2a; } #narrator.chron .nt { font: italic 17px/1.4 "IM Fell English", Georgia, serif; }
+  #narrator.hint { border-left: 5px solid #c9a227; } #narrator.hint .nt { font: 14px/1.45 "Segoe UI", Helvetica, Arial, sans-serif; } #narrator.hint a { color: #e8d08a; }
   #narrator.char .nt { font: 15px/1.4 "Segoe UI", Helvetica, Arial, sans-serif; }
   #narrator .np { flex: 0 0 64px; height: 64px; border: 3px solid; background: #3a332a center/cover no-repeat; }
   #narrator .nb { flex: 0 0 40px; font-size: 30px; text-align: center; }
@@ -181,6 +182,7 @@
   <div class="res" id="resources"></div>
   <div id="threats"></div>
   <button id="btnInventory" title="Artefakte und besondere Orte (I)">Inventar</button>
+ <button id="btnSound" title="Ton an/aus (Taste M)">🔊</button>
   <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
   <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
 </div>
@@ -251,7 +253,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 77, "date": "2026-11-04", "changes": [{"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}]};
+const BUILD = {"version": 78, "date": "2026-11-04", "changes": [{"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1646,6 +1648,7 @@ const Knowledge = {
   // Announces newly known units (called whenever knowledge or pantheons change).
   discover() {
     const c = game.campaign; if (!c) return;
+    if ((c.resources.knowledge || 0) > 0) Narrator.hint('Wissen bekommst du aus Klöstern und mythischen Orten. Es wird nicht verbraucht: Mit jeder Schwelle erkennt der Lich neue Untote. Welche, weiß er erst, wenn es so weit ist.', 'knowledge');
     c.known = c.known || Object.keys(DATA.units).filter(t => this.known(t));
     const fresh = Object.keys(DATA.units).filter(t => t !== 'lich' && this.known(t) && !c.known.includes(t));
     if (!fresh.length) return;
@@ -2002,6 +2005,7 @@ async function startTravel(target, resume = null) {
   UI.updateHeader();
   SaveGame.save();
   if (target.id === PHYLACTERY.id) UI.toast('Im Hügelgrab: Die Untoten sind geheilt.');
+  if (Campaign.isEnemy(target)) Narrator.hint('Angekommen. Mit „Angreifen“ in der Ortsinfo beginnt der Kampf. Die Besatzung siehst du dort vorher.', 'arrive');
 }
 // =============================================================================
 // Expeditions: commanders (necromancer, death knight) lead their own armies. Orders are given
@@ -2218,6 +2222,8 @@ const Narrator = {
   queue: [], busy: false,
   // Chronicler line.
   say(text, key) { this.push({ text, key }); },
+  // First-steps hint (shown once per campaign; switch off in the hint itself by clicking twice).
+  hint(text, key) { const c = game.campaign; if (c && c.hintsOff) return; this.push({ text, key: 'hint_' + key, hint: true }); },
   // Character line: type = unit id for portrait and name, side decides the frame color.
   speak(type, text, key, faction) { this.push({ text, key, type, faction }); },
   push(m) {
@@ -2234,7 +2240,11 @@ const Narrator = {
     const el = this.el(), m = this.queue.shift();
     if (!m) { el.classList.remove('on'); this.busy = false; return; }
     this.busy = true;
-    if (m.type) {
+    if (m.hint) {
+      el.className = 'on hint';
+      el.innerHTML = `<div class="nb">💡</div><div><div class="nn">Erste Schritte</div><div class="nt">${esc(m.text)}</div><div class="small" style="opacity:.6;margin-top:3px">Klicken: weiter · <a href="#" data-hoff>Hinweise ausschalten</a></div></div>`;
+      el.querySelector('[data-hoff]').onclick = e => { e.preventDefault(); e.stopPropagation(); game.campaign.hintsOff = true; this.queue = this.queue.filter(x => !x.hint); this.next(); };
+    } else if (m.type) {
       const u = DATA.units[m.type], col = m.faction ? (DATA.factions[m.faction] || {}).color : (u.side === 'undead' ? DATA.factions.UNDEAD.color : '#888');
       el.className = 'on char';
       el.innerHTML = `<div class="np" style="border-color:${col};${PORTRAITS[m.type] ? `background-image:url(${PORTRAITS[m.type]})` : `background:${u.color}`}"></div>
@@ -3240,6 +3250,77 @@ const Weather = {
 };
 
 // =============================================================================
+// Sound: everything synthesized with WebAudio (no files, works under file://).
+// Short effects per power type, deaths, UI clicks, and a quiet wind / drone ambience.
+// M or the speaker button mutes; the choice is remembered per browser.
+// =============================================================================
+const Sfx = {
+  ctx: null, master: null, amb: null, muted: false,
+  init() {
+    try { this.muted = localStorage.getItem('harmbringer_muted') === '1'; } catch (e) { /* ignore */ }
+    const start = () => { this.ensure(); window.removeEventListener('pointerdown', start); window.removeEventListener('keydown', start); };
+    window.addEventListener('pointerdown', start); window.addEventListener('keydown', start);
+  },
+  ensure() {
+    if (this.ctx) return this.ctx;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : 0.5; this.master.connect(this.ctx.destination);
+    // White noise buffer for hits and wind.
+    const n = this.ctx.sampleRate * 2, buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    this.noise = buf;
+    this.ambience(game.mode === 'battle' ? 'battle' : 'world');
+    return this.ctx;
+  },
+  toggle() {
+    this.muted = !this.muted;
+    try { localStorage.setItem('harmbringer_muted', this.muted ? '1' : '0'); } catch (e) { /* ignore */ }
+    if (this.master) this.master.gain.value = this.muted ? 0 : 0.5;
+    const b = document.getElementById('btnSound'); if (b) b.textContent = this.muted ? '🔇' : '🔊';
+    UI.toast(this.muted ? 'Ton aus' : 'Ton an');
+  },
+  env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); },
+  tone(freq, dur, type = 'sine', peak = 0.3, slide = 0) {
+    const c = this.ctx; if (!c || this.muted) return;
+    const t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+    this.env(g, t, 0.01, peak, dur); o.connect(g).connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+  },
+  hiss(dur, freq, q = 1, peak = 0.3) {
+    const c = this.ctx; if (!c || this.muted) return;
+    const t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noise; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    this.env(g, t, 0.005, peak, dur); s.connect(f).connect(g).connect(this.master); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  },
+  hit(power) {
+    if (!this.ensure()) return;
+    switch (power) {
+      case 'SOUL': this.tone(520, 0.5, 'sine', 0.18, 0.4); this.tone(780, 0.4, 'triangle', 0.08, 0.5); break;
+      case 'HOLY': this.tone(880, 0.9, 'sine', 0.15); this.tone(1320, 0.7, 'sine', 0.08); break;
+      case 'ARCANE': case 'CHAOS': this.tone(300, 0.35, 'sawtooth', 0.07, 2.2); this.hiss(0.25, 3000, 4, 0.08); break;
+      case 'FIRE': this.hiss(0.5, 900, 0.7, 0.25); break;
+      case 'POISON': this.hiss(0.35, 1800, 6, 0.12); break;
+      case 'PIERCE': this.hiss(0.12, 2500, 2, 0.3); this.tone(220, 0.08, 'square', 0.05); break;
+      case 'SIEGE': this.tone(70, 0.5, 'sine', 0.45, 0.5); this.hiss(0.3, 300, 1, 0.3); break;
+      case 'HEAL': this.tone(660, 0.4, 'sine', 0.12, 1.5); break;
+      default: this.tone(110, 0.18, 'sine', 0.4, 0.5); this.hiss(0.12, 700, 1, 0.25);   // blunt, rend
+    }
+  },
+  death() { if (this.ensure()) { this.tone(90, 0.6, 'sine', 0.35, 0.4); this.hiss(0.4, 400, 1, 0.15); } },
+  click() { if (this.ensure()) this.tone(1200, 0.05, 'square', 0.03); },
+  ability() { if (this.ensure()) { this.tone(440, 0.5, 'triangle', 0.12, 1.8); this.hiss(0.4, 5000, 3, 0.05); } },
+  // Quiet looping ambience: wind on the map, a low drone in battle.
+  ambience(kind) {
+    const c = this.ctx; if (!c) return;
+    if (this.amb) { try { this.amb.stop(); this.drone && this.drone.stop(); } catch (e) { /* ignore */ } this.amb = this.drone = null; }
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noise; s.loop = true; f.type = 'lowpass'; f.frequency.value = kind === 'battle' ? 260 : 420; g.gain.value = kind === 'battle' ? 0.05 : 0.07;
+    s.connect(f).connect(g).connect(this.master); s.start(); this.amb = s;
+    if (kind === 'battle') { const o = c.createOscillator(), og = c.createGain(); o.type = 'sine'; o.frequency.value = 55; og.gain.value = 0.04; o.connect(og).connect(this.master); o.start(); this.drone = o; }
+  }
+};
+
+// =============================================================================
 // Battle
 // Initiative, turns, movement, attacks, round effects, victory and defeat.
 // Rules work on plain data objects; BattleView only mirrors them.
@@ -3349,6 +3430,8 @@ const Battle = {
     }
     this.refreshCones();
     if (!exp) SaveGame.save();
+    Narrator.hint('Kampf: Die Einheit mit dem goldenen Ring ist am Zug. Blaue Felder = Bewegung, rote = angreifbare Gegner, über einem Gegner siehst du den erwarteten Schaden. Fähigkeiten unten rechts (Tasten 1–4), Leertaste beendet den Zug.', 'battle');
+    Narrator.hint('Solange die Gegner euch nicht bemerkt haben (Schleich-Modus), ist der erste Angriff ein Überraschungsangriff. Der Wind trägt den Geruch der Toten.', 'stealth');
     this.nextTurn();
   },
   // A stack of `hps.length` creatures. Wounds are pooled so only the top creature is wounded
@@ -3640,7 +3723,7 @@ const Battle = {
     if (deaths) { const i = game.battle.field.index(game.battle.field.get(target.q, target.r)); game.battle.corpses.set(i, (game.battle.corpses.get(i) || 0) + deaths); }
     if (target.hp <= 0 && Abilities.beforeDeath(target, power)) deaths = before - stackCount(target);
     BattleView.updateHp(target);
-    if (dmg > 0 && power) BattleView.burst(target, power);
+    if (dmg > 0 && power) { BattleView.burst(target, power); Sfx.hit(power); }
     BattleView.syncCorpses();
     BattleView.floatText(target, dmg === 0 ? 'immun' : (absorbed ? `−${dmg - absorbed} (Schild ${absorbed})` : '−' + dmg) + (deaths && target.hp > 0 ? ` · ${deaths} †` : ''));
     // Every fallen creature leaves loot (corpse quality depends on the killing blow).
@@ -3686,6 +3769,7 @@ const Battle = {
   kill(u, killer, power) {
     const b = game.battle;
     if (!u.alive) return;
+    Sfx.death();
     // A fallen leader alarms the living.
     if (u.side === 'enemy' && u.def.rank === 'UNIQUE') {
       const c = game.campaign;
@@ -3781,6 +3865,7 @@ const Battle = {
       if (node.raidId) Raids.remove(node.raidId);
       const pidWon = !node.encounter && Pantheons.memberOf(node), wasLiving = pidWon && Pantheons.living(pidWon).length;
       if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
+      setTimeout(() => Narrator.hint('Nach dem Sieg: Im Hügelgrab (Taste H) kannst du neue Untote rekrutieren und Gebäude bauen. Eroberte Orte wie Städte und Klöster sind auch Rekrutierungsorte.', 'victory'), 3200);
       if (!node.encounter) setTimeout(() => Narrator.say(`Wo die Toten gehen, welkt die Heide. Um ${node.name} wird das Land grau, und es wird nicht wieder grün.`, 'firstConquest'), 2500);
       let pantheonText = '';
       if (pidWon && wasLiving && Pantheons.assimilated(pidWon)) {
@@ -4057,7 +4142,7 @@ const Abilities = {
     u.energy -= a.energy; u.cd[id] = a.cooldown + 1;      // +1: the cooldown counts from the next own turn
     u.hasAttacked = true;
     Battle.log(`${u.def.name}: ${a.name}.`, u.side === 'player' ? 'good' : 'hit');
-    BattleView.floatText(u, a.name, true);
+    BattleView.floatText(u, a.name, true); Sfx.ability();
     if (t && t !== f.get(u.q, u.r)) { const p = hexToWorld(t.q, t.r); BattleView.face(u, p.x, p.z); }
     await wait(0.25);
     if (a.effect === 'SUMMON') { this.summon(u, id, t, Math.max(1, a.value * (id === 'WodeWildHunt' ? 4 : 1) * (id === 'NecroRaiseDead' ? Math.min(4 * n, b.corpses.get(f.index(t)) || 1) : 1))); return true; }
@@ -4284,6 +4369,7 @@ const UI = {
 
   // ---- World map ----------------------------------------------------------
   enterWorld() {
+    Sfx.ambience('world');
     ['header', 'info', 'minimap', 'hint', 'worldButtons'].forEach(id => this.show(id, true));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
     $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · R: Rekrutierung finden · H: Hügelgrab · I: Inventar · F3: Debug';
@@ -4561,6 +4647,7 @@ const UI = {
 
   // ---- Battle -------------------------------------------------------------
   enterBattle() {
+    Sfx.ambience('battle');
     ['header', 'info', 'minimap', 'worldButtons'].forEach(id => this.show(id, false));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'hint'].forEach(id => this.show(id, true));
     $('battleLog').innerHTML = '';
@@ -4787,6 +4874,7 @@ function initInput() {
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
+  window.addEventListener('keydown', e => { if (e.code === 'KeyM' && !(e.target && e.target.tagName === 'INPUT')) Sfx.toggle(); });
   window.addEventListener('keydown', e => { if (e.code === 'KeyG' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT')) Expeditions.go(); });
   // Space during a journey: hurry (4x).
   window.addEventListener('keydown', e => { if (e.code === 'Space' && game.mode === 'travel') { game.hurry = true; e.preventDefault(); } });
@@ -4819,6 +4907,8 @@ function initInput() {
   $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
   $('btnGo').onclick = () => Expeditions.go();
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
+  $('btnSound').onclick = () => Sfx.toggle();
+  $('btnSound').textContent = Sfx.muted ? '🔇' : '🔊';
   $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.'); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
@@ -4947,7 +5037,9 @@ function showIntro() {
   const buttons = [];
   if (saved) buttons.push({ label: 'Fortsetzen', action: () => startGame(saved) });
   buttons.push({ label: 'Spielstände …', action: () => setTimeout(() => SaveGame.open(true), 0) });
-  buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); setTimeout(() => Narrator.speak('lich', LICH_LINES.awaken, 'awaken'), 1200); } });
+  buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); setTimeout(() => { Narrator.speak('lich', LICH_LINES.awaken, 'awaken');
+    Narrator.hint('Klicke auf der Karte ein nahes Dorf an, zum Beispiel Undeloh, und wähle „Hierher ziehen“. Die Farbe links am Ortsnamen zeigt die Gefahr: grün, gelb, rot.', 'start');
+    Narrator.hint('Kamera: W/A/S/D oder Maus an den Rand, rechte Maustaste drehen, Mausrad zoomen. H springt zum Hügelgrab, F3 zeigt das Debug-Fenster.', 'camera'); }, 1200); } });
   UI.modal(`<h2>Harmbringer</h2>
     <p>Mai 1371. Unter dem Wilseder Berg, in einem Hügelgrab aus der Bronzezeit, öffnet ein Toter die Augen.
     Jahrhunderte lang hat der Lich geschlafen, nun ruft ihn der Hunger der Ley-Linien.</p>
@@ -4971,6 +5063,7 @@ async function boot() {
   const bar = $('loadingBar'), text = $('loadingText');
   game.world = new WorldData();
   Pantheons.init();
+  Sfx.init();
   const t0 = performance.now();
   text.textContent = `Berechne Höhen und Bodentypen für ${(WIDTH * HEIGHT).toLocaleString('de-DE')} Felder …`;
   await game.world.build(p => { bar.style.width = (p * 100).toFixed(0) + '%'; });

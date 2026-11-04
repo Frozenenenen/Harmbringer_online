@@ -2231,6 +2231,14 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Oberfläche, Klang, Spielstände (umgesetzt 04.11.2026)
+
+- **Initiative-Leiste** mit Portraits: aktive Einheit groß, Rahmenform wie der Sockel (Sechseck = Untote, Stern = Gegner), Anzahl, Zustands-Symbole, Energie der aktiven Einheit, Verblassen nach hinten. Maus über ein Portrait hebt die Einheit auf dem Feld hervor, Klick schwenkt die Kamera hin.
+- **Dialog-Leiste:** Chronist (Buch, kursive Serifenschrift, Bordeaux-Linie) und Figuren (Portrait im Fraktionsrahmen, Name in Kapitälchen). Der Lich spricht beim Erwachen und nach dem Fall eines Bosses; Bosse sprechen beim ersten Kampf gegen sie (Heidekönigin, Wode, Zwergenkönig, Brockenhexe, Rattenfänger, Schlangenkönig, Blanker Hans, Hackelberg). Zeilen warten in einer Schlange, Klick blättert weiter.
+- **Erste Schritte:** Kurze Hinweise beim Start, bei der ersten Ankunft, im ersten Kampf, nach dem ersten Sieg und beim ersten Wissen; lassen sich in der Leiste ausschalten.
+- **Klang:** Alles mit WebAudio erzeugt (keine Dateien): Treffer je Schadensart, Tod, Fähigkeiten, Wind auf der Karte, tiefer Ton im Kampf. Taste M oder 🔊 schaltet stumm.
+- **Spielstände:** Neben dem automatischen Stand 5 feste Plätze sowie Sichern und Laden als Datei (für andere Browser oder Rechner). Knopf „Spielstände“ oben und im Startfenster.
+
 ### Restpunkte aus „Offene Fragen“ und TODO (umgesetzt 04.11.2026)
 
 - **Eigene Tote recyceln:** Nach einem Sieg geben eigene Gefallene 50 % ihrer Leichen- und Knochenkosten zurück (nicht Geister, Maschinen, Beschworene).
