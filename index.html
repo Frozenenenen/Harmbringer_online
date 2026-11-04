@@ -43,26 +43,74 @@
   .small { font-size: 13px; color: var(--ink-soft); }
   .row { display: flex; justify-content: space-between; gap: 8px; }
 
-  /* Header (world map) */
-  #header { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 18px;
-    padding: 6px 14px; flex-wrap: wrap; z-index: 5; }
-  #header .res { display: flex; gap: 14px; flex-wrap: wrap; }
-  #header .res b { font-weight: normal; color: var(--undead); }
-  #header .res span[title] { cursor: help; border-bottom: 1px dotted var(--ink-soft); }
-  #threats { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
-  .threat { font-size: 12px; min-width: 80px; }
+  /* World HUD (reference: Heroes of Might and Magic). Right: sidebar with minimap, armies, actions and
+     the details of the chosen army. Bottom: resources, threat and time. Place info floats beside the sidebar. */
+  :root { --side: 300px; --bar: 42px; }
+  #header { position: absolute; inset: 0; pointer-events: none; z-index: 7; }
+  #header > * { pointer-events: auto; }
+  #bottomBar { position: absolute; left: 0; right: var(--side); bottom: 0; height: var(--bar); display: flex; align-items: center; gap: 10px; padding: 0 10px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,.35); border-width: 2px 1px 0 0; }
+  #bottomBar .spacer { flex: 1; }
+  #resources { display: flex; gap: 2px; }
+  #resources .chip { display: flex; align-items: center; gap: 3px; padding: 2px 7px; cursor: help; font-size: 16px; white-space: nowrap; border-right: 1px solid rgba(43,33,22,.2); }
+  #resources .chip:hover { background: #f4ecd6; }
+  #resources .chip b { font-weight: normal; color: var(--undead); }
+  #resources .chip .lbl { display: none; }
+  #resources .chip.full b { color: var(--blood); }
+  #status { display: flex; gap: 8px; align-items: center; cursor: help; white-space: nowrap; }
+  #dial svg { display: block; width: 32px; height: 32px; }
+  #dayNo { font-size: 20px; } #clock { font-size: 14px; } #date { font-size: 12px; }
+  #timeDelta { position: absolute; right: 10px; bottom: calc(var(--bar) + 8px); white-space: nowrap; font-size: 16px; padding: 3px 10px;
+    background: var(--undead); color: #f4ecd6; opacity: 0; transition: opacity .5s; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  #timeDelta.on { opacity: 1; }
+  #threatChip { display: flex; align-items: center; gap: 7px; font-size: 14px; height: 30px; white-space: nowrap; }
+  #threatChip .mini { display: flex; gap: 2px; align-items: flex-end; height: 20px; background: linear-gradient(to top, rgba(0,0,0,.25) 1px, transparent 1px); }
+  #threatChip .mini i { width: 4px; display: block; min-height: 2px; }
+  #threatChip.warn { color: var(--blood); }
+  #threatPop { position: absolute; bottom: calc(var(--bar) + 10px); width: 300px; padding: 10px 14px; }
+  #threatPop .threat { display: grid; grid-template-columns: 1fr 44px; gap: 0 6px; font-size: 13px; margin: 3px 0; }
+  #threatPop .threat .bar { grid-column: 1 / 3; }
+  #threats .threat.hot { color: var(--blood); }
+  #menuPop { position: absolute; right: calc(var(--side) + 8px); display: flex; flex-direction: column; gap: 5px; padding: 8px; min-width: 170px; }
+  #menuPop button { text-align: left; }
   .threat .bar { height: 6px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 1px; }
   .threat .bar div { height: 100%; }
   .threat.dead { opacity: .45; text-decoration: line-through; }
-
+  kbd { display: inline-block; margin-left: 6px; padding: 0 4px; font: 11px/14px Consolas, monospace; border: 1px solid var(--ink-soft); border-bottom-width: 2px; color: var(--ink-soft); vertical-align: 1px; }
+  button.primary kbd { color: var(--parchment); border-color: var(--parchment); }
+  button.icon { width: 34px; padding: 4px 0; }
+  #sidebar { position: absolute; right: 0; top: 0; bottom: 0; width: var(--side); z-index: 6; display: flex; flex-direction: column; gap: 6px; padding: 8px;
+    background: var(--parchment); border-left: 2px solid var(--ink); box-shadow: -3px 0 12px rgba(0,0,0,.4); }
+  #sidebar #minimap { position: relative; left: auto; bottom: auto; padding: 0; border: 1px solid var(--ink); }
+  #sidebar #minimap canvas { width: 100%; height: auto; aspect-ratio: 340 / 200; }
+  #worldButtons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  #worldButtons button { display: flex; flex-direction: column; align-items: center; padding: 3px 2px 2px; font-size: 12px; position: relative; line-height: 1.15; }
+  #worldButtons button .ic { font-size: 19px; line-height: 1.1; }
+  #worldButtons #btnGo { grid-column: 1 / 4; flex-direction: row; justify-content: center; font-size: 15px; padding: 5px; }
+  #worldButtons .badge { position: absolute; right: 3px; top: 2px; min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--undead); color: #f4ecd6; font-size: 11px; line-height: 15px; }
+  #worldButtons .badge.busy { background: #8a6a2a; }
+  #armyPanel { flex: 1; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid var(--ink); padding-top: 6px; }
+  #armyPanel .armyRows { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
+  .armyRow { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border: 1px solid rgba(0,0,0,.15); cursor: pointer; background: rgba(255,255,255,.2); }
+  .armyRow.on { border-color: var(--gold); background: #f4ecd6; box-shadow: inset 0 0 0 1px var(--gold); }
+  .armyRow .portrait { width: 34px; height: 34px; flex: 0 0 34px; }
+  .armyRow .rTxt { flex: 1; min-width: 0; font-size: 12px; line-height: 1.25; } .armyRow .rTxt b { font-size: 13px; }
+  .armyRow .rTxt div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #armyPanel .armyCards { max-height: none; overflow-y: auto; flex: 1; min-height: 0; align-content: start; }
+  @media (max-width: 1180px) { #date, #clock .small { display: none; } }
   /* Info panel (right) */
-  #info { position: absolute; top: 70px; right: 14px; width: 300px; max-height: calc(100% - 130px); overflow: auto;
-    padding: 12px 14px; z-index: 5; }
+  #info { position: absolute; top: 10px; right: calc(var(--side) + 10px); width: 320px; max-height: calc(100% - var(--bar) - 20px); overflow: auto;
+    padding: 10px 14px 12px; z-index: 5; }
+  #info .close { position: absolute; right: 6px; top: 6px; width: 26px; height: 26px; padding: 0; font-size: 16px; line-height: 1; }
+  #info h2 { padding-right: 28px; margin-bottom: 2px; }
+  #info .sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #info .sub .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid var(--ink); }
+  #info .facts { margin: 6px 0; } #info .key { font-size: 15px; }
+  #info details { margin-top: 8px; font-size: 13px; } #info summary { cursor: pointer; color: var(--ink-soft); }
+  #info .warnline { color: var(--blood); font-size: 13px; }
   #info table { width: 100%; border-collapse: collapse; font-size: 14px; }
   #info td { padding: 2px 0; vertical-align: top; }
   #info td:first-child { color: var(--ink-soft); width: 45%; }
-  #btnBuild .badge { display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 3px; border-radius: 8px; background: var(--undead); color: #f4ecd6; font-size: 12px; line-height: 16px; }
-  #btnBuild .badge.busy { background: #8a6a2a; }
   #info .buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 
   /* Hint line (bottom) */
@@ -70,7 +118,7 @@
     white-space: nowrap; z-index: 5; }
 
   /* Minimap (world) */
-  #minimap { position: absolute; left: 14px; bottom: 40px; padding: 4px; z-index: 5; }
+  #minimap { position: absolute; left: 10px; bottom: 10px; padding: 4px; z-index: 5; }
   #minimap canvas { width: 340px; height: 200px; display: block; cursor: crosshair; }
   #minimap .zoom { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 3px; }
   #minimap .zoom button { width: 26px; height: 26px; padding: 0; font-size: 17px; line-height: 1; }
@@ -98,14 +146,23 @@
   .hpbar div { height: 100%; background: var(--blood); }
   .hpbar.player div { background: var(--undead); }
   #roundInfo { position: absolute; top: 124px; left: 50%; transform: translateX(-50%); padding: 2px 12px; font-size: 13px; z-index: 5; }
-  #unitCard { position: absolute; left: 14px; bottom: 40px; width: 270px; padding: 10px 12px; font-size: 14px; z-index: 5; }
+  /* Battle console at the bottom (reference: Heroes III): chronicle in the middle, actions on the right,
+     the unit card above it on the left. */
+  #battleBar { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; z-index: 5; box-shadow: 0 -2px 10px rgba(0,0,0,.35); }
+  #unitCard { position: absolute; left: 10px; bottom: 74px; width: 280px; padding: 10px 12px; font-size: 14px; z-index: 5; }
   #unitCard table { width: 100%; font-size: 13px; }
-  #battleLog { position: absolute; right: 14px; top: 110px; height: 230px; width: 280px; padding: 8px 10px; overflow: auto; font-size: 13px; z-index: 5; }
+  #unitCard .ucStats { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; margin: 6px 0 4px; clear: both; } #unitCard .st { white-space: nowrap; cursor: help; }
+  #unitCard .ucRow { font-size: 12px; margin-top: 2px; } #unitCard .ucRow > span:first-child { color: var(--ink-soft); display: inline-block; min-width: 72px; }
+  #battleLog { position: absolute; left: 10px; bottom: 5px; height: 54px; right: var(--logRight, 480px); padding: 2px 10px; overflow: auto; font-size: 13px; z-index: 6; cursor: pointer;
+    background: #f4ecd6; border: 1px solid var(--ink-soft); }
+  #battleLog.open { height: min(340px, calc(100% - 240px)); box-shadow: 0 -4px 14px rgba(0,0,0,.35); }
   #battleLog p { margin: 0 0 3px; }
   #battleLog .hit { color: var(--blood); }
   #battleLog .good { color: var(--undead); }
-  #battleButtons { position: absolute; right: 14px; bottom: 40px; display: flex; gap: 6px; padding: 6px; z-index: 5; }
-  #worldButtons { position: absolute; right: 14px; bottom: 40px; display: flex; gap: 6px; padding: 6px; z-index: 5; }
+  #battleButtons { position: absolute; right: 10px; bottom: 0; height: 64px; display: flex; gap: 6px; z-index: 6; align-items: center; max-width: 60%; }
+  #battleButtons #abilityBar { flex-wrap: nowrap; overflow-x: auto; }
+  #battleButtons #abilityBar { margin: 0 6px 0 0; }
+  #hint { display: none !important; }
 
   /* Modals */
   .modal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(30,25,18,.55); z-index: 20; }
@@ -130,7 +187,7 @@
   .aStats { font-size: 11px; display: flex; flex-wrap: wrap; gap: 0 7px; } .aStats .st { white-space: nowrap; }
 
   /* Toast messages */
-  #toast { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); padding: 8px 18px; font-size: 17px; z-index: 15;
+  #toast { position: absolute; top: 168px; left: 50%; transform: translateX(-50%); padding: 8px 18px; font-size: 17px; z-index: 15;
     transition: opacity .4s; text-align: center; max-width: 80%; }
 
   /* Debug overlay */
@@ -146,8 +203,6 @@
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
   .nodeLabel[data-danger="low"] { border-left: 5px solid #4a9a3a; } .nodeLabel[data-danger="mid"] { border-left: 5px solid #d0a020; } .nodeLabel[data-danger="high"] { border-left: 5px solid #c0302a; }
-  #armyList { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; } #armyList:empty { display: none; }
-  #armyList button { font-size: 12px; text-align: left; } #armyList button.on { outline: 2px solid var(--gold); }
   .recruitBtns { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-end; max-width: 210px; }
   .recruitBtns button { padding: 2px 7px; } .recruitBtns input { width: 48px; } .recruitBtns .nowrap { white-space: nowrap; }
   .resIcon { vertical-align: -3px; margin-right: 2px; }
@@ -169,7 +224,7 @@
   #narrator.char .nt { font: 15px/1.4 "Segoe UI", Helvetica, Arial, sans-serif; }
   #narrator .np { flex: 0 0 64px; height: 64px; border: 3px solid; background: #3a332a center/cover no-repeat; }
   #narrator .nb { flex: 0 0 40px; font-size: 30px; text-align: center; }
-  #travelClock { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
+  #travelClock { display: none; position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
     background: rgba(233,223,196,.92); color: var(--ink); padding: 10px 26px 12px; border: 1px solid #7a6a4a; box-shadow: 0 4px 18px rgba(0,0,0,.35); text-align: center; }
   #travelClock .tcDate { font-size: 34px; font-family: "IM Fell English", Georgia, serif; }
   #travelClock .tcDays { font-size: 14px; margin-top: 2px; }
@@ -204,39 +259,58 @@
 <div id="labels"></div>
 
 <!-- World map UI -->
-<div id="header" class="panel hidden">
-  <div id="date" style="font-size:18px"></div>
-  <div class="res" id="resources"></div>
-  <div id="threats"></div>
-  <button id="btnInventory" title="Artefakte und besondere Orte (I)">Inventar</button>
- <button id="btnSound" title="Ton an/aus (Taste M)">🔊</button>
-  <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
-  <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
+<!-- World HUD in the manner of Heroes of Might and Magic: a sidebar on the right (minimap, armies,
+     actions, army details) and a bar at the bottom (resources, threat, time). -->
+<div id="header" class="hidden">
+  <div id="bottomBar" class="panel">
+    <div id="resources"></div>
+    <button id="threatChip" title="Bedrohung der Fraktionen (Klick für alle)"></button>
+    <div class="spacer"></div>
+    <div id="status"><div id="dial"></div><div id="dayNo"></div><div id="clock"></div><div id="date" class="small"></div></div>
+    <div id="timeDelta"></div>
+  </div>
+  <div id="threatPop" class="panel hidden"><h3>Bedrohung</h3><div id="threats"></div>
+    <p class="small">Steigt durch Angriffe auf Orte der Fraktion. Ab 50 % sind ihre Orte gewarnt: alle Wachen sofort alarmiert. Hohe Bedrohung schickt mehr Trupps aus.</p></div>
+  <div id="menuPop" class="panel hidden">
+    <button id="btnSound" title="Ton an/aus (Taste M)">Ton: aus</button>
+    <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
+    <button id="btnHelp" title="Steuerung und Tastenkürzel">Tastenkürzel</button>
+    <button id="btnDebugMenu" title="Debug-Fenster (F3)">Debug</button>
+    <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
+  </div>
 </div>
-<div id="info" class="panel hidden"></div>
-<div id="minimap" class="panel hidden"><canvas id="miniMap" title="Klick: Kamera dorthin · Mausrad: Zoom"></canvas>
+<div id="sidebar" class="hidden">
+  <div id="minimap" class="hidden"><canvas id="miniMap" title="Klick: Kamera dorthin · Mausrad: Zoom"></canvas>
   <div class="zoom"><button id="miniIn" title="Hineinzoomen">+</button><button id="miniOut" title="Herauszoomen">−</button></div>
   <div class="zoomLabel" id="miniZoom">1×</div></div>
+  <div id="worldButtons" class="hidden">
+    <button id="btnHome" title="Zum Hügelgrab (H)"><span class="ic">⌂</span>Hügelgrab</button>
+    <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (R)"><span class="ic">☠</span>Rekrutieren</button>
+    <button id="btnBuild" title="Gebäude im Hügelgrab bauen – geht von überall (B)"><span class="ic">⚒</span>Bauen</button>
+    <button id="btnRest" title="Rasten bis zu einer Tageszeit – z. B. um nachts anzugreifen"><span class="ic">☾</span>Rasten</button>
+    <button id="btnInventory" title="Artefakte und besondere Orte (I)"><span class="ic">✦</span>Inventar</button>
+    <button id="btnMenu" title="Menü: Ton, Spielstände, Neues Spiel, Tastenkürzel"><span class="ic">☰</span>Menü</button>
+    <button id="btnGo" class="primary hidden" title="Alle Befehle ausführen: die Zeit läuft für alle Armeen gleichzeitig (G)">Los</button>
+  </div>
+  <div id="armyPanel" class="hidden"></div>
+</div>
+<div id="info" class="panel hidden"></div>
+
 <div id="hint" class="panel hidden"></div>
 
 <!-- Battle UI -->
 <div id="initBar" class="panel hidden"></div>
 <div id="roundInfo" class="panel hidden"></div>
+<div id="battleBar" class="panel hidden"></div>
 <div id="unitCard" class="panel hidden"></div>
-<div id="battleLog" class="panel hidden"></div>
-<div id="worldButtons" class="panel hidden">
-  <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (Taste R)">Rekrutierung finden</button>
-  <button id="btnHome" title="Zum Hügelgrab (Taste H)">Hügelgrab</button>
- <button id="btnRest" title="Rasten bis zu einer Tageszeit – z. B. um nachts anzugreifen">Rasten</button>
-  <button id="btnBuild" title="Gebäude im Hügelgrab bauen – geht von überall (Taste B)">Bauen</button>
-  <div id="armyList"></div>
-  <button id="btnGo" class="primary hidden" title="Alle Befehle ausführen: die Zeit läuft für alle Armeen gleichzeitig (Taste G)">Los</button>
-</div>
-<div id="battleButtons" class="panel hidden">
+<div id="battleLog" class="hidden" title="Chronik – Klick: auf-/zuklappen"></div>
+<div id="battleButtons" class="hidden">
   <div id="abilityBar"></div>
-  <button id="btnEndTurn">Zug beenden</button>
-  <button id="btnRetreat" title="Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.">Rückzug</button>
-  <button id="btnEdges">Kanten anzeigen</button>
+  <button id="btnEndTurn" class="primary" title="Zug beenden (Leertaste)">Zug beenden<kbd>␣</kbd></button>
+  <button id="btnRetreat" title="Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.">Rückzug<kbd>R</kbd></button>
+  <button id="btnEdges" class="icon" title="Feldkanten ein/aus (T)">⬡</button>
+  <button id="btnTokens" class="icon" title="Token-Modus: automatisch / an / aus (K)">◉</button>
+  <button id="btnBattleHelp" class="icon" title="Steuerung und Tastenkürzel">?</button>
 </div>
 <div id="edgeTip" class="panel hidden"></div>
 
@@ -283,7 +357,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 98, "date": "2026-11-04", "changes": [{"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige (im Bau / baubar), Reisebalken verrät keinen Hinterhalt"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}]};
+const BUILD = {"version": 99, "date": "2026-11-04", "changes": [{"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Leiste unten mit Tag/Uhr/verstrichener Zeit, Bedrohungs-Chip, Ortsinfo nur bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3682,7 +3756,7 @@ const Sfx = {
     try { localStorage.setItem('harmbringer_sound', this.muted ? 'off' : 'on'); } catch (e) { /* ignore */ }
     if (this.muted && this.ctx) { try { this.ctx.close(); } catch (e) { /* ignore */ } this.ctx = null; this.amb = this.drone = null; }   // switched off: close it completely
     if (!this.muted) this.ensure();
-    const b = document.getElementById('btnSound'); if (b) b.textContent = this.muted ? '🔇' : '🔊';
+    const b = document.getElementById('btnSound'); if (b) b.textContent = this.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
     UI.toast(this.muted ? 'Ton aus' : 'Ton an');
   },
   env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); },
@@ -4896,43 +4970,93 @@ const UI = {
   // ---- World map ----------------------------------------------------------
   enterWorld() {
     Sfx.ambience('world');
-    ['header', 'info', 'minimap', 'hint', 'worldButtons'].forEach(id => this.show(id, true));
-    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
-    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · R: Rekrutierung finden · H: Hügelgrab · B: Bauen · I: Inventar · G: Los · M: Ton · F3: Debug';
+    ['header', 'info', 'sidebar', 'minimap', 'worldButtons', 'armyPanel'].forEach(id => this.show(id, true));
+    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'battleBar', 'edgeTip', 'hint'].forEach(id => this.show(id, false));
+    this.lastHours = null;
     this.updateHeader();
     this.renderInfo();
   },
   updateHeader() {
-    const c = game.campaign;
-    $('date').textContent = `${Campaign.dateString(c.dayCount)} · ${Campaign.hour()} Uhr`;
-    $('date').title = `${TIMES[Campaign.timeIndex(Campaign.hour())].name}. Kämpfe beginnen zur aktuellen Tageszeit: nachts sind die Toten stärker und schwerer zu sehen.`;
+    const c = game.campaign, h = Campaign.hour(), T = TIMES[Campaign.timeIndex(h)];
+    // Time: days since the awakening first, the calendar date only small.
+    const day = c.dayCount + 1, weeks = Math.floor(c.dayCount / 7), rest = c.dayCount % 7;
+    const phaseStarts = [[22, 'Nacht'], [4, 'Morgen'], [10, 'Tag'], [16, 'Abend']];
+    const next = phaseStarts.map(([t, n]) => [n, (t - h + 24) % 24 || 24]).sort((x, y) => x[1] - y[1])[0];
+    $('dial').innerHTML = this.dialSvg(h);
+    $('dayNo').textContent = `Tag ${day}`;
+    $('dayNo').title = `Seit dem Erwachen: ${weeks ? `${weeks} ${weeks === 1 ? 'Woche' : 'Wochen'}${rest ? ', ' : ''}` : ''}${rest || !weeks ? `${rest} ${rest === 1 ? 'Tag' : 'Tage'}` : ''}.`;
+    $('clock').innerHTML = `${h} Uhr · <b>${T.name}</b> <span class="small">· ${next[0]} in ${next[1]} Std.</span>`;
+    $('date').textContent = Campaign.dateString(c.dayCount);
+    $('status').title = `${T.name}. Kämpfe beginnen zur aktuellen Tageszeit: nachts sind die Toten stärker und schwerer zu sehen, morgens liegt Nebel.`;
+    this.flashTime(c.dayCount * 24 + h);
     const r = c.resources;
     const tip = k => esc(this.resourceTip(k)).replace(/\n/g, '&#10;');
-    $('resources').innerHTML = `<span title="${tip('corpses')}">${resIcon('corpses', 18)}Leichen <b>${r.corpses}</b></span><span title="${tip('bones')}">${resIcon('bones', 18)}Knochen <b>${r.bones}</b></span>
-      <span title="${tip('souls')}">${resIcon('souls', 18)}Seelen <b>${r.souls}</b></span><span title="${tip('knowledge')}">${resIcon('knowledge', 18)}Wissen <b>${r.knowledge}</b></span>
-      <span title="${tip('command')}">${resIcon('command', 18)}Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
-    this.buildBadge(); this.layoutInfo();
-    $('threats').innerHTML = ENEMY_FACTIONS.map(f => {
-      const v = Math.round(c.threat[f]), living = Campaign.isLiving(f);
-      return `<div class="threat ${living ? '' : 'dead'}" title="Bedrohung ${DATA.factions[f].name}: ${v} %">${DATA.factions[f].name} ${v} %
-        <div class="bar"><div style="width:${v}%;background:${DATA.factions[f].color}"></div></div></div>`;
-    }).join('');
+    const used = Campaign.commandUsed(), lim = Campaign.commandLimit();
+    const chip = (k, v, lbl, cls = '') => `<span class="chip ${cls}" title="${tip(k)}">${resIcon(k, 18)}<b>${v}</b> <span class="lbl">${lbl}</span></span>`;
+    $('resources').innerHTML = chip('corpses', r.corpses, 'Leichen') + chip('bones', r.bones, 'Knochen') + chip('souls', r.souls, 'Seelen')
+      + chip('knowledge', r.knowledge, 'Wissen') + chip('command', `${used}/${lim}`, 'Kommando', used >= lim ? 'full' : '');
+    this.buildBadge();
+    // Threat: one chip (mini bars + the highest faction), the full list on click.
+    const list = ENEMY_FACTIONS.map(f => ({ f, v: Math.round(c.threat[f] || 0), living: Campaign.isLiving(f) })).sort((x, y) => (y.living - x.living) || (y.v - x.v));
+    const top = list.find(x => x.living), warned = list.filter(x => x.living && x.v >= 50);
+    $('threatChip').classList.toggle('warn', warned.length > 0);
+    $('threatChip').innerHTML = `<span class="mini">${list.filter(x => x.living).map(x => `<i style="height:${Math.max(2, x.v / 5)}px;background:${DATA.factions[x.f].color}"></i>`).join('')}</span>
+      ${warned.length ? `⚠ ${warned.length === 1 ? esc(DATA.factions[warned[0].f].name) : warned.length + ' Fraktionen'} gewarnt` : top ? `Bedrohung ${top.v} %` : 'Bedrohung'}`;
+    $('threats').innerHTML = list.map(({ f, v, living }) => `<div class="threat ${living ? '' : 'dead'} ${living && v >= 50 ? 'hot' : ''}" title="${living ? (v >= 50 ? 'Gewarnt: Wachen sind sofort alarmiert' : 'Noch ahnungslos') : 'Ausgelöscht'}">
+        <span>${DATA.factions[f].name}</span><span style="text-align:right">${living ? v + ' %' : '†'}</span>
+        <div class="bar"><div style="width:${v}%;background:${DATA.factions[f].color}"></div></div></div>`).join('');
+  },
+  // 24-hour dial: the four times of day as coloured arcs, a hand for the hour.
+  dialSvg(h) {
+    const R = 17, C = 20, pt = (hr, r) => { const a = (hr / 24) * 2 * Math.PI - Math.PI / 2; return [C + r * Math.cos(a), C + r * Math.sin(a)]; };
+    const arc = (h0, h1, col) => { const [x0, y0] = pt(h0, R), [x1, y1] = pt(h1, R), large = ((h1 - h0 + 24) % 24) > 12 ? 1 : 0;
+      return `<path d="M${C},${C} L${x0.toFixed(1)},${y0.toFixed(1)} A${R},${R} 0 ${large} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${col}"/>`; };
+    const [hx, hy] = pt(h, R - 2);
+    return `<svg width="40" height="40" viewBox="0 0 40 40">${arc(22, 4, '#2c3458')}${arc(4, 10, '#c8b8a0')}${arc(10, 16, '#e8c860')}${arc(16, 22, '#c07848')}
+      <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#2b2116" stroke-width="1.2"/><line x1="${C}" y1="${C}" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="#2b2116" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="${C}" cy="${C}" r="2.4" fill="#2b2116"/></svg>`;
+  },
+  // Shows how much time an action took ("+2 T. 5 Std.") next to the clock.
+  flashTime(total) {
+    if (this.lastHours == null || total < this.lastHours) { this.lastHours = total; return; }
+    const d = total - this.lastHours; this.lastHours = total; if (!d) return;
+    this.deltaHours = (this.deltaHours || 0) + d;
+    const D = Math.floor(this.deltaHours / 24), H = this.deltaHours % 24, el = $('timeDelta');
+    el.textContent = `+${D ? D + ' T.' : ''}${D && H ? ' ' : ''}${H || !D ? H + ' Std.' : ''}`;
+    el.classList.add('on'); clearTimeout(this.deltaTimer);
+    this.deltaTimer = setTimeout(() => { el.classList.remove('on'); this.deltaHours = 0; }, 3500);
+  },
+  togglePop(id) {
+    const on = $(id).classList.contains('hidden');
+    ['threatPop', 'menuPop'].forEach(x => this.show(x, false));
+    this.show(id, on);
+    if (!on) return;
+    // Open beside the button that belongs to it.
+    const a = $(id === 'menuPop' ? 'btnMenu' : 'threatChip').getBoundingClientRect();
+    if (id === 'menuPop') $(id).style.top = Math.max(8, Math.min(a.top, window.innerHeight - $(id).offsetHeight - 60)) + 'px';
+    else $(id).style.left = Math.max(8, a.left) + 'px';
+  },
+  openHelp() {
+    const row = (k, t) => `<tr><td><kbd>${k}</kbd></td><td>${t}</td></tr>`;
+    this.modal(`<h2>Steuerung</h2><h3>Weltkarte</h3><table>${row('W A S D', 'Kamera bewegen (oder Maus an den Rand)')}${row('Q E / rechte Maus', 'drehen und neigen')}${row('Mausrad', 'Zoom')}
+      ${row('Klick', 'Ort, Trupp oder Gelände auswählen')}${row('H', 'Hügelgrab')}${row('R', 'nächster Ort zum Rekrutieren')}${row('B', 'Bauen')}${row('I', 'Inventar')}${row('G', 'Los (Befehle mehrerer Armeen)')}${row('Leertaste halten', 'Reise beschleunigen')}</table>
+      <h3>Kampf</h3><table>${row('Klick', 'bewegen, angreifen, auswählen')}${row('1–4', 'Fähigkeiten')}${row('Leertaste', 'Zug beenden')}${row('R', 'Rückzug')}${row('T', 'Feldkanten')}${row('K', 'Token-Modus')}</table>
+      <h3>Allgemein</h3><table>${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
   },
   // Build button: a running construction shows its days left, otherwise a dot when something can be started.
   buildBadge() {
     const c = game.campaign, btn = $('btnBuild'); if (!c || !btn) return;
     const w = c.construction;
     const open = Object.keys(DATA.baseBuildings).filter(k => !Base.blocker(k)).length + DATA.upgrades.filter(u => !Upgrades.blocker(u)).length;
-    btn.innerHTML = 'Bauen' + (w ? ` <span class="badge busy">⚒ ${w.daysLeft} T.</span>` : open ? ` <span class="badge">${open}</span>` : '');
+    btn.innerHTML = '<span class="ic">⚒</span>Bauen' + (w ? `<span class="badge busy" title="im Bau">${w.daysLeft} T.</span>` : open ? `<span class="badge">${open}</span>` : '');
     btn.title = (w ? `Im Bau: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}, noch ${w.daysLeft} ${w.daysLeft === 1 ? 'Tag' : 'Tage'}. ` : '')
       + (open ? `${open} ${open === 1 ? 'Gebäude oder Verbesserung kann' : 'Gebäude oder Verbesserungen können'} jetzt gebaut werden. ` : '')
-      + 'Gebäude im Hügelgrab bauen – geht von überall (Taste B)';
+      + 'Gebäude im Hügelgrab bauen – geht von überall (B)';
   },
-  // The info panel starts below the header (it wraps to several lines on narrow screens).
-  layoutInfo() {
-    const h = $('header'); if (!h || h.classList.contains('hidden')) return;
-    $('info').style.top = Math.round(h.getBoundingClientRect().bottom + 8) + 'px';
-    $('info').style.maxHeight = `calc(100% - ${Math.round(h.getBoundingClientRect().bottom + 70)}px)`;
+  layoutInfo() {},
+  clearSelection() {
+    this.selectedRaid = null; this.selectedNode = null; this.selectedTile = null;
+    WorldView.refresh(); this.renderInfo();
   },
   selectRaid(id) {
     this.selectedRaid = id; this.selectedNode = null; this.selectedTile = null;
@@ -5033,6 +5157,9 @@ const UI = {
   },
   // Army as cards: portrait, count, health bar and the values that matter (per creature).
   armyHtml(army = game.campaign.army, title = 'Armee', cmd = `${Campaign.commandUsed()} / ${Campaign.commandLimit()}`) {
+    return `<h3>${esc(title)} <span class="small">${army.length} Untote · ${resIcon('command')}${cmd}</span></h3><div class="armyCards">${this.armyCards(army)}</div>`;
+  },
+  armyCards(army) {
     const L = Campaign.lichStats();
     const stat = (ic, v, t) => `<span class="st" title="${t}">${ic}${v}</span>`;
     const cards = groupByType(army).map(g => {
@@ -5044,7 +5171,7 @@ const UI = {
         <div class="hpbar player" title="Lebenspunkte ${cur} / ${max}"><div style="width:${max ? 100 * cur / max : 0}%"></div></div>
         <div class="aStats">${stat('❤', hp, 'Lebenspunkte je Kreatur')}${stat('⚔', dmg, 'Schaden je Kreatur (' + POWER_NAMES[d.power] + ')')}${stat(d.range > 1 ? '➶' : '✊', d.range, 'Reichweite')}${stat('👣', d.move, 'Bewegung')}${stat('⚡', d.initiative + um.ini, 'Initiative')}${(isLich ? L.shield : d.soulShield + um.shield) ? stat('⛨', isLich ? L.shield : d.soulShield + um.shield, 'Seelenschild') : ''}</div></div></div>`;
     }).join('');
-    return `<h3>${esc(title)} <span class="small">${army.length} Untote · ${resIcon('command')}${cmd}</span></h3><div class="armyCards">${cards}</div>`;
+    return cards;
   },
   // Wait on the spot until a chosen time of day (night 22, morning 4, day 10, evening 16).
   openRest() {
@@ -5061,14 +5188,22 @@ const UI = {
     el.innerHTML = `Runde ${n}<div class="sub">${sub || (T ? T.name + (T.foggy ? ', Nebel' : '') : '')}</div>`;
     el.classList.add('on'); clearTimeout(this.rbTimer); this.rbTimer = setTimeout(() => el.classList.remove('on'), 1400);
   },
+  // Army panel (sidebar): one row per army (leader portrait, place, order), below the cards of the chosen one.
   renderArmies() {
-    const el = $('armyList'); if (!el) return;
+    const el = $('armyPanel'); if (!el || !game.campaign) return;
     const all = Expeditions.all();
     $('btnGo').classList.toggle('hidden', !Expeditions.hasOrders() && !game.campaign.march);
-    $('btnGo').textContent = game.campaign.march ? 'Weiterziehen' : 'Los';
-    if (all.length < 2) { el.innerHTML = ''; return; }
+    $('btnGo').innerHTML = (game.campaign.march ? 'Weiterziehen' : 'Los – Befehle ausführen') + '<kbd>G</kbd>';
     if (!all.some(a => a.id === this.activeArmy)) this.activeArmy = 'lich';
-    el.innerHTML = all.map(a => `<button data-army="${a.id}" class="${(this.activeArmy || 'lich') === a.id ? 'on' : ''}">${a.id === 'lich' ? '♛' : '☠'} ${esc(a.label)} · ${esc(a.node.name)}${a.order ? ' → ' + esc(NODE_BY_ID[a.order].name) : ''}</button>`).join('');
+    const act = Expeditions.active();
+    const row = a => {
+      const lead = a.id === 'lich' ? 'lich' : a.exp.leader, d = DATA.units[lead];
+      const cmd = a.id === 'lich' ? `${Campaign.commandUsed()}/${Campaign.commandLimit()}` : `${Expeditions.command(a.army)}/${EXPEDITION.commandLimit}`;
+      return `<div class="armyRow ${a.id === act.id ? 'on' : ''}" data-army="${a.id}" title="Klick: auswählen, Kamera dorthin">${portraitHtml(lead, d)}
+        <div class="rTxt"><div><b>${esc(a.label)}</b> · ${a.army.length} Untote · ${resIcon('command', 13)}${cmd}</div>
+        <div>${game.mode === 'travel' && a.id === 'lich' ? 'unterwegs' : esc(a.node.name)}${a.order ? ' → <b>' + esc(NODE_BY_ID[a.order].name) + '</b>' : ''}</div></div></div>`;
+    };
+    el.innerHTML = `<div class="armyRows">${all.map(row).join('')}</div><div class="armyCards">${this.armyCards(act.army)}</div>`;
     el.querySelectorAll('[data-army]').forEach(b => b.onclick = () => { this.activeArmy = b.dataset.army; const a = Expeditions.active(); this.focusNode(a.node); this.renderArmies(); Expeditions.syncView(); });
   },
   renderInfo() {
@@ -5102,23 +5237,25 @@ const UI = {
         for (const t of Campaign.garrisonFor(node)) counts[t] = (counts[t] || 0) + 1;
         garrison = Object.entries(counts).map(([t, n]) => `${n}× ${DATA.units[t].name}`).join('<br>');
       }
+      const thr = Math.round(c.threat[owner] || 0);
       html += `<h2>${esc(node.name)}</h2>
-        <table>
-          <tr><td>Typ</td><td>${NODE_TYPE_NAMES[node.type]}</td></tr>
-          <tr><td>Fraktion</td><td>${DATA.factions[owner].name}${owner !== node.faction ? ` <span class="small">(einst ${DATA.factions[node.faction].name})</span>` : ''}</td></tr>
-          <tr><td>Kampffeld</td><td>${node.size} × ${node.size}</td></tr>
-          <tr><td>Reisezeit</td><td>${atNode ? `Armee steht hier · ${Campaign.hour()} Uhr (${TIMES[Campaign.timeIndex(Campaign.hour())].name})` : Campaign.arrivalText(Campaign.travelHours(here, node))}</td></tr>
+        <div class="sub"><span class="dot" style="background:${DATA.factions[owner].color}"></span>${DATA.factions[owner].name}${owner !== node.faction ? ` (einst ${DATA.factions[node.faction].name})` : ''} · ${NODE_TYPE_NAMES[node.type]}${node.special ? ' · ★' : ''}</div>
+        ${enemy && thr >= 50 && Campaign.isLiving(owner) ? `<div class="warnline">⚠ Gewarnt (Bedrohung ${thr} %): alle Wachen sind sofort alarmiert.</div>` : ''}
+        <div class="buttons" id="nodeButtons"></div>
+        <table class="facts">
+          <tr><td>${atNode ? 'Armee' : 'Ankunft'}</td><td class="key">${atNode ? `steht hier` : Campaign.arrivalText(Campaign.travelHours(here, node))}</td></tr>
           ${atNode ? '' : (() => { const risk = Campaign.travelRisk(here, node);
-            return `<tr><td>Unterwegs</td><td>${risk.places.length} unbesiegte Orte am Weg · Hinterhalt ${Math.round(risk.chance * 100)} %</td></tr>`; })()}
-          ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
+            return `<tr><td>Hinterhalt</td><td>${Math.round(risk.chance * 100)} % <span class="small">(${risk.places.length} unbesiegte Orte am Weg)</span></td></tr>`; })()}
           <tr><td>Besatzung</td><td>${garrison}${enemy && Campaign.recovery(node) < 1 ? `<br><span class="small">${(c.weakened || {})[node.id] && !(c.retaken || {})[node.id] ? 'Ein Trupp ist ausgezogen, die Besatzung füllt sich auf' : 'Zurückerobert, erholt sich'}: ${Math.round(Campaign.recovery(node) * 100)} % (voll in ${Math.ceil((1 - Campaign.recovery(node)) / (1 - DATA.recovery.startShare) * Campaign.recoveryDays(node))} Tagen)</span>` : ''}${enemy && (c.plundered || {})[node.id] && Object.keys(node.garrison).some(t => DATA.units[t].rank === 'UNIQUE') ? '<br><span class="small">Der Anführer ist gefallen und kehrt nicht zurück.</span>' : ''}</td></tr>
-          ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
+          ${enemy ? `<tr><td>Beute</td><td>${this.rewardText(node)}</td></tr>` : ''}
           ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
           ${Pantheons.infoRow(node)}
           ${Garrisons.infoRow(node)}
         </table>
-        ${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}
-        <div class="buttons" id="nodeButtons"></div>`;
+        <details ${this.infoDetails ? 'open' : ''}><summary>Mehr zum Ort</summary><table>
+          <tr><td>Kampffeld</td><td>${node.size} × ${node.size} Felder</td></tr>
+          ${enemy ? `<tr><td>Bedrohung</td><td>${thr} % <span class="small">(ab 50 % gewarnt)</span></td></tr>` : ''}
+        </table>${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}</details>`;
     } else if (node) {
       html += `<h2>Unbekannter Ort</h2><p class="small">Zu weit entfernt. Orte werden sichtbar, wenn die Armee, das Hügelgrab oder ein eroberter Ort höchstens ${REVEAL_DISTANCE} Felder entfernt ist.</p>`;
     } else if (this.selectedTile) {
@@ -5127,12 +5264,13 @@ const UI = {
         <tr><td>Feld</td><td>${q}, ${r}</td></tr>
         <tr><td>Boden</td><td>${DATA.floorTypes[w.floorKeyAt(q, r)].name}</td></tr>
         <tr><td>Höhe</td><td>${w.metersAt(q, r).toFixed(0)} m (Stufe ${w.levelAt(q, r)})</td></tr></table>`;
-    } else {
-      html += `<h2>${esc(here.name)}</h2><p class="small">Wähle einen Ort auf der Karte oder in der Übersicht unten links.</p>`;
     }
-    const actA = Expeditions.active();
-    html += actA.id === 'lich' ? this.armyHtml() : this.armyHtml(actA.army, actA.label, `${Expeditions.command(actA.army)} / ${EXPEDITION.commandLimit}`);
-    el.innerHTML = html;
+    // Nothing selected: no panel. A selection gets a close button.
+    this.show('info', !!html);
+    if (!html) { el.innerHTML = ''; return; }
+    el.innerHTML = '<button class="close" title="Schließen (Esc)">×</button>' + html;
+    el.querySelector('.close').onclick = () => this.clearSelection();
+    const det = el.querySelector('details'); if (det) det.ontoggle = () => { this.infoDetails = det.open; };
     const rb = $('raidButtons');
     if (rb && raid) {
       const b = document.createElement('button'); b.textContent = 'Abfangen'; b.className = 'primary';
@@ -5220,11 +5358,10 @@ const UI = {
   // ---- Battle -------------------------------------------------------------
   enterBattle() {
     Sfx.ambience('battle');
-    ['header', 'info', 'minimap', 'worldButtons'].forEach(id => this.show(id, false));
-    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'hint'].forEach(id => this.show(id, true));
-    $('battleLog').innerHTML = '';
-    $('hint').textContent = 'Klick: bewegen / angreifen / auswählen · Maus über Feld: Boden und Bewegungskosten · Leertaste: Zug beenden · R: Rückzug · T: Kanten · K: Token-Modus · 1–4: Fähigkeiten · W/A/S/D, Q/E, Mausrad: Kamera · F3: Debug';
-    $('btnEdges').textContent = game.showEdges ? 'Kanten ausblenden' : 'Kanten anzeigen';
+    ['header', 'info', 'sidebar', 'threatPop', 'menuPop'].forEach(id => this.show(id, false));
+    ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'battleBar'].forEach(id => this.show(id, true));
+    $('battleLog').innerHTML = ''; $('battleLog').classList.remove('open');
+    $('btnEdges').classList.toggle('on', !!game.showEdges);
   },
   appendLog(text, cls) {
     const p = document.createElement('p');
@@ -5272,6 +5409,8 @@ const UI = {
       bar.querySelectorAll('[data-ab]').forEach(x => x.onclick = () => Battle.chooseAbility(x.dataset.ab));
     } else bar.innerHTML = '';
     $('btnRetreat').disabled = b.retreatPending || b.over;
+    // The chronicle takes the space left of the action buttons.
+    document.body.style.setProperty('--logRight', ($('battleButtons').offsetWidth + 26) + 'px');
     if (cur && cur.alive) {
       BattleView.ring.visible = true;
       BattleView.ring.position.copy(cur.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
@@ -5282,20 +5421,18 @@ const UI = {
     const d = u.def, b = game.battle, t = b.field.get(u.q, u.r);
     const flags = [d.flying && 'fliegt', d.spectral && 'spektral', d.counter && 'Konter'].filter(Boolean).join(', ');
     const n = stackCount(u);
-    $('unitCard').innerHTML = `${portraitHtml(u.type, d)}<h3 style="margin-top:0">${n > 1 ? n + '× ' : ''}${esc(d.name)} <span class="small">(${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name})</span></h3>
-      <div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
-      <table><tr><td>Anzahl</td><td>${n} / ${u.startCount}</td><td>Initiative</td><td>${d.initiative}</td></tr>
-      <tr><td>Lebenspunkte</td><td colspan="3">${n ? topHp(u) : 0} / ${d.hp} (vorderste) · ${Math.max(0, u.hp)} / ${u.maxHp} gesamt</td></tr>
-      <tr><td>Bewegung</td><td>${d.move}</td><td>Reichweite</td><td>${d.range}</td></tr>
-      <tr><td>Schaden</td><td colspan="3">${d.damage}${n > 1 ? ` × ${n} = ${d.damage * n}` : ''} ${POWER_NAMES[d.power]} (${d.power})</td></tr>
-      <tr><td>Rüstung</td><td colspan="3">${DEFENSE_NAMES[d.defense]} (${d.defense})</td></tr>
-      <tr><td>Magieres.</td><td>${d.magicResist}</td><td>Seelenschild</td><td>${u.shield ?? d.soulShield} / ${d.soulShield * u.startCount}</td></tr>
-      <tr><td>Sinne</td><td colspan="3">Sicht ${d.sight} · Gehör ${d.hear} · Geruch ${d.smell}</td></tr>
-      ${flags ? `<tr><td>Eigenschaften</td><td colspan="3">${flags}</td></tr>` : ''}
-      ${d.energy ? `<tr><td>Energie</td><td colspan="3">${u.energy} / ${d.energy} (+1 pro Zug)</td></tr>` : ''}
-      ${Abilities.statusHtml(u) ? `<tr><td>Zustand</td><td colspan="3">${Abilities.statusHtml(u)}</td></tr>` : ''}
-      ${(d.abilities || []).length ? `<tr><td>Fähigkeiten</td><td colspan="3">${d.abilities.map(id => DATA.abilities[id]).filter(Boolean).map(a => `<span title="${esc(a.desc || '')}">${esc(a.name)}</span>`).join(', ')}</td></tr>` : ''}
-      <tr><td>Feld</td><td colspan="3">${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</td></tr></table>`;
+    const st = (ic, v, tip) => `<span class="st" title="${tip}">${ic} ${v}</span>`;
+    const mark = u.side === 'enemy' && u.alert ? { unaware: ' · <i>ahnungslos</i>', suspicious: ' · <b style="color:#a07a00">misstrauisch</b>', alarmed: ' · <b style="color:var(--blood)">alarmiert</b>' }[u.alert] : '';
+    $('unitCard').innerHTML = `${portraitHtml(u.type, d)}<h3 style="margin:0">${n > 1 ? n + '× ' : ''}${esc(d.name)}</h3>
+      <div class="small">${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name}${n !== u.startCount ? ` · ${n} von ${u.startCount}` : ''}${mark}</div>
+      <div class="hpbar ${u.side === 'player' ? 'player' : ''}" style="margin-top:4px" title="Lebenspunkte gesamt"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
+      <div class="small">LP ${Math.max(0, u.hp)} / ${u.maxHp}${n > 1 ? ` · vorderste ${n ? topHp(u) : 0} / ${d.hp}` : ''}${d.energy ? ` · Energie ${u.energy} / ${d.energy}` : ''}</div>
+      <div class="ucStats">${st('⚔', d.damage + (n > 1 ? ` ×${n}` : ''), `Schaden ${d.damage}${n > 1 ? ` × ${n} = ${d.damage * n}` : ''}, ${POWER_NAMES[d.power]}`)}${st(d.range > 1 ? '➶' : '✊', d.range, 'Reichweite')}${st('👣', d.move, 'Bewegung')}${st('⚡', d.initiative, 'Initiative')}
+        ${st('🛡', DEFENSE_NAMES[d.defense], 'Rüstung')}${d.magicResist ? st('✧', d.magicResist, 'Magieresistenz (5 % je Punkt)') : ''}${d.soulShield ? st('⛨', `${u.shield ?? d.soulShield}/${d.soulShield * u.startCount}`, 'Seelenschild') : ''}</div>
+      <div class="ucRow"><span>Sinne</span> 👁 ${d.sight} · 👂 ${d.hear} · 👃 ${d.smell}${flags ? ' · ' + flags : ''}</div>
+      ${Abilities.statusHtml(u) ? `<div class="ucRow"><span>Zustand</span> ${Abilities.statusHtml(u)}</div>` : ''}
+      ${(d.abilities || []).length ? `<div class="ucRow"><span>Fähigkeiten</span> ${d.abilities.map(id => DATA.abilities[id]).filter(Boolean).map(a => `<span title="${esc(a.desc || '')}" style="border-bottom:1px dotted">${esc(a.name)}</span>`).join(', ')}</div>` : ''}
+      <div class="ucRow"><span>Feld</span> ${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}</div>`;
   }
 };
 
@@ -5476,13 +5613,22 @@ function initInput() {
     if (e.code === 'KeyI' && game.mode === 'world') UI.openInventory();
     if (e.code === 'KeyR' && game.mode === 'world') UI.findRecruitSite();
     if (e.code === 'KeyH' && game.mode === 'world') UI.focusNode(PHYLACTERY);
-    if (e.code === 'Escape' && game.mode === 'world') { UI.selectedNode = null; UI.selectedTile = null; WorldView.refresh(); UI.renderInfo(); }
+    if (e.code === 'Escape' && game.mode === 'world' && $('modal').classList.contains('hidden')) { ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)); UI.clearSelection(); }
   });
   window.addEventListener('keyup', e => inp.keys.delete(e.code));
   window.addEventListener('blur', releaseAll);
   $('btnEndTurn').onclick = () => { const b = game.battle; if (b && b.current && b.current.side === 'player') Battle.endTurn(); };
   $('btnRetreat').onclick = () => Battle.retreat();
   $('btnEdges').onclick = () => toggleEdges();
+  $('btnMenu').onclick = e => { e.stopPropagation(); UI.togglePop('menuPop'); };
+  $('threatChip').onclick = e => { e.stopPropagation(); UI.togglePop('threatPop'); };
+  ['menuPop', 'threatPop'].forEach(id => $(id).addEventListener('click', e => e.stopPropagation()));
+  window.addEventListener('click', () => ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)));
+  $('btnHelp').onclick = () => { UI.show('menuPop', false); UI.openHelp(); };
+  $('btnBattleHelp').onclick = () => UI.openHelp();
+  $('btnDebugMenu').onclick = () => { UI.show('menuPop', false); game.debug = !game.debug; UI.show('debug', game.debug); Debug.tools(game.debug); };
+  $('btnTokens').onclick = () => { game.tokenMode = game.tokenMode === 'auto' || !game.tokenMode ? 'on' : game.tokenMode === 'on' ? 'off' : 'auto'; UI.toast(`Token-Modus: ${{ auto: 'automatisch (weit herausgezoomt)', on: 'an', off: 'aus' }[game.tokenMode]}`); };
+  $('battleLog').onclick = () => { const l = $('battleLog'); l.classList.toggle('open'); l.scrollTop = 1e9; };
   $('btnRecruitSite').onclick = () => UI.findRecruitSite();
   $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
   $('btnGo').onclick = () => Expeditions.go();
@@ -5490,7 +5636,7 @@ function initInput() {
   $('btnBuild').onclick = () => { if (game.mode === 'world') Base.open(); };
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnSound').onclick = () => Sfx.toggle();
-  $('btnSound').textContent = Sfx.muted ? '🔇' : '🔊';
+  $('btnSound').textContent = Sfx.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
   $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.'); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
@@ -5498,7 +5644,7 @@ function initInput() {
 function toggleEdges() {
   game.showEdges = !game.showEdges;
   if (BattleView.optionalEdges) BattleView.optionalEdges.visible = game.showEdges;
-  $('btnEdges').textContent = game.showEdges ? 'Kanten ausblenden' : 'Kanten anzeigen';
+  $('btnEdges').classList.toggle('on', !!game.showEdges);
 }
 
 // =============================================================================

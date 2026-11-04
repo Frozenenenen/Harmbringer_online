@@ -3053,6 +3053,20 @@ Effekte, Sounds und Animationen werden erst geladen, wenn sie gebraucht werden. 
 
 ## Story- und UI-Konzept
 
+### Bildschirmaufbau (umgesetzt 04.11.2026)
+
+Vorbild: Heroes of Might and Magic (Seitenleiste, Ressourcenleiste unten, Kampfkonsole) und Aufbauspiele. Grundsatz: Ständig sichtbar ist nur, was man jede Minute braucht. Alles andere kommt mit der Auswahl oder auf Klick.
+
+| Bereich | Ständig | Auf Abruf |
+|-|-|-|
+| Seitenleiste rechts | Minimap, Aktionen (Hügelgrab, Rekrutieren, Bauen mit Zähler/Bauzeit, Rasten, Inventar, Menü), Armeen als Zeilen (Anführer, Ort, Befehl), Karten der gewählten Armee | „Los“ erst mit Befehlen |
+| Leiste unten | Ressourcen (Symbol + Zahl, Erklärung im Tooltip), Bedrohung als ein Chip (Mini-Balken, „gewarnt“ ab 50 %), Zeit: Tageszeit-Uhr, **Tag N seit dem Erwachen**, Uhrzeit, nächste Tageszeit, Datum klein | Bedrohung aller Fraktionen (Klick), verstrichene Zeit einer Aktion („+1 T. 5 Std.“) |
+| Ortsinfo | – | nur mit Auswahl: Name, Fraktion, Aktionen oben, dann Ankunft, Hinterhalt, Besatzung, Beute, Besonderheit, Pantheon; Kampffeld, Bedrohung, Beschreibung unter „Mehr zum Ort“; × oder Esc schließt |
+| Menü | – | Ton, Spielstände, Tastenkürzel, Debug, Neues Spiel |
+| Kampf | Initiativeleiste oben, Rundenzeile, Konsole unten (Chronik, Fähigkeiten, Zug beenden, Rückzug, Kanten, Token, Hilfe), Einheitenkarte kompakt links | Chronik aufklappen (Klick) |
+
+Die Tastenhilfe-Zeile am unteren Rand entfällt; Tasten stehen in den Tooltips und unter Menü → Tastenkürzel.
+
 ### Initiative-Anzeige im Kampf
 
 Horizontale Leiste am unteren Bildschirmrand mit 10-12 Avataren der nächsten Einheiten:
