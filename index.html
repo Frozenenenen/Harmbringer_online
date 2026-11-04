@@ -386,7 +386,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 118, "date": "2026-11-04", "changes": [{"date": "04.11. 22:46", "text": "Debug: Ressourcen herbeirufen, Rekrutieren aus der Ferne"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}]};
+const BUILD = {"version": 119, "date": "2026-11-04", "changes": [{"date": "04.11. 22:52", "text": "Debug im Kampf: Werte der aktuellen Einheit ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3547,6 +3547,7 @@ const Combat = {
     if (range > 1 && from.level - tt.level >= 2) range += 1;        // ranged high ground bonus
     if (range > 2 && game.battle && TIMES[game.battle.time].foggy) range -= 1;   // fog
     if (dist > range || dist < 1) return { ok: false };
+    if (game.battle && game.battle.debugNoLos && unit.side === 'player') return { ok: true, cover: false, dist, range, window: true };   // debug: through walls
     if (dist === 1) {
       const e = this.edgeBetween(field, from, tt);
       if (e && (BLOCKS_MELEE.has(e[0]) || BLOCKS_MELEE.has(e[1]))) {
@@ -6067,6 +6068,12 @@ function onLeftClick(ev) {
   const b = game.battle;
   if (!b || b.over) return;
   const unit = pickUnit();
+  if (b.debugKill && unit) {
+    b.debugKill = false; Battle.log(`Debug: ${unit.def.name} getötet.`);
+    Battle.applyDamage(unit, unit.hp + (unit.shield || 0) + 1, unit.side === 'enemy' ? b.units.find(x => x.side === 'player' && x.alive) : null, 'BLUNT');
+    Debug.tools(true); if (!b.over && b.current && b.current.side === 'player' && !b.busy && b.current.alive) Battle.computeOptions();
+    return;
+  }
   // Breakable edge under the mouse (walls, gates, palisades) – when the current unit can hit it.
   const me = b.current;
   if (!unit && me && me.side === 'player' && !b.busy && !b.abilityMode) {
@@ -6302,6 +6309,9 @@ const Debug = {
   // Cheats for testing (F3): change the command limit directly.
   tools(on) {
     const el = $('debugTools'); el.classList.toggle('hidden', !on); if (!on || !game.campaign) return;
+    // In battle the panel sits on the right (the unit card takes the left).
+    Object.assign(el.style, game.battle ? { left: 'auto', right: '10px', top: '150px' } : { left: '', right: '', top: '' });
+    if (game.battle) return this.battleTools(el);
     const c = game.campaign, extra = c.debugCommand || 0;
     el.innerHTML = `<b>Debug</b> Kommandolimit ${Campaign.commandLimit()} (Zusatz <input type="number" id="dbgCmd" value="${extra}">)
       <button data-dc="-10">−10</button><button data-dc="10">+10</button><button data-dc="100">+100</button><button data-dc="set">Setzen</button><button data-dc="0">Zurück</button>
@@ -6322,8 +6332,38 @@ const Debug = {
       apply(k === 'set' ? Math.floor(+$('dbgCmd').value || 0) : k === '0' ? 0 : (c.debugCommand || 0) + +k);
     });
   },
+  // In battle: edit the values of the unit whose turn it is, and a kill tool (button, then click a unit).
+  battleTools(el) {
+    const b = game.battle, u = b.current; this.toolsUnit = u;
+    const F = [['hp', 'LP (vorderste)'], ['damage', 'Schaden'], ['move', 'Bewegung'], ['range', 'Reichweite'], ['initiative', 'Initiative'], ['energy', 'Energie']];
+    el.innerHTML = `<b>Debug Kampf</b> ${u ? esc(u.def.name) : '—'}<div style="flex-basis:100%"></div>
+      ${u ? F.map(([k, n]) => `<label style="display:flex;gap:3px;align-items:center">${n}<input type="number" data-st="${k}" value="${k === 'hp' ? topHp(u) : k === 'energy' ? (u.energy || 0) : u.def[k]}"></label>`).join('') : ''}
+      ${u ? '<button id="dbgApply">Übernehmen</button><button data-dq="range">Reichweite 30</button><button data-dq="move">Bewegung 20</button>' : ''}
+      <div style="flex-basis:100%"></div><button id="dbgKill" class="${b.debugKill ? 'primary' : ''}" title="Danach auf eine Einheit klicken">${b.debugKill ? 'Klick auf eine Einheit …' : 'Einheit töten'}</button>
+      <button id="dbgWin" title="Alle Gegner fallen">Sieg</button>
+      <button id="dbgLos" class="${b.debugNoLos ? 'primary' : ''}" title="Eigene Angriffe ignorieren Wände und Sichtlinie">Durch Wände ${b.debugNoLos ? 'an' : 'aus'}</button>`;
+    $('dbgLos').onclick = () => { b.debugNoLos = !b.debugNoLos; if (b.current && b.current.side === 'player' && !b.busy) Battle.computeOptions(); this.battleTools(el); };
+    const apply = vals => {
+      if (!u || !u.alive) return;
+      const d = { ...u.def };
+      for (const [k, v] of Object.entries(vals)) {
+        if (k === 'hp') { const n = stackCount(u); d.hp = Math.max(d.hp, v); u.hp = (n - 1) * d.hp + Math.max(1, v); u.maxHp = Math.max(u.maxHp, n * d.hp); }
+        else if (k === 'energy') { d.energy = Math.max(d.energy || 0, v); u.energy = v; }
+        else d[k] = v;
+      }
+      u.def = d; BattleView.updateHp(u);
+      if (u.side === 'player' && b.current === u && !b.busy) Battle.computeOptions(); else UI.updateBattle();
+      this.battleTools(el);
+    };
+    if ($('dbgApply')) $('dbgApply').onclick = () => { const v = {}; el.querySelectorAll('[data-st]').forEach(i => v[i.dataset.st] = Math.max(0, Math.floor(+i.value || 0))); apply(v); };
+    el.querySelectorAll('[data-dq]').forEach(x => x.onclick = () => apply(x.dataset.dq === "range" ? { range: 30 } : { move: 20 }));
+    $('dbgKill').onclick = () => { b.debugKill = !b.debugKill; this.battleTools(el); };
+    $('dbgWin').onclick = () => { for (const e of Battle.alive('enemy')) Battle.applyDamage(e, e.hp + (e.shield || 0) + 1, b.units.find(x => x.side === 'player' && x.alive), 'BLUNT'); };
+  },
   update() {
     if (!game.debug) return;
+    if (game.battle && $('debugTools') && !$('debugTools').classList.contains('hidden') && this.toolsUnit !== game.battle.current) this.tools(true);
+    if (!game.battle && this.toolsUnit) { this.toolsUnit = null; this.tools(true); }
     const cam = game.view.cam, [q, r] = cam.pivotTile(), w = game.world;
     const dbg = $('debug');
     if (!dbg.title && typeof BUILD !== 'undefined') dbg.title = `Version ${BUILD.version} (${BUILD.date})\nLetzte Änderungen:\n` + BUILD.changes.map(c => `• ${c.date}  ${c.text}`).join('\n');
