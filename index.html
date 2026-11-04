@@ -1970,43 +1970,82 @@ const Expeditions = {
     UI.renderArmies(); UI.renderInfo(); this.syncView();
   },
   hasOrders() { return this.all().some(a => a.order); },
-  // "Los": all armies with orders march at the same time, day by day.
-  async go() {
+  // "Los": all armies with orders march at the same time, day by day. Each army may run into an
+  // ambush on the way (rolled once per march); then everyone stops, the battle is fought and the
+  // march goes on afterwards (c.march keeps the progress).
+  async go(resume = false) {
     const c = game.campaign;
-    if (game.mode !== 'world' || !this.hasOrders()) return;
-    const legs = this.all().filter(a => a.order && a.order !== a.node.id).map(a => {
-      const to = NODE_BY_ID[a.order], days = this.days(a.army, a.node, to);
-      const fig = a.id === 'lich' ? game.view.army : (game.view.expViews[a.id] || {}).group;
-      return { a, to, days, fig, p0: hexToWorld(...neighbor(a.node.q, a.node.r, a.id === 'lich' ? 2 : 4)), p1: hexToWorld(...neighbor(to.q, to.r, a.id === 'lich' ? 2 : 4)) };
-    });
-    if (!legs.length) { for (const a of this.all()) this.setOrder(a.id, null); return; }
-    const D = Math.max(...legs.map(l => l.days));
-    game.mode = 'travel'; UI.renderInfo();
-    let counted = 0;
-    TravelClock.show(D);
-    await tween(Math.max(1.5, D * DAY_SECONDS), k => {
-      for (const l of legs) {
-        if (!l.fig) continue;
-        const t = Math.min(1, k * D / l.days);
-        l.fig.position.x = l.p0.x + (l.p1.x - l.p0.x) * t; l.fig.position.z = l.p0.z + (l.p1.z - l.p0.z) * t;
-        l.fig.position.y = game.world.groundAt(l.fig.position.x, l.fig.position.z);
-      }
-      const d = Math.min(D, Math.floor(k * D + 1e-6));
-      while (counted < d) { counted++; Campaign.advanceDays(1); UI.updateHeader(); TravelClock.update(counted, D); }
-    }, true);
-    while (counted < D) { counted++; Campaign.advanceDays(1); }
-    TravelClock.hide();
-    for (const l of legs) {
-      if (l.a.id === 'lich') { c.prevNodeId = c.nodeId; c.nodeId = l.to.id; c.order = null; }
-      else { l.a.exp.prevNodeId = l.a.exp.nodeId; l.a.exp.nodeId = l.to.id; l.a.exp.order = null; }
+    if (game.mode !== 'world') return;
+    if (!resume && c.march) resume = true;              // an interrupted march (e.g. after loading) goes on
+    if (!resume) {
+      if (!this.hasOrders()) return;
+      const legs = this.all().filter(a => a.order && a.order !== a.node.id).map(a => {
+        const to = NODE_BY_ID[a.order], days = this.days(a.army, a.node, to);
+        const plan = Campaign.rollEncounter(a.node, to, days);
+        return { id: a.id, fromId: a.node.id, toId: to.id, days, done: 0, ambush: plan ? { day: Math.max(1, Math.min(days, Math.round(days * plan.at))), at: plan.at, node: plan.node } : null };
+      });
+      for (const a of this.all()) if (a.order) { if (a.id === 'lich') c.order = null; else a.exp.order = null; }
+      if (!legs.length) { UI.renderArmies(); return; }
+      c.march = { day: 0, legs };
     }
-    for (const a of this.all()) if (a.order) this.setOrder(a.id, null);
+    const M = c.march; if (!M) return;
+    // Drop legs whose army no longer exists (a fallen expedition).
+    M.legs = M.legs.filter(l => l.id === 'lich' || this.get(l.id));
+    const open = M.legs.filter(l => l.done < l.days);
+    if (!open.length) return this.arrive();
+    const end = Math.max(...open.map(l => l.days));
+    const nextAmbush = open.filter(l => l.ambush && !l.ambush.fired && l.ambush.day >= M.day).sort((x, y) => x.ambush.day - y.ambush.day)[0];
+    const T = nextAmbush ? nextAmbush.ambush.day : end, D0 = M.day, steps = T - D0;
+    game.mode = 'travel'; UI.renderInfo();
+    const posOf = l => {
+      const off = l.id === 'lich' ? 2 : 4, a = NODE_BY_ID[l.fromId], b = NODE_BY_ID[l.toId];
+      return { p0: hexToWorld(...neighbor(a.q, a.r, off)), p1: hexToWorld(...neighbor(b.q, b.r, off)), fig: l.id === 'lich' ? game.view.army : (game.view.expViews[l.id] || {}).group };
+    };
+    const P = open.map(l => ({ l, ...posOf(l) }));
+    let counted = 0;
+    TravelClock.show(end); TravelClock.update(D0, end);
+    if (steps > 0) await tween(Math.max(1, steps * DAY_SECONDS), k => {
+      const day = D0 + k * steps;
+      for (const p of P) {
+        if (!p.fig) continue;
+        const t = Math.min(1, day / p.l.days);
+        p.fig.position.x = p.p0.x + (p.p1.x - p.p0.x) * t; p.fig.position.z = p.p0.z + (p.p1.z - p.p0.z) * t;
+        p.fig.position.y = game.world.groundAt(p.fig.position.x, p.fig.position.z);
+      }
+      const d = Math.min(steps, Math.floor(k * steps + 1e-6));
+      while (counted < d) { counted++; Campaign.advanceDays(1); UI.updateHeader(); TravelClock.update(D0 + counted, end); }
+    }, true);
+    while (counted < steps) { counted++; Campaign.advanceDays(1); }
+    TravelClock.hide();
+    M.day = T;
+    for (const l of M.legs) {
+      const was = l.done; l.done = Math.min(l.days, T);
+      if (l.done >= l.days && was < l.days) {
+        if (l.id === 'lich') { c.prevNodeId = c.nodeId; c.nodeId = l.toId; }
+        else { const e = this.get(l.id); if (e) { e.prevNodeId = e.nodeId; e.nodeId = l.toId; } }
+      }
+    }
+    game.mode = 'world';
+    if (nextAmbush && nextAmbush.done < nextAmbush.days) {
+      nextAmbush.ambush.fired = true;
+      const node = nextAmbush.ambush.node, who = nextAmbush.id === 'lich' ? 'Lich-Armee' : this.name(this.get(nextAmbush.id));
+      UI.toast(`Hinterhalt gegen ${who}! ${node.name}.`, 5);
+      UI.updateHeader(); SaveGame.save();
+      if (nextAmbush.id === 'lich') { c.prevNodeId = nextAmbush.fromId; await Battle.start(node); }
+      else await Battle.start(node, this.get(nextAmbush.id));
+      return;                                            // the battle's "Weiter" calls go(true)
+    }
+    return this.arrive();
+  },
+  arrive() {
+    const c = game.campaign, legs = c.march ? c.march.legs : [];
+    c.march = null;
     Campaign.healAtPhylactery();
     for (const e of this.list()) if (e.nodeId === PHYLACTERY.id) for (const u of e.army) u.hp = DATA.units[u.type].hp;
     game.mode = 'world';
     WorldView.placeArmy(); WorldView.refresh(); this.syncView();
     UI.updateHeader(); UI.renderArmies(); UI.renderInfo(); SaveGame.save();
-    const arrived = legs.filter(l => Campaign.isEnemy(l.to)).map(l => `${l.a.label} vor ${l.to.name}`);
+    const arrived = legs.filter(l => Campaign.isEnemy(NODE_BY_ID[l.toId])).map(l => `${l.id === 'lich' ? 'Lich-Armee' : (this.get(l.id) ? this.name(this.get(l.id)) : '')} vor ${NODE_BY_ID[l.toId].name}`).filter(x => !x.startsWith(' '));
     UI.toast(arrived.length ? `Angekommen: ${arrived.join(', ')}. Angreifen über die Ortsinfo.` : 'Alle Armeen sind angekommen.', 6);
   },
   // World view: banner + commander figure per expedition.
@@ -3585,6 +3624,7 @@ const Battle = {
       Campaign.advanceDays(1);
       html = `<h2>Rückzug</h2><p>Der Lich entweicht in die Nacht und kehrt nach einem Tag ins Hügelgrab zurück. Seine Diener bleiben zurück. Keine Beute.</p>`;
     }
+    if (c.march && result !== 'victory') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
     if (b.expedition) {
       // Write the result back to the expedition and restore the Lich army.
       const e = b.expedition, sv = this.saved;
@@ -3597,7 +3637,7 @@ const Battle = {
     Campaign.healAtPhylactery();
     SaveGame.save();
     setTimeout(() => {
-      UI.modal(html, [{ label: 'Weiter', primary: true, action: () => { this.exit(); if (endNow) UI.showEnd(); else if (c.travel) resumeTravel(); } }]);
+      UI.modal(html, [{ label: 'Weiter', primary: true, action: () => { this.exit(); if (endNow) UI.showEnd(); else if (c.travel) resumeTravel(); else if (c.march) Expeditions.go(true); } }]);
     }, 700);
   },
   // Back to the world map.
@@ -4119,7 +4159,8 @@ const UI = {
   renderArmies() {
     const el = $('armyList'); if (!el) return;
     const all = Expeditions.all();
-    $('btnGo').classList.toggle('hidden', !Expeditions.hasOrders());
+    $('btnGo').classList.toggle('hidden', !Expeditions.hasOrders() && !game.campaign.march);
+    $('btnGo').textContent = game.campaign.march ? 'Weiterziehen' : 'Los';
     if (all.length < 2) { el.innerHTML = ''; return; }
     if (!all.some(a => a.id === this.activeArmy)) this.activeArmy = 'lich';
     el.innerHTML = all.map(a => `<button data-army="${a.id}" class="${(this.activeArmy || 'lich') === a.id ? 'on' : ''}">${a.id === 'lich' ? '♛' : '☠'} ${esc(a.label)} · ${esc(a.node.name)}${a.order ? ' → ' + esc(NODE_BY_ID[a.order].name) : ''}</button>`).join('');
