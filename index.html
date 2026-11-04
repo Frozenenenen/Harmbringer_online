@@ -223,6 +223,7 @@
 <div id="worldButtons" class="panel hidden">
   <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (Taste R)">Rekrutierung finden</button>
   <button id="btnHome" title="Zum Hügelgrab (Taste H)">Hügelgrab</button>
+ <button id="btnRest" title="Rasten bis zu einer Tageszeit – z. B. um nachts anzugreifen">Rasten</button>
   <button id="btnBuild" title="Gebäude im Hügelgrab bauen – geht von überall (Taste B)">Bauen</button>
   <div id="armyList"></div>
   <button id="btnGo" class="primary hidden" title="Alle Befehle ausführen: die Zeit läuft für alle Armeen gleichzeitig (Taste G)">Los</button>
@@ -278,7 +279,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 93, "date": "2026-11-04", "changes": [{"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}]};
+const BUILD = {"version": 95, "date": "2026-11-04", "changes": [{"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1231,6 +1232,7 @@ const Campaign = {
       battles: 0,
       inventory: [],          // artifact ids found
       equipped: [],           // up to DATA.artifactSlots artifact ids that are active
+      hour: 8,                // time of day on the map (0..23); battles start at this time
       conqueredDay: {},       // node id -> day of conquest (dead land grows from there)
       raids: [],              // enemy war parties on the map (Raids)
       won: false,
@@ -1363,7 +1365,25 @@ const Campaign = {
     return moves.length ? Math.min(...moves) : 3;
   },
   tilesPerDay() { return ECON.travelTilesPerDay * (2 + this.slowestMove()) / 5 * (1 + (this.effects().travelPct || 0)); },
-  travelDays(from, to) { return Math.max(1, Math.ceil(hexDistance(from.q, from.r, to.q, to.r) / this.tilesPerDay())); },
+  travelDays(from, to) { return Math.max(1, Math.ceil(this.travelHours(from, to) / 24)); },
+  // Travel in hours (marching around the clock); at least 2 hours.
+  travelHours(from, to) { return Math.max(2, Math.round(hexDistance(from.q, from.r, to.q, to.r) / this.tilesPerDay() * 24)); },
+  hour() { const c = game.campaign; return c.hour === undefined ? (c.hour = 8) : c.hour; },
+  // Advance the clock; every midnight runs the daily world (raids, buildings, threat).
+  advanceHours(h) {
+    const c = game.campaign; this.hour();
+    c.hour += h;
+    while (c.hour >= 24) { c.hour -= 24; this.advanceDays(1); }
+  },
+  // Time of day index into TIMES for an hour: night 22-4, morning 4-10, day 10-16, evening 16-22.
+  timeIndex(hour) { return hour >= 22 || hour < 4 ? 0 : hour < 10 ? 1 : hour < 16 ? 2 : 3; },
+  clockString(dayCount, hour) { return `${this.dateString(dayCount)}, ${hour} Uhr (${TIMES[this.timeIndex(hour)].name})`; },
+  // When and at what time of day the army would arrive.
+  arrivalText(hours) {
+    const c = game.campaign, total = this.hour() + hours, d = Math.floor(total / 24), h = total % 24;
+    const dur = hours >= 24 ? `${Math.floor(hours / 24)} ${Math.floor(hours / 24) === 1 ? 'Tag' : 'Tage'}${hours % 24 ? ' ' + (hours % 24) + ' Std.' : ''}` : `${hours} Std.`;
+    return `${dur} · Ankunft ${this.clockString(c.dayCount + d, h)}`;
+  },
   // Garrison incl. threat reinforcements: +1 of the most common unit per full reinforcementPer %.
   garrisonFor(node) {
     const list = [];
@@ -2235,7 +2255,7 @@ const WorldView = {
 async function startTravel(target, resume = null) {
   const c = game.campaign, from = Campaign.armyNode();
   if (target.id === from.id || (game.mode !== 'world' && !resume)) return;
-  const days = Campaign.travelDays(from, target);
+  const days = Campaign.travelDays(from, target), hours = Campaign.travelHours(from, target);
   game.mode = 'travel';
   UI.renderInfo();
   const a = hexToWorld(...neighbor(from.q, from.r, 2)), b = hexToWorld(...neighbor(target.q, target.r, 2));
@@ -2243,28 +2263,28 @@ async function startTravel(target, resume = null) {
   // Where the encounter happens (fraction of the road), decided up front.
   const plan = resume ? null : Campaign.rollEncounter(from, target, days);
   const k0 = resume ? resume.at : 0, k1 = plan ? plan.at : 1;
-  // Days of this leg: up to the ambush, the rest of an interrupted journey, or the whole way.
-  const daysSoFar = plan ? Math.max(1, Math.round(days * plan.at)) : 0;
-  const legDays = plan ? daysSoFar : resume ? resume.daysLeft : days;
+  // Hours of this leg: up to the ambush, the rest of an interrupted journey, or the whole way.
+  const hoursSoFar = plan ? Math.max(1, Math.round(hours * plan.at)) : 0;
+  const legHours = plan ? hoursSoFar : resume ? (resume.hoursLeft ?? resume.daysLeft * 24) : hours;
   cam.follow = fig;
-  // Constant march; every passed day is counted at once (raids move, buildings grow, the date runs).
+  // Constant march; the clock runs hour by hour (every midnight: raids move, buildings grow).
   let counted = 0;
-  TravelClock.show(legDays);
-  await tween(Math.max(1.5, legDays * DAY_SECONDS), k => {
+  TravelClock.show(legHours);
+  await tween(Math.max(1.5, legHours / 24 * DAY_SECONDS), k => {
     const t = k0 + (k1 - k0) * k;
     fig.position.x = a.x + (b.x - a.x) * t;
     fig.position.z = a.z + (b.z - a.z) * t;
     fig.position.y = game.world.groundAt(fig.position.x, fig.position.z);
-    const d = Math.min(legDays, Math.floor(k * legDays + 1e-6));
-    while (counted < d) { counted++; Campaign.advanceDays(1); UI.updateHeader(); TravelClock.update(counted, legDays); }
+    const d = Math.min(legHours, Math.floor(k * legHours + 1e-6));
+    if (d > counted) { Campaign.advanceHours(d - counted); counted = d; UI.updateHeader(); TravelClock.update(counted, legHours); }
   }, true);
-  while (counted < legDays) { counted++; Campaign.advanceDays(1); }
+  if (counted < legHours) Campaign.advanceHours(legHours - counted);
   TravelClock.hide();
   UI.updateHeader();
   cam.follow = null;
   if (plan) {
     // Ambush on the road: the days so far have passed, then the battle. Victory continues the journey.
-    c.travel = { targetId: target.id, at: plan.at, daysLeft: Math.max(0, days - daysSoFar) };
+    c.travel = { targetId: target.id, at: plan.at, hoursLeft: Math.max(0, hours - hoursSoFar) };
     c.prevNodeId = from.id;
     UI.toast(`Hinterhalt! ${plan.node.name}.`);
     UI.updateHeader();
@@ -2397,7 +2417,7 @@ const Expeditions = {
     };
     const P = open.map(l => ({ l, ...posOf(l) }));
     let counted = 0;
-    TravelClock.show(end); TravelClock.update(D0, end);
+    TravelClock.show(end, 'd'); TravelClock.update(D0, end);
     if (steps > 0) await tween(Math.max(1, steps * DAY_SECONDS), k => {
       const day = D0 + k * steps;
       for (const p of P) {
@@ -2557,11 +2577,13 @@ const TravelClock = {
     if (!e) { e = document.createElement('div'); e.id = 'travelClock'; document.body.appendChild(e); }
     return e;
   },
-  show(total) { const e = this.el(); e.style.display = 'block'; this.update(0, total); },
+  // Shows hours (solo journey, unit 'h') or days (march of several armies, unit 'd').
+  show(total, unit = 'h') { this.unit = unit; const e = this.el(); e.style.display = 'block'; this.update(0, total); },
   update(done, total) {
-    const c = game.campaign;
+    const c = game.campaign, left = total - done, h = this.unit === 'h';
+    const leftTxt = left <= 0 ? 'Ankunft' : h ? (left >= 24 ? `noch ${Math.floor(left / 24)} T. ${left % 24} Std.` : `noch ${left} Std.`) : `noch ${left} ${left === 1 ? 'Tag' : 'Tage'}`;
     this.el().innerHTML = `<div class="tcDate">${Campaign.dateString(c.dayCount)}</div>
-      <div class="tcDays">Tag ${done} von ${total} · ${total - done === 0 ? 'Ankunft' : `noch ${total - done} ${total - done === 1 ? 'Tag' : 'Tage'}`}</div>
+      <div class="tcDays">${Campaign.hour()} Uhr · ${TIMES[Campaign.timeIndex(Campaign.hour())].name} · ${leftTxt}</div>
       <div class="tcBar"><div style="width:${total ? done / total * 100 : 100}%"></div></div><div class="tcHint">Leertaste halten: schneller</div>`;
   },
   hide() { this.el().style.display = 'none'; }
@@ -3588,7 +3610,7 @@ const Weather = {
   startTime(node) {
     const c = game.campaign;
     if (Object.keys(node.garrison || {}).some(t => t === 'wode' || t === 'hackelberg' || t === 'wilder_jaeger')) return 0;
-    return Math.floor(hash2(node.q, node.r, c.dayCount + c.battles) * 4);
+    return Campaign.timeIndex(Campaign.hour());
   },
   // How quiet is the army? 0 (ghosts) .. 4 (giants, machines).
   noise(b) {
@@ -4346,8 +4368,8 @@ const Battle = {
       if (u.startCount - left > 0) losses.push({ type: u.type, n: u.startCount - left, of: u.startCount });
     }
     html += `<h3>Verluste</h3>${losses.length ? `<div class="losses">${losses.map(l => `<div class="lossRow" title="${esc(DATA.units[l.type].name)}: ${l.n} von ${l.of} verloren">${portraitHtml(l.type, DATA.units[l.type])}<span><b>−${l.n}</b> ${esc(DATA.units[l.type].name)}<br><span class="small">${l.of - l.n} von ${l.of} übrig</span></span></div>`).join('')}</div>` : '<p class="small">Keine – alle Untoten haben den Kampf überstanden.</p>'}`;
-    if (battleDays > 0) Campaign.advanceDays(battleDays);
-    html += `<p class="small">Der Kampf dauerte ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'} (etwa ${hours} Stunden${battleDays ? `, ${battleDays} ${battleDays === 1 ? 'Tag' : 'Tage'} vergehen` : ''}).</p>`;
+    Campaign.advanceHours(hours);
+    html += `<p class="small">Der Kampf dauerte ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'} (etwa ${hours} Stunden). Jetzt: ${Campaign.clockString(c.dayCount, Campaign.hour())}.</p>`;
     Campaign.healAtPhylactery();
     SaveGame.save();
     setTimeout(() => {
@@ -4767,7 +4789,8 @@ const UI = {
   },
   updateHeader() {
     const c = game.campaign;
-    $('date').textContent = Campaign.dateString(c.dayCount);
+    $('date').textContent = `${Campaign.dateString(c.dayCount)} · ${Campaign.hour()} Uhr`;
+    $('date').title = `${TIMES[Campaign.timeIndex(Campaign.hour())].name}. Kämpfe beginnen zur aktuellen Tageszeit: nachts sind die Toten stärker und schwerer zu sehen.`;
     const r = c.resources;
     const tip = k => esc(this.resourceTip(k)).replace(/\n/g, '&#10;');
     $('resources').innerHTML = `<span title="${tip('corpses')}">${resIcon('corpses', 18)}Leichen <b>${r.corpses}</b></span><span title="${tip('bones')}">${resIcon('bones', 18)}Knochen <b>${r.bones}</b></span>
@@ -4891,6 +4914,14 @@ const UI = {
     }).join('');
     return `<h3>${esc(title)} <span class="small">${army.length} Untote · ${resIcon('command')}${cmd}</span></h3><div class="armyCards">${cards}</div>`;
   },
+  // Wait on the spot until a chosen time of day (night 22, morning 4, day 10, evening 16).
+  openRest() {
+    if (game.mode !== 'world') return;
+    const h = Campaign.hour(), opts = [[22, 'Nacht'], [4, 'Morgen'], [10, 'Tag'], [16, 'Abend']].map(([t, n]) => [t, n, (t - h + 24) % 24 || 24]);
+    this.modal(`<h2>Rasten</h2><p class="small">Jetzt: ${Campaign.clockString(game.campaign.dayCount, h)}. Die Armee wartet, die Welt läuft weiter (Trupps, Bauten). Kämpfe beginnen zur Tageszeit der Ankunft – nachts sind die Toten stärker und schwerer zu entdecken.</p>
+      <p>${opts.map(([t, n, w]) => `<button data-rest="${w}">bis ${n} (${t} Uhr, ${w} Std.)</button>`).join(' ')} <button data-rest="6">6 Stunden</button></p>`, [{ label: 'Abbrechen', action: () => {} }]);
+    document.querySelectorAll('[data-rest]').forEach(b => b.onclick = () => { Campaign.advanceHours(+b.dataset.rest); this.closeModal(); Campaign.healAtPhylactery(); SaveGame.save(); this.updateHeader(); this.renderInfo(); WorldView.refresh(); this.toast(`Gerastet: ${Campaign.clockString(game.campaign.dayCount, Campaign.hour())}.`); });
+  },
   roundBanner(n, sub) {
     let el = document.getElementById('roundBanner');
     if (!el) { el = document.createElement('div'); el.id = 'roundBanner'; document.body.appendChild(el); }
@@ -4943,7 +4974,7 @@ const UI = {
           <tr><td>Typ</td><td>${NODE_TYPE_NAMES[node.type]}</td></tr>
           <tr><td>Fraktion</td><td>${DATA.factions[owner].name}${owner !== node.faction ? ` <span class="small">(einst ${DATA.factions[node.faction].name})</span>` : ''}</td></tr>
           <tr><td>Kampffeld</td><td>${node.size} × ${node.size}</td></tr>
-          <tr><td>Reisezeit</td><td>${atNode ? 'Armee steht hier' : days + (days === 1 ? ' Tag' : ' Tage')}</td></tr>
+          <tr><td>Reisezeit</td><td>${atNode ? `Armee steht hier · ${Campaign.hour()} Uhr (${TIMES[Campaign.timeIndex(Campaign.hour())].name})` : Campaign.arrivalText(Campaign.travelHours(here, node))}</td></tr>
           ${atNode ? '' : (() => { const risk = Campaign.travelRisk(here, node);
             return `<tr><td>Unterwegs</td><td>${risk.places.length} unbesiegte Orte am Weg · Hinterhalt ${Math.round(risk.chance * 100)} %</td></tr>`; })()}
           ${enemy ? `<tr><td>Bedrohung</td><td>${Math.round(c.threat[owner] || 0)} %</td></tr>` : ''}
@@ -5319,6 +5350,7 @@ function initInput() {
   $('btnRecruitSite').onclick = () => UI.findRecruitSite();
   $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
   $('btnGo').onclick = () => Expeditions.go();
+  $('btnRest').onclick = () => UI.openRest();
   $('btnBuild').onclick = () => { if (game.mode === 'world') Base.open(); };
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnSound').onclick = () => Sfx.toggle();

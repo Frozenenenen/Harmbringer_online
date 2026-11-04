@@ -2231,6 +2231,13 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Uhrzeit auf der Karte (umgesetzt 04.11.2026)
+
+- Die Kampagne hat eine Uhrzeit. Reisen laufen stundengenau (rund um die Uhr marschiert); die Ortsinfo nennt Dauer und **Ankunft mit Uhrzeit und Tageszeit** („3 Tage 8 Std. · Ankunft 4. Mai 1371, 16 Uhr (Abend)“). Kopfzeile und Reiseanzeige zeigen die Uhrzeit.
+- Tageszeiten: Nacht 22–4 Uhr, Morgen 4–10, Tag 10–16, Abend 16–22. **Kämpfe beginnen zur aktuellen Tageszeit** (die Wilde Jagd weiterhin nachts); Kampfrunden (2 Std.) laufen auf der Uhr weiter.
+- **Rasten** (Knopf unten rechts): bis Nacht, Morgen, Tag oder Abend bzw. 6 Stunden warten – so lässt sich ein Angriff in der Nacht planen.
+- Mehrere Armeen mit „Los“ ziehen weiterhin in ganzen Tagen.
+
 ### Besatzungen, Kosten, Orte auf der Karte, Armee-Ansicht, Runden (umgesetzt 04.11.2026)
 
 - **Besatzung zurücklassen:** An einem eroberten Ort (Lich vor Ort) können Untote zurückbleiben (Platz: Dorf 8, Ort 12, Stadt 20, große Stadt 32). Sie zählen nicht zum Kommando des Lichs. Erreicht ein Trupp den Ort, kämpft die Besatzung automatisch (Verteidiger +25 % Schaden durch die Mauern); hält sie, bleibt der Ort untot. Trupps meiden Orte, deren Besatzung deutlich stärker ist als sie selbst. Karte: 🛡 und Anzahl am Ortsnamen.
