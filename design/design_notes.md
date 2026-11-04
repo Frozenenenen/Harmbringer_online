@@ -2223,6 +2223,15 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Totes Land (umgesetzt 04.11.2026)
+
+Um das Hügelgrab und um jeden eroberten Ort stirbt die Landschaft – sichtbare Spur des Raubzugs:
+
+- **Ausbreitung:** Das Hügelgrab beginnt mit ~8 Feldern Radius und wächst mit jedem eroberten Ort (+1,6) und langsam mit der Zeit. Jeder eroberte Ort wächst ab der Eroberung um 0,35 Felder pro Tag bis zu einem Höchstradius nach Ortsgröße (4 + 2,6 · √Größe).
+- **Alter:** Je länger ein Feld tot ist, desto stärker der Effekt (voll nach ~30 Tagen). Boden: trockene graue Erde, schwarze Moorflecken, schwache grünliche „unheilige Adern“.
+- **Pflanzen:** Bäume werden zu grauen, kahlen Stämmen und fallen mit der Zeit um (liegende Stämme), Heide und Gras verdorren, im Kern stehen schiefe Grabsteine. Die Minimap zeigt das tote Land als graue Schicht.
+- Werte: `BLIGHT` in `index.html`. Spielmechanische Folgen (z. B. „verbrannte Erde“, keine Beute mehr) sind noch offen.
+
 ## Ressourcen – "Verbrannte Erde"-Prinzip
 
 Klassische RTS-Ressourcen (Gold, Holz, Eisen, Nahrung) passen nicht zur untoten Fantasie. Das Spiel ist **kein Aufbauspiel**, sondern ein **Raubzug**. Der Lich pflegt nichts – er verschlingt.

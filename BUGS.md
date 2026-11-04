@@ -4,6 +4,8 @@ Gefundene Fehler im Spiel (`index.html`). Neueste oben. Status: offen, behoben (
 
 | Datum | Fehler | Status |
 |-|-|-|
+| 2026-11-04 | **Siegmeldung nach jedem Kampf:** Nach dem Sieg am Brocken und „Weiter umherziehen“ kam der Endbildschirm nach jedem weiteren Kampf. **Ursache:** Der Sieg-Zustand blieb gesetzt und wurde nach jedem Kampf abgefragt. **Behebung:** Der Endbildschirm erscheint nur beim ersten Sieg am Brocken. | behoben (ungetestet) |
+| 2026-11-04 | **Reise endet nach Begegnung am Startort:** Nach dem Brocken-Sieg führte eine Begegnung unterwegs (z. B. zurück zum Hügelgrab) zum Endbildschirm statt zur Weiterreise; die Armee blieb am letzten Ort. Gleiche Ursache und Behebung wie oben. | behoben (ungetestet) |
 | 2026-11-03 | **Geist kann nicht aufs Wasser:** Die Wegfindung erlaubte es schon, aber Wasserfelder liegen unter der Wasserfläche – die Markierung der erreichbaren Felder und fliegende Figuren waren dort unsichtbar. **Behebung:** Markierungen und Figuren sitzen auf Wasserfeldern jetzt auf der Wasseroberfläche. | behoben (ungetestet) |
 | 2026-11-03 | **Balliste startet im Wasser:** Gegner wurden auch auf seichtem Wasser aufgestellt. **Behebung:** Nur Flieger starten auf Wasser; Maschinen stehen bevorzugt auf einem Wachturm, sonst im Freien. | behoben (ungetestet) |
 | 2026-11-03 | **Geister machen 0 Schaden an der Stadtballiste:** Kein Fehler im Code, sondern die Schadensmatrix: Seele gegen Befestigt war 0 % (Immunität). **Änderung:** Seele gegen Befestigt jetzt 25 % (die Bedienmannschaft hat eine Seele); bei echter Immunität (z. B. Gift gegen Befestigt) zeigt der Kampf jetzt „immun“ statt „−0“. 13 Geister machen an der Balliste jetzt 26 Schaden. | behoben (ungetestet) |
