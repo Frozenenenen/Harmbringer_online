@@ -308,7 +308,7 @@
   </div>
 </div>
 <div id="sidebar" class="hidden">
-  <div id="minimap" class="hidden"><canvas id="miniMap" title="Klick: Kamera dorthin · Mausrad: Zoom"></canvas>
+  <div id="minimap" class="hidden"><canvas id="miniMap" title="Klick oder Ziehen: Kamera dorthin · Mausrad: Zoom"></canvas>
   <div class="zoom"><button id="miniIn" title="Hineinzoomen">+</button><button id="miniOut" title="Herauszoomen">−</button><button id="miniMode">◎</button></div>
   <div class="zoomLabel" id="miniZoom">1×</div></div>
   <div id="worldButtons" class="hidden">
@@ -386,7 +386,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 120, "date": "2026-11-04", "changes": [{"date": "04.11. 23:01", "text": "Minimap: Knopf für Zoom auf Mausposition oder Kamera"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}]};
+const BUILD = {"version": 121, "date": "2026-11-04", "changes": [{"date": "04.11. 23:14", "text": "Minimap: Ziehen mit gedrückter Maustaste verschiebt die Kamera"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2797,13 +2797,23 @@ const Minimap = {
     const cv = this.canvas = document.getElementById('miniMap');
     cv.width = this.W * 2; cv.height = this.H * 2;
     this.ctx = cv.getContext('2d');
-    cv.addEventListener('pointerdown', ev => {
-      if (game.mode !== 'world') return;
+    // Click or drag with the button held: the camera follows the mouse. The minimap window is frozen
+    // while dragging, so it does not run away under the cursor.
+    const moveTo = ev => {
       const rect = cv.getBoundingClientRect();
       const [q, r] = this.toTile((ev.clientX - rect.left) / rect.width * cv.width, (ev.clientY - rect.top) / rect.height * cv.height);
-      game.view.cam.lookAtTile(Math.min(WIDTH - 1, Math.max(0, Math.round(q))), Math.min(HEIGHT - 1, Math.max(0, Math.round(r))));
+      game.view.cam.lookAtTile(Math.min(WIDTH - 1, Math.max(0, Math.round(q))), Math.min(HEIGHT - 1, Math.max(0, Math.round(r))), true);
       this.draw();
+    };
+    cv.addEventListener('pointerdown', ev => {
+      if (game.mode !== 'world' || ev.button !== 0) return;
+      this.dragView = null; this.dragView = this.view();
+      try { cv.setPointerCapture(ev.pointerId); } catch (e) {}
+      moveTo(ev);
     });
+    cv.addEventListener('pointermove', ev => { if (this.dragView && (ev.buttons & 1) && game.mode === 'world') moveTo(ev); });
+    const end = ev => { if (!this.dragView) return; this.dragView = null; try { cv.releasePointerCapture(ev.pointerId); } catch (e) {} this.draw(); };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     cv.addEventListener('wheel', ev => {
       ev.preventDefault();
       const rect = cv.getBoundingClientRect();
@@ -2832,6 +2842,7 @@ const Minimap = {
   },
   // Visible window in tile coordinates, centered on the camera pivot and kept inside the map.
   view() {
+    if (this.dragView) return this.dragView;
     const z = this.ZOOMS[this.zoomIdx], cw = this.canvas.width, ch = this.canvas.height;
     // Tiles per canvas pixel: at 1x the whole map fits (letterboxed to the canvas aspect).
     const scale = Math.max(WIDTH / cw, HEIGHT / ch) / z;
