@@ -328,7 +328,7 @@
 <div id="battleButtons" class="hidden">
   <div id="abilityBar"></div>
   <button id="btnEndTurn" class="primary" title="Zug beenden (Leertaste)">Zug beenden<kbd>␣</kbd></button>
-  <button id="btnRetreat" title="Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.">Rückzug<kbd>R</kbd></button>
+  <button id="btnRetreat" title="Rückzug (R): Zu Beginn des nächsten Lich-Zugs löst sich die Armee vom Feind und bleibt vor dem Ort stehen. Ein Viertel jeder Truppe fällt als Nachhut, Lich und Kommandeure entkommen. Keine Beute, der Ort bleibt in Feindeshand. Bis dahin wird weiter gekämpft.">Rückzug<kbd>R</kbd></button>
   <button id="btnEdges" class="icon" title="Feldkanten ein/aus (T)">⬡</button>
   <button id="btnTokens" class="icon" title="Token-Modus: automatisch / an / aus (K)">◉</button>
   <button id="btnBattleHelp" class="icon" title="Steuerung und Tastenkürzel">?</button>
@@ -378,7 +378,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 110, "date": "2026-11-04", "changes": [{"date": "04.11. 22:04", "text": "Fix: keine Gegner mehr in geschlossenen Türmen (unangreifbar)"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}]};
+const BUILD = {"version": 111, "date": "2026-11-04", "changes": [{"date": "04.11. 22:07", "text": "Rückzug: Armee bleibt vor dem Ort, verliert nur 25 % (Lich und Kommandeure entkommen)"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2916,6 +2916,7 @@ const SIEGE_EDGES = {
   palisade: { name: 'Palisade',   hp: 40,  other: 0.5 },
   house:    { name: 'Hauswand',   hp: 50,  other: 0 }
 };
+const RETREAT_LOSS = 0.25;   // share of every stack lost in a retreat (Lich and commanders always escape)
 const isSiege = u => u.def.role === 'SIEGE' || u.def.size >= 4 || u.type === 'huenenkoenig';
 // PROMPT 8.5: a priest without wounded allies attacks with 3 HOLY damage.
 const PRIEST_ATTACK = { power: 'HOLY', damage: 3 };
@@ -4728,12 +4729,27 @@ const Battle = {
     }
     if (lost.length) this.log(`${fallen.def.name} ist gefallen – führerlos: ${lost.join(', ')} (−2 Initiative, kein Konter, Zerfall).`, 'hit');
   },
+  // Living player stacks back to campaign units; `loss` share of each stack (not Lich or commanders)
+  // stays behind. Remembers how many of each stack got away (b.kept, for the losses list).
+  survivors(loss) {
+    const b = game.battle; b.kept = new Map();
+    return this.alive('player').flatMap(u => {
+      if (u.type === 'lich') { b.kept.set(u, 1); return [{ type: 'lich', hp: this.lichCampaignHp(u) }]; }
+      const n0 = stackCount(u), lost = COMMANDER_TYPES.includes(u.type) || u.type === b.leader ? 0 : Math.round(n0 * loss), n = n0 - lost;
+      b.kept.set(u, n);
+      if (n <= 0) return [];
+      // The wounded front creature is the one that stays behind first.
+      const baseHp = DATA.units[u.type].hp, back = x => Math.max(1, Math.round(x / u.def.hp * baseHp));
+      const top = lost ? u.def.hp : u.hp - (n0 - 1) * u.def.hp;
+      return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: back(i < n - 1 ? u.def.hp : top) }));
+    });
+  },
   // At the start: explain the problem and offer the lossless withdrawal right there.
   offerWithdraw(title, text) {
     const b = game.battle;
     if (b.node.encounter) return;
     setTimeout(() => { if (game.battle !== b || b.over || b.contact) return;
-      UI.modal(`<h2>${esc(title)}</h2><p>${esc(text)}</p><p class="small">Jetzt abziehen kostet nichts: Die ganze Armee verlässt das Feld und bleibt vor ${esc(b.node.name)} stehen. Sobald gekämpft wurde, rettet ein Rückzug nur noch den Lich.</p>`,
+      UI.modal(`<h2>${esc(title)}</h2><p>${esc(text)}</p><p class="small">Jetzt abziehen kostet nichts: Die ganze Armee verlässt das Feld und bleibt vor ${esc(b.node.name)} stehen. Sobald gekämpft wurde, kostet ein Rückzug ein Viertel der Truppen.</p>`,
         [{ label: 'Abziehen (ohne Verluste)', primary: true, action: () => this.finish('withdraw') }, { label: 'Weiterkämpfen', action: () => {} }]); }, 900);
   },
   // Enemies that no player unit can ever reach or shoot (water, cliffs), ignoring other units.
@@ -4880,20 +4896,14 @@ const Battle = {
       if (node.finale && !c.won) { c.won = true; endNow = true; }
     } else if (result === 'withdraw') {
       // Everybody leaves the field as they are (no healing, no loot); the army stays at the place.
-      c.army = this.alive('player').flatMap(u => {
-        if (u.type === 'lich') return [{ type: 'lich', hp: this.lichCampaignHp(u) }];
-        const n = stackCount(u), baseHp = DATA.units[u.type].hp, back = x => Math.max(1, Math.round(x / u.def.hp * baseHp));
-        return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: back(i < n - 1 ? u.def.hp : u.hp - (n - 1) * u.def.hp) }));
-      });
+      c.army = this.survivors(0);
       html = `<h2>Abzug</h2><p>Die Armee zieht geordnet von ${esc(node.name)} ab. Der Ort bleibt in Feindeshand.</p>`;
     } else if (result === 'defeat' && b.expedition) {
       c.army = [];
       html = `<h2>${esc(Expeditions.name(b.expedition))} vernichtet</h2><p>Der Kommandeur ist gefallen, sein Zug zerfällt. Der Lich verliert diese Diener.</p>`;
     } else if (b.expedition) {
-      const lead = this.alive('player').find(u => u.type === b.leader);
-      c.army = lead ? [{ type: b.leader, hp: Math.max(1, topHp(lead)) }] : [];
-      b.expedition.nodeId = PHYLACTERY.id;
-      html = `<h2>Rückzug</h2><p>${esc(DATA.units[b.leader].name)} entkommt ins Hügelgrab. Sein Zug bleibt zurück. Keine Beute.</p>`;
+      c.army = this.survivors(RETREAT_LOSS);
+      html = `<h2>Rückzug</h2><p>${esc(Expeditions.name(b.expedition))} zieht sich zurück und bleibt vor ${esc(node.name)} stehen. Ein Viertel der Truppen bleibt auf dem Feld (die Nachhut), der Kommandeur entkommt. Keine Beute.</p>`;
     } else if (result === 'defeat') {
       c.travel = null;
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
@@ -4902,12 +4912,10 @@ const Battle = {
       Campaign.advanceDays(deathDays);
       html = `<h2>Der Lich fällt</h2><p>Die Armee zerfällt zu Staub. ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich erneut im Hügelgrab am Wilseder Berg.</p>`;
     } else {
+      // Retreat: the army gets away, a quarter of every stack stays behind as rearguard.
       c.travel = null;
-      const lich = this.alive('player').find(u => u.type === 'lich');
-      c.army = [{ type: 'lich', hp: lich ? this.lichCampaignHp(lich) : DATA.units.lich.hp }];
-      c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
-      Campaign.advanceDays(1);
-      html = `<h2>Rückzug</h2><p>Der Lich entweicht in die Nacht und kehrt nach einem Tag ins Hügelgrab zurück. Seine Diener bleiben zurück. Keine Beute.</p>`;
+      c.army = this.survivors(RETREAT_LOSS);
+      html = `<h2>Rückzug</h2><p>Die Armee löst sich vom Feind und bleibt ${node.encounter ? 'am Weg' : 'vor ' + esc(node.name)} stehen. Ein Viertel der Truppen fällt als Nachhut, Lich und Kommandeure entkommen. Keine Beute.</p>`;
     }
     if (c.march && result !== 'victory' && result !== 'withdraw') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
     if (b.expedition) {
@@ -4923,7 +4931,7 @@ const Battle = {
     const losses = [];
     for (const u of b.units) {
       if (u.side !== 'player' || u.summoned) continue;
-      const left = u.alive && (result === 'victory' || result === 'withdraw' || u.type === b.leader) ? stackCount(u) : 0;
+      const left = !u.alive || result === 'defeat' ? 0 : b.kept && b.kept.has(u) ? b.kept.get(u) : stackCount(u);
       if (u.startCount - left > 0) losses.push({ type: u.type, n: u.startCount - left, of: u.startCount });
     }
     html += `<h3>Verluste</h3>${losses.length ? `<div class="losses">${losses.map(l => `<div class="lossRow" title="${esc(DATA.units[l.type].name)}: ${l.n} von ${l.of} verloren">${portraitHtml(l.type, DATA.units[l.type])}<span><b>−${l.n}</b> ${esc(DATA.units[l.type].name)}<br><span class="small">${l.of - l.n} von ${l.of} übrig</span></span></div>`).join('')}</div>` : '<p class="small">Keine – alle Untoten haben den Kampf überstanden.</p>'}`;
@@ -5852,7 +5860,7 @@ const UI = {
     const wd = this.canWithdrawCached !== undefined && this.cwRound === b.round && this.cwContact === !!b.contact ? this.canWithdrawCached : (this.cwRound = b.round, this.cwContact = !!b.contact, this.canWithdrawCached = Battle.canWithdraw());
     $('btnRetreat').innerHTML = (wd ? 'Abziehen' : 'Rückzug') + '<kbd>R</kbd>';
     $('btnRetreat').title = wd ? 'Abziehen (R): Die ganze Armee verlässt das Feld ohne Verluste – möglich, solange nicht gekämpft wurde oder kein Gegner erreichbar ist. Keine Beute.'
-      : 'Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.';
+      : 'Rückzug (R): Zu Beginn des nächsten Lich-Zugs löst sich die Armee vom Feind und bleibt vor dem Ort stehen. Ein Viertel jeder Truppe fällt als Nachhut, Lich und Kommandeure entkommen. Keine Beute, der Ort bleibt in Feindeshand. Bis dahin wird weiter gekämpft.';
     // The chronicle takes the space left of the action buttons.
     document.body.style.setProperty('--logRight', ($('battleButtons').offsetWidth + 26) + 'px');
     if (cur && cur.alive) {

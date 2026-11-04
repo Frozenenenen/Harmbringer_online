@@ -2221,7 +2221,7 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 
 ### Abziehen, unerreichbare Gegner, Wasser (umgesetzt 04.11.2026)
 
-- **Abziehen** (statt Rückzug, Taste R): Solange kein Schlag geführt wurde oder kein Gegner erreichbar ist, verlässt die ganze Armee das Feld ohne Verluste und bleibt vor dem Ort stehen. Keine Beute, die Kampfzeit vergeht. Bei Begegnungen unterwegs nicht möglich. Danach gilt der alte Rückzug (nur der Lich entkommt).
+- **Abziehen** (statt Rückzug, Taste R): Solange kein Schlag geführt wurde oder kein Gegner erreichbar ist, verlässt die ganze Armee das Feld ohne Verluste und bleibt vor dem Ort stehen. Keine Beute, die Kampfzeit vergeht. Bei Begegnungen unterwegs nicht möglich. Danach gilt der **Rückzug** (zu Beginn des nächsten Lich-Zugs): Die Armee bleibt vor dem Ort stehen, ein Viertel jeder Truppe fällt als Nachhut, Lich und Kommandeure entkommen.
 - **Meldung zu Kampfbeginn**, wenn Gegner für keine eigene Einheit erreichbar sind (auch nicht in Reichweite): Hier braucht es Flieger, Geister oder Fernkämpfer. Gewollt: manche Orte verlangen besondere Truppen (später auch geschlossene Mauern, die nur Riesen oder Katapulte brechen).
 - **Furten:** Getrennte Landstücke eines Kampffelds werden über den kürzesten Weg durch tiefes Wasser mit seichtem Wasser verbunden.
 - **Rungholt bei Ebbe:** Tiefes Wasser wird Watt (Bewegung 1), Schlamm und Priele.
