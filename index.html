@@ -182,7 +182,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=27"></script>
+<script src="data/world_data.js?v=28"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -273,7 +273,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 84, "date": "2026-11-04", "changes": [{"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}]};
+const BUILD = {"version": 85, "date": "2026-11-04", "changes": [{"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1494,11 +1494,12 @@ const Raids = {
   armyNear(q, r) { return Expeditions.armyNodes().some(a => hexDistance(Math.round(q), Math.round(r), a.q, a.r) <= RAIDS.safeRadius); },
   targeted() { return new Set(this.list().map(p => p.targetId)); },
   // Best target for a party at (q, r): the nearest conquered place within range that the army does not guard.
-  pickTarget(q, r, taken, region = null) {
+  pickTarget(q, r, taken, region = null, strength = 0) {
     let best = null, bd = Infinity;
     for (const n of DATA.nodes) {
       if (!Campaign.isConquered(n) || taken.has(n.id) || this.armyNear(n.q, n.r) || Pantheons.regionAssimilated(n) || Pantheons.memberOf(n)) continue;
       if (region && Pantheons.regionOf[n.id] !== region) continue;
+      if (strength && Garrisons.strength(Garrisons.of(n)) > strength * 1.3) continue;     // too well guarded
       const d = hexDistance(Math.round(q), Math.round(r), n.q, n.r);
       if (d <= RAIDS.maxRange && d < bd) { best = n; bd = d; }
     }
@@ -1541,7 +1542,7 @@ const Raids = {
       if (c.raidFactionDay[o.faction] !== undefined && c.dayCount - c.raidFactionDay[o.faction] < RAIDS.factionCooldown) continue;
       const chance = (pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0)) * (alliance && !pid ? 2 : 1);
       if (Math.random() >= chance) continue;
-      const t = this.pickTarget(o.q, o.r, taken, pid || null);
+      const t = this.pickTarget(o.q, o.r, taken, pid || null, Campaign.strength(Object.entries(o.garrison).filter(([u]) => DATA.units[u].rank !== 'UNIQUE').flatMap(([u, n]) => Array(Math.round(n * RAIDS.strength)).fill(u))));
       if (!t) continue;
       taken.add(t.id);
       const p = this.create(o, t); if (pid) p.region = pid;
@@ -1565,6 +1566,7 @@ const Raids = {
   },
   retake(p, t) {
     const c = game.campaign;
+    if (Garrisons.defend(t, p)) { this.remove(p.id); if (game.view && game.view.nodeViews) WorldView.refresh(); return; }
     const back = t.faction === p.faction || Campaign.isLiving(t.faction) ? t.faction : p.faction;
     c.owners[t.id] = back;
     if (c.conqueredDay) delete c.conqueredDay[t.id];
@@ -1648,6 +1650,73 @@ const Raids = {
     group.add(label);
     v.worldRoot.add(group);
     return { group, label, el };
+  }
+};
+
+// =============================================================================
+// Garrisons: undead left behind at a conquered place defend it against war parties.
+// They do not count against the Lich's command. A party that reaches a guarded place fights
+// an automatic battle (both sides wear each other down; the defenders have the walls).
+// =============================================================================
+const Garrisons = {
+  all() { const c = game.campaign; return c ? (c.garrisons = c.garrisons || {}) : {}; },
+  of(node) { return this.all()[node.id] || []; },
+  cap(node) { return node.type === 'VILLAGE' ? 8 : (node.size || 16) >= 64 ? 32 : (node.size || 16) >= 32 ? 20 : 12; },
+  strength(list) { return Campaign.strength(list.map(u => u.type)); },
+  canGarrison(node) { return node && node.type !== 'PHYLACTERY' && Campaign.isConquered(node) && Campaign.armyNode() === node; },
+  openLeave(node) {
+    const c = game.campaign, have = this.of(node), room = this.cap(node) - have.length;
+    const counts = {}; for (const u of c.army) if (u.type !== 'lich') counts[u.type] = (counts[u.type] || 0) + 1;
+    const rows = Object.entries(counts).map(([t, n]) => `<div class="recruitRow">${portraitHtml(t, DATA.units[t])}<div><b>${esc(DATA.units[t].name)}</b><br><span class="small">${n} in der Armee</span></div>
+      <div class="recruitBtns"><input type="number" min="0" max="${n}" value="0" data-gar="${t}"> <button data-garmax="${t}" data-n="${n}">alle</button></div></div>`).join('');
+    UI.modal(`<h2>${esc(node.name)} – Besatzung zurücklassen</h2><p class="small">Die Zurückgelassenen verteidigen den Ort, wenn ein Trupp der Lebenden kommt, und zählen nicht zum Kommando des Lichs. Platz: ${have.length} / ${this.cap(node)} (noch ${room}).</p>${rows || '<p>Keine Einheiten außer dem Lich.</p>'}`,
+      [{ label: 'Zurücklassen', primary: true, action: () => this.leave(node) }, { label: 'Abbrechen', action: () => {} }]);
+    document.querySelectorAll('[data-garmax]').forEach(b => b.onclick = () => { document.querySelector(`[data-gar="${b.dataset.garmax}"]`).value = b.dataset.n; });
+  },
+  leave(node) {
+    const c = game.campaign, take = {};
+    document.querySelectorAll('[data-gar]').forEach(i => { const n = Math.max(0, Math.floor(+i.value || 0)); if (n) take[i.dataset.gar] = n; });
+    let room = this.cap(node) - this.of(node).length; const stay = [], rest = [];
+    for (const u of c.army) { if (u.type !== 'lich' && take[u.type] > 0 && room > 0) { take[u.type]--; room--; stay.push(u); } else rest.push(u); }
+    if (!stay.length) return;
+    c.army = rest; this.all()[node.id] = [...this.of(node), ...stay];
+    UI.toast(`${stay.length} Untote bleiben in ${node.name} zurück.`); SaveGame.save(); UI.updateHeader(); UI.renderInfo(); WorldView.refresh();
+  },
+  takeBack(node) {
+    const c = game.campaign, g = this.of(node); if (!g.length) return;
+    c.army.push(...g); delete this.all()[node.id];
+    UI.toast(`Die Besatzung von ${node.name} schließt sich wieder an.`); SaveGame.save(); UI.updateHeader(); UI.renderInfo(); WorldView.refresh();
+  },
+  // Automatic battle at a guarded place. Returns true if the undead hold it.
+  defend(node, party) {
+    const g = this.of(node); if (!g.length) return false;
+    const att = Object.entries(party.garrison).flatMap(([t, n]) => Array(n).fill(0).map(() => ({ type: t, hp: DATA.units[t].hp })));
+    const def = g.map(u => ({ ...u }));
+    const dmgOf = (list, target, mul) => list.reduce((s, u) => {
+      const d = DATA.units[u.type], tgt = DATA.units[target.type];
+      return s + d.damage * (DATA.powerDefense[d.power][tgt.defense] || 0) / 100 * mul;
+    }, 0);
+    const hit = (list, amount) => { let left = amount; list.sort((a, b) => a.hp - b.hp); while (left > 0 && list.length) { const u = list[0]; const d = Math.min(u.hp, left); u.hp -= d; left -= d; if (u.hp <= 0) list.shift(); } };
+    for (let r = 0; r < 30 && att.length && def.length; r++) {
+      hit(att, dmgOf(def, att[0], 1.25 * (0.8 + Math.random() * 0.4)));       // the defenders have the walls
+      if (!att.length) break;
+      hit(def, dmgOf(att, def[0], 0.8 + Math.random() * 0.4));
+    }
+    const lost = g.length - def.length;
+    if (def.length) {
+      this.all()[node.id] = def;
+      Narrator.say(`Vor ${node.name} brach der Trupp aus ${NODE_BY_ID[party.originId].name} an der Besatzung der Toten. ${lost ? lost + ' Untote fielen, ' : ''}${def.length} halten den Ort.`);
+      UI.toast(`${node.name} gehalten! Die Besatzung schlug den Trupp zurück (${lost} verloren).`, 6);
+      return true;
+    }
+    delete this.all()[node.id];
+    UI.toast(`${node.name}: Die Besatzung ist gefallen (${lost} Untote).`, 6);
+    return false;
+  },
+  infoRow(node) {
+    const g = this.of(node); if (!Campaign.isConquered(node) && !g.length) return '';
+    const counts = {}; for (const u of g) counts[u.type] = (counts[u.type] || 0) + 1;
+    return `<tr><td>Untote Besatzung</td><td>${g.length ? Object.entries(counts).map(([t, n]) => `${n}× ${esc(DATA.units[t].name)}`).join('<br>') : '<span class="small">keine – ein Trupp nimmt den Ort kampflos</span>'}<br><span class="small">Platz ${g.length} / ${this.cap(node)}</span></td></tr>`;
   }
 };
 
@@ -2074,7 +2143,7 @@ const WorldView = {
       nv.pillar.scale.set(fr * 0.8, 8, fr * 0.8);
       nv.el.classList.toggle('village', village);
       Settlements.setFlag(node, revealed ? DATA.factions[owner].color : '#8a8a8a');
-      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') : '?';
+      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') + (Garrisons.of(node).length ? ` 🛡${Garrisons.of(node).length}` : '') : '?';
       nv.el.classList.toggle('unknown', !revealed);
       const dg = revealed ? Campaign.danger(node) : null;
       nv.el.dataset.danger = dg || '';
@@ -4782,6 +4851,7 @@ const UI = {
           ${enemy ? `<tr><td>Eroberung bringt</td><td>${this.rewardText(node)}</td></tr>` : ''}
           ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
           ${Pantheons.infoRow(node)}
+          ${Garrisons.infoRow(node)}
         </table>
         ${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}
         <div class="buttons" id="nodeButtons"></div>`;
@@ -4828,6 +4898,8 @@ const UI = {
       if (here.id === node.id && Recruitment.canRecruitAt(node) && (Base.level('deadHall') >= 1 || game.campaign.army.some(u => DATA.units[u.type].ancestor))) add('Expedition aufstellen', () => Expeditions.openCreate(), false, !!Expeditions.canCreate());
       if (here.id === node.id && Recruitment.canRecruitAt(node)) add('Rekrutieren', () => this.openRecruit(), true);
       if (here.id === node.id && Pantheons.isLeyNode(node)) add('Ley-Sprung', () => Pantheons.openJump(), false);
+      if (Garrisons.canGarrison(node)) add('Besatzung zurücklassen', () => Garrisons.openLeave(node), false);
+      if (Garrisons.canGarrison(node) && Garrisons.of(node).length) add('Besatzung aufnehmen', () => Garrisons.takeBack(node), false);
       if (here.id === node.id && Pantheons.portalPossible(node)) add(`Portal errichten (${Object.entries(LEY.portalCost).map(([k, v]) => v + ' ' + RESOURCE_NAMES[k]).join(', ')}, ${LEY.portalDays} Tage)`, () => Pantheons.buildPortal(node), true, !!Pantheons.portalBlocker());
       if (here.id === node.id && node === PHYLACTERY) add('Bauen', () => Base.open(), true);
     }

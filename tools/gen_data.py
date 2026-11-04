@@ -166,6 +166,9 @@ for _u in units:
 # Extras sind Werte, die nur das Spiel braucht (Platzhalter-Form, Farbe, Beschreibung, Wissens-Voraussetzung).
 # cost: optional, sonst aus den Design-Kosten (Knochen x BONE_SCALE, weil das Spiel Knochen 60-fach zählt).
 BONE_SCALE = 60
+# Recruiting costs in the game (04.11.2026: units were too cheap at the start, the command limit was
+# reached at once): corpses x3, bones x2.5, souls unchanged.
+COST_SCALE = {"corpses": 3, "bones": 2.5, "souls": 1}
 GAME_UNITS = [
  # Spiel-ID, Design-Zeile, Extras
  ("lich", "Lich", dict(shape="octahedron", color="#5a2d82", desc="Untoter Herrscher. Fällt er, ist der Kampf verloren und er kehrt ins Hügelgrab zurück.")),
@@ -568,6 +571,7 @@ def game_unit(gid, row, extra):
     u = UN[row]
     cost = extra.get("cost") or {k: v for k, v in (("corpses", u["CorpsesCost"]), ("bones", u["BonesCost"] * BONE_SCALE),
                                                      ("souls", u["SoulsCost"])) if v}
+    cost = {k: int(round(v * COST_SCALE.get(k, 1))) for k, v in cost.items()}
     d = dict(name=u["UnitName"], side="undead" if u["Faction"] == "Undead" else "enemy", faction=enum(u["Faction"]),
              rank=enum(u["Rank"]), role=enum(u["Role"]), hp=u["HP"], initiative=u["Initiative"], move=u["MoveRange"],
              damage=u["AttackDamage"], range=u["AttackRange"], power=enum(u["PowerType"]), counter=u["CanCounter"],

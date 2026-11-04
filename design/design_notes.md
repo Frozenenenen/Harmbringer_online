@@ -2231,6 +2231,14 @@ Beispiele:
 
 Die untoten Versionen **erben die Magien**, werden aber kälter/böser in der Ausführung.
 
+### Besatzungen, Kosten, Orte auf der Karte, Armee-Ansicht, Runden (umgesetzt 04.11.2026)
+
+- **Besatzung zurücklassen:** An einem eroberten Ort (Lich vor Ort) können Untote zurückbleiben (Platz: Dorf 8, Ort 12, Stadt 20, große Stadt 32). Sie zählen nicht zum Kommando des Lichs. Erreicht ein Trupp den Ort, kämpft die Besatzung automatisch (Verteidiger +25 % Schaden durch die Mauern); hält sie, bleibt der Ort untot. Trupps meiden Orte, deren Besatzung deutlich stärker ist als sie selbst. Karte: 🛡 und Anzahl am Ortsnamen.
+- **Kosten:** Leichen ×3, Knochen ×2,5 gegenüber vorher (Ghul 3 Leichen, Skelett 300 Knochen); mit dem Startvorrat liegt das Kommando nicht mehr sofort am Limit.
+- **Orte als Bild:** Häuser, Mauern, Türme und Kirchen je nach Größe; Klöster als Kirche mit Häusern (große mit Mauer), mythische Orte als Steinkreis mit Dolmen, das Hügelgrab als Hügel mit Steinen. Flagge in der Farbe des Besitzers, eroberte Orte grau. Alle Orte in zwei zusammengefassten Meshes (lebend / tot) für die Leistung.
+- **Armee-Ansicht:** Karten mit Portrait, Anzahl, Lebensbalken und Werten je Kreatur (❤ LP, ⚔ Schaden, Reichweite, 👣 Bewegung, ⚡ Initiative, ⛨ Seelenschild). Der Lich zeigt seine Kampfwerte mit allen Boni und seine **Stufe** (1 + eroberte Orte).
+- **Runden:** Die Initiative-Leiste zeigt 12 Züge voraus mit Trennern „Runde N“; zu Beginn jeder Runde erscheint groß „Runde N“ mit der Tageszeit; die Rundenzeile nennt, in wie vielen Zügen die nächste eigene Einheit dran ist.
+
 ### Animationen und Zeitskala (umgesetzt 04.11.2026)
 
 - **Animationen** (prozedural, die Figuren haben kein Skelett): leichtes Atmen bzw. Schweben im Stand, schwer angeschlagene Stapel schwanken und sacken ab; Ausholen vor jedem Angriff (zurücklehnen, dann zustoßen), Zurückzucken bei Treffern, Umkippen und Versinken beim Tod; Fähigkeiten zeigen einen Ring in der Farbe der Schadensart.
