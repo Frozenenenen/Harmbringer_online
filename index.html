@@ -112,7 +112,7 @@
     transition: opacity .4s; text-align: center; max-width: 80%; }
 
   /* Debug overlay */
-  #debug { position: absolute; left: 14px; top: 120px; padding: 6px 10px; font: 12px/1.45 Consolas, monospace; background: rgba(233,223,196,.92);
+  #debug { pointer-events: auto; cursor: help; position: absolute; left: 14px; top: 120px; padding: 6px 10px; font: 12px/1.45 Consolas, monospace; background: rgba(233,223,196,.92);
     border: 1px solid var(--ink); z-index: 6; white-space: pre; }
 
   /* 3D labels (CSS2DRenderer) */
@@ -236,6 +236,9 @@ if (HM.format !== 'u16' || !DATA.map.metersPerStep) {
 const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
+// <GEN:VERSION> written by tools/make_version.py - do not edit by hand
+const BUILD = {"version": 68, "date": "2026-11-04", "changes": [{"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}, {"date": "04.11. 11:54", "text": "Tageszeit, Wind, Nebel und Ankunftszustände im Kampf"}, {"date": "04.11. 11:51", "text": "Fähigkeiten und Zustände im Kampf, Schadensvorschau; Fix: Gebäude im Hügelgrab überschrieben die Kampffeld-Gebäude"}, {"date": "04.11. 11:44", "text": "Reisen Tag für Tag mit großem Datum, Tempo nach langsamster Einheit; Doku Wissen/Gebäude"}, {"date": "04.11. 11:41", "text": "Wissen und Gebäude: unbekannte Einheiten, Erkenntnis-Schwellen, Pantheon-Varianten, Bauen im Hügelgrab, Wasserleiche"}]};
+// </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
 const WIDTH = MAP.width, HEIGHT = MAP.height;
@@ -4588,7 +4591,10 @@ const Debug = {
   update() {
     if (!game.debug) return;
     const cam = game.view.cam, [q, r] = cam.pivotTile(), w = game.world;
-    $('debug').textContent =
+    const dbg = $('debug');
+    if (!dbg.title && typeof BUILD !== 'undefined') dbg.title = `Version ${BUILD.version} (${BUILD.date})\nLetzte Änderungen:\n` + BUILD.changes.map(c => `• ${c.date}  ${c.text}`).join('\n');
+    dbg.textContent =
+      `Version    ${typeof BUILD !== 'undefined' ? BUILD.version + ' · ' + BUILD.date : '?'}  (Maus hier: Änderungen)\n` +
       `FPS        ${game.fps.toFixed(0)}\n` +
       `Pivot      (${q}, ${r})\n` +
       `Meter      ${w.metersAt(q, r).toFixed(1)} m\n` +

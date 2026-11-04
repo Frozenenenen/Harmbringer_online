@@ -31,6 +31,7 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 - Nach Änderungen an Einheiten: `python tools/build_gallery.py`. Neue Einheit: Figur in `tools/build_units.py` (`build()` + `UNITS`), dann `build_units.py`, `render_portraits.py`, `build_game_figures.py`. Karten-Daten: `python tools/build_webmap.py --assets <Ordner mit Textures/ und Maps/>`. Danach `python tools/build_game_textures.py` (Bodentexturen fürs Spiel).
 - `data/world_data.js`: Einheiten und Kampfregeln (Bereiche `// <GEN:UNITS>`, `// <GEN:RULES>`) erzeugt `gen_data.py` aus den CSVs – dort nicht von Hand ändern. Fraktionen, Orte, Gebäude, Wirtschaft sind Handarbeit.
 - Spieltexte und Dokumentation auf Deutsch, Code-Kommentare auf Englisch.
+- **Vor jedem Commit** `python tools/make_version.py "<Commit-Nachricht>"` ausführen: schreibt Versionsnummer und letzte Änderungen in `index.html` (Debug-Fenster F3, Tooltip).
 - Änderungen **direkt auf `main` committen und pushen** – ohne Branch und Pull Request. Das Spiel spielt aktuell nur Kevin, GitHub Pages darf sofort den neuen Stand zeigen.
 
 ## Getroffene Entscheidungen (Auszug)
