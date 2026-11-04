@@ -1254,6 +1254,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Totenlicht | Undead | CannonFodder / Scout | 1 | 6 | 0 | 9 | 5 | 3 | 1 | Arcane | Unarmored | 6 / 2 | 6/3/0 | 0/0 | Spektral/Flug | -1 | 1S |
 | Gefallene Schwester | Undead | Warrior / Support | 2 | 14 | 4 | 5 | 3 | 4 | 2 | Soul | Light | 4 / 2 | 4/3/2 | 1/2 | – | -2 | 1L 1S |
 | Grabdruidin | Undead | Warrior / Caster | 2 | 14 | 5 | 6 | 3 | 7 | 4 | Arcane | Light | 5 / 2 | 4/3/4 | 1/3 | – | -3 | 1L 1K 1S |
+| Wasserleiche | Undead | Warrior / Tank | 2 | 26 | 0 | 3 | 3 | 8 | 1 | Blunt | Unarmored | 3 / 2 | 3/2/4 | 2/4 | – | -3 | 2L 1S |
 | Knochenschütze | Undead | CannonFodder / Ranged | 2 | 10 | 0 | 4 | 3 | 8 | 5 | Pierce | Light | 0 / 0 | 5/2/0 | 2/1 | – | -2 | 3K |
 | Totenjäger | Undead | Warrior / Scout | 3 | 22 | 3 | 7 | 6 | 9 | 1 | Pierce | Light | 2 / 0 | 5/4/3 | 3/3 | – | -4 | 3L 2K 1S |
 | Skelett-Bogenschütze | Undead | CannonFodder / Ranged | 1 | 9 | 0 | 4 | 3 | 4 | 4 | Pierce | Light | 0 / 0 | 5/2/1 | 1/1 | – | -2 | 3K |
@@ -2444,7 +2445,7 @@ Beantwortet die offene Frage „Welche Gebäude-Typen in der Basis konkret?". St
 | Knochenwerkstatt | 2 | 10L 10K | 2 | Knochenwerkstatt 1 + Armbrust-Handwerk | Knochenschütze | Knochenschützen |
 | Knochenwerkstatt | 3 | 20L 30K 2S | 4 | Knochenwerkstatt 2 | Balliste, Knochendrache | Belagerung, Knochendrache |
 | Leichengrube | 1 | Start | – | – | Zombie, Ghul, Leichenhund | Start |
-| Leichengrube | 2 | 15L 10K | 2 | Leichengrube 1 + Moorwissen | Moorleiche | Moorleichen |
+| Leichengrube | 2 | 15L 10K | 2 | Leichengrube 1 + Moorwissen | Moorleiche, Wasserleiche | Moorleichen, Wasserleichen |
 | Leichengrube | 3 | 30L 20K 5S | 4 | Leichengrube 2 | Fleischriese | Fleischriesen |
 | Seelenzwinger | 1 | 10L 10K 3S | 2 | – | Geist | Kommando-Limit 15 → 20 |
 | Seelenzwinger | 2 | 20L 20K 6S | 3 | Seelenzwinger 1 + Irrlicht-Bann | Totenlicht | Limit 25, Totenlichter |

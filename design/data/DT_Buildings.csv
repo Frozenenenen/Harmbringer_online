@@ -6,7 +6,7 @@ BoneWorkshop_1,Knochenwerkstatt,1,0,0,0,0,0,,,"(""Skeleton"",""SkeletonArcher"",
 BoneWorkshop_2,Knochenwerkstatt,2,10,10,0,0,2,BoneWorkshop_1,Know_Crossbow,"(""BoneArcher"")",0,Knochenschützen
 BoneWorkshop_3,Knochenwerkstatt,3,20,30,2,0,4,BoneWorkshop_2,,"(""Ballista"",""BoneDragon"")",0,"Belagerung, Knochendrache"
 CorpsePit_1,Leichengrube,1,0,0,0,0,0,,,"(""Zombie"",""Ghoul"",""CorpseHound"")",0,Start
-CorpsePit_2,Leichengrube,2,15,10,0,0,2,CorpsePit_1,Know_Bog,"(""BogCorpse"")",0,Moorleichen
+CorpsePit_2,Leichengrube,2,15,10,0,0,2,CorpsePit_1,Know_Bog,"(""BogCorpse"",""DrownedCorpse"")",0,"Moorleichen, Wasserleichen"
 CorpsePit_3,Leichengrube,3,30,20,5,0,4,CorpsePit_2,,"(""FleshGiant"")",0,Fleischriesen
 SoulKennel_1,Seelenzwinger,1,10,10,3,0,2,,,"(""Ghost"")",5,Kommando-Limit 15 → 20
 SoulKennel_2,Seelenzwinger,2,20,20,6,0,3,SoulKennel_1,Know_Wisp,"(""DeathLight"")",5,"Limit 25, Totenlichter"

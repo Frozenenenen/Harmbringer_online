@@ -13,7 +13,7 @@ buildings = [
  B("BoneWorkshop_2","Knochenwerkstatt",2,10,10,0,0,2,"BoneWorkshop_1","Know_Crossbow",("BoneArcher",), effect="Knochenschützen"),
  B("BoneWorkshop_3","Knochenwerkstatt",3,20,30,2,0,4,"BoneWorkshop_2", produces=("Ballista", "BoneDragon"), effect="Belagerung, Knochendrache"),
  B("CorpsePit_1","Leichengrube",1,0,0,0,0,0, produces=("Zombie","Ghoul","CorpseHound"), effect="Start"),
- B("CorpsePit_2","Leichengrube",2,15,10,0,0,2,"CorpsePit_1","Know_Bog",("BogCorpse",), effect="Moorleichen"),
+ B("CorpsePit_2","Leichengrube",2,15,10,0,0,2,"CorpsePit_1","Know_Bog",("BogCorpse","DrownedCorpse"), effect="Moorleichen, Wasserleichen"),
  B("CorpsePit_3","Leichengrube",3,30,20,5,0,4,"CorpsePit_2", produces=("FleshGiant",), effect="Fleischriesen"),
  B("SoulKennel_1","Seelenzwinger",1,10,10,3,0,2, produces=("Ghost",), cmd=5, effect="Kommando-Limit 15 → 20"),
  B("SoulKennel_2","Seelenzwinger",2,20,20,6,0,3,"SoulKennel_1","Know_Wisp",("DeathLight",), cmd=5, effect="Limit 25, Totenlichter"),

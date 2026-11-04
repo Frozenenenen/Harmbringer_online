@@ -79,6 +79,8 @@ units = [
    14,4,5,3,4,2,"Soul",1,F,"Light",4,2, 4,3,2,1,2,2,F,F,-2, l=1, s=1, ab=("FallenSisterGraveWater",)),
  U("GraveDruidess","Grabdruidin","Warrior","Caster","Undead","Mumifizierte Hügelgrab-Druidin.",
    14,5,6,3,7,4,"Arcane",1,F,"Light",5,2, 4,3,4,1,3,2,F,F,-3, l=1, k=1, s=1, ab=("GraveDruidessBind","DruidessEarthBind")),
+ U("DrownedCorpse","Wasserleiche","Warrior","Tank","Undead","Untote Version der Ertrunkenen von Rungholt. Freigeschaltet durch den Sturz der Versunkenen Städte.",
+   26,0,3,3,8,1,"Blunt",1,T,"Unarmored",3,2, 3,2,4,2,4,2,F,F,-3, l=2, s=1),
  U("BoneArcher","Knochenschütze","CannonFodder","Ranged","Undead","Skelett-Armbrustschütze. Wird nie führerlos (kein Leaderless).",
    10,0,4,3,8,5,"Pierce",1,F,"Light",0,0, 5,2,0,2,1,2,F,F,-2, k=3, ab=("CrossbowPavise",)),
  U("DeathHunter","Totenjäger","Warrior","Scout","Undead","Untoter Reiter der Wilden Jagd. Freigeschaltet durch den Sieg über den Wode.",
@@ -161,16 +163,17 @@ GAME_UNITS = [
  ("brockenhexe", "BrockenQueen", dict(shape="octahedron", color="#1d1d1d")),
  # Advanced undead from the design data (unlocked by knowledge; where to recruit: RECRUIT_AT in index.html)
  ("knochenschuetze", "BoneArcher", dict(shape="cylinder", color="#e0d8c0", requiresKnowledge=4)),
- ("moorleiche", "BogCorpse", dict(shape="capsule", color="#4a4030", requiresKnowledge=4)),
- ("todesritter", "DeathKnight", dict(shape="box", color="#3a3a44", requiresKnowledge=5)),
- ("totenlicht", "DeathLight", dict(shape="sphere", color="#9be05a", requiresKnowledge=5)),
+ ("moorleiche", "BogCorpse", dict(shape="capsule", color="#4a4030", requiresKnowledge=3, requiresPantheon="heide")),
+ ("todesritter", "DeathKnight", dict(shape="box", color="#3a3a44", requiresKnowledge=7)),
+ ("totenlicht", "DeathLight", dict(shape="sphere", color="#9be05a", requiresKnowledge=5, requiresPantheon="heide")),
  ("gefallene_schwester", "FallenSister", dict(shape="cone", color="#6a4a5a", requiresKnowledge=6)),
- ("grabdruidin", "GraveDruidess", dict(shape="cone", color="#4a5a3a", requiresKnowledge=6)),
- ("nekromant", "Necromancer", dict(shape="octahedron", color="#2a1a3a", requiresKnowledge=6)),
- ("knochenballiste", "Ballista", dict(shape="box", color="#8a7a5a", requiresKnowledge=7)),
- ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=3)),
- ("knochendrache", "BoneDragon", dict(shape="octahedron", color="#d8d0b8", requiresKnowledge=10)),
- ("totenjaeger", "DeathHunter", dict(shape="box", color="#3a2a2a", requiresKnowledge=10)),
+ ("grabdruidin", "GraveDruidess", dict(shape="cone", color="#4a5a3a", requiresKnowledge=8, requiresPantheon="heide")),
+ ("nekromant", "Necromancer", dict(shape="octahedron", color="#2a1a3a", requiresKnowledge=9)),
+ ("knochenballiste", "Ballista", dict(shape="box", color="#8a7a5a", requiresKnowledge=10)),
+ ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=5)),
+ ("knochendrache", "BoneDragon", dict(shape="octahedron", color="#d8d0b8", requiresKnowledge=16, requiresPantheon="spreewald")),
+ ("wasserleiche", "DrownedCorpse", dict(shape="capsule", color="#5a6a70", requiresKnowledge=6, requiresPantheon="wattenmeer")),
+ ("totenjaeger", "DeathHunter", dict(shape="box", color="#3a2a2a", requiresKnowledge=10, requiresPantheon="wodan")),
  # Heath pantheon and clergy units for the mythic places of the wider map
  ("kleriker", "Cleric", dict(shape="cone", color="#cfc6a8")),
  ("heideschwester", "HeathSister", dict(shape="cone", color="#9a7a8a")),
@@ -540,6 +543,8 @@ def game_unit(gid, row, extra):
     if d["side"] == "undead":
         d["commandPoints"] = -u["CommandPoints"]; d["cost"] = cost
     if "requiresKnowledge" in extra: d["requiresKnowledge"] = extra["requiresKnowledge"]
+    if "requiresPantheon" in extra: d["requiresPantheon"] = extra["requiresPantheon"]
+    d["energy"] = u["MaxEnergy"]
     d["shape"], d["color"] = extra["shape"], extra["color"]
     d["desc"] = extra.get("desc") or u["DescriptionText"]
     return d

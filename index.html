@@ -132,9 +132,9 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=16"></script>
+<script src="data/world_data.js?v=17"></script>
 <script src="data/ground_textures.js?v=7"></script>
-<script src="data/portraits.js?v=11"></script>
+<script src="data/portraits.js?v=12"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1175,6 +1175,7 @@ const Campaign = {
       for (const f of ENEMY_FACTIONS) c.threat[f] -= c.threat[f] * THREAT.dailyDecay;
       for (const node of this.ownedSpecials()) this.addResources(DATA.specials[node.special].income || {});
       Raids.day();
+      Base.day();
     }
   },
   owner(node) { return game.campaign.owners[node.id]; },
@@ -1184,7 +1185,7 @@ const Campaign = {
   armyNode() { return NODE_BY_ID[game.campaign.nodeId]; },
   commandLimit() {
     const mythic = DATA.nodes.filter(n => n.type === 'MYTHIC' && this.isConquered(n)).length;
-    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0);
+    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0) + Base.sum('command');
   },
   // Sum of all active bonuses: equipped artifacts plus buffs of owned special places.
   effects() {
@@ -1289,6 +1290,7 @@ const Campaign = {
   },
   addResources(res) {
     for (const [k, v] of Object.entries(res)) game.campaign.resources[k] = (game.campaign.resources[k] || 0) + v;
+    if (res.knowledge) Knowledge.discover();
   }
 };
 
@@ -1512,13 +1514,115 @@ const RECRUIT_AT = {
   PHYLACTERY: null,                                                     // null = all units
   WORLDLY: ['ghul', 'zombie', 'leichenhund', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'todesritter', 'knochenballiste', 'fleischriese'],
   CHRISTIAN: ['zombie', 'skelett', 'bogner', 'schleuderer', 'knochenschuetze', 'gefallene_schwester', 'nekromant', 'fleischriese'],
-  MYTHIC: ['ghul', 'leichenhund', 'geist', 'moorleiche', 'totenlicht', 'grabdruidin', 'nekromant', 'totenjaeger', 'knochendrache']
+  MYTHIC: ['ghul', 'leichenhund', 'geist', 'moorleiche', 'wasserleiche', 'totenlicht', 'grabdruidin', 'nekromant', 'totenjaeger', 'knochendrache']
+};
+
+// Knowledge: a unit is known once the Lich has enough knowledge and (for pantheon variants)
+// the pantheon has fallen. Unknown units stay hidden; only the next threshold is shown.
+const Knowledge = {
+  known(type) {
+    const u = DATA.units[type], c = game.campaign;
+    if (u.side !== 'undead') return false;
+    if (u.requiresPantheon && !Pantheons.assimilated(u.requiresPantheon)) return false;
+    return (u.requiresKnowledge || 0) <= (c.resources.knowledge || 0);
+  },
+  // Next knowledge value that reveals something (only counting units whose pantheon has fallen).
+  next() {
+    const have = game.campaign.resources.knowledge || 0;
+    const t = Object.values(DATA.units).filter(u => u.side === 'undead' && (u.requiresKnowledge || 0) > have && (!u.requiresPantheon || Pantheons.assimilated(u.requiresPantheon)))
+      .map(u => u.requiresKnowledge);
+    return t.length ? Math.min(...t) : null;
+  },
+  hiddenInPantheons() { return Object.values(DATA.units).some(u => u.side === 'undead' && u.requiresPantheon && !Pantheons.assimilated(u.requiresPantheon)); },
+  hint() {
+    const n = this.next(), have = game.campaign.resources.knowledge || 0;
+    const parts = [];
+    parts.push(n !== null ? `Nächste Erkenntnis bei <b>${n} Wissen</b> (noch ${n - have}).` : 'Mit deinem Wissen ist alles erkannt, was du erkennen kannst.');
+    if (this.hiddenInPantheons()) parts.push('Weitere Geheimnisse ruhen bei Pantheons, die noch nicht gefallen sind.');
+    return parts.join(' ');
+  },
+  // Announces newly known units (called whenever knowledge or pantheons change).
+  discover() {
+    const c = game.campaign; if (!c) return;
+    c.known = c.known || Object.keys(DATA.units).filter(t => this.known(t));
+    const fresh = Object.keys(DATA.units).filter(t => t !== 'lich' && this.known(t) && !c.known.includes(t));
+    if (!fresh.length) return;
+    c.known.push(...fresh);
+    const names = fresh.map(t => DATA.units[t].name).join(', ');
+    UI.toast(`Erkenntnis: ${names}. ${fresh.some(t => !Base.hasProducer(t)) ? 'Das passende Gebäude im Hügelgrab fehlt noch.' : 'Jetzt rekrutierbar.'}`, 7);
+  }
+};
+
+// Buildings in the barrow (DATA.buildings). One construction at a time, it continues while travelling.
+const Base = {
+  levels() {
+    const c = game.campaign;
+    if (!c.buildings) { c.buildings = {}; for (const [k, b] of Object.entries(DATA.buildings)) c.buildings[k] = b.start || 0; }
+    return c.buildings;
+  },
+  level(k) { return this.levels()[k] || 0; },
+  built(k) { return DATA.buildings[k].levels.slice(0, this.level(k)); },
+  allBuilt() { return Object.keys(DATA.buildings).flatMap(k => this.built(k)); },
+  producer(type) {
+    for (const [k, b] of Object.entries(DATA.buildings)) { const i = b.levels.findIndex(l => (l.produces || []).includes(type)); if (i >= 0) return { k, level: i + 1 }; }
+    return null;
+  },
+  hasProducer(type) { const p = this.producer(type); return !p || this.level(p.k) >= p.level; },
+  sum(key) { return this.allBuilt().reduce((s, l) => s + (l[key] || 0), 0); },
+  lichDeathDays() { const d = this.allBuilt().map(l => l.lichDeathDays).filter(Boolean); return d.length ? Math.min(...d) : ECON.lichDeathDays; },
+  // Reason why the next level of k cannot be started, or null.
+  blocker(k) {
+    const c = game.campaign, B = DATA.buildings[k], L = this.level(k), next = B.levels[L];
+    if (!next) return 'Höchste Stufe';
+    if (c.construction) return c.construction.k === k ? 'Im Bau' : 'Es wird schon gebaut';
+    if (Campaign.armyNode() !== PHYLACTERY) return 'Nur im Hügelgrab';
+    if (B.requiresNode && !Campaign.isConquered(NODE_BY_ID[B.requiresNode])) return `Erst ${NODE_BY_ID[B.requiresNode].name} erobern`;
+    if (B.requiresPantheon && !Pantheons.assimilated(B.requiresPantheon)) return `Erst ${DATA.pantheons[B.requiresPantheon].name} stürzen`;
+    for (const [rk, rl] of Object.entries(B.requiresBuilding || {})) if (this.level(rk) < rl) return `Benötigt ${DATA.buildings[rk].name}`;
+    for (const [r, v] of Object.entries(next.cost || {})) if ((c.resources[r] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[r]}`;
+    return null;
+  },
+  start(k) {
+    if (this.blocker(k)) return;
+    const c = game.campaign, next = DATA.buildings[k].levels[this.level(k)];
+    for (const [r, v] of Object.entries(next.cost || {})) c.resources[r] -= v;
+    c.construction = { k, level: this.level(k) + 1, daysLeft: next.days || 1 };
+    SaveGame.save(); UI.updateHeader(); this.open();
+  },
+  day() {
+    const c = game.campaign, w = c.construction;
+    if (!w) return;
+    if (--w.daysLeft > 0) return;
+    this.levels()[w.k] = w.level; c.construction = null;
+    UI.toast(`Fertig: ${DATA.buildings[w.k].name} Stufe ${w.level}.`, 5);
+    Knowledge.discover();
+  },
+  producesText(l) {
+    if (!l.produces) return '';
+    return 'Erhebt: ' + l.produces.map(t => Knowledge.known(t) ? DATA.units[t].name : '???').join(', ');
+  },
+  open() {
+    const c = game.campaign, cost = o => Object.entries(o || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ') || '—';
+    const rows = Object.entries(DATA.buildings).map(([k, B]) => {
+      const L = this.level(k), next = B.levels[L], block = this.blocker(k);
+      const have = B.levels.slice(0, L).map(l => [l.text, this.producesText(l)].filter(Boolean).join(' ')).join('<br>');
+      const w = c.construction && c.construction.k === k ? ` · <b>im Bau: noch ${c.construction.daysLeft} ${c.construction.daysLeft === 1 ? 'Tag' : 'Tage'}</b>` : '';
+      return `<div class="recruitRow"><div></div><div><b>${B.name}</b> <span class="small">· Stufe ${L} / ${B.levels.length}${w}</span><br>
+        ${have ? `<span class="small">${have}</span><br>` : ''}
+        ${next ? `<span class="small">Nächste Stufe: ${[next.text, this.producesText(next)].filter(Boolean).join(' ')} · Kosten: ${cost(next.cost)} · ${next.days} ${next.days === 1 ? 'Tag' : 'Tage'}</span>` : ''}</div>
+        <div>${next ? `<button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button><div class="small">${block || ''}</div>` : ''}</div></div>`;
+    }).join('');
+    const r = c.resources;
+    UI.modal(`<h2>Hügelgrab – Bauen</h2><p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge}</p>
+      <p class="small">${Knowledge.hint()}</p>${rows}`, [{ label: 'Schließen', primary: true, action: () => { UI.renderInfo(); UI.updateHeader(); } }]);
+    document.querySelectorAll('[data-build]').forEach(b => b.onclick = () => this.start(b.dataset.build));
+  }
 };
 const Recruitment = {
   canRecruitAt(node) { return node && node.type in RECRUIT_AT && (node.type === 'PHYLACTERY' || Campaign.isConquered(node)); },
   candidates(node = Campaign.armyNode()) {
     const allow = RECRUIT_AT[node.type];
-    return Object.entries(DATA.units).filter(([k, u]) => u.side === 'undead' && k !== 'lich' && (!allow || allow.includes(k)));
+    return Object.entries(DATA.units).filter(([k, u]) => u.side === 'undead' && k !== 'lich' && (!allow || allow.includes(k)) && Knowledge.known(k));
   },
   // Returns null if recruitable, otherwise a German reason.
   blocker(type) {
@@ -1526,7 +1630,10 @@ const Recruitment = {
     const here = Campaign.armyNode();
     if (!this.canRecruitAt(here)) return 'Hier kann nicht rekrutiert werden';
     if (!this.candidates(here).some(([k]) => k === type)) return 'Nicht an diesem Ort';
-    if ((u.requiresKnowledge || 0) > c.resources.knowledge) return `Benötigt ${u.requiresKnowledge} Wissen`;
+    if (!Knowledge.known(type)) return 'Unbekannt';
+    const pr = Base.producer(type);
+    if (pr && Base.level(pr.k) < pr.level) return `Benötigt ${DATA.buildings[pr.k].name} Stufe ${pr.level}`;
+    if (u.requiresPantheon && !Base.level('knowledgeAltar')) return 'Benötigt Wissensaltar';
     for (const [k, v] of Object.entries(u.cost || {})) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
     if (Campaign.commandUsed() + u.commandPoints > Campaign.commandLimit()) return 'Kommandolimit erreicht';
     return null;
@@ -2659,6 +2766,9 @@ const Battle = {
   },
   // Artifacts and owned special places strengthen every undead stack (copied defs, battle only).
   applyArmyEffects(b) {
+    // Bone forge: death knights carry extra soul shield.
+    const dk = Base.sum('deathKnightShield');
+    if (dk) for (const u of b.units) if (u.side === 'player' && u.type === 'todesritter') u.shield += dk * stackCount(u);
     const fx = Campaign.effects();
     if (!fx.undeadHpPct && !fx.undeadDamagePct && !fx.undeadMr && !fx.undeadIni) return;
     for (const u of b.units) {
@@ -2776,8 +2886,14 @@ const Battle = {
     const b = game.battle;
     b.round++;
     this.log(`— Runde ${b.round} —`);
+    const heath = Base.sum('heathHeal');
     for (const u of this.alive('player')) {
       const t = b.field.get(u.q, u.r), eff = DATA.floorTypes[t.floor].effect;
+      if (heath && t.floor === 'HEATHER' && topHp(u) < u.def.hp) {
+        const h = Math.min(heath, u.def.hp - topHp(u));
+        u.hp += h; BattleView.updateHp(u); BattleView.floatText(u, '+' + h, true);
+        this.log(`${u.def.name} heilt auf der Heide (+${h}, Heidealtar).`, 'good');
+      }
       if (!eff) continue;
       if (eff.damageUndeadPerRound) {
         this.applyDamage(u, eff.damageUndeadPerRound, null, null);
@@ -2980,6 +3096,7 @@ const Battle = {
         const P = DATA.pantheons[pidWon];
         pantheonText = `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, ${esc(NODE_BY_ID[P.seat].name)} ist ein Ley-Knoten (Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
         c.raids = Raids.list().filter(r => !P.factions.includes(r.faction));
+        setTimeout(() => Knowledge.discover(), 1500);
       } else if (pidWon) {
         const live = Pantheons.living(pidWon).length;
         pantheonText = `<p class="small">${esc(DATA.pantheons[pidWon].name)}: noch ${live} ${live === 1 ? 'Mitglied' : 'Mitglieder'}. Solange sie leben, schicken sie Trupps in ihre Region.</p>`;
@@ -3025,8 +3142,9 @@ const Battle = {
       c.travel = null;
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
       c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
-      Campaign.advanceDays(ECON.lichDeathDays);
-      html = `<h2>Der Lich fällt</h2><p>Die Armee zerfällt zu Staub. ${ECON.lichDeathDays} Tage später erwacht der Lich erneut im Hügelgrab am Wilseder Berg.</p>`;
+      const deathDays = Base.lichDeathDays();
+      Campaign.advanceDays(deathDays);
+      html = `<h2>Der Lich fällt</h2><p>Die Armee zerfällt zu Staub. ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich erneut im Hügelgrab am Wilseder Berg.</p>`;
     } else {
       c.travel = null;
       const lich = this.alive('player').find(u => u.type === 'lich');
@@ -3264,10 +3382,10 @@ const UI = {
     if (k === 'bones') return `Knochen\n• ${ECON.bonesPerKill} Knochen je gefallenem Gegner, egal wie er starb.\n• Eroberung von Dörfern und Städten.\n• Täglich aus: ${sites('bones')}.\nBraucht: ${users('bones')}.${daily}`;
     if (k === 'souls') return `Seelen\n• ${ECON.soulsPerSoulKill} Seele je Gegner, der durch Seelenschaden stirbt (Lich, Geist).\n• Eroberung mythischer Orte.\n• Täglich aus: ${sites('souls')}.\n• Artefakt: Glocke von Rungholt (+2 pro Sieg).\nBraucht: ${users('souls')}.${daily}`;
     if (k === 'knowledge') {
-      const locked = Object.values(DATA.units).filter(u => u.side === 'undead' && u.requiresKnowledge).map(u => `${u.name} (${u.requiresKnowledge})`).join(', ');
-      return `Wissen\n• Eroberung von Klöstern (ihre Bücher) und mythischen Orten.\n• Artefakt: Lehniner Weissagung (+1 pro Sieg).\nSchaltet Einheiten frei: ${locked}. Wird nicht verbraucht.`;
+      const n = Knowledge.next(), have = game.campaign.resources.knowledge || 0;
+      return `Wissen\n• Eroberung von Klöstern (ihre Bücher) und mythischen Orten.\n• Artefakt: Lehniner Weissagung (+1 pro Sieg).\nWird nicht verbraucht. Mit wachsendem Wissen erkennt der Lich neue Untote – welche, weiß er erst, wenn es so weit ist.\n${n !== null ? `Nächste Erkenntnis bei ${n} Wissen (noch ${n - have}).` : 'Zurzeit nichts Neues zu erkennen.'}${Knowledge.hiddenInPantheons() ? '\nManches Wissen liegt bei Pantheons, die erst fallen müssen.' : ''}`;
     }
-    return `Kommando\n• Der Lich führt ${ECON.commandLimitBase} Kommando-Punkte.\n• +${ECON.commandLimitPerMythicNode} je eroberter mythischer Ort.\n• Artefakt: Codex von Corvey (+8).\nJede Einheit belegt Punkte (Ghul 2, Skelett 1 …). Je mehr belegt, desto stärker der Lich im Kampf.`;
+    return `Kommando\n• Der Lich führt ${ECON.commandLimitBase} Kommando-Punkte.\n• +${ECON.commandLimitPerMythicNode} je eroberter mythischer Ort.\n• Artefakt: Codex von Corvey (+8).\n• Seelenzwinger im Hügelgrab (+12 je Stufe).\nJede Einheit belegt Punkte (Ghul 2, Skelett 1 …). Je mehr belegt, desto stärker der Lich im Kampf.`;
   },
   // What a special place offers (income / buff while owned, artifact on conquest).
   specialText(node) {
@@ -3391,6 +3509,7 @@ const UI = {
       else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
       if (here.id === node.id && Recruitment.canRecruitAt(node)) add('Rekrutieren', () => this.openRecruit(), true);
       if (here.id === node.id && Pantheons.isLeyNode(node)) add('Ley-Sprung', () => Pantheons.openJump(), false);
+      if (here.id === node.id && node === PHYLACTERY) add('Bauen', () => Base.open(), true);
     }
   },
   openRecruit() {
@@ -3398,9 +3517,9 @@ const UI = {
     const rows = Recruitment.candidates().map(([type, u]) => {
       const block = Recruitment.blocker(type);
       const cost = Object.entries(u.cost || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
-      const locked = (u.requiresKnowledge || 0) > c.resources.knowledge;
+      const locked = !!block && block.startsWith('Benötigt');
       return `<div class="recruitRow ${locked ? 'locked' : ''}">${portraitHtml(type, u)}
-        <div><b>${u.name}</b> <span class="small">· ${u.commandPoints < 0 ? `+${-u.commandPoints} Kommando (Anführer)` : u.commandPoints + ' Kommando'} · Kosten: ${cost}${u.requiresKnowledge ? ` · benötigt ${u.requiresKnowledge} Wissen` : ''}</span><br>
+        <div><b>${u.name}</b> <span class="small">· ${u.commandPoints < 0 ? `+${-u.commandPoints} Kommando (Anführer)` : u.commandPoints + ' Kommando'} · Kosten: ${cost}</span><br>
         <span class="small">LP ${u.hp} · Ini ${u.initiative} · Bew ${u.move} · Schaden ${u.damage} ${POWER_NAMES[u.power]} · Reichweite ${u.range} · Rüstung ${DEFENSE_NAMES[u.defense]}</span><br>
         <span class="small"><i>${esc(u.desc || '')}</i></span></div>
         <div><button data-type="${type}" ${block ? 'disabled' : ''} title="${block || ''}">Rekrutieren</button><div class="small">${block || ''}</div></div></div>`;
@@ -3408,6 +3527,7 @@ const UI = {
     const r = c.resources;
     const place = Campaign.armyNode();
     this.modal(`<h2>${esc(place.name)} – Rekrutieren</h2>
+      <p class="small">${Knowledge.hint()}</p>
       ${place.type !== 'PHYLACTERY' ? '<p class="small">Eroberte Orte erheben nur, was ihre Gräber hergeben. Alle Einheiten gibt es im Hügelgrab, Geister auch an mythischen Orten.</p>' : ''}
       <p class="small">Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge} · Kommando ${Campaign.commandUsed()} / ${Campaign.commandLimit()}</p>
       ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);

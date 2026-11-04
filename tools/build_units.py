@@ -454,6 +454,12 @@ def build(unit):
         for x, y in ((0.1, 1.3), (-0.12, 1.05), (0.15, 0.9)): m.B((x, y, 0.12), (0.06, 0.22, 0.01), "#3a6a3a")         # seaweed
         spear(m, (0.27, 1.0, 0.2), wood="#5a4a3a", tip="#6a4a3a", length=1.7); m.C((0.27, 1.85, 0.2), (0.4, 1.75, 0.2), 0.015, 0.0, "#6a4a3a", seg=3)
         return m
+    if unit == "wasserleiche":
+        m = human(skin="#7a8a80", shirt="#3a4440", pants="#2a302c", boots="#1e2220", hair="#2a3a2a", r=(0.24, 1.2, 0.42), l=(-0.24, 1.2, 0.42))
+        for x, y in ((0.1, 1.3), (-0.12, 1.05), (0.15, 0.9), (0.0, 1.45)): m.B((x, y, 0.12), (0.06, 0.24, 0.01), "#2a5a2a")
+        for sx in (-1, 1): m.B((sx * 0.04, 1.54, 0.125), (0.03, 0.02, 0.01), "#9be05a")
+        m.C((0.0, 0.9, -0.15), (0.1, 0.35, -0.3), 0.012, 0.012, "#5a5a50", seg=3); m.B((0.1, 0.33, -0.3), (0.16, 0.12, 0.05), "#5a5a50")   # chain + anchor stone
+        return m
     if unit == "wattjungfrau":
         m = robed("#9aaab0", skin="#c8d0d0", hair="#2a4a3a", eyes="#e8f0a0", r_bot=0.3)
         m.B((0, 1.0, -0.14), (0.3, 0.8, 0.05), "#2a4a3a"); lantern(m, (-0.27, 1.05, 0.2)); return m
@@ -530,7 +536,7 @@ UNITS = ["lich", "ghul", "skelett", "bogner", "leichenhund", "zombie", "schleude
          "moorleiche", "todesritter", "totenlicht", "gefallene_schwester", "grabdruidin", "nekromant", "knochenballiste",
          "fleischriese", "totenjaeger", "knochendrache",
          "sachsenkrieger", "wodansrabe", "wilder_jaeger", "hackelberg", "lutki", "wassermann", "rusalka", "mittagsfrau",
-         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans"]
+         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche"]
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
