@@ -181,6 +181,7 @@
   <div class="res" id="resources"></div>
   <div id="threats"></div>
   <button id="btnInventory" title="Artefakte und besondere Orte (I)">Inventar</button>
+  <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
   <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
 </div>
 <div id="info" class="panel hidden"></div>
@@ -250,7 +251,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 76, "date": "2026-11-04", "changes": [{"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}]};
+const BUILD = {"version": 77, "date": "2026-11-04", "changes": [{"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1772,8 +1773,11 @@ const SaveGame = {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.campaign)); } catch (e) { /* storage unavailable */ }
   },
   load() {
+    try { return this.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
+  },
+  // Turns a saved JSON string into a campaign (with migration of older saves), or null.
+  parse(s) {
     try {
-      const s = localStorage.getItem(SAVE_KEY);
       if (!s) return null;
       const c = JSON.parse(s);
       if (!c || !Array.isArray(c.army) || !c.owners || !NODE_BY_ID[c.nodeId]) return null;
@@ -1789,7 +1793,63 @@ const SaveGame = {
         owners: { ...fresh.owners, ...c.owners } };   // new places added since the save keep their default owner
     } catch (e) { return null; }
   },
-  clear() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
+  clear() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } },
+  // ---- save slots and files -------------------------------------------------
+  SLOTS: 5,
+  slotKey(i) { return SAVE_KEY + '_slot' + i; },
+  info(c) {
+    if (!c) return null;
+    const won = DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && c.owners[n.id] === 'UNDEAD').length;
+    return `${Campaign.dateString(c.dayCount)} · Tag ${c.dayCount} · ${won} Orte erobert · ${c.army.length} Untote`;
+  },
+  readSlot(i) { try { const raw = localStorage.getItem(this.slotKey(i)); if (!raw) return null; const w = JSON.parse(raw); return { at: w.at, name: w.name, c: this.parse(JSON.stringify(w.c)) }; } catch (e) { return null; } },
+  writeSlot(i) {
+    try { localStorage.setItem(this.slotKey(i), JSON.stringify({ at: new Date().toLocaleString('de-DE'), name: `Platz ${i + 1}`, c: game.campaign })); UI.toast(`Gespeichert in Platz ${i + 1}.`); }
+    catch (e) { UI.toast('Speichern nicht möglich (Browser-Speicher voll oder gesperrt).'); }
+  },
+  deleteSlot(i) { try { localStorage.removeItem(this.slotKey(i)); } catch (e) { /* ignore */ } },
+  // Download the current campaign as a file (works under file:// too).
+  exportFile() {
+    const blob = new Blob([JSON.stringify({ game: 'Harmbringer', version: typeof BUILD !== 'undefined' ? BUILD.version : 0, savedAt: new Date().toISOString(), c: game.campaign })], { type: 'application/json' });
+    const a = document.createElement('a'), c = game.campaign;
+    a.href = URL.createObjectURL(blob); a.download = `harmbringer_tag${c.dayCount}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  },
+  importFile() {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = async () => {
+      const f = inp.files[0]; if (!f) return;
+      try {
+        const w = JSON.parse(await f.text()), c = this.parse(JSON.stringify(w.c || w));
+        if (!c) throw new Error('bad');
+        UI.closeModal(); if (game.battle) Battle.exit(); startGame(c); UI.toast(`Spielstand geladen: ${this.info(c)}`, 5);
+      } catch (e) { UI.toast('Diese Datei ist kein Harmbringer-Spielstand.'); }
+    };
+    inp.click();
+  },
+  // Modal with autosave, slots, export and import.
+  open(fromIntro = false) {
+    const auto = this.load(), inGame = !fromIntro && game.campaign && (game.mode === 'world');
+    const row = (label, info, btns) => `<div class="recruitRow"><div></div><div><b>${label}</b><br><span class="small">${info || 'leer'}</span></div><div class="recruitBtns">${btns}</div></div>`;
+    let html = `<h2>Spielstände</h2><p class="small">Gespeichert wird automatisch nach Kämpfen, Reisen und Aktionen. Zusätzlich gibt es ${this.SLOTS} feste Plätze und die Sicherung als Datei (z. B. für einen anderen Browser oder Rechner).</p>`;
+    html += row('Automatisch', this.info(auto), auto && fromIntro ? `<button data-sv="loadauto">Laden</button>` : '');
+    for (let i = 0; i < this.SLOTS; i++) {
+      const sl = this.readSlot(i);
+      html += row(`Platz ${i + 1}`, sl ? `${sl.at} · ${this.info(sl.c)}` : null,
+        `${inGame ? `<button data-sv="save" data-i="${i}">Speichern</button>` : ''}${sl ? `<button data-sv="load" data-i="${i}">Laden</button><button data-sv="del" data-i="${i}">Löschen</button>` : ''}`);
+    }
+    html += `<p>${inGame ? '<button data-sv="export">Als Datei sichern</button> ' : ''}<button data-sv="import">Datei laden</button></p>`;
+    UI.modal(html, [{ label: 'Schließen', primary: true, action: () => { if (fromIntro) showIntro(); } }]);
+    document.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i, k = b.dataset.sv;
+      if (k === 'save') { this.writeSlot(i); this.open(fromIntro); }
+      else if (k === 'del') { this.deleteSlot(i); this.open(fromIntro); }
+      else if (k === 'load') { const sl = this.readSlot(i); if (sl && sl.c) { UI.closeModal(); if (game.battle) Battle.exit(); startGame(sl.c); UI.toast(`Platz ${i + 1} geladen.`); } else UI.toast('Dieser Stand passt nicht mehr zum Spiel.'); }
+      else if (k === 'loadauto') { UI.closeModal(); startGame(auto); }
+      else if (k === 'export') this.exportFile();
+      else if (k === 'import') this.importFile();
+    });
+  }
 };
 
 // =============================================================================
@@ -4759,6 +4819,7 @@ function initInput() {
   $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
   $('btnGo').onclick = () => Expeditions.go();
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
+  $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.'); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
     [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
 }
@@ -4885,6 +4946,7 @@ function showIntro() {
   game.mode = 'intro';
   const buttons = [];
   if (saved) buttons.push({ label: 'Fortsetzen', action: () => startGame(saved) });
+  buttons.push({ label: 'Spielstände …', action: () => setTimeout(() => SaveGame.open(true), 0) });
   buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); setTimeout(() => Narrator.speak('lich', LICH_LINES.awaken, 'awaken'), 1200); } });
   UI.modal(`<h2>Harmbringer</h2>
     <p>Mai 1371. Unter dem Wilseder Berg, in einem Hügelgrab aus der Bronzezeit, öffnet ein Toter die Augen.
