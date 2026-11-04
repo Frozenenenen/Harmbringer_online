@@ -151,6 +151,8 @@
   .losses { display: flex; flex-wrap: wrap; gap: 6px 14px; } .lossRow { display: flex; gap: 6px; align-items: center; min-width: 150px; }
   .lossRow .portrait { width: 40px; height: 40px; }
   .cost { white-space: nowrap; margin-right: 4px; } .cost.short { color: #b0302a; font-weight: bold; }
+  .upgrades { margin-top: 3px; border-left: 3px solid #c9a227; padding-left: 6px; } .upg { font-size: 12px; margin: 2px 0; } .upg.own { opacity: .75; }
+  .upg button { font-size: 11px; padding: 1px 6px; margin-left: 4px; }
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
   #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
@@ -182,7 +184,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=29"></script>
+<script src="data/world_data.js?v=30"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -273,7 +275,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 86, "date": "2026-11-04", "changes": [{"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}]};
+const BUILD = {"version": 87, "date": "2026-11-04", "changes": [{"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1327,10 +1329,10 @@ const Campaign = {
   // The Lich's battle values (army bonus, conquests, artifacts) and his level (1 + conquered places).
   lichStats() {
     const B = ECON.lichArmyBonus, base = DATA.units.lich, cp = this.commandUsed(), fx = this.effects();
-    const won = DATA.nodes.filter(n => this.isConquered(n)).length;
-    return { level: 1 + won, hp: base.hp + Math.round(cp * B.hpPerCommand + won * (B.hpPerConquest || 0)) + (fx.lichHp || 0),
-      damage: base.damage + Math.round(cp * B.damagePerCommand + won * (B.damagePerConquest || 0)) + (fx.lichDamage || 0),
-      shield: base.soulShield + Math.round(cp * B.shieldPerCommand + won * (B.shieldPerConquest || 0)) + (fx.lichShield || 0) };
+    const won = DATA.nodes.filter(n => this.isConquered(n)).length, um = Upgrades.mods('lich');
+    return { level: 1 + won, hp: base.hp + Math.round(cp * B.hpPerCommand + won * (B.hpPerConquest || 0)) + (fx.lichHp || 0) + um.lichHp,
+      damage: base.damage + Math.round(cp * B.damagePerCommand + won * (B.damagePerConquest || 0)) + (fx.lichDamage || 0) + um.lichDamage,
+      shield: base.soulShield + Math.round(cp * B.shieldPerCommand + won * (B.shieldPerConquest || 0)) + (fx.lichShield || 0) + um.lichShield };
   },
   // Scouts in the army: hounds smell further, ghosts and death lights see through monastery veils.
   scoutRange() { const t = new Set(game.campaign.army.map(u => u.type)); return (t.has('leichenhund') ? 40 : 0) + (t.has('geist') || t.has('totenlicht') ? 60 : 0); },
@@ -1769,6 +1771,37 @@ const Knowledge = {
   }
 };
 
+// Upgrades (DATA.upgrades): bought once in a building, then permanent buffs for a unit group.
+const Upgrades = {
+  owned() { const c = game.campaign; return c ? (c.upgrades = c.upgrades || []) : []; },
+  has(id) { return this.owned().includes(id); },
+  inGroup(type, g) { const G = DATA.unitGroups[g]; return g === 'lich' ? type === 'lich' : G === '*' ? type !== 'lich' : (G || []).includes(type); },
+  // Summed effects for a unit type.
+  mods(type) {
+    const m = { hpPct: 0, damagePct: 0, shield: 0, mr: 0, ini: 0, lichHp: 0, lichDamage: 0, lichShield: 0 };
+    for (const u of DATA.upgrades) if (this.has(u.id) && this.inGroup(type, u.group)) for (const k in m) m[k] += u[k] || 0;
+    return m;
+  },
+  blocker(u) {
+    const c = game.campaign;
+    if (this.has(u.id)) return 'Erworben';
+    if (Base.level(u.building) < u.level) return `Benötigt ${DATA.baseBuildings[u.building].name} Stufe ${u.level}`;
+    for (const [k, v] of Object.entries(u.cost)) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
+    return null;
+  },
+  buy(id) {
+    const u = DATA.upgrades.find(x => x.id === id); if (!u || this.blocker(u)) return;
+    for (const [k, v] of Object.entries(u.cost)) game.campaign.resources[k] -= v;
+    this.owned().push(id); UI.toast(`${u.name}: ${u.text}`, 5); SaveGame.save(); UI.updateHeader(); Base.open();
+  },
+  html(k) {
+    const list = DATA.upgrades.filter(u => u.building === k); if (!list.length) return '';
+    return '<div class="upgrades">' + list.map(u => { const b = this.blocker(u), own = this.has(u.id);
+      return `<div class="upg ${own ? 'own' : ''}"><b>${own ? '✔ ' : ''}${esc(u.name)}</b> <span class="small">${esc(u.text)}${own ? '' : ` · ${costHtml(u.cost, game.campaign.resources)}`}</span>
+        ${own ? '' : `<button data-upg="${u.id}" ${b ? 'disabled' : ''} title="${b || 'Kaufen'}">Kaufen</button>${b ? `<span class="small"> ${esc(b)}</span>` : ''}`}</div>`; }).join('') + '</div>';
+  }
+};
+
 // Buildings in the barrow (DATA.baseBuildings). One construction at a time, it continues while travelling.
 const Base = {
   levels() {
@@ -1825,6 +1858,7 @@ const Base = {
       return `<div class="recruitRow"><div></div><div><b>${B.name}</b> <span class="small">· Stufe ${L} / ${B.levels.length}${w}</span><br>
         ${have ? `<span class="small">${have}</span><br>` : ''}
         ${next ? `<span class="small">Nächste Stufe: ${[next.text, this.producesText(next)].filter(Boolean).join(' ')} · Kosten: ${cost(next.cost)} · ${next.days} ${next.days === 1 ? 'Tag' : 'Tage'}</span>` : ''}</div>
+        ${Upgrades.html(k)}</div>
         <div>${next ? `<button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button><div class="small">${block || ''}</div>` : ''}</div></div>`;
     }).join('');
     const r = c.resources;
@@ -1832,6 +1866,7 @@ const Base = {
       <p>${resSummary(r)}</p>
       <p class="small">${Knowledge.hint()}</p>${rows}`, [{ label: 'Schließen', primary: true, action: () => { UI.renderInfo(); UI.updateHeader(); } }]);
     document.querySelectorAll('[data-build]').forEach(b => b.onclick = () => this.start(b.dataset.build));
+    document.querySelectorAll('[data-upg]').forEach(b => b.onclick = () => Upgrades.buy(b.dataset.upg));
   }
 };
 const Recruitment = {
@@ -3723,10 +3758,10 @@ const Battle = {
     const lich = b.units.find(u => u.type === 'lich'), B = ECON.lichArmyBonus;
     if (!lich || !B) return;
     const cp = Campaign.commandUsed(), base = lich.def;
-    const fx = Campaign.effects(), won = DATA.nodes.filter(n => Campaign.isConquered(n)).length;
-    const add = { hp: Math.round(cp * B.hpPerCommand + won * (B.hpPerConquest || 0)) + (fx.lichHp || 0),
-      damage: Math.round(cp * B.damagePerCommand + won * (B.damagePerConquest || 0)) + (fx.lichDamage || 0),
-      soulShield: Math.round(cp * B.shieldPerCommand + won * (B.shieldPerConquest || 0)) + (fx.lichShield || 0) };
+    const fx = Campaign.effects(), won = DATA.nodes.filter(n => Campaign.isConquered(n)).length, um = Upgrades.mods('lich');
+    const add = { hp: Math.round(cp * B.hpPerCommand + won * (B.hpPerConquest || 0)) + (fx.lichHp || 0) + um.lichHp,
+      damage: Math.round(cp * B.damagePerCommand + won * (B.damagePerConquest || 0)) + (fx.lichDamage || 0) + um.lichDamage,
+      soulShield: Math.round(cp * B.shieldPerCommand + won * (B.shieldPerConquest || 0)) + (fx.lichShield || 0) + um.lichShield };
     lich.def = { ...base, hp: base.hp + add.hp, damage: base.damage + add.damage, soulShield: base.soulShield + add.soulShield };
     lich.hp = Math.max(1, Math.round(lich.hp / base.hp * lich.def.hp));
     lich.maxHp = lich.def.hp; lich.shield = lich.def.soulShield;
@@ -3738,13 +3773,14 @@ const Battle = {
     const dk = Base.sum('deathKnightShield');
     if (dk) for (const u of b.units) if (u.side === 'player' && u.type === 'todesritter') u.shield += dk * stackCount(u);
     const fx = Campaign.effects();
-    if (!fx.undeadHpPct && !fx.undeadDamagePct && !fx.undeadMr && !fx.undeadIni) return;
     for (const u of b.units) {
       if (u.side !== 'player' || u.type === 'lich') continue;
+      const m = Upgrades.mods(u.type);
+      if (!fx.undeadHpPct && !fx.undeadDamagePct && !fx.undeadMr && !fx.undeadIni && !m.hpPct && !m.damagePct && !m.shield && !m.mr && !m.ini) continue;
       const base = u.def, n = stackCount(u);
-      u.def = { ...base, hp: Math.round(base.hp * (1 + (fx.undeadHpPct || 0))), damage: Math.round(base.damage * (1 + (fx.undeadDamagePct || 0))),
-        magicResist: base.magicResist + (fx.undeadMr || 0), initiative: base.initiative + (fx.undeadIni || 0) };
-      u.hp = Math.round(u.hp / base.hp * u.def.hp); u.maxHp = n * u.def.hp;
+      u.def = { ...base, hp: Math.round(base.hp * (1 + (fx.undeadHpPct || 0) + m.hpPct)), damage: Math.round(base.damage * (1 + (fx.undeadDamagePct || 0) + m.damagePct)),
+        magicResist: base.magicResist + (fx.undeadMr || 0) + m.mr, initiative: base.initiative + (fx.undeadIni || 0) + m.ini, soulShield: (base.soulShield || 0) + m.shield };
+      u.hp = Math.round(u.hp / base.hp * u.def.hp); u.maxHp = n * u.def.hp; u.shield += m.shield * n;
       u.nextTick = turnTicks(u.def);
     }
   },
@@ -4783,11 +4819,12 @@ const UI = {
     const stat = (ic, v, t) => `<span class="st" title="${t}">${ic}${v}</span>`;
     const cards = groupByType(army).map(g => {
       const d = DATA.units[g.type], n = g.hps.length, sum = g.hps.reduce((a, h) => a + h, 0), isLich = g.type === 'lich';
-      const hp = isLich ? L.hp : d.hp, dmg = isLich ? L.damage : d.damage, cur = isLich ? Math.round(sum / d.hp * L.hp) : sum, max = n * hp;
+      const um = Upgrades.mods(g.type), hp = isLich ? L.hp : Math.round(d.hp * (1 + um.hpPct)), dmg = isLich ? L.damage : Math.round(d.damage * (1 + um.damagePct));
+      const cur = Math.round(sum / d.hp * hp), max = n * hp;
       return `<div class="aCard ${isLich ? 'lich' : ''}" title="${esc(d.name)}: ${esc(d.desc || '')}">${portraitHtml(g.type, d)}${n > 1 ? `<span class="aCnt">${n}</span>` : ''}
         <div class="aBody"><div class="aName">${esc(d.name)}${isLich ? ` <span class="lvl" title="Stufe = 1 + eroberte Orte; jede Stufe +${ECON.lichArmyBonus.hpPerConquest} LP, +${ECON.lichArmyBonus.damagePerConquest} Schaden">Stufe ${L.level}</span>` : ''}</div>
         <div class="hpbar player" title="Lebenspunkte ${cur} / ${max}"><div style="width:${max ? 100 * cur / max : 0}%"></div></div>
-        <div class="aStats">${stat('❤', hp, 'Lebenspunkte je Kreatur')}${stat('⚔', dmg, 'Schaden je Kreatur (' + POWER_NAMES[d.power] + ')')}${stat(d.range > 1 ? '➶' : '✊', d.range, 'Reichweite')}${stat('👣', d.move, 'Bewegung')}${stat('⚡', d.initiative, 'Initiative')}${(isLich ? L.shield : d.soulShield) ? stat('⛨', isLich ? L.shield : d.soulShield, 'Seelenschild') : ''}</div></div></div>`;
+        <div class="aStats">${stat('❤', hp, 'Lebenspunkte je Kreatur')}${stat('⚔', dmg, 'Schaden je Kreatur (' + POWER_NAMES[d.power] + ')')}${stat(d.range > 1 ? '➶' : '✊', d.range, 'Reichweite')}${stat('👣', d.move, 'Bewegung')}${stat('⚡', d.initiative + um.ini, 'Initiative')}${(isLich ? L.shield : d.soulShield + um.shield) ? stat('⛨', isLich ? L.shield : d.soulShield + um.shield, 'Seelenschild') : ''}</div></div></div>`;
     }).join('');
     return `<h3>${esc(title)} <span class="small">${army.length} Untote · ${resIcon('command')}${cmd}</span></h3><div class="armyCards">${cards}</div>`;
   },
