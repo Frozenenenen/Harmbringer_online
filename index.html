@@ -183,6 +183,8 @@
   .modal .panel { max-width: 560px; width: calc(100% - 32px); max-height: calc(100% - 40px); overflow: auto; padding: 20px 26px; }
   .modal p { line-height: 1.45; font-size: 17px; }
   .modal .panel { position: relative; }
+  /* Resources stay visible at the top while the list scrolls (recruiting, building). */
+  .stickyRes { position: sticky; top: -20px; z-index: 1; background: var(--parchment); margin: 0 -26px 8px; padding: 8px 26px; border-bottom: 1px solid rgba(43,33,22,.3); font-size: 17px; }
   .modalClose { position: sticky; top: -12px; float: right; margin: -8px -14px 0 8px; width: 30px; height: 30px; padding: 0; font-size: 18px; line-height: 1; z-index: 2; }
   .modal .buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
   #loading .bar { height: 12px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 10px; }
@@ -378,7 +380,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 112, "date": "2026-11-04", "changes": [{"date": "04.11. 22:11", "text": "Massive Türme/Bergfriede (unbegehbar, blickdicht), Ballisten Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}]};
+const BUILD = {"version": 113, "date": "2026-11-04", "changes": [{"date": "04.11. 22:14", "text": "Rekrutieren und Bauen: Ressourcen bleiben beim Scrollen oben stehen"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2002,7 +2004,7 @@ const Base = {
     }).join('');
     const r = c.resources;
     UI.modal(`<h2>Hügelgrab – Bauen</h2><p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. Die Diener im Hügelgrab bauen auch, wenn der Lich fort ist.</p>
-      <p>${resSummary(r)}</p>
+      <div class="stickyRes">${resSummary(r)}</div>
       <p class="small">${Knowledge.hint()}</p>${rows}`, [{ label: 'Schließen', primary: true, action: () => { UI.renderInfo(); UI.updateHeader(); } }]);
     document.querySelectorAll('[data-build]').forEach(b => b.onclick = () => this.start(b.dataset.build));
     document.querySelectorAll('[data-upg]').forEach(b => b.onclick = () => Upgrades.buy(b.dataset.upg));
@@ -5798,7 +5800,7 @@ const UI = {
     this.modal(`<h2>${esc(place.name)} – Rekrutieren</h2>
       <p class="small">${Knowledge.hint()}</p>
       ${place.type !== 'PHYLACTERY' ? '<p class="small">Eroberte Orte erheben nur, was ihre Gräber hergeben. Alle Einheiten gibt es im Hügelgrab, Geister auch an mythischen Orten.</p>' : ''}
-      <p>${resSummary(r)} <span class="cost" title="Kommando">${resIcon('command')}${Campaign.commandUsed()} / ${Campaign.commandLimit()}</span></p>
+      <div class="stickyRes">${resSummary(r)} <span class="cost" title="Kommando">${resIcon('command')}${Campaign.commandUsed()} / ${Campaign.commandLimit()}</span></div>
       ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
     $('modalBody').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => {
       const type = b.dataset.type, max = Recruitment.maxAffordable(type);
