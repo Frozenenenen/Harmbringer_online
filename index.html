@@ -169,7 +169,7 @@
 </div>
 <div id="battleButtons" class="panel hidden">
   <button id="btnEndTurn">Zug beenden</button>
-  <button id="btnRetreat">Rückzug</button>
+  <button id="btnRetreat" title="Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.">Rückzug</button>
   <button id="btnEdges">Kanten anzeigen</button>
 </div>
 <div id="edgeTip" class="panel hidden"></div>
@@ -530,6 +530,83 @@ class TileRenderer {
 }
 
 // =============================================================================
+// Blight (world map): the land around the barrow and around every conquered place dies.
+// One byte per tile (0 = alive, 255 = dead). Each source grows with the days since its
+// conquest; the barrow also grows with every conquered place. The terrain shader turns
+// the ground into dry, grey earth, black bog and faint unholy veins; the vegetation
+// turns grey, dies and finally falls over.
+// =============================================================================
+const BLIGHT = {
+  barrow: { r0: 8, perPlace: 1.6, perDay: 0.12, max: 70, oldDays: 15 },   // oldDays: the barrow's own land is dead for ages
+  place: { r0: 2, perDay: 0.35, maxBase: 4, maxPerSqrtSize: 2.6 },   // max radius = maxBase + sqrt(size) * maxPerSqrtSize
+  barrowRate: 0.3,         // tiles per day used to estimate how long the barrow's land is dead already
+  instantDays: 8,          // a conquered place starts as if dead for this many days already (the battle)
+  fullDays: 30             // days after the front passed until a tile is fully dead (trees fall from about day 17)
+};
+const Blight = {
+  data: null, tex: null, overlay: null, sig: '', version: 0,
+  init() {
+    if (this.data) return;
+    this.data = new Uint8Array(WIDTH * HEIGHT);
+    this.tex = new THREE.DataTexture(this.data, WIDTH, HEIGHT, THREE.RedFormat, THREE.UnsignedByteType);
+    this.tex.magFilter = this.tex.minFilter = THREE.LinearFilter; this.tex.needsUpdate = true;
+    const K = 4; this.overlay = document.createElement('canvas');
+    this.overlay.width = Math.ceil(WIDTH / K); this.overlay.height = Math.ceil(HEIGHT / K);
+  },
+  at(q, r) { return this.data ? this.data[r * WIDTH + q] / 255 : 0; },
+  sources() {
+    const c = game.campaign, out = [];
+    if (!c) return out;
+    c.conqueredDay = c.conqueredDay || {};
+    const owned = DATA.nodes.filter(n => Campaign.isConquered(n));
+    for (const n of owned) if (c.conqueredDay[n.id] === undefined) c.conqueredDay[n.id] = 0;   // older saves
+    const B = BLIGHT.barrow, P = BLIGHT.place;
+    // R: current radius; rate: tiles per day the front moved; extra: days since the front stopped.
+    out.push({ q: PHYLACTERY.q, r: PHYLACTERY.r, R: Math.min(B.max, B.r0 + B.perPlace * owned.length + B.perDay * c.dayCount), rate: BLIGHT.barrowRate, extra: B.oldDays });
+    for (const n of owned) {
+      const days = Math.max(0, c.dayCount - c.conqueredDay[n.id]);
+      const max = P.maxBase + Math.sqrt(n.size || 4) * P.maxPerSqrtSize, R = Math.min(max, P.r0 + P.perDay * days);
+      out.push({ q: n.q, r: n.r, R, rate: P.perDay, extra: BLIGHT.instantDays + Math.max(0, days - (max - P.r0) / P.perDay) });
+    }
+    return out;
+  },
+  // Recomputes when the day or the set of conquered places changed. Returns true on change.
+  refresh() {
+    const c = game.campaign; if (!c) return false;
+    this.init();
+    const src = this.sources(), sig = src.map(s => `${s.q},${s.r},${s.R.toFixed(1)}`).join(';');
+    if (sig === this.sig) return false;
+    this.sig = sig; this.version++;
+    const d = this.data; d.fill(0);
+    const ry = ROW_SPACING / COL_SPACING;                    // rows are a bit taller than columns
+    for (const { q, r, R, rate, extra } of src) {
+      const Rr = Math.ceil(R / ry) + 1;
+      for (let y = Math.max(0, r - Rr); y <= Math.min(HEIGHT - 1, r + Rr); y++) {
+        const dy = (y - r) * ry;
+        for (let x = Math.max(0, Math.floor(q - R - 1)); x <= Math.min(WIDTH - 1, Math.ceil(q + R + 1)); x++) {
+          const dist = Math.hypot(x - q, dy);
+          if (dist >= R) continue;
+          // Age of the blight on this tile in days -> 0..1 (the front itself is young and faint).
+          const age = (R - dist) / rate + extra;
+          const v = Math.round(255 * smoothstep01(Math.min(1, age / BLIGHT.fullDays)));
+          const i = y * WIDTH + x; if (v > d[i]) d[i] = v;
+        }
+      }
+    }
+    this.tex.needsUpdate = true;
+    // Minimap overlay at 1/4 resolution.
+    const ov = this.overlay, ctx = ov.getContext('2d'), img = ctx.createImageData(ov.width, ov.height);
+    for (let my = 0; my < ov.height; my++) for (let mx = 0; mx < ov.width; mx++) {
+      const v = d[Math.min(HEIGHT - 1, my * 4 + 2) * WIDTH + Math.min(WIDTH - 1, mx * 4 + 2)];
+      if (!v) continue;
+      const o = (my * ov.width + mx) * 4; img.data[o] = 58; img.data[o + 1] = 52; img.data[o + 2] = 50; img.data[o + 3] = v * 0.8;
+    }
+    ctx.putImageData(img, 0, 0);
+    return true;
+  }
+};
+
+// =============================================================================
 // TerrainRenderer (world map)
 // Continuous landscape instead of hex prisms: one vertex per heightmap point in a
 // window that follows the camera. Heights and floor types are read in the shaders
@@ -607,7 +684,8 @@ class TerrainRenderer {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setIndex(new THREE.BufferAttribute(index, 1));
     this.uniforms = {
-      hTex: { value: hTex }, fTex: { value: fTex }, groundTex: { value: ground.tex },
+      hTex: { value: hTex }, fTex: { value: fTex }, groundTex: { value: ground.tex }, bTex: { value: (Blight.init(), Blight.tex) },
+      deadLayer: { value: ['DryEarth', 'Swamp', 'Mud'].map(n => Math.max(0, ground.names.indexOf(n))) },
       layer: { value: layer }, tint: { value: tint },
       center: { value: new THREE.Vector2() }, mapSize: { value: new THREE.Vector2(WIDTH, HEIGHT) },
       spacing: { value: new THREE.Vector3(COL_SPACING, ROW_SPACING, INRADIUS / 2) },
@@ -638,7 +716,7 @@ class TerrainRenderer {
         // GLSL3 ShaderMaterial: three.js does not declare the output, so the colorspace chunk needs this alias.
         layout(location = 0) out vec4 pc_fragColor;
         #define gl_FragColor pc_fragColor
-        uniform sampler2D fTex; uniform sampler2DArray groundTex;
+        uniform sampler2D fTex, bTex; uniform sampler2DArray groundTex; uniform int deadLayer[3];
         uniform int layer[${FLOOR_KEYS.length}]; uniform vec3 tint[${FLOOR_KEYS.length}];
         uniform vec2 mapSize; uniform float uvScale;
         uniform vec3 sunDir, sunColor, skyColor, groundColor, fogColor; uniform float fogDensity;
@@ -663,9 +741,29 @@ class TerrainRenderer {
             col += w * tc; wsum += w;
           }
           col /= max(wsum, 1e-4);
+          // Blight: ragged front, then dry grey earth, black bog patches and faint unholy veins.
+          float bl = texture(bTex, (vTile + 0.5) / mapSize).r;
+          float glow = 0.0;
+          if (bl > 0.0) {
+            float edge = bl + (vnoise(vTile * 0.18) - 0.5) * 0.45 + (vnoise(vTile * 0.9 + 3.1) - 0.5) * 0.12;
+            float e = smoothstep(0.18, 0.5, edge);
+            vec3 dry = pow(texture(groundTex, vec3(uv, float(deadLayer[0]))).rgb, vec3(2.2));
+            vec3 bog = pow(texture(groundTex, vec3(uv * 1.3, float(deadLayer[1]))).rgb, vec3(2.2));
+            vec3 mud = pow(texture(groundTex, vec3(uv * 0.8, float(deadLayer[2]))).rgb, vec3(2.2));
+            float nb = vnoise(vTile * 0.07 + 40.0) * 0.7 + vnoise(vTile * 0.3 + 9.0) * 0.3;
+            vec3 dead = mix(dry * vec3(0.75, 0.72, 0.7), mud * 0.7, smoothstep(0.4, 0.55, nb));
+            dead = mix(dead, bog * vec3(0.32, 0.36, 0.3), smoothstep(0.6, 0.7, nb));
+            float lum = dot(dead, vec3(0.3, 0.55, 0.15));
+            dead = mix(vec3(lum), dead, 0.35);
+            // The old ground shows through a little at the front.
+            col = mix(col, dead, e * mix(0.75, 1.0, smoothstep(0.5, 0.9, bl)));
+            float vein = 1.0 - abs(vnoise(vTile * 0.45 + 70.0) * 2.0 - 1.0);
+            glow = smoothstep(0.9, 0.98, vein) * smoothstep(0.65, 0.95, edge);
+          }
           vec3 nrm = normalize(vNormal);
           vec3 light = sunColor * max(dot(nrm, sunDir), 0.0) + mix(groundColor, skyColor, nrm.y * 0.5 + 0.5);
           col *= light;
+          col += glow * vec3(0.05, 0.16, 0.04);
           // Outside the heightmap: fade to the background.
           vec2 out2 = max(-vTile, vTile - (mapSize - 1.0));
           col = mix(col, fogColor, clamp(max(out2.x, out2.y) / 8.0, 0.0, 1.0));
@@ -709,6 +807,8 @@ class TerrainRenderer {
 // tile; a few percent of the tiles borrow the floor type of a neighbour so objects also
 // appear slightly outside their areas (natural, ragged edges).
 // =============================================================================
+// Blighted replacement per kind (see Blight); trees may also fall over ('log').
+const DEAD_KIND = { pine: 'snag', leaf: 'snag', birch: 'snag', juniper: 'snag', bush: 'deadbush', heath: 'deadheath', grass: 'deadgrass', reed: 'deadgrass' };
 const VEG_SPILL = 0.06;            // share of tiles that use a neighbour's floor type
 const VEG_SPILL_RADIUS = 2;        // tiles
 // Objects per tile (expected value) by floor type. Fractions are rolled per tile.
@@ -765,10 +865,26 @@ class VegetationRenderer {
       grass:   mergeColored([[T(new THREE.ConeGeometry(0.05, 0.5, 3), 0, 0.25, 0), '#7d8b47'], [T(new THREE.ConeGeometry(0.05, 0.42, 3).rotateZ(0.35), 0.12, 0.2, 0), '#879450'],
                              [T(new THREE.ConeGeometry(0.05, 0.45, 3).rotateX(-0.3), -0.05, 0.2, 0.12), '#76853f']]),
       reed:    mergeColored([[T(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 3), 0, 0.45, 0), '#8a8a4a'], [T(new THREE.CylinderGeometry(0.03, 0.03, 0.75, 3).rotateZ(0.2), 0.1, 0.37, 0), '#7a7d42'],
-                             [T(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 4), 0, 0.95, 0), '#5a4028']])
+                             [T(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 4), 0, 0.95, 0), '#5a4028']]),
+      // Blighted land: grey snags, fallen trunks, dead shrubs and grass, a few crooked grave stones.
+      snag:    mergeColored([[T(new THREE.CylinderGeometry(0.08, 0.17, 2.3, 5), 0, 1.15, 0), '#77726b'],
+                             [T(new THREE.CylinderGeometry(0.03, 0.06, 0.9, 4).rotateZ(0.9), 0.35, 1.6, 0), '#6d6862'],
+                             [T(new THREE.CylinderGeometry(0.03, 0.05, 0.7, 4).rotateZ(-1.0), -0.3, 1.9, 0.05), '#6d6862'],
+                             [T(new THREE.CylinderGeometry(0.02, 0.04, 0.6, 4).rotateX(0.9), 0, 1.3, -0.25), '#7d7871']]),
+      log:     mergeColored([[T(new THREE.CylinderGeometry(0.13, 0.17, 2.2, 6).rotateZ(Math.PI / 2), 0.2, 0.15, 0), '#6f6a63'],
+                             [T(new THREE.CylinderGeometry(0.05, 0.04, 0.6, 4).rotateZ(0.5), 0.6, 0.35, 0.05), '#66615b'],
+                             [T(new THREE.DodecahedronGeometry(0.35, 0).scale(0.4, 1, 1), -0.95, 0.25, 0), '#5a544d'],
+                             [T(new THREE.CylinderGeometry(0.15, 0.2, 0.3, 6), -1.1, 0.15, 0.6), '#77726b']]),
+      deadbush: mergeColored([[T(new THREE.IcosahedronGeometry(0.5, 0).scale(1, 0.6, 1), 0, 0.25, 0), '#6a6158']]),
+      deadheath: mergeColored([[T(new THREE.IcosahedronGeometry(0.5, 0).scale(1.2, 0.5, 1), 0, 0.2, 0), '#5e5552'],
+                               [T(new THREE.IcosahedronGeometry(0.3, 0).scale(1.1, 0.5, 1), 0.38, 0.13, 0.15), '#544c4a']]),
+      deadgrass: mergeColored([[T(new THREE.ConeGeometry(0.05, 0.4, 3).rotateZ(0.5), 0.05, 0.15, 0), '#8a8270'], [T(new THREE.ConeGeometry(0.05, 0.35, 3).rotateX(-0.7), -0.05, 0.12, 0.1), '#7d7563']]),
+      gravestone: mergeColored([[T(new THREE.BoxGeometry(0.45, 0.7, 0.12).rotateZ(0.15), 0, 0.3, 0), '#5c5a5e'],
+                                [T(new THREE.BoxGeometry(0.4, 0.55, 0.12).rotateZ(-0.25), 0.7, 0.22, 0.3), '#545256']])
     };
     // Size factor per kind (world units are ~55 m; figures stay readable from the default zoom).
-    this.size = { pine: 2.2, leaf: 2.2, birch: 2.0, juniper: 1.6, bush: 1.4, heath: 1.5, rock: 1.6, grass: 2.2, reed: 2.0 };
+    this.size = { pine: 2.2, leaf: 2.2, birch: 2.0, juniper: 1.6, bush: 1.4, heath: 1.5, rock: 1.6, grass: 2.2, reed: 2.0,
+                  snag: 2.0, log: 2.0, deadbush: 1.4, deadheath: 1.5, deadgrass: 2.2, gravestone: 1.6 };
     const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 });
     this.capacity = 24000;
     this.meshes = {};
@@ -794,6 +910,22 @@ class VegetationRenderer {
     this.center = [q, r]; this.radius = radius;
     this.rebuild();
   }
+  // One object of `kind` on tile (q, r), randomized by `seed`.
+  place(kind, q, r, seed, counts, m4, quat, pos, scl, up, col) {
+    if (counts[kind] >= this.capacity) return;
+    const w = this.world;
+    const x = (q + (hash2(q, r, seed) - 0.5) * 1.1) * COL_SPACING;
+    const z = (r + (hash2(q, r, seed + 1) - 0.5) * 1.1) * ROW_SPACING + INRADIUS / 2;
+    const y = w.surfaceAt(x, z);
+    if (y < HEX.waterLevel + 0.15) return;              // nothing in the water
+    const s = this.size[kind] * (0.75 + hash2(q, r, seed + 2) * 0.5);
+    quat.setFromAxisAngle(up, hash2(q, r, seed + 3) * Math.PI * 2);
+    m4.compose(pos.set(x, y - 0.05 * s, z), quat, scl.set(s, s * (0.85 + hash2(q, r, seed + 2) * 0.3), s));
+    const mesh = this.meshes[kind], k = counts[kind]++;
+    mesh.setMatrixAt(k, m4);
+    const b = 0.85 + hash2(q, r, seed + 5) * 0.3;
+    mesh.setColorAt(k, col.setRGB(b, b * (0.95 + hash2(q, r, seed + 6) * 0.1), b));
+  }
   rebuild() {
     const [cq, cr] = this.center, rad = this.radius, w = this.world;
     const counts = {}; for (const k in this.meshes) counts[k] = 0;
@@ -811,22 +943,22 @@ class VegetationRenderer {
           if (inMap(nq, nr)) fi = w.floor[nr * WIDTH + nq];
         }
         let seed = 20;
+        const bl = Blight.at(q, r);
+        if (bl > 0.85 && hash2(q, r, 90) < (bl - 0.85) * 0.25) this.place('gravestone', q, r, 91, counts, m4, quat, pos, scl, up, col);
         for (const [kind, density] of this.rules[fi]) {
           // Expected `density` objects: integer part always, fractional part by chance.
           let n = Math.floor(density) + (hash2(q, r, seed++) < density % 1 ? 1 : 0);
           for (let i = 0; i < n; i++, seed += 4) {
-            if (counts[kind] >= this.capacity) break;
-            const x = (q + (hash2(q, r, seed) - 0.5) * 1.1) * COL_SPACING;
-            const z = (r + (hash2(q, r, seed + 1) - 0.5) * 1.1) * ROW_SPACING + INRADIUS / 2;
-            const y = w.surfaceAt(x, z);
-            if (y < HEX.waterLevel + 0.15) continue;           // nothing in the water
-            const s = this.size[kind] * (0.75 + hash2(q, r, seed + 2) * 0.5);
-            quat.setFromAxisAngle(up, hash2(q, r, seed + 3) * Math.PI * 2);
-            m4.compose(pos.set(x, y - 0.05 * s, z), quat, scl.set(s, s * (0.85 + hash2(q, r, seed + 2) * 0.3), s));
-            const mesh = this.meshes[kind], k = counts[kind]++;
-            mesh.setMatrixAt(k, m4);
-            const b = 0.85 + hash2(q, r, seed + 5) * 0.3;
-            mesh.setColorAt(k, col.setRGB(b, b * (0.95 + hash2(q, r, seed + 6) * 0.1), b));
+            // Blight: grey and dead first, fallen later. The front is ragged per object.
+            let k0 = kind;
+            if (bl > 0 && bl > 0.12 + hash2(q, r, seed + 7) * 0.6) {
+              k0 = DEAD_KIND[kind] || kind;
+              if (k0 === 'snag' && hash2(q, r, seed + 8) < (bl - 0.55) * 1.6) k0 = 'log';
+              if (k0 === 'deadgrass' && bl > 0.8 && hash2(q, r, seed + 9) < 0.5) continue;
+            }
+            const kind2 = k0;
+            if (counts[kind2] >= this.capacity) break;
+            this.place(kind2, q, r, seed, counts, m4, quat, pos, scl, up, col);
           }
         }
       }
@@ -1443,6 +1575,7 @@ const Minimap = {
     const useFull = v.z >= 4, src = useFull ? this.full : this.small, k = useFull ? 1 : 4;
     ctx.imageSmoothingEnabled = !useFull;
     ctx.drawImage(src, 0, 0, src.width, src.height, sx(0), sy(0), src.width * k / v.scale, src.height * k / v.scale);
+    if (Blight.sig) { ctx.imageSmoothingEnabled = true; const o = Blight.overlay; ctx.drawImage(o, 0, 0, o.width, o.height, sx(0), sy(0), o.width * 4 / v.scale, o.height * 4 / v.scale); }
     // Places: dots, names when zoomed in.
     ctx.font = '22px "IM Fell English", Georgia, serif';
     ctx.textAlign = 'center';
@@ -2584,7 +2717,7 @@ const Battle = {
     if (b.over) return;
     b.over = true;
     c.battles++;
-    let html = '';
+    let html = '', endNow = false;
     if (result === 'victory') {
       const fx = Campaign.effects();
       const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0) * (1 + (fx.lootCorpsesPct || 0)));
@@ -2596,7 +2729,7 @@ const Battle = {
       if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       Campaign.addResources(loot);
-      if (!node.encounter) c.owners[node.id] = 'UNDEAD';
+      if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
       // Special place: artifact into the inventory (auto-equipped while a slot is free).
       const sp = node.special && DATA.specials[node.special];
       let found = '';
@@ -2630,7 +2763,8 @@ const Battle = {
       html += `
 <h3>Beute</h3><ul>${lines || '<li>nichts</li>'}</ul>
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}`;
-      if (node.finale) c.won = true;
+      // Show the end screen only once (the campaign may go on afterwards).
+      if (node.finale && !c.won) { c.won = true; endNow = true; }
     } else if (result === 'defeat') {
       c.travel = null;
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
@@ -2648,7 +2782,7 @@ const Battle = {
     Campaign.healAtPhylactery();
     SaveGame.save();
     setTimeout(() => {
-      UI.modal(html, [{ label: 'Weiter', primary: true, action: () => { this.exit(); if (c.won) UI.showEnd(); else if (c.travel) resumeTravel(); } }]);
+      UI.modal(html, [{ label: 'Weiter', primary: true, action: () => { this.exit(); if (endNow) UI.showEnd(); else if (c.travel) resumeTravel(); } }]);
     }, 700);
   },
   // Back to the world map.
@@ -3296,7 +3430,10 @@ function frame(now) {
   v.scene.fog.density = 1.35 / (v.cam.distance + 160);
   v.sun.position.set(v.cam.pivot.x - 60, v.cam.pivot.y + 90, v.cam.pivot.z + 60);
   v.sun.target.position.copy(v.cam.pivot);
-  if (!inBattle) { v.terrain.update(v.cam.pivot, v.sun, v.scene.fog); v.vegetation.update(v.cam.pivot, v.cam.distance); }
+  if (!inBattle) {
+    if (Blight.refresh()) v.vegetation.center = [-9999, -9999];
+    v.terrain.update(v.cam.pivot, v.sun, v.scene.fog); v.vegetation.update(v.cam.pivot, v.cam.distance);
+  }
   v.waterNormal.offset.x = now * 0.00002; v.waterNormal.offset.y = now * 0.000013;
   if (v.armyBody && game.mode !== 'battle') { v.armyBody.rotation.y = now * 0.0008; v.armyBody.position.y = 4.2 + Math.sin(now * 0.002) * 0.4; }
   if (game.battle && BattleView.ring && game.battle.current && game.battle.current.alive) {
