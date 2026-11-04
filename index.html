@@ -264,7 +264,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=33"></script>
+<script src="data/world_data.js?v=34"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -378,7 +378,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 111, "date": "2026-11-04", "changes": [{"date": "04.11. 22:07", "text": "Rückzug: Armee bleibt vor dem Ort, verliert nur 25 % (Lich und Kommandeure entkommen)"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}]};
+const BUILD = {"version": 112, "date": "2026-11-04", "changes": [{"date": "04.11. 22:11", "text": "Massive Türme/Bergfriede (unbegehbar, blickdicht), Ballisten Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3041,7 +3041,7 @@ class Battlefield {
   index(t) { return (t.r - this.r0) * this.size + (t.q - this.q0); }
   neighborTile(t, d) { const [nq, nr] = neighbor(t.q, t.r, d); return this.get(nq, nr); }
   isWater(t) { return !!DATA.floorTypes[t.floor].water; }
-  walkable(t) { return DATA.floorTypes[t.floor].moveCost !== null; }
+  walkable(t) { return !t.solid && DATA.floorTypes[t.floor].moveCost !== null; }
   tilesWithin(q, r, rad) {
     const out = [];
     for (const t of this.tiles) if (t && hexDistance(q, r, t.q, t.r) <= rad) out.push(t);
@@ -3204,6 +3204,8 @@ class Battlefield {
       this.setEdge(w.t, w.e, 'WALL_TRANSPARENT');
     }
     this.buildings.push({ id, key, name: tpl.name, tiles: parts, doors });
+    // Closed blocks (no door) are solid: nobody can enter, nobody can see through.
+    if (!doors.length) for (const t of parts) { t.solid = true; for (let e = 0; e < 6; e++) this.setEdgeInfo(t, e, null); }
     return true;
   }
 
@@ -3361,7 +3363,7 @@ const SWIMMERS = new Set(['wasserleiche', 'wassermann', 'ertrunkener', 'wattjung
 const Pathfinding = {
   // Cost to step from A to B in direction d, or null if not allowed.
   stepCost(field, unit, A, d, B, ignoreUnits = false) {
-    if (!B) return null;
+    if (!B || B.solid) return null;
     const def = unit.def;
     if (!def.spectral && (A.edges[d] !== 'OPEN' || B.edges[opposite(d)] !== 'OPEN')) {
       // Flyers cross city walls, gates and palisades (not house walls: roofs).
@@ -3465,7 +3467,7 @@ const Combat = {
         if (info && info.kind === 'city' && ((i === 1 && high(A)) || (i === line.length - 1 && high(B)))) { if (i === line.length - 1) cover = true; continue; }
         return { clear: false };
       }
-      if (i < line.length - 1 && c.level > maxLevel) return { clear: false };
+      if (i < line.length - 1 && (c.level > maxLevel || c.solid)) return { clear: false };
       if (i === line.length - 1 && e && (e[0] === 'COVER' || e[1] === 'COVER')) cover = true;
     }
     return { clear: true, cover };
@@ -3539,6 +3541,25 @@ const BattleView = {
     this.ring.rotation.x = Math.PI / 2; this.ring.visible = false;
     root.add(this.ring);
     this.buildEdges(field);
+    this.buildSolids(field);
+  },
+  // Closed buildings (keep, stone tower) as massive stone blocks the full size of their tiles.
+  buildSolids(field) {
+    const geo = new THREE.CylinderGeometry(R * 0.97, R * 1.0, 1, 6); geo.rotateY(Math.PI / 6); geo.translate(0, 0.5, 0);
+    const cap = new THREE.CylinderGeometry(R * 1.05, R * 1.05, 0.5, 6); cap.rotateY(Math.PI / 6); cap.translate(0, 0.25, 0);
+    const stone = new THREE.MeshStandardMaterial({ color: 0x8a8378, roughness: 0.95, flatShading: true });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x5e584e, roughness: 0.95, flatShading: true });
+    for (const bld of field.buildings) {
+      if (bld.doors.length || bld.key === 'walltower') continue;
+      const h = bld.key === 'stonetower' ? 7 : 5;
+      for (const t of bld.tiles) {
+        const p = hexToWorld(t.q, t.r);
+        const body = new THREE.Mesh(geo, stone); body.scale.y = h; body.position.set(p.x, t.y, p.z);
+        const top = new THREE.Mesh(cap, dark); top.position.set(p.x, t.y + h, p.z);
+        body.castShadow = top.castShadow = true;
+        game.view.battleRoot.add(body, top);
+      }
+    }
   },
   setOverlay(mesh, list) {
     const m = mesh.instanceMatrix.array, c = mesh.instanceColor.array, col = new THREE.Color();
@@ -6030,6 +6051,7 @@ function onHover(ev) {
     }
     // With a unit on the tile its card shows everything (ground included); the cursor keeps only the attack preview.
     if (t.unit && t.unit.alive) { const k = extra.indexOf('<br><b>'); if (k >= 0 && /angreifen|Angriff/.test(extra)) showTip(ev, extra.slice(k + 4)); else tip.classList.add('hidden'); }
+    else if (t.solid) showTip(ev, `<b>${b.field.buildings[t.building].name}</b><br>Massiv: unbegehbar, versperrt die Sicht.`);
     else showTip(ev, groundTip(t.floor, t.level, extra));
   } else if (p) {
     showTip(ev, groundTip(game.world.floorKeyAt(p.q, p.r), game.world.levelAt(p.q, p.r), '<br><i>außerhalb des Kampffelds</i>'));

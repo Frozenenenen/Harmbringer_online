@@ -1233,7 +1233,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Ghul | Undead | CannonFodder / Melee | 2 | 18 | 0 | 5 | 3 | 6 | 1 | Rend | Unarmored | 1 / 0 | 3/2/4 | 2/4 | – | -2 | 1L |
 | Todesritter | Undead | Warrior / Tank | 2 | 35 | 3 | 4 | 3 | 10 | 1 | Pierce | Heavy | 3 / 3 | 3/3/1 | 3/2 | – | -4 | 1L 3K 1S |
 | Geist | Undead | Warrior / Scout | 1 | 10 | 0 | 8 | 5 | 8 | 1 | Soul | Unarmored | 4 / 6 | 5/4/0 | 0/0 | Spektral/Flug | -3 | 2S |
-| Balliste | Undead | Machine / Siege | 3 | 25 | 0 | 2 | 1 | 20 | 6 | Siege | Fortified | 0 / 0 | 6/3/1 | 4/1 | – | -5 | 3L 5K |
+| Balliste | Undead | Machine / Siege | 3 | 25 | 0 | 5 | 1 | 20 | 6 | Siege | Fortified | 0 / 0 | 6/3/1 | 4/1 | – | -5 | 3L 5K |
 | Nekromant | Undead | Commander / Caster | 2 | 18 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 5 / 4 | 4/3/2 | 1/2 | – | +4 | 2L 2S |
 | Fleischriese | Undead | Warrior / Tank | 4 | 70 | 3 | 2 | 2 | 14 | 1 | Blunt | Medium | 1 / 0 | 3/2/2 | 4/4 | – | -8 | 15L |
 | Knochendrache | Undead | Warrior / Tank | 4 | 120 | 4 | 5 | 6 | 18 | 2 | Soul | Heavy | 4 / 4 | 6/4/3 | 4/2 | Flug | -16 | 30K 6S |
@@ -1269,7 +1269,7 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Knochenschleuderer | Undead | Warrior / Ranged | 1 | 10 | 0 | 4 | 3 | 6 | 4 | Blunt | Light | 0 / 0 | 5/2/1 | 1/1 | – | -2 | 3K |
 | Stadtwache | Hanse | Warrior / Melee | 2 | 18 | 0 | 5 | 3 | 6 | 1 | Pierce | Medium | 0 / 0 | 5/3/2 | 2/2 | – | +0 | – |
 | Ritter | Guelphs | Warrior / Tank | 2 | 30 | 0 | 6 | 4 | 9 | 1 | Pierce | Heavy | 1 / 1 | 5/2/2 | 3/2 | – | +0 | – |
-| Stadtballiste | Hanse | Machine / Siege | 3 | 25 | 0 | 2 | 1 | 20 | 6 | Siege | Fortified | 0 / 0 | 6/3/1 | 4/1 | – | +0 | – |
+| Stadtballiste | Hanse | Machine / Siege | 3 | 25 | 0 | 5 | 1 | 20 | 6 | Siege | Fortified | 0 / 0 | 6/3/1 | 4/1 | – | +0 | – |
 | Mönch | Clergy | Warrior / Caster | 1 | 12 | 0 | 5 | 3 | 6 | 3 | Holy | Unarmored | 3 / 3 | 5/4/3 | 1/1 | – | +0 | – |
 | Priester | Clergy | Warrior / Support | 1 | 16 | 0 | 4 | 3 | 6 | 3 | Heal | Unarmored | 4 / 4 | 5/4/3 | 1/1 | – | +0 | – |
 | Rattenfänger | Witches | Unique / Caster | 2 | 35 | 0 | 8 | 4 | 9 | 4 | Arcane | Light | 5 / 3 | 7/7/3 | 2/1 | – | +0 | – |
@@ -1414,7 +1414,7 @@ Treffer bis Tod = aufrunden((HP + SoulShield) / Schaden)
 | Todesritter | 9.5 | 2.50 | 23.8 | 4 | 5.94 |
 | Geist | 3.8 | 3.89 | 14.9 | 3 | 4.97 |
 | Fleischriese | 15.0 | 1.28 | 19.2 | 8 | 2.40 |
-| Balliste | 9.3 | 1.50 | 14.0 | 5 | 2.80 |
+| Balliste | 9.3 | 3.75 | 35.0 | 5 | 7.00 |
 | Moorleiche | 6.0 | 1.12 | 6.8 | 3 | 2.25 |
 | Totenlicht | 2.0 | 1.41 | 2.8 | 1 | 2.82 |
 | Gefallene Schwester | 3.8 | 1.36 | 5.2 | 2 | 2.60 |
@@ -2218,6 +2218,9 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Neue Gebäude:** Scheune, Schmiede, Krug, Kornspeicher, Kreuzgang; geschlossene Blöcke ohne Tür (Bergfried, Steinturm) als Hindernisse, die Umwege erzwingen. Mehr Gebäude je Ort.
 - **Kommandeure** (Nekromant, Todesritter, Ahnen) im Kampf: LP ×3 + 2 je erobertem Ort, +10 Seelenschild.
 - **Flieger** sind von Bodenwirkungen (geweihter Boden, Gelände-Fähigkeiten) nicht betroffen.
+- **Geschlossene Gebäude** (Bergfried, Steinturm) sind massive Steinblöcke: unbegehbar für alle (auch Geister und Flieger), sie nehmen die Sicht; niemand wird darin aufgestellt.
+- **Ballisten** (Stadtballiste, Balliste): Initiative 2 → 5, damit sie gegen schnelle Geister zum Zug kommen.
+- **Rückzug** kostet 25 % jeder Truppe (Lich und Kommandeure entkommen), die Armee bleibt vor dem Ort.
 
 ### Abziehen, unerreichbare Gegner, Wasser (umgesetzt 04.11.2026)
 

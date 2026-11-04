@@ -5,7 +5,7 @@ Zombie,Zombie,CannonFodder,Melee,Undead,"Langsam, zäh, stinkt.",20,0,3,2,6,1,Bl
 Ghoul,Ghul,CannonFodder,Melee,Undead,Vierbeiniger Aasfresser mit Krallen.,18,0,5,3,6,1,Rend,1,True,Unarmored,1,0,3,2,4,2,4,2,False,False,-2,1,0,0,"(""GhoulCorpseEater"")"
 DeathKnight,Todesritter,Warrior,Tank,Undead,"Plattenrüstung, Turmschild, Bidenhänder.",35,3,4,3,10,1,Pierce,1,True,Heavy,3,3,3,3,1,3,2,2,False,False,-4,1,3,1,"(""DeathKnightShieldWall"")"
 Ghost,Geist,Warrior,Scout,Undead,Lautloser Seelenfresser.,10,0,8,5,8,1,Soul,1,False,Unarmored,4,6,5,4,0,0,0,1,True,True,-3,0,0,2,()
-Ballista,Balliste,Machine,Siege,Undead,Knochen-Belagerungsgeschütz.,25,0,2,1,20,6,Siege,1,False,Fortified,0,0,6,3,1,4,1,3,False,False,-5,3,5,0,()
+Ballista,Balliste,Machine,Siege,Undead,Knochen-Belagerungsgeschütz.,25,0,5,1,20,6,Siege,1,False,Fortified,0,0,6,3,1,4,1,3,False,False,-5,3,5,0,()
 Necromancer,Nekromant,Commander,Caster,Undead,"Generischer Kommandeur, ruft Tote.",18,8,5,3,6,4,Soul,1,False,Light,5,4,4,3,2,1,2,2,False,False,4,2,0,2,"(""NecroRaiseDead"")"
 FleshGiant,Fleischriese,Warrior,Tank,Undead,Aus 15 Leichen vernäht.,70,3,2,2,14,1,Blunt,1,True,Medium,1,0,3,2,2,4,4,4,False,False,-8,15,0,0,"(""FleshGiantCrush"")"
 BoneDragon,Knochendrache,Warrior,Tank,Undead,"Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",120,4,5,6,18,2,Soul,1,True,Heavy,4,4,6,4,3,4,2,4,False,True,-16,0,30,6,()
@@ -41,7 +41,7 @@ CorpseHound,Leichenhund,CannonFodder,Scout,Undead,Schnell und früh am Zug. Erre
 BoneSlinger,Knochenschleuderer,Warrior,Ranged,Undead,Fernkampf. Wirft Knochensplitter.,10,0,4,3,6,4,Blunt,1,False,Light,0,0,5,2,1,1,1,1,False,False,-2,0,3,0,()
 TownGuard,Stadtwache,Warrior,Melee,Hanse,"Spieß und Kettenhemd, bewacht Tore und Märkte.",18,0,5,3,6,1,Pierce,1,True,Medium,0,0,5,3,2,2,2,2,False,False,0,0,0,0,()
 Knight,Ritter,Warrior,Tank,Guelphs,Gepanzerter Vasall der Welfen.,30,0,6,4,9,1,Pierce,1,True,Heavy,1,1,5,2,2,3,2,2,False,False,0,0,0,0,()
-CityBallista,Stadtballiste,Machine,Siege,Hanse,Geschütz auf Mauern und Türmen der Städte.,25,0,2,1,20,6,Siege,1,False,Fortified,0,0,6,3,1,4,1,3,False,False,0,0,0,0,()
+CityBallista,Stadtballiste,Machine,Siege,Hanse,Geschütz auf Mauern und Türmen der Städte.,25,0,5,1,20,6,Siege,1,False,Fortified,0,0,6,3,1,4,1,3,False,False,0,0,0,0,()
 Monk,Mönch,Warrior,Caster,Clergy,Wirft heilige Worte wie Steine.,12,0,5,3,6,3,Holy,1,False,Unarmored,3,3,5,4,3,1,1,1,False,False,0,0,0,0,()
 Priest,Priester,Warrior,Support,Clergy,Heilt Verbündete. Ohne Verwundete greift er mit 3 Heilig-Schaden an.,16,0,4,3,6,3,Heal,1,False,Unarmored,4,4,5,4,3,1,1,1,False,False,0,0,0,0,()
 PiedPiper,Rattenfänger,Unique,Caster,Witches,Der Rattenfänger von Hameln. Seine Flöte lenkt Ratten und Kinder.,35,0,8,4,9,4,Arcane,1,False,Light,5,3,7,7,3,2,1,2,False,False,0,0,0,0,()
