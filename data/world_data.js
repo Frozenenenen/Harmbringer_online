@@ -767,9 +767,10 @@ window.HARMBRINGER_DATA = {
   // war parties no longer retake places there, the seat becomes a ley node for the Lich
   // (jumps between active ley nodes and the barrow), and the pantheon's factions weaken.
   // While members live they strengthen the seat (Ley-Bund) and send parties into their region.
+  // Conquered members themselves are never retaken by war parties (only the places around them).
   pantheons: {
     heide:      { name: "Heide-Pantheon",      seat: "oldendorf",   factions: ["HEATHSPIRITS"],
-                  members: ["oldendorf", "pestrup", "iberg", "sieben_steinhaeuser", "teufelsmoor", "duemmer", "arendsee"] },
+                  members: ["oldendorf", "pestrup", "sieben_steinhaeuser"] },   // Heidekönigin (Sitz), Wode, Hünengräber
     wodan:      { name: "Wilde Jagd",          seat: "kyffhaeuser", factions: ["WODAN"],      members: ["kyffhaeuser", "hackelberg", "externsteine"] },
     spreewald:  { name: "Wendische Geister",   seat: "spreewald",   factions: ["SPREEWALD"],  members: ["spreewald", "arkona"] },
     wattenmeer: { name: "Versunkene Städte",   seat: "rungholt",    factions: ["WATTENMEER"], members: ["rungholt", "vineta"] },

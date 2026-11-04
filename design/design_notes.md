@@ -2290,13 +2290,14 @@ Erste spielbare Fassung von „Einfluss auf Regionen“, Ley-Linien-Teleportatio
 
 | Pantheon | Sitz (Ley-Knoten) | Mitglieder |
 |-|-|-|
-| Heide-Pantheon | Oldendorfer Totenstatt | + Pestrup, Iberg, Sieben Steinhäuser, Teufelsmoor, Dümmer, Arendsee |
+| Heide-Pantheon | Oldendorfer Totenstatt | + Pestruper Gräberfeld, Sieben Steinhäuser (04.11. von 7 auf 3 Mitglieder verkleinert) |
 | Wilde Jagd | Kyffhäuser | + Hackelbergs Grab, Externsteine |
 | Wendische Geister | Spreewald | + Kap Arkona |
 | Versunkene Städte | Rungholt | + Vineta |
 | Walpurgis-Zirkel | Brocken | + Hexentanzplatz, Teufelsmauer, Hameln |
 
 - **Region:** jeder Ort gehört zum Pantheon mit dem nächsten Mitglied (höchstens 260 Felder).
+- **Eroberte Mitglieder bleiben erobert:** Trupps holen sich nie ein Pantheon-Mitglied zurück, nur die Orte drumherum.
 - **Halb erobert:** Lebende Mitglieder schicken Trupps in ihre eigene Region (0,8 % pro Tag und Mitglied) und stärken den Sitz (Ley-Bund: +4 Einheiten pro lebendem Mitglied).
 - **Assimiliert** (alle Mitglieder erobert): Trupps erobern in der Region nichts mehr zurück; der Sitz wird Ley-Knoten. Zwischen aktiven Ley-Knoten und dem Hügelgrab: **Ley-Sprung** (1 Tag, 4 Seelen). Minimap zeigt die Ley-Linien violett, Karte markiert Knoten mit ✦.
 - **Pantheon-Fall:** Die Fraktionen des Pantheons schicken keine Trupps mehr, ihre übrigen Orte haben nur noch 60 % Besatzung (Anführer bleiben).
