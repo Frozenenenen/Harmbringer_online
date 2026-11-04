@@ -42,6 +42,13 @@ units = [
    70,3,2,2,14,1,"Blunt",1,T,"Medium",1,0, 3,2,2,4,4,4,F,F,-8, l=15, ab=("FleshGiantCrush",)),
  U("BoneDragon","Knochendrache","Warrior","Tank","Undead","Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",
    120,4,5,6,18,2,"Soul",1,T,"Heavy",4,4, 6,4,3,4,2,4,F,T,-16, k=30, s=6),
+ # --- Engel der Kirche (biblisch: Ophanim, Cherubim, Seraphim) ---
+ U("Ophan","Ophan","Warrior","Tank","Clergy","Brennendes Rad voller Augen. Rollt durch die Reihen der Toten.",
+   40,3,4,4,10,1,"Holy",1,T,"Divine",6,6, 6,4,2,2,0,3,F,T,0, ab=("ClericCenser",)),
+ U("Cherub","Cherub","Warrior","Caster","Clergy","Vier Gesichter, vier Flügel, ein Körper voller Augen. Sieht alles.",
+   45,4,5,4,12,2,"Holy",1,T,"Divine",6,8, 8,6,4,2,0,3,F,T,0, ab=("WitchHex",)),
+ U("Seraph","Seraph","Warrior","Caster","Clergy","Sechs Flügel aus Feuer. Wer ihn ansieht, verbrennt.",
+   55,6,7,5,14,3,"Holy",1,F,"Divine",7,10, 8,6,4,2,0,4,F,T,0, ab=("SisterConsecrate","ClericCenser")),
  # --- Ahnen: einzigartige untote Anführer aus besonderen Gräbern (nicht rekrutierbar, schließen sich bei der Eroberung an) ---
  U("BronzeRider","Bronzezeitlicher Reiterfürst","Unique","Commander","Undead","Ahne aus dem Pestruper Gräberfeld. Reitet seit dreitausend Jahren mit der Wilden Jagd.",
    45,6,7,6,12,1,"Pierce",1,T,"Medium",3,4, 6,4,3,3,2,3,F,F,6, ab=("DeathHunterCharge","WodeHorn")),
@@ -193,6 +200,9 @@ GAME_UNITS = [
  ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=5)),
  ("knochendrache", "BoneDragon", dict(shape="octahedron", color="#d8d0b8", requiresKnowledge=16, requiresPantheon="spreewald")),
  ("wasserleiche", "DrownedCorpse", dict(shape="capsule", color="#5a6a70", requiresKnowledge=6, requiresPantheon="wattenmeer")),
+ ("ophan", "Ophan", dict(shape="sphere", color="#e8c050")),
+ ("cherub", "Cherub", dict(shape="octahedron", color="#e0d0a0")),
+ ("seraph", "Seraph", dict(shape="octahedron", color="#ff9a40")),
  ("reiterfuerst", "BronzeRider", dict(shape="octahedron", color="#b08a4a", ancestor=True)),
  ("huenenkoenig", "BarrowKing", dict(shape="octahedron", color="#cfc4a8", ancestor=True)),
  ("widukind", "WidukindShade", dict(shape="octahedron", color="#5a6a5a", ancestor=True)),

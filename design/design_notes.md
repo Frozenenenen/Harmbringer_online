@@ -1237,6 +1237,9 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Nekromant | Undead | Commander / Caster | 2 | 18 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 5 / 4 | 4/3/2 | 1/2 | – | +4 | 2L 2S |
 | Fleischriese | Undead | Warrior / Tank | 4 | 70 | 3 | 2 | 2 | 14 | 1 | Blunt | Medium | 1 / 0 | 3/2/2 | 4/4 | – | -8 | 15L |
 | Knochendrache | Undead | Warrior / Tank | 4 | 120 | 4 | 5 | 6 | 18 | 2 | Soul | Heavy | 4 / 4 | 6/4/3 | 4/2 | Flug | -16 | 30K 6S |
+| Ophan | Clergy | Warrior / Tank | 3 | 40 | 3 | 4 | 4 | 10 | 1 | Holy | Divine | 6 / 6 | 6/4/2 | 2/0 | Flug | +0 | – |
+| Cherub | Clergy | Warrior / Caster | 3 | 45 | 4 | 5 | 4 | 12 | 2 | Holy | Divine | 6 / 8 | 8/6/4 | 2/0 | Flug | +0 | – |
+| Seraph | Clergy | Warrior / Caster | 4 | 55 | 6 | 7 | 5 | 14 | 3 | Holy | Divine | 7 / 10 | 8/6/4 | 2/0 | Flug | +0 | – |
 | Bronzezeitlicher Reiterfürst | Undead | Unique / Commander | 3 | 45 | 6 | 7 | 6 | 12 | 1 | Pierce | Medium | 3 / 4 | 6/4/3 | 3/2 | – | +6 | – |
 | Hünenkönig | Undead | Unique / Commander | 3 | 60 | 5 | 4 | 3 | 14 | 1 | Blunt | Heavy | 4 / 4 | 4/3/2 | 4/2 | – | +6 | – |
 | Widukinds Schatten | Undead | Unique / Commander | 2 | 50 | 6 | 6 | 4 | 12 | 1 | Pierce | Medium | 4 / 6 | 5/4/3 | 2/2 | – | +8 | – |
@@ -1332,10 +1335,10 @@ Sonderfälle, die die Tabelle nicht ausdrückt (Zweit-Effekte, Bedingungen wie �
 | `FleshGiantCrush` | Zermalmen | Fleischriese, Hünenkönig, Schlangenkönig, Blanker Hans | Active | Enemy / Cone 1 | 1 | Damage (Blunt) | 10 | Stunned (1) | 3 / 2 | Trifft 3 Felder im Kegel, betäubt |
 | `PeasantMob` | Rottenmut | Widukinds Schatten, Bauer, Sachsenkrieger, Lutki | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Pierce) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn mind. 2 Bauern angrenzen |
 | `CrossbowPavise` | Setzschild | Lüneburger Armbrustschütze, Knochenschütze | Passive | Self / SinglePoint | 0 | ModifyTerrain (Pierce) | 0 | – | 0 / 0 | Wenn nicht bewegt: Kante zur Angriffsrichtung zählt als Cover |
-| `ClericCenser` | Weihrauch | Kleriker | Active | AllEnemies / Radius 1 | 0 | Damage (Holy) | 4 | – | 2 / 1 | 4 Holy-Schaden an alle angrenzenden Feinde |
+| `ClericCenser` | Weihrauch | Ophan, Seraph, Kleriker | Active | AllEnemies / Radius 1 | 0 | Damage (Holy) | 4 | – | 2 / 1 | 4 Holy-Schaden an alle angrenzenden Feinde |
 | `SisterHolyWater` | Weihwasser | Heideschwester | Active | Ally / SinglePoint | 2 | Heal (Heal) | 6 | – | 2 / 0 | Heilt Verbündeten um 6 HP |
-| `SisterConsecrate` | Geweihter Boden | Heideschwester | Active | Ground / Radius 1 | 2 | ModifyTerrain (Holy) | 2 | – (3) | 3 / 3 | Felder werden 3 Runden HolyGround: 2 Holy-Schaden pro Runde an Untote |
-| `WitchHex` | Hexenschuss | Hexe, Mittagsfrau, Wattjungfrau | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Marked (2) | 2 / 1 | Ziel nimmt 2 Züge lang +25 % Schaden |
+| `SisterConsecrate` | Geweihter Boden | Seraph, Heideschwester | Active | Ground / Radius 1 | 2 | ModifyTerrain (Holy) | 2 | – (3) | 3 / 3 | Felder werden 3 Runden HolyGround: 2 Holy-Schaden pro Runde an Untote |
+| `WitchHex` | Hexenschuss | Cherub, Hexe, Mittagsfrau, Wattjungfrau | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Marked (2) | 2 / 1 | Ziel nimmt 2 Züge lang +25 % Schaden |
 | `DruidMistletoe` | Mistelsegen | Druide, Schlangenkönig | Active | Ally / SinglePoint | 3 | ApplyStatus (Heal) | 3 | Regeneration (3) | 2 / 1 | Verbündeter regeneriert 3 HP pro Zug |
 | `DruidessGraveRest` | Grabesruhe | Hügelgrab-Druidin, Rusalka | Active | Enemy / SinglePoint | 4 | ApplyStatus (Arcane) | 0 | Cursed (2) | 3 / 2 | Nur gegen Untote: -25 % Schaden |
 | `DruidessEarthBind` | Erdbindung | Hügelgrab-Druidin, Grabdruidin | Active | Ground / SinglePoint | 3 | ModifyTerrain (Arcane) | 0 | – (2) | 2 / 3 | Feld wird 2 Runden unpassierbar, Kanten ringsum Cover |
@@ -3055,6 +3058,8 @@ Für Wode/Wodan: Im Prompt **Odin** verwenden (mehr Trainingsdaten), im Spiel se
 Rollen-Zusätze und Fraktions-Leuchtfarben: siehe Einheiten-Visualisierung → Portrait-Prompts.
 
 ### Engel-Konzept (Clergy)
+
+**Umgesetzt (04.11.2026):** Ophan (brennendes Rad voller Augen, Tank, Weihrauch), Cherub (vier Gesichter, vier Flügel, Augen am Körper, Fernkampf 2, Hexenschuss = „sieht alles“), Seraph (sechs Feuerflügel, Fernkampf 3, Geweihter Boden + Weihrauch). Alle fliegen, Rüstung Göttlich, Heilig-Schaden. Stehen in den Bischofsstädten: Ophanim in allen großen Kirchenorten, Cherubim in Halberstadt, Hildesheim und Magdeburg, ein Seraph nur in Magdeburg.
 
 Biblisch-korrekte Engel statt romantisierter Flügelwesen:
 - **Seraph:** 6 Flügel, feurig, blendend (Jesaja 6)

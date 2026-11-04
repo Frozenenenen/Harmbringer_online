@@ -9,6 +9,9 @@ Ballista,Balliste,Machine,Siege,Undead,Knochen-Belagerungsgeschütz.,25,0,2,1,20
 Necromancer,Nekromant,Commander,Caster,Undead,"Generischer Kommandeur, ruft Tote.",18,8,5,3,6,4,Soul,1,False,Light,5,4,4,3,2,1,2,2,False,False,4,2,0,2,"(""NecroRaiseDead"")"
 FleshGiant,Fleischriese,Warrior,Tank,Undead,Aus 15 Leichen vernäht.,70,3,2,2,14,1,Blunt,1,True,Medium,1,0,3,2,2,4,4,4,False,False,-8,15,0,0,"(""FleshGiantCrush"")"
 BoneDragon,Knochendrache,Warrior,Tank,Undead,"Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",120,4,5,6,18,2,Soul,1,True,Heavy,4,4,6,4,3,4,2,4,False,True,-16,0,30,6,()
+Ophan,Ophan,Warrior,Tank,Clergy,Brennendes Rad voller Augen. Rollt durch die Reihen der Toten.,40,3,4,4,10,1,Holy,1,True,Divine,6,6,6,4,2,2,0,3,False,True,0,0,0,0,"(""ClericCenser"")"
+Cherub,Cherub,Warrior,Caster,Clergy,"Vier Gesichter, vier Flügel, ein Körper voller Augen. Sieht alles.",45,4,5,4,12,2,Holy,1,True,Divine,6,8,8,6,4,2,0,3,False,True,0,0,0,0,"(""WitchHex"")"
+Seraph,Seraph,Warrior,Caster,Clergy,"Sechs Flügel aus Feuer. Wer ihn ansieht, verbrennt.",55,6,7,5,14,3,Holy,1,False,Divine,7,10,8,6,4,2,0,4,False,True,0,0,0,0,"(""SisterConsecrate"",""ClericCenser"")"
 BronzeRider,Bronzezeitlicher Reiterfürst,Unique,Commander,Undead,Ahne aus dem Pestruper Gräberfeld. Reitet seit dreitausend Jahren mit der Wilden Jagd.,45,6,7,6,12,1,Pierce,1,True,Medium,3,4,6,4,3,3,2,3,False,False,6,0,0,0,"(""DeathHunterCharge"",""WodeHorn"")"
 BarrowKing,Hünenkönig,Unique,Commander,Undead,Ahne aus den Sieben Steinhäusern. Riesige Gebeine unter den Decksteinen.,60,5,4,3,14,1,Blunt,1,True,Heavy,4,4,4,3,2,4,2,3,False,False,6,0,0,0,"(""FleshGiantCrush"",""DeathKnightShieldWall"")"
 WidukindShade,Widukinds Schatten,Unique,Commander,Undead,"Der Sachsenherzog, der Karl trotzte. An den Externsteinen erhebt er sich erneut.",50,6,6,4,12,1,Pierce,1,True,Medium,4,6,5,4,3,2,2,2,False,False,8,0,0,0,"(""PeasantMob"",""WodeHorn"")"

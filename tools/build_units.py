@@ -247,6 +247,23 @@ def serpent(m, scale_col, belly, eye="#e0c030", tongue="#c02a2a"):
     m.C((hx, hy - 0.03, hz + 0.17), (hx, hy - 0.04, hz + 0.32), 0.012, 0.004, tongue, seg=3)
     return hx, hy, hz
 
+
+def ring(m, center, radius, axis, thick, col, seg=18):
+    """Torus-like ring from cylinder segments; axis 'x', 'y' or 'z' is the ring's normal."""
+    cx, cy, cz = center; pts = []
+    for i in range(seg + 1):
+        a = i / seg * 2 * math.pi; u, v = math.cos(a) * radius, math.sin(a) * radius
+        pts.append((cx, cy + u, cz + v) if axis == "x" else (cx + u, cy, cz + v) if axis == "y" else (cx + u, cy + v, cz))
+    for a, b in zip(pts, pts[1:]): m.C(a, b, thick, thick, col, seg=4)
+    return pts
+
+def eye(m, at, r=0.06, white="#f4f0e0", pupil="#1a1410", out=(0, 0, 1)):
+    x, y, z = at; m.O(at, (r, r, r), white, 3, 6)
+    m.O((x + out[0] * r * 0.8, y + out[1] * r * 0.8, z + out[2] * r * 0.8), (r * 0.45, r * 0.45, r * 0.45), pupil, 2, 5)
+
+def wing(m, root, tip, back, col):
+    m.tri(np.array(root), np.array(tip), np.array(back), m.slot(col)); m.tri(np.array(back), np.array(tip), np.array(root), m.slot(col))
+
 # ---------------------------------------------------------------- archetypes
 def human(skin="#c89a78", shirt="#6a5a40", pants="#4a3a2a", boots="#3a2a1a", **kw):
     m = Mesh()
@@ -454,6 +471,40 @@ def build(unit):
         for x, y in ((0.1, 1.3), (-0.12, 1.05), (0.15, 0.9)): m.B((x, y, 0.12), (0.06, 0.22, 0.01), "#3a6a3a")         # seaweed
         spear(m, (0.27, 1.0, 0.2), wood="#5a4a3a", tip="#6a4a3a", length=1.7); m.C((0.27, 1.85, 0.2), (0.4, 1.75, 0.2), 0.015, 0.0, "#6a4a3a", seg=3)
         return m
+    # --- angels -----------------------------------------------------------------
+    if unit == "ophan":
+        m = Mesh(); c = (0, 1.25, 0)
+        p1 = ring(m, c, 0.75, "x", 0.06, "#e8b040"); p2 = ring(m, c, 0.75, "z", 0.06, "#d89030")
+        for i, p in enumerate(p1[:-1:2]): eye(m, p, 0.07, out=(1, 0, 0))
+        for i, p in enumerate(p2[1:-1:3]): eye(m, p, 0.06)
+        m.O(c, (0.25, 0.25, 0.25), "#fff0a0", 4, 8)
+        for k in range(8):
+            a = k / 8 * 2 * math.pi; m.C(c, (math.cos(a) * 0.7, 1.25 + math.sin(a) * 0.7, 0), 0.02, 0.0, "#ffd060", seg=3)   # spokes of fire
+        return m
+    if unit == "cherub":
+        m = Mesh()
+        m.C((0, 1.35, 0), (0, 0.35, 0), 0.22, 0.32, "#d8c890", seg=8)
+        for y in (0.6, 0.85, 1.1): 
+            for k in range(6): a = k / 6 * 2 * math.pi + y; eye(m, (math.cos(a) * 0.27, y, math.sin(a) * 0.27), 0.04, out=(math.cos(a), 0, math.sin(a)))
+        m.O((0, 1.55, 0.12), (0.11, 0.13, 0.1), "#d8b090")                                   # human face (front)
+        m.O((0.14, 1.55, 0), (0.1, 0.12, 0.11), "#c89a40"); m.O((0.22, 1.6, 0), (0.06, 0.08, 0.08), "#a07a30")   # lion (right) with mane
+        m.O((-0.14, 1.55, 0), (0.1, 0.11, 0.11), "#7a5a3a")
+        for sx in (-1,): m.C((-0.2, 1.62, 0.04), (-0.34, 1.72, 0.06), 0.02, 0.0, "#e8e0d0", seg=3); m.C((-0.2, 1.62, -0.04), (-0.34, 1.72, -0.06), 0.02, 0.0, "#e8e0d0", seg=3)  # ox horns
+        m.O((0, 1.55, -0.13), (0.1, 0.1, 0.1), "#6a5a4a"); m.C((0, 1.53, -0.2), (0, 1.48, -0.3), 0.04, 0.0, "#d0a030", seg=4)   # eagle (back) with beak
+        for sx in (-1, 1):
+            wing(m, (sx * 0.15, 1.35, 0), (sx * 1.0, 2.1, -0.2), (sx * 0.9, 1.1, -0.25), "#f0e6c8")
+            wing(m, (sx * 0.15, 1.0, 0), (sx * 0.8, 0.4, -0.15), (sx * 0.3, 0.3, -0.1), "#e0d4b0")
+        return m
+    if unit == "seraph":
+        m = Mesh()
+        m.C((0, 1.45, 0), (0, 0.7, 0), 0.16, 0.24, "#ffe0a0", seg=8); m.O((0, 1.6, 0.0), (0.12, 0.13, 0.12), "#fff4d0")
+        m.O((0, 1.1, 0), (0.32, 0.5, 0.3), "#ffc060", 4, 8)                                   # fire aura
+        for sx in (-1, 1):
+            wing(m, (sx * 0.1, 1.6, 0.05), (sx * 0.25, 1.95, 0.35), (sx * 0.05, 1.45, 0.3), "#ff8a30")      # pair covering the face
+            wing(m, (sx * 0.15, 1.35, -0.05), (sx * 1.25, 2.0, -0.3), (sx * 1.1, 1.15, -0.35), "#ffb040")   # pair to fly
+            wing(m, (sx * 0.12, 0.85, 0.0), (sx * 0.45, 0.25, 0.25), (sx * 0.1, 0.3, 0.3), "#ff7020")       # pair covering the feet
+        for k in range(7): a = k / 7 * 2 * math.pi; m.C((math.cos(a) * 0.2, 0.75, math.sin(a) * 0.2), (math.cos(a) * 0.3, 0.35, math.sin(a) * 0.3), 0.05, 0.0, "#ffd060", seg=3)
+        return scaled(m, 1.25)
     # --- ancestors (unique undead leaders from graves) -----------------------
     if unit == "reiterfuerst":
         m = Mesh(); horse(m, "#cfc4a8", "#6a5a40", eye="#7aff9a", saddle="#7a4a1a")
@@ -558,7 +609,7 @@ UNITS = ["lich", "ghul", "skelett", "bogner", "leichenhund", "zombie", "schleude
          "moorleiche", "todesritter", "totenlicht", "gefallene_schwester", "grabdruidin", "nekromant", "knochenballiste",
          "fleischriese", "totenjaeger", "knochendrache",
          "sachsenkrieger", "wodansrabe", "wilder_jaeger", "hackelberg", "lutki", "wassermann", "rusalka", "mittagsfrau",
-         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche", "reiterfuerst", "huenenkoenig", "widukind", "ratsherr"]
+         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche", "reiterfuerst", "huenenkoenig", "widukind", "ratsherr", "ophan", "cherub", "seraph"]
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
