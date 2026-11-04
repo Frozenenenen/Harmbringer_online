@@ -278,7 +278,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 92, "date": "2026-11-04", "changes": [{"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}]};
+const BUILD = {"version": 93, "date": "2026-11-04", "changes": [{"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3606,7 +3606,9 @@ const Weather = {
 const Sfx = {
   ctx: null, master: null, amb: null, muted: false,
   init() {
-    try { this.muted = localStorage.getItem('harmbringer_muted') === '1'; } catch (e) { /* ignore */ }
+    // Off by default (sound is opt-in via M or the speaker button); the choice is remembered.
+    this.muted = true;
+    try { this.muted = localStorage.getItem('harmbringer_sound') !== 'on'; } catch (e) { /* ignore */ }
     const start = () => { this.ensure(); window.removeEventListener('pointerdown', start); window.removeEventListener('keydown', start); };
     window.addEventListener('pointerdown', start); window.addEventListener('keydown', start);
     // Hidden tab, minimized window or a closed panel: silence; back again: resume. Leaving the page closes the audio.
@@ -3618,6 +3620,7 @@ const Sfx = {
   },
   ensure() {
     if (this.ctx) return this.ctx;
+    if (this.muted) return null;                     // no audio context at all while the sound is off
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
     this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : 0.5; this.master.connect(this.ctx.destination);
     // White noise buffer for hits and wind.
@@ -3629,8 +3632,9 @@ const Sfx = {
   },
   toggle() {
     this.muted = !this.muted;
-    try { localStorage.setItem('harmbringer_muted', this.muted ? '1' : '0'); } catch (e) { /* ignore */ }
-    if (this.master) this.master.gain.value = this.muted ? 0 : 0.5;
+    try { localStorage.setItem('harmbringer_sound', this.muted ? 'off' : 'on'); } catch (e) { /* ignore */ }
+    if (this.muted && this.ctx) { try { this.ctx.close(); } catch (e) { /* ignore */ } this.ctx = null; this.amb = this.drone = null; }   // switched off: close it completely
+    if (!this.muted) this.ensure();
     const b = document.getElementById('btnSound'); if (b) b.textContent = this.muted ? '🔇' : '🔊';
     UI.toast(this.muted ? 'Ton aus' : 'Ton an');
   },
