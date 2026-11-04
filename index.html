@@ -278,7 +278,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 90, "date": "2026-11-04", "changes": [{"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}]};
+const BUILD = {"version": 91, "date": "2026-11-04", "changes": [{"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}, {"date": "04.11. 16:22", "text": "Trupps schwächen ihren Heimatort (füllt sich wieder auf), nur volle Orte schicken Trupps; Debug: Kommandolimit ändern"}, {"date": "04.11. 16:20", "text": "Fix: Meldung zum Auslöschen einer Fraktion wurde vom Pantheon-Text überschrieben"}, {"date": "04.11. 16:19", "text": "Fraktion ausgelöscht: Meldung des Chronisten und Belohnung (Wissen, Seelen, Leichen)"}, {"date": "04.11. 16:15", "text": "Gebäude bieten Verbesserungen für Einheitengruppen gegen Ressourcen (13 Stück)"}, {"date": "04.11. 16:11", "text": "Seltene Einheiten stärker: +5 % je Wissenspunkt, Pantheon-Einheiten +10 %"}, {"date": "04.11. 16:07", "text": "Besatzungen zurücklassen (verteidigen automatisch gegen Trupps); Einheiten teurer (Leichen x3, Knochen x2,5)"}, {"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2683,7 +2683,6 @@ const Minimap = {
     for (const a of Expeditions.all()) {
       const x = sx(a.node.q + (a.id === 'lich' ? 0 : 3)), y = sy(a.node.r + (a.id === 'lich' ? 0 : 3));
       if (a.order) { const t = NODE_BY_ID[a.order]; ctx.strokeStyle = '#b07ae0'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(sx(t.q), sy(t.r)); ctx.stroke(); ctx.setLineDash([]); }
-      if (a.id !== 'lich') { ctx.fillStyle = DATA.factions.UNDEAD.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
     }
     // War parties: a faction-colored triangle and a dashed line to their target.
     for (const p of Raids.list()) {
@@ -2710,10 +2709,28 @@ const Minimap = {
         ctx.strokeText(node.name, x, y - rad - 6); ctx.fillText(node.name, x, y - rad - 6);
       }
     }
-    // Army and the visible tile window.
+    // Own armies, drawn last so they stay on top: the Lich as a crowned shield, expeditions as
+    // shields with a skull, all in undead violet with a gold rim and a short name; garrisons as small shields.
+    const shieldAt = (x, y, r, fill, rim, glyph, label, active) => {
+      ctx.beginPath(); ctx.moveTo(x - r, y - r * 0.9); ctx.lineTo(x + r, y - r * 0.9); ctx.lineTo(x + r, y + r * 0.1);
+      ctx.quadraticCurveTo(x + r * 0.8, y + r * 0.9, x, y + r * 1.25); ctx.quadraticCurveTo(x - r * 0.8, y + r * 0.9, x - r, y + r * 0.1); ctx.closePath();
+      ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = active ? 4 : 2.5; ctx.strokeStyle = rim; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(r * 1.1)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(glyph, x, y + r * 0.1);
+      if (label) { ctx.font = 'bold 18px Georgia, serif'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.strokeText(label, x, y - r * 1.6); ctx.fillStyle = '#f2e6cf'; ctx.fillText(label, x, y - r * 1.6); }
+      ctx.textBaseline = 'alphabetic';
+    };
+    for (const [id, g] of Object.entries(Garrisons.all())) {
+      const n = NODE_BY_ID[id]; if (!n || !g.length) continue;
+      shieldAt(sx(n.q) + 14, sy(n.r) + 12, 8, '#3a1e52', '#c9a227', '', '', false);
+    }
+    const ev = game.view.expViews || {};
+    for (const e of Expeditions.list()) {
+      const pos = ev[e.id] ? ev[e.id].group.position : null, n = NODE_BY_ID[e.nodeId];
+      const [eq, er] = pos ? worldToHex(pos.x, pos.z) : [n.q, n.r];
+      shieldAt(sx(eq), sy(er), 15, DATA.factions.UNDEAD.color, '#c9a227', '☠', DATA.units[e.leader].name, UI.activeArmy === e.id);
+    }
     const [aq, ar] = worldToHex(game.view.army.position.x, game.view.army.position.z);
-    ctx.fillStyle = '#c9a227'; ctx.strokeStyle = '#2b2116'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(sx(aq), sy(ar), 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    shieldAt(sx(aq), sy(ar), 18, '#5a2d82', '#f0c840', '♛', Expeditions.list().length ? 'Lich' : '', (UI.activeArmy || 'lich') === 'lich');
     // Camera: an open view cone from the camera position toward the pivot, opening by the
     // horizontal field of view, so the viewing direction is visible at any zoom.
     const cam = game.view.cam, camera = game.view.camera;
