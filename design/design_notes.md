@@ -2221,6 +2221,7 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Geschlossene Gebäude** (Bergfried, Steinturm) sind massive Steinblöcke: unbegehbar für alle (auch Geister und Flieger), sie nehmen die Sicht; niemand wird darin aufgestellt.
 - **Ballisten** (Stadtballiste, Balliste): Initiative 2 → 5, damit sie gegen schnelle Geister zum Zug kommen.
 - **Rückzug** kostet 25 % jeder Truppe (Lich und Kommandeure entkommen), die Armee bleibt vor dem Ort.
+- **Lich (oder Kommandeur) fällt im Kampf:** Der Kampf läuft automatisch weiter, die Diener sind führerlos (KI steuert). Siegen sie, verlieren sie ein weiteres Viertel und warten als **Verwaiste** am Ort (bei Hinterhalten am nächsten Ort); Minimap: grauer Schild mit „?“, Ortsinfo: „Verwaiste aufnehmen“, wenn der Lich dort steht. Der Lich erwacht wie bisher nach seiner Todesfrist im Hügelgrab. Verlieren sie, ist alles verloren.
 
 ### Abziehen, unerreichbare Gegner, Wasser (umgesetzt 04.11.2026)
 

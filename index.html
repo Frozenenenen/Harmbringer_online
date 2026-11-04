@@ -380,7 +380,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 113, "date": "2026-11-04", "changes": [{"date": "04.11. 22:14", "text": "Rekrutieren und Bauen: Ressourcen bleiben beim Scrollen oben stehen"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}]};
+const BUILD = {"version": 114, "date": "2026-11-04", "changes": [{"date": "04.11. 22:22", "text": "Lich fällt: Kampf läuft automatisch weiter, Überlebende warten als Verwaiste am Ort zum Abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2865,6 +2865,10 @@ const Minimap = {
       if (label) { ctx.font = 'bold 18px Georgia, serif'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.strokeText(label, x, y - r * 1.6); ctx.fillStyle = '#f2e6cf'; ctx.fillText(label, x, y - r * 1.6); }
       ctx.textBaseline = 'alphabetic';
     };
+    for (const [id, g] of Object.entries(Stranded.all())) {
+      const n = NODE_BY_ID[id]; if (!n || !g.length) continue;
+      shieldAt(sx(n.q) - 14, sy(n.r) + 12, 9, '#6a6a6a', '#c9a227', '?', '', false);
+    }
     for (const [id, g] of Object.entries(Garrisons.all())) {
       const n = NODE_BY_ID[id]; if (!n || !g.length) continue;
       shieldAt(sx(n.q) + 14, sy(n.r) + 12, 8, '#3a1e52', '#c9a227', '', '', false);
@@ -2918,7 +2922,19 @@ const SIEGE_EDGES = {
   palisade: { name: 'Palisade',   hp: 40,  other: 0.5 },
   house:    { name: 'Hauswand',   hp: 50,  other: 0 }
 };
-const RETREAT_LOSS = 0.25;   // share of every stack lost in a retreat (Lich and commanders always escape)
+const RETREAT_LOSS = 0.25;
+// Servants who survived their fallen Lich (c.stranded: { nodeId: [{type, hp}] }); the Lich picks them up there.
+const Stranded = {
+  all() { const c = game.campaign; return c ? (c.stranded = c.stranded || {}) : {}; },
+  of(node) { return this.all()[node.id] || []; },
+  add(node, army) { const s = this.all(); s[node.id] = [...(s[node.id] || []), ...army]; },
+  pickUp(node) {
+    const c = game.campaign, list = this.of(node); if (!list.length) return;
+    c.army.push(...list); delete this.all()[node.id];
+    UI.toast(`${list.length} verwaiste Untote schließen sich dem Lich wieder an.`, 4, 'world');
+    SaveGame.save(); UI.updateHeader(); UI.renderInfo(); UI.renderArmies(); WorldView.refresh();
+  }
+};   // share of every stack lost in a retreat (Lich and commanders always escape)
 const isSiege = u => u.def.role === 'SIEGE' || u.def.size >= 4 || u.type === 'huenenkoenig';
 // PROMPT 8.5: a priest without wounded allies attacks with 3 HOLY damage.
 const PRIEST_ATTACK = { power: 'HOLY', damage: 3 };
@@ -4401,7 +4417,7 @@ const Battle = {
     if (u.side === 'player' && u.type === b.leader && b.retreatPending) { this.finish('retreat'); return; }
     if (Abilities.turnStart(u)) { if (b.over) return; UI.updateBattle(); await wait(0.5); if (game.battle === b && !b.over) this.endTurn(); return; }
     UI.updateBattle();
-    if (u.side === 'player') {
+    if (u.side === 'player' && !b.auto) {
       this.computeOptions();
     } else {
       b.busy = true;
@@ -4707,7 +4723,18 @@ const Battle = {
     b.field.get(u.q, u.r).unit = null;
     BattleView.removeUnit(u);
     this.log(u.startCount > 1 ? `Die letzten ${u.def.name} fallen.` : `${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
-    if (u.side === 'player' && (u.type === b.leader || !this.alive('player').length)) { this.finish('defeat'); return; }
+    if (u.side === 'player' && !this.alive('player').length) { this.finish('defeat'); return; }
+    if (u.side === 'player' && u.type === b.leader) {
+      // The leader is gone: his servants fight on by themselves (leaderless); survivors wait on the spot.
+      b.leaderFallen = true; b.auto = true; b.retreatPending = false;
+      for (const x of this.alive('player')) { x.status = x.status || {}; x.status.LEADERLESS = { turns: 999, value: 2 }; BattleView.updateHp(x); }
+      const who = u.type === 'lich' ? 'Der Lich' : u.def.name;
+      this.log(`${who} ist gefallen! Die Diener kämpfen führerlos allein weiter. Überleben sie, warten sie hier auf ${u.type === 'lich' ? 'den Lich' : 'Abholung'}.`, 'hit');
+      UI.toast(`${who} ist gefallen – die Untoten kämpfen allein weiter.`, 5, false);
+      this.clearOptions(); UI.updateBattle();
+      // Fell while it was his own turn and nothing else is running: hand on to the next unit.
+      if (b.current === u && !b.busy) setTimeout(() => { if (game.battle === b && !b.over && b.current === u) this.endTurn(); }, 300);
+    }
     Abilities.afterDeath(u);
     if (u.side === 'player' && (u.def.commandPoints || 0) < 0) this.checkLeaderless(u);
     if (!this.alive('enemy').length) this.finish('victory');
@@ -4917,6 +4944,21 @@ const Battle = {
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${ancestorText}${pantheonText}`;
       // Show the end screen only once (the campaign may go on afterwards).
       if (node.finale && !c.won) { c.won = true; endNow = true; }
+      if (b.leaderFallen) {
+        // Survivors (a further quarter lost without their master) wait at the battlefield to be picked up.
+        const army = this.survivors(RETREAT_LOSS), at = node.encounter
+          ? DATA.nodes.slice().sort((x, y) => hexDistance(x.q, x.r, node.q, node.r) - hexDistance(y.q, y.r, node.q, node.r))[0] : node;
+        if (army.length) Stranded.add(at, army);
+        html += `<h3>Verwaist</h3><p>${b.expedition ? esc(DATA.units[b.leader].name) : 'Der Lich'} fiel im Kampf. ${army.length ? `${army.length} Untote haben überlebt (ein Viertel mehr zerfiel ohne ihren Herrn) und warten bei <b>${esc(at.name)}</b>, bis der Lich sie abholt.` : 'Keiner seiner Diener blieb übrig.'}</p>`;
+        if (b.expedition) c.army = [];
+        else {
+          const deathDays = Base.lichDeathDays();
+          c.travel = null; c.army = [{ type: 'lich', hp: DATA.units.lich.hp }]; c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
+          Campaign.advanceDays(deathDays);
+          html += `<p class="small">${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
+        }
+        UI.news(`Verwaiste Untote (${army.length}) warten bei ${at.name}.`, 'world');
+      }
     } else if (result === 'withdraw') {
       // Everybody leaves the field as they are (no healing, no loot); the army stays at the place.
       c.army = this.survivors(0);
@@ -4953,7 +4995,7 @@ const Battle = {
     // Losses with portraits (own stacks; summoned ones do not count). After a defeat or retreat all stay behind.
     const losses = [];
     for (const u of b.units) {
-      if (u.side !== 'player' || u.summoned) continue;
+      if (u.side !== 'player' || u.summoned || u.type === 'lich') continue;   // the Lich always returns
       const left = !u.alive || result === 'defeat' ? 0 : b.kept && b.kept.has(u) ? b.kept.get(u) : stackCount(u);
       if (u.startCount - left > 0) losses.push({ type: u.type, n: u.startCount - left, of: u.startCount });
     }
@@ -5270,11 +5312,11 @@ const EnemyAI = {
     // 2. Score every reachable tile by its best attack.
     let best = null;
     for (const t of spots) {
-      for (const p of Battle.alive('player')) {
+      for (const p of Battle.alive(u.side === 'player' ? 'enemy' : 'player')) {
         const chk = Combat.canAttack(f, u, t, p);
         if (!chk.ok) continue;
         const dmg = Combat.expected(f, u, t, p, chk.cover);
-        let score = dmg + (dmg >= p.hp ? 30 : 0) + (p.type === 'lich' ? 15 : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
+        let score = dmg + (dmg >= p.hp ? 30 : 0) + (p.type === 'lich' || p.def.rank === 'UNIQUE' ? 15 : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
         if (u.def.range > 1) {
           if (chk.dist >= chk.range) score += 3;                       // stay at maximum range
           if (Combat.lineOfSight(f, f.get(p.q, p.r), t).cover) score += 3;  // in cover against the target
@@ -5302,7 +5344,7 @@ const EnemyAI = {
   // Furthest tile along the shortest path to the nearest undead that the unit can reach this turn.
   approach(u, reach) {
     const f = game.battle.field;
-    const targets = Battle.alive('player');
+    const targets = Battle.alive(u.side === 'player' ? 'enemy' : 'player');
     // Goals: free tiles from which an attack is actually possible (not merely adjacent,
     // which would include tiles behind a wall, e.g. inside a house next to the target).
     const goalsOf = search => {
@@ -5336,7 +5378,7 @@ const EnemyAI = {
     }
     // Fallback: the reachable tile closest to any undead.
     let best = null, bd = Infinity;
-    for (const t of reach.tiles) for (const p of Battle.alive('player')) {
+    for (const t of reach.tiles) for (const p of Battle.alive(u.side === 'player' ? 'enemy' : 'player')) {
       const d = hexDistance(t.q, t.r, p.q, p.r);
       if (d < bd) { bd = d; best = t; }
     }
@@ -5722,6 +5764,7 @@ const UI = {
           ${node.special ? `<tr><td>Besonderheit</td><td>${this.specialText(node)}</td></tr>` : ''}
           ${Pantheons.infoRow(node)}
           ${Garrisons.infoRow(node)}
+          ${Stranded.of(node).length ? `<tr><td>Verwaist</td><td><b>${Stranded.of(node).length} Untote</b> warten hier auf den Lich</td></tr>` : ''}
         </table>
         <details ${this.infoDetails ? 'open' : ''}><summary>Mehr zum Ort</summary><table>
           <tr><td>Kampffeld</td><td>${node.size} × ${node.size} Felder</td></tr>
@@ -5775,6 +5818,7 @@ const UI = {
       if (Garrisons.canGarrison(node) && Garrisons.of(node).length) add('Besatzung aufnehmen', () => Garrisons.takeBack(node), false);
       if (here.id === node.id && Pantheons.portalPossible(node)) add(`Portal errichten (${Object.entries(LEY.portalCost).map(([k, v]) => v + ' ' + RESOURCE_NAMES[k]).join(', ')}, ${LEY.portalDays} Tage)`, () => Pantheons.buildPortal(node), true, !!Pantheons.portalBlocker());
       if (here.id === node.id && node === PHYLACTERY) add('Bauen', () => Base.open(), true);
+      if (here.id === node.id && Stranded.of(node).length) add(`Verwaiste aufnehmen (${Stranded.of(node).length})`, () => Stranded.pickUp(node), true);
     }
   },
   openRecruit() {
@@ -5879,7 +5923,7 @@ const UI = {
       }).join('');
       bar.querySelectorAll('[data-ab]').forEach(x => x.onclick = () => Battle.chooseAbility(x.dataset.ab));
     } else bar.innerHTML = '';
-    $('btnRetreat').disabled = b.retreatPending || b.over;
+    $('btnRetreat').disabled = b.retreatPending || b.over || b.auto;
     const wd = this.canWithdrawCached !== undefined && this.cwRound === b.round && this.cwContact === !!b.contact ? this.canWithdrawCached : (this.cwRound = b.round, this.cwContact = !!b.contact, this.canWithdrawCached = Battle.canWithdraw());
     $('btnRetreat').innerHTML = (wd ? 'Abziehen' : 'Rückzug') + '<kbd>R</kbd>';
     $('btnRetreat').title = wd ? 'Abziehen (R): Die ganze Armee verlässt das Feld ohne Verluste – möglich, solange nicht gekämpft wurde oder kein Gegner erreichbar ist. Keine Beute.'
