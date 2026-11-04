@@ -2198,6 +2198,15 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
+### Abziehen, unerreichbare Gegner, Wasser (umgesetzt 04.11.2026)
+
+- **Abziehen** (statt Rückzug, Taste R): Solange kein Schlag geführt wurde oder kein Gegner erreichbar ist, verlässt die ganze Armee das Feld ohne Verluste und bleibt vor dem Ort stehen. Keine Beute, die Kampfzeit vergeht. Bei Begegnungen unterwegs nicht möglich. Danach gilt der alte Rückzug (nur der Lich entkommt).
+- **Meldung zu Kampfbeginn**, wenn Gegner für keine eigene Einheit erreichbar sind (auch nicht in Reichweite): Hier braucht es Flieger, Geister oder Fernkämpfer. Gewollt: manche Orte verlangen besondere Truppen (später auch geschlossene Mauern, die nur Riesen oder Katapulte brechen).
+- **Furten:** Getrennte Landstücke eines Kampffelds werden über den kürzesten Weg durch tiefes Wasser mit seichtem Wasser verbunden.
+- **Rungholt bei Ebbe:** Tiefes Wasser wird Watt (Bewegung 1), Schlamm und Priele.
+- **Schwimmer:** Wasserleiche, Wassermann, Ertrunkener, Wattjungfrau, Klabautermann, Blanker Hans – Wasser (auch tiefes) kostet sie 1.
+- **Fenster:** Fernkämpfer schießen auch auf ein direkt angrenzendes Feld durchs Fenster (Deckung, kein Konter); Nahkampf bleibt blockiert.
+
 ### Alarm schlagen (umgesetzt 04.11.2026)
 
 Nicht gleich alle Verteidiger kämpfen. Jeder Gegner hat einen Zustand:

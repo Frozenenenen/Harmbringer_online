@@ -259,7 +259,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=31"></script>
+<script src="data/world_data.js?v=32"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -373,7 +373,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 102, "date": "2026-11-04", "changes": [{"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen (Taste N), filterbar, mit Ungelesen-Zähler"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}, {"date": "04.11. 16:26", "text": "Minimap: eigene Armeen als Wappen (Lich, Expeditionen mit Namen, Besatzungen)"}]};
+const BUILD = {"version": 103, "date": "2026-11-04", "changes": [{"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, Meldung bei unerreichbaren Gegnern, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}, {"date": "04.11. 19:45", "text": "Chronik: Log aller Weltmeldungen"}, {"date": "04.11. 19:41", "text": "Baumenü: Text über die volle Breite"}, {"date": "04.11. 19:35", "text": "Kampf: Mouseover-Einheitenkarte über der eigenen Karte"}, {"date": "04.11. 19:20", "text": "UI-Overhaul nach Heroes-Vorbild: Seitenleiste, Zeitleiste, Bedrohungs-Chip, Ortsinfo bei Auswahl, Kampfkonsole"}, {"date": "04.11. 18:46", "text": "Ortsinfo unter Kopfleiste, Bauen-Anzeige, Reisebalken ohne Hinterhalt-Spoiler"}, {"date": "04.11. 18:32", "text": "Sichtkegel: gelb ahnungslos, orange misstrauisch"}, {"date": "04.11. 18:26", "text": "Alarm: ahnungslos/misstrauisch/alarmiert, Glocken, Sichtkegel, Stinkfahnen"}, {"date": "04.11. 18:14", "text": "Uhrzeit auf der Karte: Reisen stundengenau mit Ankunftszeit, Kämpfe zur Tageszeit der Ankunft, Rasten"}, {"date": "04.11. 18:05", "text": "BUGS: Windgeräusch nach dem Schließen"}, {"date": "04.11. 18:03", "text": "Ton standardmäßig aus; ausgeschaltet wird der Audio-Kontext ganz geschlossen"}, {"date": "04.11. 16:32", "text": "Ton verstummt, wenn das Spiel verdeckt, minimiert oder verlassen wird"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -795,7 +795,7 @@ const TERRAIN_UV_SCALE = 1 / 36;   // texture repeats every 36 world units (abou
 // Floor type -> ground texture (index into HARMBRINGER_GROUND.textures). Borrowed textures are
 // tinted towards the floor color so every floor type keeps its own look.
 const GROUND_TEXTURE_FOR = {
-  DEEP_WATER: 'Sand', SHALLOW_WATER: 'Mud', SAND: 'Sand', WET_EARTH: 'WetEarth', MUD: 'Mud', BOG: 'Bog', SWAMP: 'Swamp',
+  DEEP_WATER: 'Sand', SHALLOW_WATER: 'Mud', WATT: 'WetEarth', SAND: 'Sand', WET_EARTH: 'WetEarth', MUD: 'Mud', BOG: 'Bog', SWAMP: 'Swamp',
   GRASS_SHORT: 'GrassShort', GRASS_TALL: 'GrassTall', HEATHER: 'Heather', DRY_EARTH: 'DryEarth', GRAVEL: 'RawStone',
   RAW_STONE: 'RawStone', COBBLESTONE: 'RawStone', STONE_FLOOR: 'RawStone', WOOD_FLOOR: 'DryEarth',
   HOLY_GROUND: 'Sand', GRAVEYARD_GROUND: 'WetEarth', PAGAN_GROUND: 'Heather'
@@ -3058,6 +3058,45 @@ class Battlefield {
         placed++;
       }
     }
+    // Rungholt is fought at low tide: the sea becomes tidal flats and tideways (slow, but walkable).
+    if (this.node.id === 'rungholt')
+      for (const t of this.tiles) if (t && t.floor === 'DEEP_WATER') { const x = this.rng(); t.floor = x < 0.65 ? 'WATT' : x < 0.85 ? 'MUD' : 'SHALLOW_WATER'; }
+    this.connectLand();
+  }
+  // Every piece of walkable ground must be reachable: separate islands get fords (shallow water)
+  // along the shortest way through deep water to the largest piece.
+  connectLand() {
+    const N = this.tiles.length, comp = new Int32Array(N).fill(-1), sizes = [];
+    const ok = t => t && this.walkable(t);
+    for (let i = 0; i < N; i++) {
+      if (comp[i] >= 0 || !ok(this.tiles[i])) continue;
+      const id = sizes.length, st = [i]; comp[i] = id; let n = 0;
+      while (st.length) { const k = st.pop(); n++; const t = this.tiles[k];
+        for (let d = 0; d < 6; d++) { const m = this.neighborTile(t, d); if (!ok(m)) continue; const j = this.index(m); if (comp[j] < 0) { comp[j] = id; st.push(j); } } }
+      sizes.push(n);
+    }
+    if (sizes.length < 2) return;
+    const main = sizes.indexOf(Math.max(...sizes)), joined = new Set([main]);
+    for (let round = 0; round < 40 && joined.size < sizes.length; round++) {
+      // Multi-source BFS from the joined land through deep water to the next unjoined piece.
+      const prev = new Int32Array(N).fill(-2), q = [];
+      for (let i = 0; i < N; i++) if (joined.has(comp[i])) { prev[i] = -1; q.push(i); }
+      let hit = -1;
+      for (let h = 0; h < q.length && hit < 0; h++) {
+        const t = this.tiles[q[h]];
+        for (let d = 0; d < 6; d++) {
+          const m = this.neighborTile(t, d); if (!m) continue; const j = this.index(m);
+          if (prev[j] !== -2) continue;
+          if (ok(m) && !joined.has(comp[j])) { prev[j] = q[h]; hit = j; break; }
+          if (!ok(m)) { prev[j] = q[h]; q.push(j); }
+        }
+      }
+      if (hit < 0) break;
+      for (let k = prev[hit]; k >= 0 && prev[k] !== -1; k = prev[k]) { this.tiles[k].floor = 'SHALLOW_WATER'; comp[k] = main; }
+      const c = comp[hit];
+      for (let i = 0; i < N; i++) if (comp[i] === c) comp[i] = main;
+      joined.add(c);
+    }
   }
 
   // Weighted pick from a [key, weight] list.
@@ -3227,6 +3266,8 @@ class MinHeap {
   get size() { return this.a.length; }
 }
 
+// Creatures of the sea and the drowned: water (also deep) costs them 1.
+const SWIMMERS = new Set(['wasserleiche', 'wassermann', 'ertrunkener', 'wattjungfrau', 'klabautermann', 'blanker_hans']);
 const Pathfinding = {
   // Cost to step from A to B in direction d, or null if not allowed.
   stepCost(field, unit, A, d, B, ignoreUnits = false) {
@@ -3236,6 +3277,7 @@ const Pathfinding = {
     if (!def.flying && Math.abs(A.level - B.level) >= 2) return null;
     if (B.unit && B.unit !== unit && !def.flying && !ignoreUnits) return null;     // flyers may pass over units
     if (def.flying) return 1;
+    if (SWIMMERS.has(unit.type) && DATA.floorTypes[B.floor].water) return 1;   // creatures of the sea swim fast, even in deep water
     const base = DATA.floorTypes[B.floor].moveCost;                  // null = impassable
     if (base === null || base === undefined) return base;
     // Mass: tiles next to an enemy giant (size 4) cost one more movement point.
@@ -3342,7 +3384,11 @@ const Combat = {
     if (dist > range || dist < 1) return { ok: false };
     if (dist === 1) {
       const e = this.edgeBetween(field, from, tt);
-      if (e && (BLOCKS_MELEE.has(e[0]) || BLOCKS_MELEE.has(e[1]))) return { ok: false };
+      if (e && (BLOCKS_MELEE.has(e[0]) || BLOCKS_MELEE.has(e[1]))) {
+        // A window blocks melee, but archers can still shoot through it (with cover, no counter).
+        if (unit.def.range > 1 && !BLOCKS_SIGHT.has(e[0]) && !BLOCKS_SIGHT.has(e[1])) return { ok: true, cover: true, dist, range, window: true };
+        return { ok: false };
+      }
       return { ok: true, cover: !!e && (e[0] === 'COVER' || e[1] === 'COVER'), dist, range };
     }
     const los = this.lineOfSight(field, from, tt);
@@ -4020,6 +4066,13 @@ const Battle = {
     UI.roundBanner(1, `${node.name} · ${TIMES[b.time].name}`);
     Narrator.hint('Kampf: Die Einheit mit dem goldenen Ring ist am Zug. Blaue Felder = Bewegung, rote = angreifbare Gegner, über einem Gegner siehst du den erwarteten Schaden. Fähigkeiten unten rechts (Tasten 1–4), Leertaste beendet den Zug.', 'battle');
     Narrator.hint('Solange die Gegner euch nicht bemerkt haben (Schleich-Modus), ist der erste Angriff ein Überraschungsangriff. Der Wind trägt den Geruch der Toten.', 'stealth');
+    // Some places need special troops (flyers, ghosts, swimmers). Say so at once – withdrawal costs nothing yet.
+    const cut = this.unreachableEnemies();
+    if (cut.length) {
+      const all = cut.length === b.units.filter(u => u.side === 'enemy' && u.alive).length;
+      const msg = `${all ? 'Kein Gegner ist' : `${cut.length} ${cut.length === 1 ? 'Gegnergruppe ist' : 'Gegnergruppen sind'}`} für eure Einheiten erreichbar (${[...new Set(cut.map(u => u.def.name))].join(', ')}). Hier braucht es Flieger, Geister oder Fernkämpfer. „Abziehen“ ist ohne Verluste möglich, solange nicht gekämpft wurde.`;
+      this.log(msg, 'hit'); setTimeout(() => UI.toast(all ? 'Unerreichbar! Abzug ohne Verluste möglich.' : 'Nicht alle Gegner sind erreichbar.', 6), 1200);
+    }
     this.nextTurn();
   },
   // A stack of `hps.length` creatures. Wounds are pooled so only the top creature is wounded
@@ -4077,7 +4130,7 @@ const Battle = {
   deploy(b) {
     const f = b.field, size = f.size, cpos = hexToWorld(f.cq, f.cr);
     // Nobody starts in the water except flyers (a ballista in a pond helps no one).
-    const canStand = (u, t) => t && !t.unit && (u.def.flying || (f.walkable(t) && !f.isWater(t)));
+    const canStand = (u, t) => t && !t.unit && (u.def.flying || (SWIMMERS.has(u.type) && f.walkable(t)) || (f.walkable(t) && !f.isWater(t)));
     const players = b.units.filter(u => u.side === 'player');
     const D = Math.min(size / 2 - 2, 12);
     const free = f.tiles.filter(t => t && t.building === null && f.walkable(t) && !f.isWater(t));
@@ -4305,6 +4358,7 @@ const Battle = {
     this.endTurn();
   },
   applyDamage(target, dmg, killer, power) {
+    if (game.battle) game.battle.contact = true;
     // Soul shield pool absorbs any damage first and does not regenerate during the battle.
     const absorbed = Math.min(target.shield || 0, dmg);
     target.shield = (target.shield || 0) - absorbed;
@@ -4344,7 +4398,7 @@ const Battle = {
     if (b.over) return;
     Abilities.afterHit(att, target, dmg);
     // Counter: surviving melee targets with counter strike back once at 50 %.
-    if (target.alive && chk.dist === 1 && target.def.counter && !surprise && !(target.status && target.status.LEADERLESS)) {
+    if (target.alive && chk.dist === 1 && !chk.window && target.def.counter && !surprise && !(target.status && target.status.LEADERLESS)) {
       const back = Combat.canAttack(f, target, tt, att);
       if (back.ok) {
         await wait(0.15);
@@ -4417,9 +4471,27 @@ const Battle = {
     }
     if (lost.length) this.log(`${fallen.def.name} ist gefallen – führerlos: ${lost.join(', ')} (−2 Initiative, kein Konter, Zerfall).`, 'hit');
   },
+  // Enemies that no player unit can ever reach or shoot (water, cliffs), ignoring other units.
+  unreachableEnemies() {
+    const b = game.battle, f = b.field, en = b.units.filter(u => u.side === 'enemy' && u.alive);
+    const reach = b.units.filter(u => u.side === 'player' && u.alive).map(u => ({ u, tiles: [...Pathfinding.search(f, u, 9999, true).cost.keys()].map(i => f.tiles[i]) }));
+    return en.filter(e => !reach.some(({ u, tiles }) => tiles.some(t => hexDistance(t.q, t.r, e.q, e.r) <= Math.max(1, u.def.range))));
+  },
+  // Withdrawal without losses: before any blow was struck, or when no enemy can be reached at all.
+  canWithdraw() {
+    const b = game.battle; if (!b || b.over || b.node.encounter) return false;
+    if (!b.contact) return true;
+    const en = b.units.filter(u => u.side === 'enemy' && u.alive);
+    return en.length > 0 && this.unreachableEnemies().length === en.length;
+  },
   retreat() {
     const b = game.battle;
     if (!b || b.over || b.retreatPending) return;
+    if (this.canWithdraw()) {
+      UI.modal(`<h2>Abziehen?</h2><p>${b.contact ? 'Kein Gegner ist erreichbar.' : 'Noch wurde kein Schlag geführt.'} Die ganze Armee zieht geordnet ab und bleibt vor ${esc(b.node.name)} stehen. Keine Verluste, keine Beute; die Zeit des Kampfes vergeht.</p>`,
+        [{ label: 'Abziehen', primary: true, action: () => this.finish('withdraw') }, { label: 'Weiterkämpfen', action: () => {} }]);
+      return;
+    }
     b.retreatPending = true;
     this.log('Rückzug befohlen. Er gelingt zu Beginn des nächsten Zugs des Lichs.', 'hit');
     UI.toast('Rückzug befohlen – zu Beginn des nächsten Lich-Zugs.');
@@ -4430,7 +4502,7 @@ const Battle = {
     if (b.over) return;
     b.over = true;
     c.battles++;
-    UI.news(`${result === 'victory' ? 'Sieg' : result === 'retreat' ? 'Rückzug' : 'Niederlage'}: ${node.name}${node.encounter ? ' (unterwegs)' : ''} nach ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'}.`, 'battle');
+    UI.news(`${result === 'victory' ? 'Sieg' : result === 'retreat' ? 'Rückzug' : result === 'withdraw' ? 'Abzug' : 'Niederlage'}: ${node.name}${node.encounter ? ' (unterwegs)' : ''} nach ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'}.`, 'battle');
     let html = '', endNow = false;
     // Time scale: a round lasts BATTLE_HOURS_PER_ROUND hours (time of day turns every 3 rounds = 6 h).
     const hours = b.round * BATTLE_HOURS_PER_ROUND, battleDays = Math.floor(hours / 24);
@@ -4536,6 +4608,14 @@ const Battle = {
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${ancestorText}${pantheonText}`;
       // Show the end screen only once (the campaign may go on afterwards).
       if (node.finale && !c.won) { c.won = true; endNow = true; }
+    } else if (result === 'withdraw') {
+      // Everybody leaves the field as they are (no healing, no loot); the army stays at the place.
+      c.army = this.alive('player').flatMap(u => {
+        if (u.type === 'lich') return [{ type: 'lich', hp: this.lichCampaignHp(u) }];
+        const n = stackCount(u), baseHp = DATA.units[u.type].hp, back = x => Math.max(1, Math.round(x / u.def.hp * baseHp));
+        return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: back(i < n - 1 ? u.def.hp : u.hp - (n - 1) * u.def.hp) }));
+      });
+      html = `<h2>Abzug</h2><p>Die Armee zieht geordnet von ${esc(node.name)} ab. Der Ort bleibt in Feindeshand.</p>`;
     } else if (result === 'defeat' && b.expedition) {
       c.army = [];
       html = `<h2>${esc(Expeditions.name(b.expedition))} vernichtet</h2><p>Der Kommandeur ist gefallen, sein Zug zerfällt. Der Lich verliert diese Diener.</p>`;
@@ -4559,12 +4639,12 @@ const Battle = {
       Campaign.advanceDays(1);
       html = `<h2>Rückzug</h2><p>Der Lich entweicht in die Nacht und kehrt nach einem Tag ins Hügelgrab zurück. Seine Diener bleiben zurück. Keine Beute.</p>`;
     }
-    if (c.march && result !== 'victory') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
+    if (c.march && result !== 'victory' && result !== 'withdraw') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
     if (b.expedition) {
       // Write the result back to the expedition and restore the Lich army.
       const e = b.expedition, sv = this.saved;
       e.army = c.army;
-      if (result === 'victory' && !node.encounter) e.nodeId = node.id;
+      if ((result === 'victory' || result === 'withdraw') && !node.encounter) e.nodeId = node.id;
       c.army = sv.army; c.nodeId = sv.nodeId; c.prevNodeId = sv.prevNodeId; c.travel = sv.travel;
       if (!e.army.length) { c.expeditions = Expeditions.list().filter(x => x !== e); if (UI.activeArmy === e.id) UI.activeArmy = 'lich'; }
       this.saved = null;
@@ -4573,7 +4653,7 @@ const Battle = {
     const losses = [];
     for (const u of b.units) {
       if (u.side !== 'player' || u.summoned) continue;
-      const left = u.alive && (result === 'victory' || u.type === b.leader) ? stackCount(u) : 0;
+      const left = u.alive && (result === 'victory' || result === 'withdraw' || u.type === b.leader) ? stackCount(u) : 0;
       if (u.startCount - left > 0) losses.push({ type: u.type, n: u.startCount - left, of: u.startCount });
     }
     html += `<h3>Verluste</h3>${losses.length ? `<div class="losses">${losses.map(l => `<div class="lossRow" title="${esc(DATA.units[l.type].name)}: ${l.n} von ${l.of} verloren">${portraitHtml(l.type, DATA.units[l.type])}<span><b>−${l.n}</b> ${esc(DATA.units[l.type].name)}<br><span class="small">${l.of - l.n} von ${l.of} übrig</span></span></div>`).join('')}</div>` : '<p class="small">Keine – alle Untoten haben den Kampf überstanden.</p>'}`;
@@ -5463,6 +5543,10 @@ const UI = {
       bar.querySelectorAll('[data-ab]').forEach(x => x.onclick = () => Battle.chooseAbility(x.dataset.ab));
     } else bar.innerHTML = '';
     $('btnRetreat').disabled = b.retreatPending || b.over;
+    const wd = this.canWithdrawCached !== undefined && this.cwRound === b.round && this.cwContact === !!b.contact ? this.canWithdrawCached : (this.cwRound = b.round, this.cwContact = !!b.contact, this.canWithdrawCached = Battle.canWithdraw());
+    $('btnRetreat').innerHTML = (wd ? 'Abziehen' : 'Rückzug') + '<kbd>R</kbd>';
+    $('btnRetreat').title = wd ? 'Abziehen (R): Die ganze Armee verlässt das Feld ohne Verluste – möglich, solange nicht gekämpft wurde oder kein Gegner erreichbar ist. Keine Beute.'
+      : 'Rückzug (R): Der Lich verlässt das Feld zu Beginn seines nächsten Zugs und kehrt nach einem Tag ins Hügelgrab zurück. Alle anderen Einheiten bleiben zurück und gehen verloren, es gibt keine Beute, der Ort bleibt in Feindeshand. Bis dahin kann der Lich weiter angegriffen werden.';
     // The chronicle takes the space left of the action buttons.
     document.body.style.setProperty('--logRight', ($('battleButtons').offsetWidth + 26) + 'px');
     if (cur && cur.alive) {
@@ -5602,7 +5686,7 @@ function onHover(ev) {
       const dmg = Math.round(Combat.expected(b.field, cur, from, x, chk.cover) * Abilities.damageMul(cur, x));
       const through = Math.max(0, dmg - (x.shield || 0)), left = x.hp - through, dies = stackCount(x) - (left > 0 ? Math.ceil(left / x.def.hp) : 0);
       const eff = DATA.powerDefense[Combat.profile(cur, x).power][x.def.defense];
-      extra += `<br><b>Angriff: ≈ ${dmg} Schaden</b>${x.shield ? ` (Schild ${Math.min(x.shield, dmg)})` : ''} · ${left <= 0 ? 'vernichtet den Stapel' : `~${dies} fallen`}<br><span class="small">${eff >= 125 ? '▲ sehr wirksam' : eff >= 100 ? '► wirksam' : eff > 0 ? '▼ schwach' : '✖ immun'} (${eff} %)${chk.cover ? ' · Deckung' : ''}${x.def.counter && chk.dist === 1 ? ' · Gegner kontert' : ''}</span>`;
+      extra += `<br><b>Angriff: ≈ ${dmg} Schaden</b>${x.shield ? ` (Schild ${Math.min(x.shield, dmg)})` : ''} · ${left <= 0 ? 'vernichtet den Stapel' : `~${dies} fallen`}<br><span class="small">${eff >= 125 ? '▲ sehr wirksam' : eff >= 100 ? '► wirksam' : eff > 0 ? '▼ schwach' : '✖ immun'} (${eff} %)${chk.cover ? ' · Deckung' : ''}${chk.window ? ' · durchs Fenster' : ''}${x.def.counter && chk.dist === 1 && !chk.window ? ' · Gegner kontert' : ''}</span>`;
     }
     UI.renderHoverCard(t.unit && t.unit.alive ? t.unit : null);
     if (myTurn && !t.unit) {

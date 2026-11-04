@@ -57,6 +57,7 @@ window.HARMBRINGER_DATA = {
   floorTypes: {
     DEEP_WATER:        { name: "Tiefes Wasser",    color: "#22364f", moveCost: null, water: true },
     SHALLOW_WATER:     { name: "Seichtes Wasser",  color: "#3f6478", moveCost: 3,    water: true },
+    WATT:              { name: "Watt",             color: "#7a705a", moveCost: 1 },
     SAND:              { name: "Sand",             color: "#cbb98a", moveCost: 2 },
     WET_EARTH:         { name: "Feuchte Erde",     color: "#5e5236", moveCost: 2 },
     MUD:               { name: "Schlamm",          color: "#4a3f2b", moveCost: 3 },
