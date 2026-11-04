@@ -124,6 +124,8 @@
   .nodeLabel[data-danger="low"] { border-left: 5px solid #4a9a3a; } .nodeLabel[data-danger="mid"] { border-left: 5px solid #d0a020; } .nodeLabel[data-danger="high"] { border-left: 5px solid #c0302a; }
   #armyList { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; } #armyList:empty { display: none; }
   #armyList button { font-size: 12px; text-align: left; } #armyList button.on { outline: 2px solid var(--gold); }
+  .recruitBtns { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-end; max-width: 210px; }
+  .recruitBtns button { padding: 2px 7px; } .recruitBtns input { width: 48px; } .recruitBtns .nowrap { white-space: nowrap; }
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
   #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
@@ -237,7 +239,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 72, "date": "2026-11-04", "changes": [{"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}, {"date": "04.11. 11:57", "text": "Expeditionen: Kommandeure mit eigenem Zug, Befehle geben und gemeinsam mit „Los“ ziehen"}]};
+const BUILD = {"version": 73, "date": "2026-11-04", "changes": [{"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}, {"date": "04.11. 12:52", "text": "Version und letzte Änderungen im Debug-Fenster (F3)"}, {"date": "04.11. 12:49", "text": "Fix: Irrlichter beschworen sich beim Tod endlos neu – Kampf ließ sich nicht beenden"}, {"date": "04.11. 12:35", "text": "Ahnen aus Gräbern (Reiterfürst, Hünenkönig, Widukind, Ratsherr von Rungholt); Doku"}, {"date": "04.11. 12:31", "text": "Gemeinsamer Marsch: Hinterhalte für alle Armeen, Marsch läuft nach dem Kampf weiter"}, {"date": "04.11. 12:29", "text": "Gelände-Fähigkeiten verändern den Boden; Portalbau, Lichtsäulen und Heimvorteil am Pantheon-Sitz"}, {"date": "04.11. 12:02", "text": "Gebäudetexte verraten keine unbekannten Einheiten mehr"}, {"date": "04.11. 12:00", "text": "Späher, Gefahrenfarben, Bündnis, verbrannte Erde, Chronist, Token-Modus; Doku"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1725,6 +1727,20 @@ const Recruitment = {
     for (const [k, v] of Object.entries(u.cost || {})) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
     if (Campaign.commandUsed() + u.commandPoints > Campaign.commandLimit()) return 'Kommandolimit erreicht';
     return null;
+  },
+  // How many of `type` can be raised right now (resources and command).
+  maxAffordable(type) {
+    if (this.blocker(type)) return 0;
+    const u = DATA.units[type], c = game.campaign;
+    let n = Infinity;
+    for (const [k, v] of Object.entries(u.cost || {})) if (v > 0) n = Math.min(n, Math.floor((c.resources[k] || 0) / v));
+    if (u.commandPoints > 0) n = Math.min(n, Math.floor((Campaign.commandLimit() - Campaign.commandUsed()) / u.commandPoints));
+    return n === Infinity ? 99 : Math.max(0, n);
+  },
+  recruitMany(type, count) {
+    let done = 0;
+    while (done < count && this.recruit(type)) done++;
+    return done;
   },
   recruit(type) {
     if (this.blocker(type)) return false;
@@ -4309,7 +4325,13 @@ const UI = {
         <div><b>${u.name}</b> <span class="small">· ${u.commandPoints < 0 ? `+${-u.commandPoints} Kommando (Anführer)` : u.commandPoints + ' Kommando'} · Kosten: ${cost}</span><br>
         <span class="small">LP ${u.hp} · Ini ${u.initiative} · Bew ${u.move} · Schaden ${u.damage} ${POWER_NAMES[u.power]} · Reichweite ${u.range} · Rüstung ${DEFENSE_NAMES[u.defense]}</span><br>
         <span class="small"><i>${esc(u.desc || '')}</i></span></div>
-        <div><button data-type="${type}" ${block ? 'disabled' : ''} title="${block || ''}">Rekrutieren</button><div class="small">${block || ''}</div></div></div>`;
+        <div class="recruitBtns">${(() => { const max = Recruitment.maxAffordable(type);
+          return `<button data-type="${type}" data-n="1" ${block ? 'disabled' : ''} title="${block || 'Eine Einheit'}">+1</button>
+          <button data-type="${type}" data-n="10" ${max < 2 ? 'disabled' : ''} title="Bis zu 10">+10</button>
+          <button data-type="${type}" data-n="max" ${max < 2 ? 'disabled' : ''} title="So viele wie möglich (${max})">Max (${max})</button>
+          <span class="nowrap"><input type="number" min="1" max="${Math.max(1, max)}" value="${Math.max(1, Math.min(5, max))}" data-count="${type}" ${block ? 'disabled' : ''}>
+          <button data-type="${type}" data-n="input" ${block ? 'disabled' : ''} title="Eingegebene Anzahl">OK</button></span>`; })()}
+          <div class="small">${block || ''}</div></div></div>`;
     }).join('');
     const r = c.resources;
     const place = Campaign.armyNode();
@@ -4319,8 +4341,17 @@ const UI = {
       <p class="small">Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge} · Kommando ${Campaign.commandUsed()} / ${Campaign.commandLimit()}</p>
       ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
     $('modalBody').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => {
-      if (Recruitment.recruit(b.dataset.type)) { this.toast(`${DATA.units[b.dataset.type].name} erhebt sich aus dem Grab.`); this.updateHeader(); this.renderInfo(); this.openRecruit(); }
+      const type = b.dataset.type, max = Recruitment.maxAffordable(type);
+      const want = b.dataset.n === 'max' ? max : b.dataset.n === 'input' ? Math.floor(+($('modalBody').querySelector(`[data-count="${type}"]`).value) || 0) : +b.dataset.n;
+      const n = Recruitment.recruitMany(type, Math.min(want, max));
+      if (n) {
+        const name = DATA.units[type].name;
+        this.toast(n === 1 ? `${name} erhebt sich aus dem Grab.` : `${n}× ${name} erheben sich aus dem Grab.`);
+        const scroll = $('modalBody').scrollTop;
+        this.updateHeader(); this.renderInfo(); this.openRecruit(); $('modalBody').scrollTop = scroll;
+      }
     });
+    $('modalBody').querySelectorAll('input[data-count]').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') $('modalBody').querySelector(`button[data-n="input"][data-type="${i.dataset.count}"]`).click(); });
   },
   showEnd() {
     const c = game.campaign;
