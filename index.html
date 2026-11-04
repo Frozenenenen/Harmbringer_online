@@ -1095,7 +1095,7 @@ function initScene(ground) {
   v.sun = new THREE.DirectionalLight(0xffe2b8, 1.9);
   v.sun.position.set(-60, 90, 60);
   v.scene.add(v.sun, v.sun.target);
-  v.scene.add(new THREE.HemisphereLight(0xe8dcc0, 0x3a3328, 1.1));
+  v.hemi = new THREE.HemisphereLight(0xe8dcc0, 0x3a3328, 1.1); v.scene.add(v.hemi);
 
   // Water plane over the whole map.
   const w = WIDTH * COL_SPACING, h = HEIGHT * ROW_SPACING;
@@ -2466,6 +2466,7 @@ const Combat = {
     const dist = hexDistance(from.q, from.r, tt.q, tt.r);
     let range = unit.def.range;
     if (range > 1 && from.level - tt.level >= 2) range += 1;        // ranged high ground bonus
+    if (range > 2 && game.battle && TIMES[game.battle.time].foggy) range -= 1;   // fog
     if (dist > range || dist < 1) return { ok: false };
     if (dist === 1) {
       const e = this.edgeBetween(field, from, tt);
@@ -2674,7 +2675,7 @@ const Stealth = {
   },
   sees(field, enemy, tq, tr) {
     const dist = hexDistance(enemy.q, enemy.r, tq, tr);
-    if (dist > enemy.def.sight || dist === 0 || !this.inCone(enemy, tq, tr)) return false;
+    if (dist > Weather.sightOf(game.battle, enemy) || dist === 0 || !this.inCone(enemy, tq, tr)) return false;
     return Combat.lineOfSight(field, field.get(enemy.q, enemy.r), field.get(tq, tr)).clear;
   },
   // Does `enemy` detect undead unit `u`? Returns the sense or null.
@@ -2682,7 +2683,7 @@ const Stealth = {
     const dist = hexDistance(enemy.q, enemy.r, u.q, u.r);
     if (this.sees(field, enemy, u.q, u.r)) return 'Sicht';
     if (dist <= enemy.def.hear && u.def.size >= 2 && u.movedThisTurn) return 'Gehör';
-    if (dist <= enemy.def.smell && !u.def.spectral) return 'Geruch';
+    if (dist <= Weather.smellOf(game.battle, enemy, u) && !u.def.spectral) return 'Geruch';
     return null;
   },
   check(battle, units) {
@@ -2700,11 +2701,62 @@ const Stealth = {
     const set = new Map();
     for (const e of battle.units) {
       if (e.side !== 'enemy' || !e.alive) continue;
-      for (const t of battle.field.tilesWithin(e.q, e.r, e.def.sight)) {
+      for (const t of battle.field.tilesWithin(e.q, e.r, Weather.sightOf(battle, e))) {
         if (this.sees(battle.field, e, t.q, t.r)) set.set(battle.field.index(t), t);
       }
     }
     return [...set.values()];
+  }
+};
+
+// =============================================================================
+// Time of day, weather and arrival (design: Tageszeit-System, Gebietseffekte, Schlachtfeld-Ankunft)
+// Four times of day, each lasting 3 rounds. Night favours the undead, day the living, morning
+// brings fog. The wind decides whether the undead are smelled. The arrival state follows from
+// the encounter, the alarm of the defenders, time, fog and how quiet the army is.
+// =============================================================================
+const TIMES = [
+  { key: 'NIGHT', name: 'Nacht', sight: -2, undead: 1.15, living: 0.95, sun: [0x7080c0, 0.35], hemi: [0x5a6488, 0.55], fog: 0x2c3040 },
+  { key: 'MORNING', name: 'Morgen', sight: -3, undead: 1.0, living: 1.0, sun: [0xffd8b0, 1.1], hemi: [0xc8c4c0, 0.95], fog: 0x9a968e, foggy: true },
+  { key: 'DAY', name: 'Tag', sight: 1, undead: 0.95, living: 1.15, sun: [0xffe2b8, 1.9], hemi: [0xe8dcc0, 1.1], fog: BG_COLOR },
+  { key: 'EVENING', name: 'Abend', sight: -1, undead: 1.05, living: 1.0, sun: [0xffa070, 1.2], hemi: [0xb89880, 0.85], fog: 0x5a4a44 }
+];
+const ROUNDS_PER_TIME = 3;
+const DIR_NAMES = ['Norden', 'Nordosten', 'Südosten', 'Süden', 'Südwesten', 'Nordwesten'];   // vectorToDirection: 0 = north, clockwise
+const Weather = {
+  time(b) { return TIMES[b.time]; },
+  sightOf(b, u) { return Math.max(1, u.def.sight + (u.side === 'enemy' ? TIMES[b.time].sight : 0)); },
+  damageMul(b, u) { const t = TIMES[b.time]; return u.side === 'player' ? t.undead : t.living; },
+  // Smell is carried by the wind: downwind of the undead the radius grows, upwind it shrinks.
+  smellOf(b, enemy, u) {
+    const a = hexToWorld(u.q, u.r), e = hexToWorld(enemy.q, enemy.r);
+    const dir = vectorToDirection(e.x - a.x, e.z - a.z);                       // from the undead to the enemy
+    const diff = Math.min((dir - b.wind + 6) % 6, (b.wind - dir + 6) % 6);
+    return enemy.def.smell * (diff <= 1 ? 1.5 : diff >= 2 ? 0.5 : 1);
+  },
+  apply(b) {
+    const v = game.view, t = TIMES[b.time];
+    v.sun.color.setHex(t.sun[0]); v.sun.intensity = t.sun[1];
+    if (v.hemi) { v.hemi.color.setHex(t.hemi[0]); v.hemi.intensity = t.hemi[1]; }
+    v.scene.fog.color.setHex(t.fog);
+    if (v.scene.background && v.scene.background.setHex) v.scene.background.setHex(t.fog);
+  },
+  reset() {
+    const v = game.view; v.sun.color.setHex(0xffe2b8); v.sun.intensity = 1.9;
+    if (v.hemi) { v.hemi.color.setHex(0xe8dcc0); v.hemi.intensity = 1.1; }
+    v.scene.fog.color.setHex(BG_COLOR); if (v.scene.background && v.scene.background.setHex) v.scene.background.setHex(BG_COLOR);
+  },
+  // Start time: rolls with the day and the place; the Wild Hunt only rides at night.
+  startTime(node) {
+    const c = game.campaign;
+    if (Object.keys(node.garrison || {}).some(t => t === 'wode' || t === 'hackelberg' || t === 'wilder_jaeger')) return 0;
+    return Math.floor(hash2(node.q, node.r, c.dayCount + c.battles) * 4);
+  },
+  // How quiet is the army? 0 (ghosts) .. 4 (giants, machines).
+  noise(b) {
+    const pl = b.units.filter(u => u.side === 'player' && u.type !== 'lich');
+    if (!pl.length) return 1;
+    return Math.max(...pl.map(u => u.def.size + (u.def.spectral ? -2 : 0)));
   }
 };
 
@@ -2733,7 +2785,8 @@ const Battle = {
     const b = game.battle = {
       node, field, dir, units: [], log: [], round: 1, lastTick: null, current: null,
       state: 'fight', busy: false, retreatPending: false, kills: [], reach: null, targets: [],
-      selected: null, hover: null, over: false, corpses: new Map(), abilityMode: null
+      selected: null, hover: null, over: false, corpses: new Map(), abilityMode: null,
+      time: Weather.startTime(node), wind: Math.floor(hash2(node.q, node.r, c.dayCount * 7 + 3) * 6), arrival: 'STANDARD'
     };
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
@@ -2774,15 +2827,33 @@ const Battle = {
     // Stealth phase (PROMPT 9).
     const base = vectorToDirection(dir.x, dir.z), rng = makeRng(field.seed + 17);
     for (const u of b.units) if (u.side === 'enemy') u.facing = (base + Math.floor(rng() * 3) - 1 + 6) % 6;
+    Weather.apply(b);
+    const T = TIMES[b.time], windTxt = `Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}`;
+    this.log(`${T.name}${T.foggy ? ', Nebel' : ''} · ${windTxt}. ${b.time === 0 ? 'Die Toten sind in ihrem Element.' : b.time === 2 ? 'Das Tageslicht stärkt die Lebenden.' : ''}`);
+    const alarm = !node.encounter && ((game.campaign.threat[node.faction] || 0) >= 50 || Raids.list().some(r => r.faction === node.faction));
+    const senses = Object.keys(node.garrison || {}).some(t => ['hexe', 'brockenhexe', 'druidin', 'heidekoenigin', 'zwergenkoenig', 'priester'].includes(t));
     const found = Stealth.check(b, b.units.filter(u => u.side === 'player'));
-    if (found) {
+    const quiet = Weather.noise(b) <= 2 && (b.time === 0 || T.foggy);
+    if (node.encounter && !node.raidId) {
+      // Ambush on the road: the enemy strikes first and the column is still in marching order.
+      b.arrival = 'AMBUSH'; b.state = 'fight';
+      for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(4); else Abilities.addStatus(u, 'SLOWED', 1, 0, true);
+      UI.toast('Hinterhalt! Der Feind ist zuerst am Zug, eure Reihen sind ungeordnet.', 5);
+      this.log('Hinterhalt: Gegner handeln zuerst, eure Einheiten sind im ersten Zug verlangsamt.', 'hit');
+    } else if (alarm || senses) {
+      b.arrival = 'WARNED'; b.state = 'fight';
+      for (const u of b.units) if (u.side === 'enemy') { u.nextTick -= roundFrac(2); Abilities.addStatus(u, 'SHIELDED', 1, 2 * stackCount(u), true); }
+      const why = senses ? 'Sie spüren die Toten' : 'Die Verteidiger sind gewarnt';
+      UI.toast(`Vorwarnung! ${why} – sie stehen in Stellung.`, 5);
+      this.log(`Vorwarnung (${why}): Gegner in Stellung, etwas geschützt und früher am Zug.`, 'hit');
+    } else if (found && !quiet) {
       b.state = 'fight';
       for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(3);
       UI.toast(`Entdeckt! ${found.enemy.def.name} bemerkt ${found.unit.def.name} (${found.sense}).`);
       this.log(`Entdeckt durch ${found.sense}: Die Verteidiger handeln zuerst.`, 'hit');
     } else {
-      b.state = 'stealth';
-      UI.toast('Der Wind steht günstig. Die Wachen haben euch nicht bemerkt.');
+      b.arrival = 'SURPRISE'; b.state = 'stealth';
+      UI.toast(`${quiet ? (b.time === 0 ? 'Die Nacht deckt euch.' : 'Der Nebel deckt euch.') : 'Der Wind steht günstig.'} Die Wachen haben euch nicht bemerkt.`, 5);
       this.log('Schleich-Modus: Die Gegner haben euch nicht bemerkt. Ein Angriff aus dem Verborgenen ist ein Überraschungsangriff.', 'good');
     }
     this.refreshCones();
@@ -2938,6 +3009,13 @@ const Battle = {
     const b = game.battle;
     b.round++;
     this.log(`— Runde ${b.round} —`);
+    if ((b.round - 1) % ROUNDS_PER_TIME === 0) {
+      b.time = (b.time + 1) % 4; Weather.apply(b);
+      const T = TIMES[b.time];
+      this.log(`Die Zeit vergeht: ${T.name}${T.foggy ? ', Nebel zieht auf' : ''}.`, b.time === 0 ? 'good' : '');
+      UI.toast(`${T.name}${T.foggy ? ' – Nebel' : ''}`);
+      this.refreshCones();
+    }
     const heath = Base.sum('heathHeal');
     for (const u of this.alive('player')) {
       const t = b.field.get(u.q, u.r), eff = DATA.floorTypes[t.floor].effect;
@@ -3247,6 +3325,7 @@ const Battle = {
     const root = game.view.battleRoot;
     while (root.children.length) removeWithLabels(root.children[0]);
     game.battle = null;
+    Weather.reset();
     tr.floorOverride = null; tr.dimOutside = null; tr.locked = false;
     game.view.cam.setMapBounds();
     const n = Campaign.armyNode();
@@ -3295,7 +3374,7 @@ const Abilities = {
   },
   // Damage multiplier from statuses (attacker deals, target takes).
   damageMul(att, tgt) {
-    let m = 1; const a = att && att.status || {}, t = tgt && tgt.status || {};
+    let m = att && game.battle ? Weather.damageMul(game.battle, att) : 1; const a = att && att.status || {}, t = tgt && tgt.status || {};
     if (a.ENHANCED) m *= 1.25; if (a.CURSED) m *= 0.75; if (a.CONFUSED) m *= 0.5; if (t.MARKED) m *= 1.25;
     return m;
   },
@@ -3870,7 +3949,8 @@ const UI = {
     }).join('');
     const cur = b.current;
     const who = !cur ? '' : cur.side === 'player' ? `Am Zug: ${cur.def.name}` : `Gegner am Zug: ${cur.def.name}`;
-    $('roundInfo').textContent = `Runde ${b.round} · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}${who}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
+    const T = TIMES[b.time], left = ROUNDS_PER_TIME - ((b.round - 1) % ROUNDS_PER_TIME);
+    $('roundInfo').innerHTML = `Runde ${b.round} · <span title="${T.name}: Untote ${Math.round((T.undead - 1) * 100)} %, Lebende ${Math.round((T.living - 1) * 100)} % Schaden, Sicht der Gegner ${T.sight >= 0 ? '+' : ''}${T.sight}${T.foggy ? ', Nebel: Fernkampf −1 Reichweite' : ''}. Wechsel in ${left} ${left === 1 ? 'Runde' : 'Runden'}.">${T.name}${T.foggy ? ' (Nebel)' : ''}</span> · <span title="Gegen den Wind riechen die Lebenden die Toten weiter, mit dem Wind kaum.">Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}</span> · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}${esc(who)}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
     this.renderUnitCard(b.selected || cur);
     const myTurn = cur && cur.side === 'player' && !b.busy && !b.over;
     $('btnEndTurn').disabled = !myTurn;
