@@ -273,7 +273,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 83, "date": "2026-11-04", "changes": [{"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}]};
+const BUILD = {"version": 84, "date": "2026-11-04", "changes": [{"date": "04.11. 16:01", "text": "Orte auf der Karte zusammengefasst gezeichnet (weniger Draw Calls), Flaggen instanziert"}, {"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1957,11 +1957,58 @@ const Settlements = {
       if (size >= 32) { church(0, 0, size >= 64 ? 1.4 : 1.1); wallRing(r + 1.5, size >= 64 ? 20 : 14); }
       else tower(0, 0, 3.5);
     }
-    const g = mergeColored(parts);
-    const mesh = new THREE.Mesh(g, this.mat || (this.mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85 })));
-    return mesh;
+    const g = mergeColored(parts), base = hexToWorld(node.q, node.r), by = Math.max(w.groundAt(base.x, base.z), HEX.waterLevel);
+    g.translate(base.x, by, base.z);
+    return g;
   },
-  deadMat() { return this._dead || (this._dead = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, color: 0x6a6268 })); },
+  // All places in two meshes (alive / dead), rebuilt only when ownership changes; flags as one instanced mesh.
+  sync() {
+    const v = game.view, c = game.campaign; if (!v || !c) return;
+    this.cache = this.cache || {};
+    const dead = DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && c.owners[n.id] === 'UNDEAD').map(n => n.id);
+    const sig = dead.join(',');
+    if (sig === this.sig && this.meshes) return;
+    this.sig = sig;
+    const merge = list => {
+      const geos = list.map(n => this.cache[n.id] || (this.cache[n.id] = this.build(n)));
+      let len = 0; for (const g of geos) len += g.attributes.position.count;
+      const pos = new Float32Array(len * 3), nor = new Float32Array(len * 3), col = new Float32Array(len * 3); let o = 0;
+      for (const g of geos) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); col.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; }
+      const out = new THREE.BufferGeometry();
+      out.setAttribute('position', new THREE.BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); out.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      out.computeBoundingSphere();
+      return out;
+    };
+    const set = new Set(dead);
+    if (!this.meshes) {
+      this.mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85 });
+      this.dmat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, color: 0x6a6268 });
+      this.meshes = [new THREE.Mesh(new THREE.BufferGeometry(), this.mat), new THREE.Mesh(new THREE.BufferGeometry(), this.dmat)];
+      for (const m of this.meshes) { m.frustumCulled = false; v.worldRoot.add(m); }
+      // Flags: poles and cloths as instanced meshes, one instance per place.
+      const n = DATA.nodes.length;
+      this.poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 5).translate(0, 3.5, 0), new THREE.MeshStandardMaterial({ color: 0x3a2a1a }), n);
+      this.cloths = new THREE.InstancedMesh(new THREE.BoxGeometry(0.1, 1.6, 2.4).translate(0, 6.2, 1.2), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }), n);
+      const m4 = new THREE.Matrix4(), w = game.world;
+      DATA.nodes.forEach((node, i) => {
+        const p = hexToWorld(node.q, node.r), fr = this.radius(node), x = p.x + fr * 0.55, z = p.z - fr * 0.55;
+        m4.makeTranslation(x, Math.max(w.groundAt(x, z), HEX.waterLevel), z);
+        this.poles.setMatrixAt(i, m4); this.cloths.setMatrixAt(i, m4); this.cloths.setColorAt(i, new THREE.Color(0x888888));
+      });
+      this.poles.frustumCulled = this.cloths.frustumCulled = false;
+      v.worldRoot.add(this.poles, this.cloths);
+      this.index = Object.fromEntries(DATA.nodes.map((n, i) => [n.id, i]));
+    }
+    const old = this.meshes.map(m => m.geometry);
+    this.meshes[0].geometry = merge(DATA.nodes.filter(n => !set.has(n.id)));
+    this.meshes[1].geometry = merge(DATA.nodes.filter(n => set.has(n.id)));
+    old.forEach(g => g.dispose());
+  },
+  setFlag(node, color) {
+    if (!this.cloths) return;
+    const col = this._c || (this._c = new THREE.Color());
+    this.cloths.setColorAt(this.index[node.id], col.set(color)); this.cloths.instanceColor.needsUpdate = true;
+  },
   // Footprint radius (clicking, label height).
   radius(node) { const s = node.size || 16; return node.type === 'VILLAGE' ? 6 : node.type === 'PHYLACTERY' ? 8 : s >= 64 ? 20 : s >= 32 ? 13 : 8; }
 };
@@ -1990,20 +2037,10 @@ const WorldView = {
       const label = new CSS2DObject(el);
       pillar.add(label);
       v.worldRoot.add(pillar);
-      // The place itself as houses / stones; the (invisible) pillar stays as click target.
-      const town = Settlements.build(node);
-      town.position.copy(pillar.position); v.worldRoot.add(town);
-      town.userData.nodeId = node.id;
-      const flag = new THREE.Group(), fr = Settlements.radius(node);
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 5), new THREE.MeshStandardMaterial({ color: 0x3a2a1a }));
-      pole.position.y = 3.5;
-      const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 2.4), new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.8 }));
-      cloth.position.set(0, 6.2, 1.2); flag.add(pole, cloth);
-      flag.position.set(pillar.position.x + fr * 0.55, pillar.position.y, pillar.position.z - fr * 0.55);
-      flag.position.y = Math.max(game.world.groundAt(flag.position.x, flag.position.z), HEX.waterLevel);
-      v.worldRoot.add(flag);
+      // The place itself is drawn by Settlements (all places merged into two meshes); the invisible pillar stays as click target.
+      const fr = Settlements.radius(node);
       label.position.y = (3 + fr * 0.3) / 8;          // the pillar parent is scaled by 8 in height
-      v.nodeViews[node.id] = { pillar, label, el, town, flag, cloth };
+      v.nodeViews[node.id] = { pillar, label, el };
     }
     // Army figure: a violet Lich-like shape.
     const fig = new THREE.Group();
@@ -2025,6 +2062,7 @@ const WorldView = {
   },
   // Update pillar colors, heights and labels from the campaign state.
   refresh() {
+    Settlements.sync();
     for (const node of DATA.nodes) {
       const nv = game.view.nodeViews[node.id];
       const revealed = Campaign.isRevealed(node);
@@ -2035,8 +2073,7 @@ const WorldView = {
       nv.pillar.material.visible = false;
       nv.pillar.scale.set(fr * 0.8, 8, fr * 0.8);
       nv.el.classList.toggle('village', village);
-      nv.cloth.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
-      nv.town.material = owner === 'UNDEAD' && node.type !== 'PHYLACTERY' ? Settlements.deadMat() : Settlements.mat;
+      Settlements.setFlag(node, revealed ? DATA.factions[owner].color : '#8a8a8a');
       nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') : '?';
       nv.el.classList.toggle('unknown', !revealed);
       const dg = revealed ? Campaign.danger(node) : null;
