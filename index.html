@@ -194,6 +194,12 @@
   .portrait.none { display: block; }
   #unitCard .portrait { float: right; width: 64px; height: 64px; margin: 0 0 4px 8px; }
   .recruitRow.locked { opacity: .5; }
+  .modal .panel.wide { max-width: 900px; }
+  .recLayout { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: start; }
+  .recSide { position: sticky; top: 36px; display: flex; flex-direction: column; gap: 3px; }
+  .recSide h3 { margin: 4px 0 2px; font-size: 15px; } .recSide button { text-align: left; font-size: 13px; padding: 2px 8px; }
+  .recSide button.on { outline: 2px solid var(--gold); background: #f4ecd6; }
+  @media (max-width: 760px) { .recLayout { grid-template-columns: 1fr; } .recSide { position: static; flex-direction: row; flex-wrap: wrap; } }
   .buildRow { padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
   .buildRow .bHead { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px; }
   .buildRow .bBtn { margin-left: auto; }
@@ -380,7 +386,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 114, "date": "2026-11-04", "changes": [{"date": "04.11. 22:22", "text": "Lich fällt: Kampf läuft automatisch weiter, Überlebende warten als Verwaiste am Ort zum Abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}, {"date": "04.11. 19:55", "text": "Abziehen ohne Verluste, unerreichbare Gegner, Rungholt bei Ebbe, Furten, Schwimmer, Fernschuss durchs Fenster"}]};
+const BUILD = {"version": 115, "date": "2026-11-04", "changes": [{"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix: Anführer machten den Lich negativ (Kommando-Last)"}, {"date": "04.11. 22:22", "text": "Lich-Tod: automatischer Weiterkampf, Verwaiste abholen"}, {"date": "04.11. 22:14", "text": "Rekrutieren/Bauen: Ressourcenleiste bleibt oben"}, {"date": "04.11. 22:11", "text": "Massive geschlossene Gebäude, Ballisten-Initiative 5"}, {"date": "04.11. 22:07", "text": "Rückzug kostet nur noch 25 % der Truppen"}, {"date": "04.11. 22:04", "text": "Fix: keine Aufstellung in Gebäuden ohne Tür"}, {"date": "04.11. 21:48", "text": "Ladefehler: klarere Meldung mit Neu-laden-Knopf"}, {"date": "04.11. 21:18", "text": "Kampfbeginn: Abziehen direkt in der Meldung anbieten"}, {"date": "04.11. 20:53", "text": "Fix: Hinterhalt im Wasser, sauberer Rückfall zur Weltkarte"}, {"date": "04.11. 20:45", "text": "Bedrohungsliste: Truppen-Balken, Orte blinken auf der Minimap"}, {"date": "04.11. 20:25", "text": "Mauern und Belagerung, neue Gebäude, zähere Kommandeure, Flieger ohne Bodenwirkung, Schließen-Kreuz"}, {"date": "04.11. 20:03", "text": "Kampf: Hinlaufen und angreifen mit einem Klick"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1371,7 +1377,7 @@ const Campaign = {
   armyNode() { return NODE_BY_ID[game.campaign.nodeId]; },
   commandLimit() {
     const mythic = DATA.nodes.filter(n => n.type === 'MYTHIC' && this.isConquered(n)).length;
-    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0) + Base.sum('command') + (game.campaign.debugCommand || 0);
+    return ECON.commandLimitBase + ECON.commandLimitPerMythicNode * mythic + (this.effects().commandLimit || 0) + Base.sum('command') + (game.campaign.debugCommand || 0) + this.leaderCommand();
   },
   // Sum of all active bonuses: equipped artifacts plus buffs of owned special places.
   effects() {
@@ -1438,7 +1444,10 @@ const Campaign = {
   },
   // Special places the undead own (for income, buffs and the inventory screen).
   ownedSpecials() { return DATA.nodes.filter(n => n.special && this.isConquered(n)); },
-  commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
+  // Command load: only units that cost command. Leaders (negative points) raise the limit instead,
+  // so they never push the load below zero (which drained the Lich's army bonus).
+  commandUsed() { return game.campaign.army.reduce((s, u) => s + Math.max(0, DATA.units[u.type].commandPoints || 0), 0); },
+  leaderCommand(army = game.campaign.army) { return army.reduce((s, u) => s + Math.max(0, -(DATA.units[u.type].commandPoints || 0)), 0); },
   isRevealed(node) { return this.revealedAt(node.q, node.r); },
   // The Lich's battle values (army bonus, conquests, artifacts) and his level (1 + conquered places).
   lichStats() {
@@ -5433,6 +5442,7 @@ const UI = {
     c.newsUnread = 0; this.newsBadge();
   },
   modal(html, buttons) {
+    $('modalBody').classList.remove('wide');
     $('modalBody').innerHTML = html + '<div class="buttons"></div>';
     const box = $('modalBody').querySelector('.buttons');
     for (const b of buttons) {
@@ -5624,7 +5634,7 @@ const UI = {
       const n = Knowledge.next(), have = game.campaign.resources.knowledge || 0;
       return `Wissen\n• Eroberung von Klöstern (ihre Bücher) und mythischen Orten.\n• Artefakt: Lehniner Weissagung (+1 pro Sieg).\nWird nicht verbraucht. Mit wachsendem Wissen erkennt der Lich neue Untote – welche, weiß er erst, wenn es so weit ist.\n${n !== null ? `Nächste Erkenntnis bei ${n} Wissen (noch ${n - have}).` : 'Zurzeit nichts Neues zu erkennen.'}${Knowledge.hiddenInPantheons() ? '\nManches Wissen liegt bei Pantheons, die erst fallen müssen.' : ''}`;
     }
-    return `Kommando\n• Der Lich führt ${ECON.commandLimitBase} Kommando-Punkte.\n• +${ECON.commandLimitPerMythicNode} je eroberter mythischer Ort.\n• Artefakt: Codex von Corvey (+8).\n• Seelenzwinger im Hügelgrab (+12 je Stufe).\nJede Einheit belegt Punkte (Ghul 2, Skelett 1 …). Je mehr belegt, desto stärker der Lich im Kampf.`;
+    return `Kommando\n• Der Lich führt ${ECON.commandLimitBase} Kommando-Punkte.\n• +${ECON.commandLimitPerMythicNode} je eroberter mythischer Ort.\n• Artefakt: Codex von Corvey (+8).\n• Seelenzwinger im Hügelgrab (+12 je Stufe).\n• Anführer im Heer: Nekromant +4, Ahnen +6 bis +8.\nJede Einheit belegt Punkte (Ghul 2, Skelett 1 …). Je mehr belegt, desto stärker der Lich im Kampf.`;
   },
   // What a special place offers (income / buff while owned, artifact on conquest).
   specialText(node) {
@@ -5823,7 +5833,22 @@ const UI = {
   },
   openRecruit() {
     const c = game.campaign;
-    const rows = Recruitment.candidates().map(([type, u]) => {
+    // Categories (filter) and sort keys, chosen in the column on the left.
+    const siegeDef = (t, u) => u.role === 'SIEGE' || u.size >= 4 || t === 'huenenkoenig';
+    const CATS = [['all', 'Alle', () => true], ['melee', 'Nahkampf', (t, u) => u.range <= 1 && u.power !== 'HEAL'], ['ranged', 'Fernkampf', (t, u) => u.range > 1 && u.role !== 'CASTER' && !siegeDef(t, u)],
+      ['siege', 'Belagerung', siegeDef], ['caster', 'Zauber und Heilung', (t, u) => u.role === 'CASTER' || u.power === 'HEAL'], ['flying', 'Flieger', (t, u) => u.flying],
+      ['spectral', 'Geister (durch Wände)', (t, u) => u.spectral], ['swim', 'Schwimmer', t => SWIMMERS.has(t)], ['leader', 'Anführer', (t, u) => (u.commandPoints || 0) < 0]];
+    const cost = (u, k) => (u.cost || {})[k] || 0;
+    const SORTS = [['name', 'Name', u => u.name], ['corpses', 'Leichen', u => cost(u, 'corpses')], ['bones', 'Knochen', u => cost(u, 'bones')], ['souls', 'Seelen', u => cost(u, 'souls')],
+      ['command', 'Kommando', u => u.commandPoints || 0], ['hp', 'Lebenspunkte', u => u.hp], ['damage', 'Schaden', u => u.damage], ['initiative', 'Initiative', u => u.initiative],
+      ['move', 'Bewegung', u => u.move], ['range', 'Reichweite', u => u.range]];
+    this.recruitCat = this.recruitCat || 'all'; this.recruitSort = this.recruitSort || 'name'; this.recruitDir = this.recruitDir || 1;
+    const all = Recruitment.candidates(), cat = CATS.find(x => x[0] === this.recruitCat) || CATS[0], srt = SORTS.find(x => x[0] === this.recruitSort) || SORTS[0];
+    const list = all.filter(([t, u]) => cat[2](t, u)).sort(([, a], [, b]) => { const x = srt[2](a), y = srt[2](b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * this.recruitDir || a.name.localeCompare(b.name); });
+    const side = `<div class="recSide"><h3>Kategorie</h3>${CATS.map(([k, n, f]) => { const cnt = all.filter(([t, u]) => f(t, u)).length;
+        return `<button data-rcat="${k}" class="${k === cat[0] ? 'on' : ''}" ${cnt ? '' : 'disabled'}>${n} <span class="small">${cnt}</span></button>`; }).join('')}
+      <h3>Sortieren</h3>${SORTS.map(([k, n]) => `<button data-rsort="${k}" class="${k === srt[0] ? 'on' : ''}">${['corpses', 'bones', 'souls', 'command'].includes(k) ? resIcon(k) : ''}${n}${k === srt[0] ? (this.recruitDir > 0 ? ' ▲' : ' ▼') : ''}</button>`).join('')}</div>`;
+    const rows = list.map(([type, u]) => {
       const block = Recruitment.blocker(type);
       const cost = costHtml(u.cost, c.resources);
       const locked = !!block && block.startsWith('Benötigt');
@@ -5845,7 +5870,13 @@ const UI = {
       <p class="small">${Knowledge.hint()}</p>
       ${place.type !== 'PHYLACTERY' ? '<p class="small">Eroberte Orte erheben nur, was ihre Gräber hergeben. Alle Einheiten gibt es im Hügelgrab, Geister auch an mythischen Orten.</p>' : ''}
       <div class="stickyRes">${resSummary(r)} <span class="cost" title="Kommando">${resIcon('command')}${Campaign.commandUsed()} / ${Campaign.commandLimit()}</span></div>
-      ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
+      <div class="recLayout">${side}<div class="recList">${rows || '<p class="small">Keine Einheit in dieser Kategorie.</p>'}${this.armyHtml()}</div></div>`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
+    $('modalBody').classList.add('wide');
+    $('modalBody').querySelectorAll('[data-rcat]').forEach(b => b.onclick = () => { this.recruitCat = b.dataset.rcat; this.openRecruit(); });
+    $('modalBody').querySelectorAll('[data-rsort]').forEach(b => b.onclick = () => {
+      if (this.recruitSort === b.dataset.rsort) this.recruitDir = -this.recruitDir;
+      else { this.recruitSort = b.dataset.rsort; this.recruitDir = ['name', 'corpses', 'bones', 'souls', 'command'].includes(b.dataset.rsort) ? 1 : -1; }
+      this.openRecruit(); });
     $('modalBody').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => {
       const type = b.dataset.type, max = Recruitment.maxAffordable(type);
       const want = b.dataset.n === 'max' ? max : b.dataset.n === 'input' ? Math.floor(+($('modalBody').querySelector(`[data-count="${type}"]`).value) || 0) : +b.dataset.n;
