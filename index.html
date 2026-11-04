@@ -82,6 +82,12 @@
   .initSlot.current .pic { width: 70px; height: 70px; }
   .initSlot.enemy .pic { clip-path: polygon(50% 0, 61% 12%, 79% 7%, 82% 25%, 100% 32%, 90% 50%, 100% 68%, 82% 75%, 79% 93%, 61% 88%, 50% 100%, 39% 88%, 21% 93%, 18% 75%, 0 68%, 10% 50%, 0 32%, 18% 25%, 21% 7%, 39% 12%); }
   .initSlot.player .pic { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+  .initRound { align-self: stretch; display: flex; flex-direction: column; justify-content: center; text-align: center; font-size: 10px; padding: 0 5px;
+    border-left: 2px solid #5a2d82; border-right: 2px solid #5a2d82; background: rgba(90,45,130,.12); color: #3a1e52; }
+  .initRound b { font-size: 16px; }
+  #roundBanner { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 32; pointer-events: none; font: 44px/1.1 "IM Fell English", Georgia, serif;
+    color: #f2e6cf; text-shadow: 0 2px 12px #000, 0 0 4px #000; opacity: 0; transition: opacity .35s; text-align: center; }
+  #roundBanner.on { opacity: 1; } #roundBanner .sub { font-size: 18px; }
   .initSlot .cnt { position: absolute; right: 2px; top: 2px; font-size: 10px; background: rgba(0,0,0,.65); color: #fff; padding: 0 3px; }
   .initSlot .st { font-size: 10px; height: 12px; line-height: 12px; }
   .initSlot .en { height: 3px; background: #2a2a50; margin-top: 1px; } .initSlot .en div { height: 100%; background: #7a9aff; }
@@ -112,6 +118,14 @@
   #unitCard .portrait { float: right; width: 64px; height: 64px; margin: 0 0 4px 8px; }
   .recruitRow.locked { opacity: .5; }
   .armyList { font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .armyCards { display: grid; grid-template-columns: 1fr; gap: 4px; max-height: 300px; overflow-y: auto; }
+  .aCard { position: relative; display: flex; gap: 6px; align-items: center; padding: 3px; border: 1px solid rgba(0,0,0,.12); background: rgba(255,255,255,.25); }
+  .aCard.lich { border-color: var(--gold); }
+  .aCard .portrait { width: 42px; height: 42px; flex: 0 0 42px; }
+  .aCnt { position: absolute; left: 30px; top: 30px; background: rgba(0,0,0,.7); color: #fff; font-size: 11px; padding: 0 4px; border-radius: 6px; }
+  .aBody { flex: 1; min-width: 0; } .aName { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .aName .lvl { font-weight: normal; font-size: 11px; background: #5a2d82; color: #fff; padding: 0 5px; border-radius: 6px; }
+  .aStats { font-size: 11px; display: flex; flex-wrap: wrap; gap: 0 7px; } .aStats .st { white-space: nowrap; }
 
   /* Toast messages */
   #toast { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); padding: 8px 18px; font-size: 17px; z-index: 15;
@@ -259,7 +273,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 82, "date": "2026-11-04", "changes": [{"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}]};
+const BUILD = {"version": 83, "date": "2026-11-04", "changes": [{"date": "04.11. 15:57", "text": "Orte als Häuser, Mauern, Kirchen und Steinkreise auf der Karte; Armee als Karten mit Werten und Lich-Stufe; Runden in der Initiative-Leiste"}, {"date": "04.11. 15:11", "text": "Kampfende: Beute mit Icons, Verluste mit Avatar, zurückgewonnene Ressourcen"}, {"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1310,6 +1324,14 @@ const Campaign = {
   ownedSpecials() { return DATA.nodes.filter(n => n.special && this.isConquered(n)); },
   commandUsed() { return game.campaign.army.reduce((s, u) => s + (DATA.units[u.type].commandPoints || 0), 0); },
   isRevealed(node) { return this.revealedAt(node.q, node.r); },
+  // The Lich's battle values (army bonus, conquests, artifacts) and his level (1 + conquered places).
+  lichStats() {
+    const B = ECON.lichArmyBonus, base = DATA.units.lich, cp = this.commandUsed(), fx = this.effects();
+    const won = DATA.nodes.filter(n => this.isConquered(n)).length;
+    return { level: 1 + won, hp: base.hp + Math.round(cp * B.hpPerCommand + won * (B.hpPerConquest || 0)) + (fx.lichHp || 0),
+      damage: base.damage + Math.round(cp * B.damagePerCommand + won * (B.damagePerConquest || 0)) + (fx.lichDamage || 0),
+      shield: base.soulShield + Math.round(cp * B.shieldPerCommand + won * (B.shieldPerConquest || 0)) + (fx.lichShield || 0) };
+  },
   // Scouts in the army: hounds smell further, ghosts and death lights see through monastery veils.
   scoutRange() { const t = new Set(game.campaign.army.map(u => u.type)); return (t.has('leichenhund') ? 40 : 0) + (t.has('geist') || t.has('totenlicht') ? 60 : 0); },
   seesThroughVeil() { const t = new Set(game.campaign.army.map(u => u.type)); return t.has('geist') || t.has('totenlicht'); },
@@ -1876,6 +1898,75 @@ const SaveGame = {
 };
 
 // =============================================================================
+// Settlements on the world map: small low-poly houses instead of light pillars, so the size
+// of a place can be judged at a glance (village: a few houses, big city: walls, towers, church).
+// Mythic places are stone circles and dolmens, monasteries a church with a cloister, the barrow a
+// mound. A flag shows the owner; conquered places turn grey and dead.
+// =============================================================================
+const Settlements = {
+  geo: {},
+  // One merged, vertex-colored mesh per place (built lazily, cached by node id).
+  build(node) {
+    const T = (g, x, y, z) => g.translate(x, y, z), parts = [], w = game.world, c0 = hexToWorld(node.q, node.r);
+    const gy = (x, z) => Math.max(w.groundAt(c0.x + x, c0.z + z), HEX.waterLevel) - Math.max(w.groundAt(c0.x, c0.z), HEX.waterLevel);
+    const rnd = (k) => hash2(node.q, node.r, 300 + k);
+    const ROOFS = ['#8a3a2a', '#7a4a30', '#9a5a3a', '#6a5a4a'], WALLS = ['#d8ccb0', '#c8b898', '#b8a888'];
+    const house = (x, z, s, rot, k) => {
+      const y = gy(x, z), body = new THREE.BoxGeometry(1.6 * s, 1.3 * s, 2.1 * s).rotateY(rot), roof = new THREE.ConeGeometry(1.45 * s, 1.1 * s, 4).rotateY(Math.PI / 4 + rot).scale(1, 1, 1.25);
+      parts.push([T(body, x, y + 0.65 * s, z), WALLS[k % 3]], [T(roof, x, y + 1.3 * s + 0.55 * s, z), ROOFS[k % 4]]);
+    };
+    const tower = (x, z, h, col = '#a8a090', top = '#5a4a3a') => { const y = gy(x, z); parts.push([T(new THREE.BoxGeometry(1.4, h, 1.4), x, y + h / 2, z), col], [T(new THREE.ConeGeometry(1.15, 1.6, 4).rotateY(Math.PI / 4), x, y + h + 0.8, z), top]); };
+    const church = (x, z, s = 1) => {
+      const y = gy(x, z);
+      parts.push([T(new THREE.BoxGeometry(2.2 * s, 2.0 * s, 4.2 * s), x, y + 1.0 * s, z), '#d8d0b8'], [T(new THREE.ConeGeometry(2.0 * s, 1.4 * s, 4).rotateY(Math.PI / 4).scale(1, 1, 1.9), x, y + 2.7 * s, z), '#5a5a62']);
+      tower(x, z - 2.6 * s, 4.5 * s, '#d0c8b0', '#4a4a52');
+      parts.push([T(new THREE.ConeGeometry(0.5 * s, 2.4 * s, 4).rotateY(Math.PI / 4), x, y + 4.5 * s + 2.4 * s, z - 2.6 * s), '#4a4a52']);
+    };
+    const wallRing = (r, n) => {
+      for (let i = 0; i < n; i++) {
+        const a0 = i / n * Math.PI * 2, a1 = (i + 1) / n * Math.PI * 2, x0 = Math.cos(a0) * r, z0 = Math.sin(a0) * r, x1 = Math.cos(a1) * r, z1 = Math.sin(a1) * r;
+        const len = Math.hypot(x1 - x0, z1 - z0), mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
+        parts.push([T(new THREE.BoxGeometry(len, 1.6, 0.5).rotateY(-Math.atan2(z1 - z0, x1 - x0)), mx, gy(mx, mz) + 0.8, mz), '#9a9284']);
+        if (i % 3 === 0) tower(x0, z0, 3.2, '#8a8274', '#6a3a2a');
+      }
+    };
+    const stones = (r, n, h) => { for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + rnd(i) * 0.2, x = Math.cos(a) * r, z = Math.sin(a) * r; parts.push([T(new THREE.BoxGeometry(0.7, h * (0.8 + rnd(i + 9) * 0.4), 0.45).rotateY(a), x, gy(x, z) + h / 2, z), '#7a766c']); } };
+    const scatter = (n, rMax, s, k0 = 0) => {
+      for (let i = 0; i < n; i++) {
+        const a = rnd(k0 + i * 3) * Math.PI * 2, r = 1.8 + Math.sqrt(rnd(k0 + i * 3 + 1)) * (rMax - 1.8);
+        house(Math.cos(a) * r, Math.sin(a) * r, s * (0.85 + rnd(k0 + i * 3 + 2) * 0.35), Math.round(rnd(i + 50) * 4) * Math.PI / 2 + a, i);
+      }
+    };
+    const size = node.size || 16;
+    if (node.type === 'PHYLACTERY') {
+      parts.push([new THREE.SphereGeometry(5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.45, 1), '#4a5a34']);
+      parts.push([T(new THREE.BoxGeometry(1.6, 1.4, 0.4), 0, 0.7, 4.5), '#1a1418']); stones(7, 9, 2.4);
+    } else if (node.type === 'MYTHIC') {
+      stones(3 + size / 16, 6 + size / 8, 1.6 + size / 32);
+      const y = gy(0, 0); parts.push([T(new THREE.BoxGeometry(3, 0.5, 2), 0, y + 1.5, 0), '#6a665c'], [T(new THREE.BoxGeometry(0.5, 1.3, 0.5), -1, y + 0.65, 0), '#6a665c'], [T(new THREE.BoxGeometry(0.5, 1.3, 0.5), 1, y + 0.65, 0), '#6a665c']);
+      if (size >= 64) scatter(6, 9, 1, 10);
+    } else if (node.type === 'CHRISTIAN') {
+      church(0, 0, size >= 64 ? 1.6 : size >= 32 ? 1.3 : 1);
+      const n = size >= 64 ? 26 : size >= 32 ? 12 : 4; scatter(n, size >= 64 ? 16 : size >= 32 ? 10 : 6, 1, 20);
+      if (size >= 32) wallRing(size >= 64 ? 17 : 11, size >= 64 ? 18 : 12);
+    } else if (node.type === 'VILLAGE') {
+      scatter(4, 5, 0.9);
+    } else {   // WORLDLY towns and cities
+      const n = size >= 64 ? 34 : size >= 32 ? 16 : 8, r = size >= 64 ? 18 : size >= 32 ? 11 : 7;
+      scatter(n, r, 1.05);
+      if (size >= 32) { church(0, 0, size >= 64 ? 1.4 : 1.1); wallRing(r + 1.5, size >= 64 ? 20 : 14); }
+      else tower(0, 0, 3.5);
+    }
+    const g = mergeColored(parts);
+    const mesh = new THREE.Mesh(g, this.mat || (this.mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85 })));
+    return mesh;
+  },
+  deadMat() { return this._dead || (this._dead = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, color: 0x6a6268 })); },
+  // Footprint radius (clicking, label height).
+  radius(node) { const s = node.size || 16; return node.type === 'VILLAGE' ? 6 : node.type === 'PHYLACTERY' ? 8 : s >= 64 ? 20 : s >= 32 ? 13 : 8; }
+};
+
+// =============================================================================
 // World view: node pillars, labels, army figure, selection
 // =============================================================================
 const WorldView = {
@@ -1899,7 +1990,20 @@ const WorldView = {
       const label = new CSS2DObject(el);
       pillar.add(label);
       v.worldRoot.add(pillar);
-      v.nodeViews[node.id] = { pillar, label, el };
+      // The place itself as houses / stones; the (invisible) pillar stays as click target.
+      const town = Settlements.build(node);
+      town.position.copy(pillar.position); v.worldRoot.add(town);
+      town.userData.nodeId = node.id;
+      const flag = new THREE.Group(), fr = Settlements.radius(node);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 5), new THREE.MeshStandardMaterial({ color: 0x3a2a1a }));
+      pole.position.y = 3.5;
+      const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 2.4), new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.8 }));
+      cloth.position.set(0, 6.2, 1.2); flag.add(pole, cloth);
+      flag.position.set(pillar.position.x + fr * 0.55, pillar.position.y, pillar.position.z - fr * 0.55);
+      flag.position.y = Math.max(game.world.groundAt(flag.position.x, flag.position.z), HEX.waterLevel);
+      v.worldRoot.add(flag);
+      label.position.y = (3 + fr * 0.3) / 8;          // the pillar parent is scaled by 8 in height
+      v.nodeViews[node.id] = { pillar, label, el, town, flag, cloth };
     }
     // Army figure: a violet Lich-like shape.
     const fig = new THREE.Group();
@@ -1926,9 +2030,13 @@ const WorldView = {
       const revealed = Campaign.isRevealed(node);
       const owner = Campaign.owner(node);
       const village = node.type === 'VILLAGE';
-      nv.pillar.scale.set(village ? 0.6 : 1, revealed ? (village ? 18 : 40) : 10, village ? 0.6 : 1);
+      // The pillar is only an invisible click target now, as wide as the place.
+      const fr = Settlements.radius(node);
+      nv.pillar.material.visible = false;
+      nv.pillar.scale.set(fr * 0.8, 8, fr * 0.8);
       nv.el.classList.toggle('village', village);
-      nv.pillar.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
+      nv.cloth.material.color.set(revealed ? DATA.factions[owner].color : '#8a8a8a');
+      nv.town.material = owner === 'UNDEAD' && node.type !== 'PHYLACTERY' ? Settlements.deadMat() : Settlements.mat;
       nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') : '?';
       nv.el.classList.toggle('unknown', !revealed);
       const dg = revealed ? Campaign.danger(node) : null;
@@ -3489,6 +3597,7 @@ const Battle = {
     }
     this.refreshCones();
     if (!exp) SaveGame.save();
+    UI.roundBanner(1, `${node.name} · ${TIMES[b.time].name}`);
     Narrator.hint('Kampf: Die Einheit mit dem goldenen Ring ist am Zug. Blaue Felder = Bewegung, rote = angreifbare Gegner, über einem Gegner siehst du den erwarteten Schaden. Fähigkeiten unten rechts (Tasten 1–4), Leertaste beendet den Zug.', 'battle');
     Narrator.hint('Solange die Gegner euch nicht bemerkt haben (Schleich-Modus), ist der erste Angriff ein Überraschungsangriff. Der Wind trägt den Geruch der Toten.', 'stealth');
     this.nextTurn();
@@ -3598,12 +3707,14 @@ const Battle = {
     return this.alive(b.state === 'stealth' ? 'player' : null);
   },
   // Predicts the next n turns for the initiative bar.
-  forecast(n) {
-    const sim = this.candidates().map(u => ({ u, nextTick: u.nextTick, def: u.def, side: u.side, id: u.id }));
-    const out = [];
+  forecast(n) { return this.forecastRounds(n).map(x => x.u); },
+  // Next n turns with the round each one falls into.
+  forecastRounds(n) {
+    const b = game.battle, sim = this.candidates().map(u => ({ u, nextTick: u.nextTick, def: u.def, side: u.side, id: u.id }));
+    const out = [], base = b.lastTick === null ? 0 : Math.floor(b.lastTick / RULES.roundTicks);
     for (let i = 0; i < n && sim.length; i++) {
       sim.sort((a, c) => this.order(a, c));
-      out.push(sim[0].u);
+      out.push({ u: sim[0].u, round: b.round + Math.max(0, Math.floor(sim[0].nextTick / RULES.roundTicks) - base) });
       sim[0].nextTick += turnTicks(sim[0].def);
     }
     return out;
@@ -3643,6 +3754,7 @@ const Battle = {
     const b = game.battle;
     b.round++;
     this.log(`— Runde ${b.round} —`);
+    UI.roundBanner(b.round);
     Abilities.roundEnd();
     if ((b.round - 1) % ROUNDS_PER_TIME === 0) {
       b.time = (b.time + 1) % 4; Weather.apply(b);
@@ -4559,12 +4671,26 @@ const UI = {
       SaveGame.save(); this.openInventory();
     });
   },
-  armyHtml() {
-    // Grouped like the battle stacks: "3× Ghul" with total health.
-    return '<h3>Armee</h3><div class="armyList">' + groupByType(game.campaign.army).map(g => {
-      const d = DATA.units[g.type], sum = g.hps.reduce((a, h) => a + h, 0);
-      return `<div>${g.hps.length > 1 ? g.hps.length + '× ' : ''}${d.name} <span class="small">${sum}/${g.hps.length * d.hp}</span></div>`;
-    }).join('') + '</div>';
+  // Army as cards: portrait, count, health bar and the values that matter (per creature).
+  armyHtml(army = game.campaign.army, title = 'Armee', cmd = `${Campaign.commandUsed()} / ${Campaign.commandLimit()}`) {
+    const L = Campaign.lichStats();
+    const stat = (ic, v, t) => `<span class="st" title="${t}">${ic}${v}</span>`;
+    const cards = groupByType(army).map(g => {
+      const d = DATA.units[g.type], n = g.hps.length, sum = g.hps.reduce((a, h) => a + h, 0), isLich = g.type === 'lich';
+      const hp = isLich ? L.hp : d.hp, dmg = isLich ? L.damage : d.damage, cur = isLich ? Math.round(sum / d.hp * L.hp) : sum, max = n * hp;
+      return `<div class="aCard ${isLich ? 'lich' : ''}" title="${esc(d.name)}: ${esc(d.desc || '')}">${portraitHtml(g.type, d)}${n > 1 ? `<span class="aCnt">${n}</span>` : ''}
+        <div class="aBody"><div class="aName">${esc(d.name)}${isLich ? ` <span class="lvl" title="Stufe = 1 + eroberte Orte; jede Stufe +${ECON.lichArmyBonus.hpPerConquest} LP, +${ECON.lichArmyBonus.damagePerConquest} Schaden">Stufe ${L.level}</span>` : ''}</div>
+        <div class="hpbar player" title="Lebenspunkte ${cur} / ${max}"><div style="width:${max ? 100 * cur / max : 0}%"></div></div>
+        <div class="aStats">${stat('❤', hp, 'Lebenspunkte je Kreatur')}${stat('⚔', dmg, 'Schaden je Kreatur (' + POWER_NAMES[d.power] + ')')}${stat(d.range > 1 ? '➶' : '✊', d.range, 'Reichweite')}${stat('👣', d.move, 'Bewegung')}${stat('⚡', d.initiative, 'Initiative')}${(isLich ? L.shield : d.soulShield) ? stat('⛨', isLich ? L.shield : d.soulShield, 'Seelenschild') : ''}</div></div></div>`;
+    }).join('');
+    return `<h3>${esc(title)} <span class="small">${army.length} Untote · ${resIcon('command')}${cmd}</span></h3><div class="armyCards">${cards}</div>`;
+  },
+  roundBanner(n, sub) {
+    let el = document.getElementById('roundBanner');
+    if (!el) { el = document.createElement('div'); el.id = 'roundBanner'; document.body.appendChild(el); }
+    const b = game.battle, T = b ? TIMES[b.time] : null;
+    el.innerHTML = `Runde ${n}<div class="sub">${sub || (T ? T.name + (T.foggy ? ', Nebel' : '') : '')}</div>`;
+    el.classList.add('on'); clearTimeout(this.rbTimer); this.rbTimer = setTimeout(() => el.classList.remove('on'), 1400);
   },
   renderArmies() {
     const el = $('armyList'); if (!el) return;
@@ -4633,7 +4759,8 @@ const UI = {
     } else {
       html += `<h2>${esc(here.name)}</h2><p class="small">Wähle einen Ort auf der Karte oder in der Übersicht unten links.</p>`;
     }
-    html += this.armyHtml();
+    const actA = Expeditions.active();
+    html += actA.id === 'lich' ? this.armyHtml() : this.armyHtml(actA.army, actA.label, `${Expeditions.command(actA.army)} / ${EXPEDITION.commandLimit}`);
     el.innerHTML = html;
     const rb = $('raidButtons');
     if (rb && raid) {
@@ -4736,14 +4863,17 @@ const UI = {
   updateBattle() {
     const b = game.battle;
     if (!b) return;
-    const list = Battle.forecast(10);
-    $('initBar').innerHTML = list.map((u, i) => {
+    const fr = Battle.forecastRounds(12), list = fr.map(x => x.u);
+    $('initBar').innerHTML = fr.map(({ u, round }, i) => {
+      const sep = i > 0 && round !== fr[i - 1].round ? `<div class="initRound" title="Ab hier beginnt Runde ${round}">Runde<br><b>${round}</b></div>` : '';
+      return sep + (() => {
       const border = u.side === 'player' ? DATA.factions.UNDEAD.color : DATA.factions[u.faction].color, pic = PORTRAITS[u.type];
       const st = Object.keys(u.status || {}).map(k => STATUS_ICONS[k] || '').join('');
       return `<div class="initSlot ${i === 0 ? 'current' : ''} ${u.side === 'player' ? 'player' : 'enemy'}" data-uid="${u.id}" style="opacity:${Math.max(0.45, 1 - i * 0.06)}">
         <div class="pic" style="border-color:${border};background-color:${pic ? '#3a332a' : u.def.color};${pic ? `background-image:url(${pic})` : ''}">${stackCount(u) > 1 ? `<span class="cnt">${stackCount(u)}</span>` : ''}</div>
         <div class="nm">${esc(u.def.name)}</div><div class="st">${st}</div><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
         ${i === 0 && u.def.energy ? `<div class="en" title="Energie ${u.energy}/${u.def.energy}"><div style="width:${100 * u.energy / u.def.energy}%"></div></div>` : ''}</div>`;
+      })();
     }).join('');
     // Hover over a portrait highlights the unit on the field (ring) and shows its card.
     $('initBar').querySelectorAll('[data-uid]').forEach(el => {
@@ -4755,7 +4885,8 @@ const UI = {
     const cur = b.current;
     const who = !cur ? '' : cur.side === 'player' ? `Am Zug: ${cur.def.name}` : `Gegner am Zug: ${cur.def.name}`;
     const T = TIMES[b.time], left = ROUNDS_PER_TIME - ((b.round - 1) % ROUNDS_PER_TIME);
-    $('roundInfo').innerHTML = `Runde ${b.round} · <span title="${T.name}: Untote ${Math.round((T.undead - 1) * 100)} %, Lebende ${Math.round((T.living - 1) * 100)} % Schaden, Sicht der Gegner ${T.sight >= 0 ? '+' : ''}${T.sight}${T.foggy ? ', Nebel: Fernkampf −1 Reichweite' : ''}. Wechsel in ${left} ${left === 1 ? 'Runde' : 'Runden'}.">${T.name}${T.foggy ? ' (Nebel)' : ''}</span> · <span title="Gegen den Wind riechen die Lebenden die Toten weiter, mit dem Wind kaum.">Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}</span> · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}${esc(who)}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
+    const myNext = fr.findIndex((x, i) => i > 0 && x.u.side === 'player');
+    $('roundInfo').innerHTML = `Runde ${b.round} · <span title="${T.name}: Untote ${Math.round((T.undead - 1) * 100)} %, Lebende ${Math.round((T.living - 1) * 100)} % Schaden, Sicht der Gegner ${T.sight >= 0 ? '+' : ''}${T.sight}${T.foggy ? ', Nebel: Fernkampf −1 Reichweite' : ''}. Wechsel in ${left} ${left === 1 ? 'Runde' : 'Runden'}.">${T.name}${T.foggy ? ' (Nebel)' : ''}</span> · <span title="Gegen den Wind riechen die Lebenden die Toten weiter, mit dem Wind kaum.">Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}</span> · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}<b>${esc(who)}</b>${cur && cur.side !== 'player' && myNext > 0 ? ` · deine nächste Einheit in ${myNext} ${myNext === 1 ? 'Zug' : 'Zügen'}` : ''}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
     this.renderUnitCard(b.selected || cur);
     const myTurn = cur && cur.side === 'player' && !b.busy && !b.over;
     $('btnEndTurn').disabled = !myTurn;
