@@ -132,6 +132,8 @@
   #armyList button { font-size: 12px; text-align: left; } #armyList button.on { outline: 2px solid var(--gold); }
   .recruitBtns { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-end; max-width: 210px; }
   .recruitBtns button { padding: 2px 7px; } .recruitBtns input { width: 48px; } .recruitBtns .nowrap { white-space: nowrap; }
+  .resIcon { vertical-align: -3px; margin-right: 2px; }
+  .cost { white-space: nowrap; margin-right: 4px; } .cost.short { color: #b0302a; font-weight: bold; }
   #abilityBar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   #abilityBar:empty { display: none; }
   #abilityBar button { font-size: 12px; padding: 3px 7px; } #abilityBar button.active { outline: 2px solid #a050e0; background: #e6d6f2; }
@@ -200,6 +202,7 @@
 <div id="worldButtons" class="panel hidden">
   <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (Taste R)">Rekrutierung finden</button>
   <button id="btnHome" title="Zum Hügelgrab (Taste H)">Hügelgrab</button>
+  <button id="btnBuild" title="Gebäude im Hügelgrab bauen – geht von überall (Taste B)">Bauen</button>
   <div id="armyList"></div>
   <button id="btnGo" class="primary hidden" title="Alle Befehle ausführen: die Zeit läuft für alle Armeen gleichzeitig (Taste G)">Los</button>
 </div>
@@ -253,7 +256,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 80, "date": "2026-11-04", "changes": [{"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}, {"date": "04.11. 12:58", "text": "Zurückeroberte Orte erholen sich über Wochen, gefallene Anführer kehren nicht zurück"}]};
+const BUILD = {"version": 81, "date": "2026-11-04", "changes": [{"date": "04.11. 15:04", "text": "Icons für Ressourcen (Leiste, Bauen, Rekrutieren, Beute); Bauen von überall, Knopf Bauen (B)"}, {"date": "04.11. 14:42", "text": "Animationen (Atmen, Ausholen, Zurückzucken, Umkippen, Fähigkeits-Ring) und Kampfdauer kostet Zeit"}, {"date": "04.11. 14:34", "text": "Rundenanzeige unter die größere Initiative-Leiste verschoben"}, {"date": "04.11. 14:31", "text": "Klang mit WebAudio (Treffer, Tod, Fähigkeiten, Ambiente, Taste M) und Hinweise für die ersten Schritte"}, {"date": "04.11. 14:28", "text": "Spielstände: 5 Speicherplätze, Sichern und Laden als Datei"}, {"date": "04.11. 14:27", "text": "Engel der Kirche: Ophan, Cherub, Seraph in den Bischofsstädten"}, {"date": "04.11. 14:25", "text": "Initiative-Leiste mit Portraits und Hover; Dialog-Leiste: Lich und Bosse sprechen, Chronist erzählt"}, {"date": "04.11. 13:32", "text": "Eigene Tote recyceln, Führerlos, Masse, Sockel-Formen, Zustands-Symbole, Treffer-Effekte, Leichen, Kamera am Rand"}, {"date": "04.11. 13:17", "text": "Rekrutieren: +1, +10, Max und Eingabe einer Anzahl"}, {"date": "04.11. 13:11", "text": "Heide-Pantheon auf 3 Mitglieder verkleinert; Trupps erobern keine Pantheon-Mitglieder zurück"}, {"date": "04.11. 13:06", "text": "Lich deutlich stärker: höhere Grundwerte, mehr Bonus pro Kommando, wächst mit jedem eroberten Ort"}, {"date": "04.11. 13:02", "text": "Trupps deutlich seltener und langsamer: Abklingzeiten pro Karte und Fraktion"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -267,6 +270,20 @@ const NODE_TYPE_NAMES = { ENCOUNTER: 'Zufallsbegegnung', MYTHIC: 'Mythisch', WOR
 const EDGE_NAMES = { OPEN: 'Offen', COVER: 'Deckung (halber Schaden)', WALL: 'Mauer', WALL_DESTRUCTIBLE: 'Zerstörbare Mauer', WALL_TRANSPARENT: 'Durchsichtige Wand' };
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const RESOURCE_NAMES = { corpses: 'Leichen', bones: 'Knochen', souls: 'Seelen', knowledge: 'Wissen' };
+// Small inline SVG icons (no files, readable on light and dark panels).
+const RES_SVG = {
+  corpses: '<path d="M12 3c-3.3 0-6 2.5-6 5.8 0 2 1 3.4 2.3 4.4V16h7.4v-2.8C17 12.2 18 10.8 18 8.8 18 5.5 15.3 3 12 3z" fill="#7a8a6a" stroke="#2a2a1e" stroke-width="1.2"/><circle cx="9.6" cy="9.4" r="1.5" fill="#2a2a1e"/><circle cx="14.4" cy="9.4" r="1.5" fill="#2a2a1e"/><path d="M8.3 17.5h7.4v2.5H8.3z" fill="#5a4a3a"/>',
+  bones: '<g fill="#efe6cc" stroke="#5a4a32" stroke-width="1.1"><path d="M6.5 15.5l9-9"/><path d="M5 13.4a2 2 0 1 1 2.8-1.4l4.2-4.2a2 2 0 1 1 1.4-2.8 2 2 0 1 1 2.8 2.8 2 2 0 1 1-2.8 1.4L9.2 13.4A2 2 0 1 1 7.8 16.2 2 2 0 1 1 5 13.4z"/></g>',
+  souls: '<path d="M12 3c2.5 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3.2 2-4.4.2 1.4.8 2.2 1.6 2.6C10 7.6 11 5.4 12 3z" fill="#7affaa" stroke="#1e6a44" stroke-width="1.1"/><circle cx="12" cy="13.5" r="2" fill="#e8fff0"/>',
+  knowledge: '<path d="M4 5.5c2.7-1 5.3-1 8 .8 2.7-1.8 5.3-1.8 8-.8v12.5c-2.7-1-5.3-1-8 .8-2.7-1.8-5.3-1.8-8-.8z" fill="#c9a227" stroke="#5a4210" stroke-width="1.1"/><path d="M12 6.3v12.5" stroke="#5a4210" stroke-width="1.1"/>',
+  command: '<path d="M6 3v18" stroke="#3a2a1a" stroke-width="1.6"/><path d="M6.8 4h11l-2.6 3.6L17.8 11h-11z" fill="#6a3a9a" stroke="#2a1440" stroke-width="1"/>'
+};
+const resIcon = (k, size = 16) => RES_SVG[k] ? `<svg class="resIcon" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${RES_SVG[k]}</svg>` : '';
+// Current stock with icons (zeros shown too).
+const resSummary = r => ['corpses', 'bones', 'souls', 'knowledge'].map(k => `<span class="cost" title="${RESOURCE_NAMES[k]}">${resIcon(k, 18)}<b>${r[k] || 0}</b> ${RESOURCE_NAMES[k]}</span>`).join(' ');
+// Costs or loot as "icon amount" pairs; the name stays in the tooltip.
+const costHtml = (obj, have) => Object.entries(obj || {}).filter(([, v]) => v > 0).map(([k, v]) =>
+  `<span class="cost${have && (have[k] || 0) < v ? ' short' : ''}" title="${v} ${RESOURCE_NAMES[k] || k}">${resIcon(k)}${v}</span>`).join(' ') || '—';
 const REVEAL_DISTANCE = 165;           // tiles, from PROMPT section 7.1
 const VILLAGE_LABEL_DISTANCE = 85;     // village names only show near the camera, to keep the map readable
 const TRAVEL_SECONDS = 2.5;            // animation length of short moves (interception)
@@ -1680,7 +1697,6 @@ const Base = {
     const c = game.campaign, B = DATA.baseBuildings[k], L = this.level(k), next = B.levels[L];
     if (!next) return 'Höchste Stufe';
     if (c.construction) return c.construction.k === k ? 'Im Bau' : 'Es wird schon gebaut';
-    if (Campaign.armyNode() !== PHYLACTERY) return 'Nur im Hügelgrab';
     if (B.requiresNode && !Campaign.isConquered(NODE_BY_ID[B.requiresNode])) return `Erst ${NODE_BY_ID[B.requiresNode].name} erobern`;
     if (B.requiresPantheon && !Pantheons.assimilated(B.requiresPantheon)) return `Erst ${DATA.pantheons[B.requiresPantheon].name} stürzen`;
     for (const [rk, rl] of Object.entries(B.requiresBuilding || {})) if (this.level(rk) < rl) return `Benötigt ${DATA.baseBuildings[rk].name}`;
@@ -1707,7 +1723,7 @@ const Base = {
     return 'Erhebt: ' + l.produces.map(t => Knowledge.known(t) ? DATA.units[t].name : '???').join(', ');
   },
   open() {
-    const c = game.campaign, cost = o => Object.entries(o || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ') || '—';
+    const c = game.campaign, cost = o => costHtml(o, c.resources);
     const rows = Object.entries(DATA.baseBuildings).map(([k, B]) => {
       const L = this.level(k), next = B.levels[L], block = this.blocker(k);
       const have = B.levels.slice(0, L).map(l => [l.text, this.producesText(l)].filter(Boolean).join(' ')).join('<br>');
@@ -1718,7 +1734,8 @@ const Base = {
         <div>${next ? `<button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button><div class="small">${block || ''}</div>` : ''}</div></div>`;
     }).join('');
     const r = c.resources;
-    UI.modal(`<h2>Hügelgrab – Bauen</h2><p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge}</p>
+    UI.modal(`<h2>Hügelgrab – Bauen</h2><p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. Die Diener im Hügelgrab bauen auch, wenn der Lich fort ist.</p>
+      <p>${resSummary(r)}</p>
       <p class="small">${Knowledge.hint()}</p>${rows}`, [{ label: 'Schließen', primary: true, action: () => { UI.renderInfo(); UI.updateHeader(); } }]);
     document.querySelectorAll('[data-build]').forEach(b => b.onclick = () => this.start(b.dataset.build));
   }
@@ -3956,7 +3973,7 @@ const Battle = {
         return Array.from({ length: n }, (_, i) => ({ type: u.type, hp: back(i < n - 1 ? u.def.hp : total - (n - 1) * u.def.hp) }));
       });
       if (b.ancestorJoin) c.army.push({ type: b.ancestorJoin, hp: DATA.units[b.ancestorJoin].hp });
-      const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${v} ${RESOURCE_NAMES[k]}</li>`).join('');
+      const lines = Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<li>${resIcon(k)}${v} ${RESOURCE_NAMES[k]}</li>`).join('');
       html = node.raidId
         ? `<h2>${node.name} zerschlagen</h2><p>${b.kills.length} Feinde gefallen. Die Armee kehrt nach ${esc(Campaign.armyNode().name)} zurück.</p>`
         : node.encounter
@@ -4415,7 +4432,7 @@ const UI = {
     Sfx.ambience('world');
     ['header', 'info', 'minimap', 'hint', 'worldButtons'].forEach(id => this.show(id, true));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'edgeTip'].forEach(id => this.show(id, false));
-    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · R: Rekrutierung finden · H: Hügelgrab · I: Inventar · F3: Debug';
+    $('hint').textContent = 'W/A/S/D: bewegen · Q/E oder rechte Maustaste: drehen und neigen · Mausrad: Zoom · Linksklick: auswählen · R: Rekrutierung finden · H: Hügelgrab · B: Bauen · I: Inventar · G: Los · M: Ton · F3: Debug';
     this.updateHeader();
     this.renderInfo();
   },
@@ -4424,9 +4441,9 @@ const UI = {
     $('date').textContent = Campaign.dateString(c.dayCount);
     const r = c.resources;
     const tip = k => esc(this.resourceTip(k)).replace(/\n/g, '&#10;');
-    $('resources').innerHTML = `<span title="${tip('corpses')}">Leichen <b>${r.corpses}</b></span><span title="${tip('bones')}">Knochen <b>${r.bones}</b></span>
-      <span title="${tip('souls')}">Seelen <b>${r.souls}</b></span><span title="${tip('knowledge')}">Wissen <b>${r.knowledge}</b></span>
-      <span title="${tip('command')}">Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
+    $('resources').innerHTML = `<span title="${tip('corpses')}">${resIcon('corpses', 18)}Leichen <b>${r.corpses}</b></span><span title="${tip('bones')}">${resIcon('bones', 18)}Knochen <b>${r.bones}</b></span>
+      <span title="${tip('souls')}">${resIcon('souls', 18)}Seelen <b>${r.souls}</b></span><span title="${tip('knowledge')}">${resIcon('knowledge', 18)}Wissen <b>${r.knowledge}</b></span>
+      <span title="${tip('command')}">${resIcon('command', 18)}Kommando <b>${Campaign.commandUsed()} / ${Campaign.commandLimit()}</b></span>`;
     $('threats').innerHTML = ENEMY_FACTIONS.map(f => {
       const v = Math.round(c.threat[f]), living = Campaign.isLiving(f);
       return `<div class="threat ${living ? '' : 'dead'}" title="Bedrohung ${DATA.factions[f].name}: ${v} %">${DATA.factions[f].name} ${v} %
@@ -4447,7 +4464,7 @@ const UI = {
   // Fixed reward for conquering a place (kills add corpses, bones and souls on top).
   rewardText(node) {
     const r = (ECON.nodeRewards[node.type] || {})[node.size] || {}, pl = (game.campaign.plundered || {})[node.id] || 0;
-    const parts = Object.entries(r).map(([k, v]) => [k, Math.floor(v * Math.pow(0.5, pl))]).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`);
+    const parts = Object.entries(r).map(([k, v]) => [k, Math.floor(v * Math.pow(0.5, pl))]).filter(([, v]) => v > 0).map(([k, v]) => `${resIcon(k)}${v} ${RESOURCE_NAMES[k]}`);
     if (pl) parts.push(`<span class="small">(schon ${pl}× geplündert – verbrannte Erde)</span>`);
     if (node.type === 'MYTHIC') parts.push(`+${ECON.commandLimitPerMythicNode} Kommando`);
     return (parts.join(', ') || '—') + '<br><span class="small">dazu Beute von gefallenen Gegnern</span>';
@@ -4643,7 +4660,7 @@ const UI = {
     const c = game.campaign;
     const rows = Recruitment.candidates().map(([type, u]) => {
       const block = Recruitment.blocker(type);
-      const cost = Object.entries(u.cost || {}).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
+      const cost = costHtml(u.cost, c.resources);
       const locked = !!block && block.startsWith('Benötigt');
       return `<div class="recruitRow ${locked ? 'locked' : ''}">${portraitHtml(type, u)}
         <div><b>${u.name}</b> <span class="small">· ${u.commandPoints < 0 ? `+${-u.commandPoints} Kommando (Anführer)` : u.commandPoints + ' Kommando'} · Kosten: ${cost}</span><br>
@@ -4662,7 +4679,7 @@ const UI = {
     this.modal(`<h2>${esc(place.name)} – Rekrutieren</h2>
       <p class="small">${Knowledge.hint()}</p>
       ${place.type !== 'PHYLACTERY' ? '<p class="small">Eroberte Orte erheben nur, was ihre Gräber hergeben. Alle Einheiten gibt es im Hügelgrab, Geister auch an mythischen Orten.</p>' : ''}
-      <p class="small">Leichen ${r.corpses} · Knochen ${r.bones} · Seelen ${r.souls} · Wissen ${r.knowledge} · Kommando ${Campaign.commandUsed()} / ${Campaign.commandLimit()}</p>
+      <p>${resSummary(r)} <span class="cost" title="Kommando">${resIcon('command')}${Campaign.commandUsed()} / ${Campaign.commandLimit()}</span></p>
       ${rows}${this.armyHtml()}`, [{ label: 'Schließen', primary: true, action: () => { this.renderInfo(); this.updateHeader(); } }]);
     $('modalBody').querySelectorAll('button[data-type]').forEach(b => b.onclick = () => {
       const type = b.dataset.type, max = Recruitment.maxAffordable(type);
@@ -4917,6 +4934,7 @@ function initInput() {
     if (e.target === canvas) onHover(e); else $('edgeTip').classList.add('hidden');
   });
   canvas.addEventListener('wheel', e => { e.preventDefault(); game.view.cam.zoom(e.deltaY); }, { passive: false });
+  window.addEventListener('keydown', e => { if (e.code === 'KeyB' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT') && $('modal').classList.contains('hidden')) Base.open(); });
   window.addEventListener('keydown', e => { if (e.code === 'KeyM' && !(e.target && e.target.tagName === 'INPUT')) Sfx.toggle(); });
   window.addEventListener('keydown', e => { if (e.code === 'KeyG' && game.mode === 'world' && !(e.target && e.target.tagName === 'INPUT')) Expeditions.go(); });
   // Space during a journey: hurry (4x).
@@ -4949,6 +4967,7 @@ function initInput() {
   $('btnRecruitSite').onclick = () => UI.findRecruitSite();
   $('btnHome').onclick = () => UI.focusNode(PHYLACTERY);
   $('btnGo').onclick = () => Expeditions.go();
+  $('btnBuild').onclick = () => { if (game.mode === 'world') Base.open(); };
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnSound').onclick = () => Sfx.toggle();
   $('btnSound').textContent = Sfx.muted ? '🔇' : '🔊';
