@@ -67,6 +67,8 @@
   #threatChip .mini { display: flex; gap: 2px; align-items: flex-end; height: 20px; background: linear-gradient(to top, rgba(0,0,0,.25) 1px, transparent 1px); }
   #threatChip .mini i { width: 4px; display: block; min-height: 2px; }
   #threatChip.warn { color: var(--blood); }
+  #coopChip { height: 30px; white-space: nowrap; font-size: 13px; } #coopChip.off { color: var(--blood); }
+  body.coopGuest #nodeButtons, body.coopGuest #worldButtons button:not(#btnMenu) { display: none; }
   #btnNews { height: 30px; position: relative; white-space: nowrap; }
   #btnNews .badge { display: inline-block; margin-left: 5px; min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--blood); color: #f4ecd6; font-size: 11px; line-height: 15px; }
   .newsDay { margin: 10px 0 2px; font-size: 13px; color: var(--ink-soft); border-bottom: 1px solid rgba(43,33,22,.25); }
@@ -295,6 +297,7 @@
     <div id="resources"></div>
     <button id="threatChip" title="Bedrohung der Fraktionen (Klick für alle)"></button>
     <button id="btnNews" title="Chronik: alle Meldungen der Welt (N)">📜 Chronik</button>
+    <button id="coopChip" class="hidden" title="Koop-Verbindung"></button>
     <div class="spacer"></div>
     <div id="status"><div id="dial"></div><div id="dayNo"></div><div id="clock"></div><div id="date" class="small"></div></div>
     <div id="timeDelta"></div>
@@ -305,6 +308,7 @@
     <button id="btnSound" title="Ton an/aus (Taste M)">Ton: aus</button>
     <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
     <button id="btnHelp" title="Steuerung und Tastenkürzel">Tastenkürzel</button>
+    <button id="btnCoop" title="Koop-Kampagne zu zweit: eröffnen oder beitreten">Koop-Spiel</button>
     <button id="btnDebugMenu" title="Debug-Fenster (F3)">Debug</button>
     <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
   </div>
@@ -388,7 +392,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 126, "date": "2026-11-09", "changes": [{"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil (design/ui_bilder.md)"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}, {"date": "04.11. 22:33", "text": "Spielstände: Bereinigung beim Laden (Schutz vor Skript-Einschleusung)"}, {"date": "04.11. 22:25", "text": "Rekrutieren: Kategorien und Sortierung; Fix negativer Lich durch Anführer"}]};
+const BUILD = {"version": 128, "date": "2026-11-09", "changes": [{"date": "09.11. 23:11", "text": "Koop Stufe 1: Raumcode, Verbindung (PeerJS/lokal), Gast sieht die Welt live"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}, {"date": "04.11. 22:37", "text": "Esc schließt Fenster"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1616,6 +1620,7 @@ const Pantheons = {
     UI.toast(`Ley-Sprung nach ${target.name}.`);
   },
   openJump() {
+    if (Coop.guestBlocked()) return; 
     const here = Campaign.armyNode(), cost = Object.entries(LEY.jumpCost).map(([k, v]) => `${v} ${RESOURCE_NAMES[k]}`).join(', ');
     const c = game.campaign, short = Object.entries(LEY.jumpCost).filter(([k, v]) => (c.resources[k] || 0) < v).map(([k, v]) => `${v - (c.resources[k] || 0)} ${RESOURCE_NAMES[k]}`);
     const rows = this.leyNodes().filter(n => n !== here).map(n => `<p><button data-ley="${n.id}" ${short.length ? 'disabled' : ''}>${esc(n.name)}</button></p>`).join('');
@@ -2010,6 +2015,7 @@ const Base = {
     return 'Erhebt: ' + l.produces.map(t => Knowledge.known(t) ? DATA.units[t].name : '???').join(', ');
   },
   open() {
+    if (Coop.guestBlocked()) return;
     const c = game.campaign, cost = o => costHtml(o, c.resources);
     const rows = Object.entries(DATA.baseBuildings).map(([k, B]) => {
       const L = this.level(k), next = B.levels[L], block = this.blocker(k);
@@ -2080,9 +2086,111 @@ const Recruitment = {
 // SaveGame (localStorage, key harmbringer_save_v1). All access in try/catch.
 // =============================================================================
 const SAVE_KEY = 'harmbringer_save_v1';
+// =============================================================================
+// Coop: a campaign for two (stage 1: connection, room code, the guest sees the host's world live).
+// The host runs the world and sends snapshots; transport is PeerJS (WebRTC, the public PeerJS server
+// only brokers the room code) or, for two windows of the same browser, a BroadcastChannel.
+// =============================================================================
+const Coop = {
+  role: null, code: null, link: null, peer: null, timer: 0, connected: false,
+  PEERJS: 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js',
+  async loadPeer() {
+    if (window.Peer) return;
+    await new Promise((ok, fail) => { const s = document.createElement('script'); s.src = this.PEERJS; s.onload = ok; s.onerror = () => fail(new Error('PeerJS konnte nicht geladen werden')); document.head.appendChild(s); });
+  },
+  newCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({ length: 5 }, () => A[Math.floor(Math.random() * A.length)]).join(''); },
+  // Transport wrapper: { send(obj), close() } plus onData/onOpen/onClose callbacks.
+  local(code) {
+    const ch = new BroadcastChannel('harmbringer-coop-' + code), link = { send: m => ch.postMessage(m), close: () => ch.close() };
+    ch.onmessage = e => this.receive(e.data);
+    return link;
+  },
+  peerLink(conn) {
+    const link = { send: m => { try { conn.send(m); } catch (e) {} }, close: () => conn.close() };
+    conn.on('data', m => this.receive(m));
+    conn.on('open', () => this.opened());
+    conn.on('close', () => this.closed());
+    conn.on('error', () => this.closed());
+    return link;
+  },
+  async host(local = false) {
+    this.leave(); this.role = 'host'; this.code = this.newCode();
+    if (local) { this.link = this.local(this.code); this.status('wartet (lokal)'); return this.code; }
+    await this.loadPeer();
+    await new Promise((ok, fail) => {
+      this.peer = new Peer('harmbringer-' + this.code);
+      this.peer.on('open', ok); this.peer.on('error', e => fail(new Error(e.type || 'Verbindungsfehler')));
+      this.peer.on('connection', conn => { if (this.link) this.link.close(); this.link = this.peerLink(conn); });
+    });
+    this.status('wartet');
+    return this.code;
+  },
+  async join(code, local = false) {
+    this.leave(); this.role = 'guest'; this.code = code.trim().toUpperCase();
+    document.body.classList.add('coopGuest');
+    if (local) { this.link = this.local(this.code); this.link.send({ t: 'hello' }); this.status('verbindet (lokal)'); return; }
+    await this.loadPeer();
+    await new Promise((ok, fail) => { this.peer = new Peer(); this.peer.on('open', ok); this.peer.on('error', e => fail(new Error(e.type || 'Verbindungsfehler'))); });
+    this.link = this.peerLink(this.peer.connect('harmbringer-' + this.code, { reliable: true }));
+    this.status('verbindet');
+  },
+  opened() { if (this.role === 'guest') this.link.send({ t: 'hello' }); },
+  closed() { this.connected = false; this.status('getrennt'); UI.toast('Koop: Verbindung getrennt.', 5, 'world'); },
+  leave() {
+    try { if (this.link) this.link.close(); } catch (e) {}
+    try { if (this.peer) this.peer.destroy(); } catch (e) {}
+    this.link = this.peer = null; this.connected = false; this.role = null;
+    document.body.classList.remove('coopGuest'); $('coopChip').classList.add('hidden');
+  },
+  send(m) { if (this.link) this.link.send(m); },
+  receive(m) {
+    if (!m || typeof m !== 'object') return;
+    if (m.t === 'hello' && this.role === 'host') { this.connected = true; this.status('verbunden'); this.push(); UI.toast('Koop: Mitspieler ist beigetreten.', 5, 'world'); }
+    else if (m.t === 'snap' && this.role === 'guest') this.applySnap(m.c);
+    else if (m.t === 'chat') UI.toast(`Mitspieler: ${String(m.text).replace(/[<>"&`]/g, '').slice(0, 200)}`, 6, 'info');
+    else if (m.t === 'bye') this.closed();
+  },
+  // Host: send the world (throttled; never in the middle of a battle).
+  pushSoon() { clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 400); },
+  push() { if (this.role !== 'host' || !this.link || game.mode === 'battle') return; this.send({ t: 'snap', c: JSON.stringify(game.campaign) }); },
+  applySnap(json) {
+    const c = SaveGame.parse(json); if (!c) return;
+    const first = !this.connected; this.connected = true; this.status('verbunden (Gast)');
+    game.campaign = c;
+    if (game.mode !== 'world') { game.mode = 'world'; UI.enterWorld(); }
+    WorldView.placeArmy(); WorldView.refresh(); UI.updateHeader(); UI.renderArmies(); UI.renderInfo();
+    if (first) { const n = Campaign.armyNode(); game.view.cam.lookAtTile(n.q, n.r); UI.closeModal(); UI.toast('Koop: Du siehst die Welt deines Mitspielers.', 5, false); }
+  },
+  // Stage 1: the guest watches only.
+  guestBlocked() { if (this.role !== 'guest') return false; UI.toast('Koop: Als Gast schaust du vorerst nur zu – eigene Armee folgt.', 4, false); return true; },
+  status(text) {
+    const el = $('coopChip'); el.classList.remove('hidden'); el.classList.toggle('off', /getrennt/.test(text));
+    el.textContent = `⚭ Koop ${this.code || ''}: ${text}`; el.title = `Raumcode ${this.code} – ${this.role === 'host' ? 'du eröffnest' : 'du bist Gast'}. Klick: Koop-Fenster`;
+  },
+  open() {
+    const row = (label, html) => `<tr><td>${label}</td><td>${html}</td></tr>`;
+    UI.modal(`<h2>Koop-Spiel</h2><p class="small">Kampagne zu zweit. Stufe 1: Verbindung und gemeinsame Welt – der Gast sieht die Welt des Gastgebers live. Eigene Armee, Vorräte und Zeitleiste für den Gast folgen.</p>
+      ${this.role ? `<p><b>${this.role === 'host' ? 'Du eröffnest' : 'Du bist Gast'}</b>, Raumcode <b style="font-size:20px;letter-spacing:2px">${esc(this.code)}</b> – ${this.connected ? 'verbunden' : 'noch nicht verbunden'}.</p>` : ''}
+      <table>${row('Eröffnen', '<button id="coopHost">Spiel eröffnen</button> <button id="coopHostLocal" title="Zweites Fenster im selben Browser">lokal</button>')}
+      ${row('Beitreten', '<input id="coopCode" maxlength="5" placeholder="Code" style="width:90px;text-transform:uppercase"> <button id="coopJoin">Beitreten</button> <button id="coopJoinLocal">lokal</button>')}
+      ${this.role ? row('', '<button id="coopLeave">Verbindung trennen</button>') : ''}</table>
+      <p class="small">Verbindung direkt zwischen den Browsern (WebRTC). Der Raumcode wird über den öffentlichen PeerJS-Dienst vermittelt.</p>`,
+      [{ label: 'Schließen', primary: true, action: () => {} }]);
+    const run = async (f, label) => { try { await f(); this.open(); } catch (e) { this.leave(); UI.toast(`Koop: ${label} fehlgeschlagen (${e.message}).`, 6, false); } };
+    $('coopHost').onclick = () => run(() => this.host(false), 'Eröffnen');
+    $('coopHostLocal').onclick = () => run(() => this.host(true), 'Eröffnen');
+    $('coopJoin').onclick = () => run(() => this.join($('coopCode').value, false), 'Beitreten');
+    $('coopJoinLocal').onclick = () => run(() => this.join($('coopCode').value, true), 'Beitreten');
+    if ($('coopLeave')) $('coopLeave').onclick = () => { this.send({ t: 'bye' }); this.leave(); this.open(); };
+  }
+};
+window.addEventListener('pagehide', () => { if (Coop.role) Coop.send({ t: 'bye' }); });
+
 const SaveGame = {
   save() {
+    if (Coop.role === 'guest') return;   // a guest never overwrites his own save with the host's world
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.campaign)); } catch (e) { /* storage unavailable */ }
+    if (Coop.role === 'host') Coop.pushSoon();
   },
   load() {
     try { return this.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
@@ -2421,6 +2529,7 @@ const WorldView = {
 // Journey: the figure glides along the road, the camera follows. Every travel day may bring a
 // random encounter (DATA.encounters); the battle happens on the road and the journey goes on afterwards.
 async function startTravel(target, resume = null) {
+  if (Coop.guestBlocked()) return;
   const c = game.campaign, from = Campaign.armyNode();
   if (target.id === from.id || (game.mode !== 'world' && !resume)) return;
   const days = Campaign.travelDays(from, target), hours = Campaign.travelHours(from, target);
@@ -5799,6 +5908,7 @@ const UI = {
   },
   // Wait on the spot until a chosen time of day (night 22, morning 4, day 10, evening 16).
   openRest() {
+    if (Coop.guestBlocked()) return; 
     if (game.mode !== 'world') return;
     const h = Campaign.hour(), opts = [[22, 'Nacht'], [4, 'Morgen'], [10, 'Tag'], [16, 'Abend']].map(([t, n]) => [t, n, (t - h + 24) % 24 || 24]);
     this.modal(`<h2>Rasten</h2><p class="small">Jetzt: ${Campaign.clockString(game.campaign.dayCount, h)}. Die Armee wartet, die Welt läuft weiter (Trupps, Bauten). Kämpfe beginnen zur Tageszeit der Ankunft – nachts sind die Toten stärker und schwerer zu entdecken.</p>
@@ -5933,6 +6043,7 @@ const UI = {
     }
   },
   openRecruit() {
+    if (Coop.guestBlocked()) return; 
     const c = game.campaign;
     // Categories (filter) and sort keys, chosen in the column on the left.
     const siegeDef = (t, u) => u.role === 'SIEGE' || u.size >= 4 || t === 'huenenkoenig';
@@ -6320,6 +6431,8 @@ function initInput() {
   window.addEventListener('click', () => { ['menuPop', 'threatPop'].forEach(id => UI.show(id, false)); Minimap.highlight = null; });
   $('btnHelp').onclick = () => { UI.show('menuPop', false); UI.openHelp(); };
   $('btnNews').onclick = () => UI.openNews();
+  $('btnCoop').onclick = () => { UI.show('menuPop', false); Coop.open(); };
+  $('coopChip').onclick = () => Coop.open();
   // Fast tooltips: the browser waits about a second before showing a title; ours appear after 120 ms.
   // Titles move into data-tip when first hovered (so the native one never shows).
   (() => {

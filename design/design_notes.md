@@ -2198,6 +2198,24 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
+### Koop-Kampagne (Plan 09.11.2026, Stufe 1 umgesetzt)
+
+Zwei Spieler in einer Kampagne. Entscheidungen (Kevin, 09.11.2026):
+
+- **Zeit:** Jede aktive Aktion (Reise, Rast, Bau, Portal) kostet Zeit. Eine zweite Aktion, die zur gleichen Zeit läuft, kostet keine zusätzliche. Umsetzung: Jeder Spieler hat eine eigene Zeitleiste („frei ab“). Die Weltzeit ist die frühere der beiden; wer vorn ist, ist beschäftigt (unterwegs), wer hinten ist, handelt. Weltereignisse (Trupps, totes Land, Erholung, Bauten) laufen nur bis zur Weltzeit.
+- **Vorräte getrennt:** Jeder hat eigene Leichen, Knochen, Seelen, Wissen und eigenes Kommando. Beute und Einkommen gehen an den, der den Ort erobert hat.
+- **Kämpfe:** Nur der Beteiligte kämpft (auf seinem Rechner), der andere spielt weiter.
+- **Verbindung:** PeerJS (WebRTC, der öffentliche PeerJS-Dienst vermittelt nur den Raumcode), lokal zum Testen über BroadcastChannel (zwei Fenster im selben Browser).
+- **Rollen:** Gastgeber führt den Lich und rechnet die Welt. Gast führt ein eigenes Heer mit Kommandeur (Nekromant), startet am Hügelgrab.
+
+Stufen:
+
+1. **Verbindung** (umgesetzt): Menü → Koop-Spiel, Raumcode (5 Zeichen), Gast sieht die Welt des Gastgebers live; Gast speichert nicht in seine eigenen Stände; Anzeige unten „⚭ Koop CODE: verbunden“.
+2. Befehle statt Direktaufrufe: Gast schickt Befehle (Reise, Rekrutieren, Bauen, Rasten), der Gastgeber führt sie aus und verteilt den neuen Stand. Eigenes Heer, eigene Vorräte.
+3. Zeitleisten pro Spieler (siehe oben), Weltzeit = frühere Zeitleiste.
+4. Kämpfe des Gasts auf seinem Rechner, Ergebnis zurück an den Gastgeber; der Gastgeber spielt währenddessen weiter.
+5. Gemeinsame Kämpfe am selben Ort, Chat, Wiederverbinden, Speichern der Koop-Kampagne.
+
 ### Mauern, Belagerung, Gebäude (umgesetzt 04.11.2026)
 
 - **Stadtmauer** (Felder ab 32): Ring aus Stein mit **Wehrgang** (+2 Stufen) dahinter, **Mauertürmen** (+3, jedes 6. Feld und neben jedem Tor), **Treppen** von innen und **geschlossenen Toren**. Schützen und Ballisten stehen auf Wehrgang und Türmen. Wer auf dem Wehrgang direkt hinter der Mauer steht, sieht und schießt darüber (und hat Deckung); sonst nimmt die Mauer die Sicht.
