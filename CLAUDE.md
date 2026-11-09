@@ -24,6 +24,7 @@ Fantasy-Taktikspiel mit norddeutscher Mythologie: Ein Lich erwacht 1371 im Hüge
 | `data/portraits.js` | Einheitenbilder (Rekrutieren, Einheitenkarte), gerendert mit `tools/render_portraits.py` aus den Generated-Figuren |
 | `data/figures/<einheit>.js` | Figuren fürs Kampffeld (Base64-GLB, beim Kampfstart per `<script>` nachgeladen), erzeugt mit `tools/build_game_figures.py` |
 | `BUGS.md` | Fehlerliste (von Kevin gemeldete Fehler und ihr Status) |
+| `design/ui_bilder.md` | Bilder fürs UI (Dürer-Stil): Prompts, Dateinamen, Verhältnisse, Stand offen/erledigt. Kevin erzeugt, Claude baut ein und pflegt die Liste (offene oben). Erzeugt mit dem Skript im Abschnitt „Stil“, sonst von Hand pflegen. |
 
 ## Arbeitsregeln
 
