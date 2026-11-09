@@ -2198,11 +2198,11 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
-### Koop-Kampagne (Plan 09.11.2026, Stufen 1–2 umgesetzt)
+### Koop-Kampagne (Plan 09.11.2026, Stufen 1–3 umgesetzt)
 
 Zwei Spieler in einer Kampagne. Entscheidungen (Kevin, 09.11.2026):
 
-- **Zeit:** Jede aktive Aktion (Reise, Rast, Bau, Portal) kostet Zeit. Eine zweite Aktion, die zur gleichen Zeit läuft, kostet keine zusätzliche. Umsetzung: Jeder Spieler hat eine eigene Zeitleiste („frei ab“). Die Weltzeit ist die frühere der beiden; wer vorn ist, ist beschäftigt (unterwegs), wer hinten ist, handelt. Weltereignisse (Trupps, totes Land, Erholung, Bauten) laufen nur bis zur Weltzeit.
+- **Zeit:** Jede aktive Aktion (Reise, Rast, Bau, Portal) kostet Zeit. Eine zweite Aktion, die zur gleichen Zeit läuft, kostet keine zusätzliche. Umsetzung siehe Stufe 3.
 - **Vorräte getrennt:** Jeder hat eigene Leichen, Knochen, Seelen, Wissen und eigenes Kommando. Beute und Einkommen gehen an den, der den Ort erobert hat.
 - **Kämpfe:** Nur der Beteiligte kämpft (auf seinem Rechner), der andere spielt weiter.
 - **Verbindung:** PeerJS (WebRTC, der öffentliche PeerJS-Dienst vermittelt nur den Raumcode), lokal zum Testen über BroadcastChannel (zwei Fenster im selben Browser).
@@ -2212,7 +2212,7 @@ Stufen:
 
 1. **Verbindung** (umgesetzt): Menü → Koop-Spiel, Raumcode (5 Zeichen), Gast sieht die Welt des Gastgebers live; Gast speichert nicht in seine eigenen Stände; Anzeige unten „⚭ Koop CODE: verbunden“.
 2. **Eigenes Heer und Befehle** (umgesetzt): Beim Beitritt bekommt der Gast einen Nekromanten mit 8 Skeletten und 6 Ghulen am Hügelgrab und eigene Vorräte (Startwerte, ohne Wissen). Er rekrutiert (an seinem Standort), baut im gemeinsamen Hügelgrab, kauft Verbesserungen und reist (Befehl + „Los“) mit seinen Vorräten; der Gastgeber führt die Befehle aus und verteilt den Stand. Beute aus Kämpfen seines Heers geht an ihn. Technik: Das Heer des Gasts ist eine Expedition `coop`; der Gast sieht die Kampagne „getauscht“ (sein Heer als Hauptarmee, der Lich als Expedition), der Gastgeber tauscht kurz, um einen Befehl auszuführen. Vorerst noch nicht für den Gast: Rasten, Ley-Sprung, Inventar, eigene Expeditionen; Kämpfe seines Heers spielt noch der Gastgeber (Stufe 4).
-3. Zeitleisten pro Spieler (siehe oben), Weltzeit = frühere Zeitleiste.
+3. **Eigene Uhren** (umgesetzt): Jeder Spieler hat eine eigene Uhr, die Weltzeit ist die spätere der beiden. Eine Aktion (Reise, Marsch, Rast, Kampf, Portal, Ley-Sprung, Todesfrist) läuft ab der Uhr ihres Spielers; nur der Teil, der über die Weltzeit hinausgeht, lässt die Welt weiterlaufen (Trupps, totes Land, Einkommen, Bauten). Wer zurückliegt, hat „freie Zeit“ und kann sie nutzen, ohne dass die Welt weiterläuft – so kostet eine zweite, gleichzeitige Aktion nichts. Niemand muss warten. Anzeige unten: „⚭ Koop · freie Zeit: du … · Mitspieler …“. Der Gast kann jetzt auch rasten. (Abweichung von der ersten Planung „Weltzeit = frühere Uhr“: so muss keiner auf den anderen warten.)
 4. Kämpfe des Gasts auf seinem Rechner, Ergebnis zurück an den Gastgeber; der Gastgeber spielt währenddessen weiter.
 5. Gemeinsame Kämpfe am selben Ort, Chat, Wiederverbinden, Speichern der Koop-Kampagne.
 

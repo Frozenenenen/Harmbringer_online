@@ -391,7 +391,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 129, "date": "2026-11-09", "changes": [{"date": "09.11. 23:38", "text": "Koop Stufe 2: eigenes Heer und Vorräte für den Gast, Befehle (Rekrutieren, Bauen, Reisen)"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}, {"date": "04.11. 22:46", "text": "Debug: Ressourcen und Fern-Rekrutierung"}]};
+const BUILD = {"version": 130, "date": "2026-11-09", "changes": [{"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren, gleichzeitige Aktionen kosten keine Weltzeit, Gast kann rasten"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1365,7 +1365,10 @@ const Campaign = {
     return { year, month, day };
   },
   dateString(dayCount) { const d = this.dateOf(dayCount); return `${d.day}. ${MONTHS[d.month - 1]} ${d.year}`; },
-  advanceDays(n) {
+  // Time passes through advanceHours/advanceDays (actions). In a coop game an action is charged to its
+  // player's own clock first (Coop.charge): only what goes beyond the current world time moves the world.
+  advanceDays(n) { this.advanceHours(n * 24); },
+  passDays(n) {
     const c = game.campaign;
     for (let i = 0; i < n; i++) {
       c.dayCount++;
@@ -1495,8 +1498,9 @@ const Campaign = {
   // Advance the clock; every midnight runs the daily world (raids, buildings, threat).
   advanceHours(h) {
     const c = game.campaign; this.hour();
+    h = Coop.charge(h);
     c.hour += h;
-    while (c.hour >= 24) { c.hour -= 24; this.advanceDays(1); }
+    while (c.hour >= 24) { c.hour -= 24; this.passDays(1); }
   },
   // Time of day index into TIMES for an hour: night 22-4, morning 4-10, day 10-16, evening 16-22.
   timeIndex(hour) { return hour >= 22 || hour < 4 ? 0 : hour < 10 ? 1 : hour < 16 ? 2 : 3; },
@@ -2161,16 +2165,40 @@ const Coop = {
     const c = game.campaign;
     if (game.mode !== 'world') { (this.queue = this.queue || []).push(m); return; }
     if (m.op === 'go') { Expeditions.go(); return; }
-    const keepOpen = Base.open; Base.open = () => {}; this.swapping = true;
+    if (m.op === 'rest') { const h = Math.max(1, Math.min(48, m.hours | 0)); this.actor = 'guest'; try { Campaign.advanceHours(h); } finally { this.actor = null; }
+      SaveGame.save(); UI.updateHeader(); WorldView.refresh(); return; }
+    const keepOpen = Base.open; Base.open = () => {}; this.swapping = true; this.actor = 'guest';
     if (!this.swapSides(c)) { Base.open = keepOpen; this.swapping = false; return; }
     try {
       if (m.op === 'recruit' && DATA.units[m.type]) { const n = Recruitment.recruitMany(m.type, Math.max(0, Math.min(999, m.n | 0))); if (n) UI.toast(`Mitspieler: ${n}× ${DATA.units[m.type].name} erhoben.`, 3, 'info'); }
       else if (m.op === 'build' && DATA.baseBuildings[m.k]) Base.start(m.k);
       else if (m.op === 'upgrade') Upgrades.buy(m.id);
       else if (m.op === 'order') Expeditions.setOrder('lich', m.target && NODE_BY_ID[m.target] ? NODE_BY_ID[m.target] : null);
-    } finally { this.swapSides(c); this.swapping = false; Base.open = keepOpen; }
+    } finally { this.swapSides(c); this.swapping = false; this.actor = null; Base.open = keepOpen; }
     SaveGame.save(); UI.updateHeader(); UI.renderArmies(); UI.renderInfo(); WorldView.placeArmy(); WorldView.refresh();
   },
+  // --- Own clocks (stage 3). World time W = the latest of the players' clocks. An action of h hours
+  // runs from its player's clock; the part that ends before W costs no world time (it ran alongside).
+  now() { const c = game.campaign; return c.dayCount * 24 + Campaign.hour(); },
+  active() { return this.role === 'host' && this.connected && !!(game.campaign && game.campaign.coop); },
+  clocks() { const c = game.campaign, W = this.now(); return (c.coop.clock = c.coop.clock || { host: W, guest: W }); },
+  // Whose action is running: a guest command, the armies of the current march, the battle's side.
+  actors() {
+    const c = game.campaign;
+    if (this.actor) return [this.actor];
+    if (game.battle) return [game.battle.expedition && game.battle.expedition.id === 'coop' ? 'guest' : 'host'];
+    if (c.march && game.mode === 'travel') { const a = new Set(c.march.legs.filter(l => l.done < l.days).map(l => l.id === 'coop' ? 'guest' : 'host')); if (a.size) return [...a]; }
+    return ['host'];
+  },
+  charge(h) {
+    if (!this.active() || h <= 0) return h;
+    const W = this.now(), clk = this.clocks();
+    let end = W;
+    for (const a of this.actors()) { clk[a] = Math.min(clk[a] ?? W, W) + h; end = Math.max(end, clk[a]); }
+    return end - W;
+  },
+  // Hours a player is behind the world (time he can spend without moving it).
+  credit(who) { const c = game.campaign; if (!c || !c.coop || !c.coop.clock) return 0; return Math.max(0, c.dayCount * 24 + Campaign.hour() - (c.coop.clock[who] ?? 0)); },
   // Guest: send a command; returns true when the guest is in a coop game (the caller then stops).
   cmd(m) { if (this.role !== 'guest') return false; this.send({ t: 'cmd', ...m }); return true; },
   isGuestArmy(id) { return this.role === 'host' && id === 'coop'; },
@@ -2184,7 +2212,8 @@ const Coop = {
   send(m) { if (this.link) this.link.send(m); },
   receive(m) {
     if (!m || typeof m !== 'object') return;
-    if (m.t === 'hello' && this.role === 'host') { this.connected = true; this.status('verbunden'); this.ensureGuestArmy(); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh(); UI.toast('Koop: Mitspieler ist beigetreten.', 5, 'world'); }
+    if (m.t === 'hello' && this.role === 'host') { this.connected = true; this.status('verbunden'); this.ensureGuestArmy();
+      if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now()); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh(); UI.toast('Koop: Mitspieler ist beigetreten.', 5, 'world'); }
     else if (m.t === 'cmd' && this.role === 'host') this.exec(m);
     else if (m.t === 'snap' && this.role === 'guest') this.applySnap(m.c);
     else if (m.t === 'chat') UI.toast(`Mitspieler: ${String(m.text).replace(/[<>"&`]/g, '').slice(0, 200)}`, 6, 'info');
@@ -2212,7 +2241,17 @@ const Coop = {
   guestBlocked(what = 'Das') { if (this.role !== 'guest') return false; UI.toast(`Koop: ${what} geht als Gast noch nicht – kommt mit den eigenen Zeitleisten.`, 4, false); return true; },
   status(text) {
     const el = $('coopChip'); el.classList.remove('hidden'); el.classList.toggle('off', /getrennt/.test(text));
-    el.textContent = `⚭ Koop ${this.code || ''}: ${text}`; el.title = `Raumcode ${this.code} – ${this.role === 'host' ? 'du eröffnest' : 'du bist Gast'}. Klick: Koop-Fenster`;
+    el.textContent = `⚭ Koop ${this.code || ''}: ${text}`;
+    this.clockText(); el.title = `Raumcode ${this.code} – ${this.role === 'host' ? 'du eröffnest' : 'du bist Gast'}. Klick: Koop-Fenster`;
+  },
+  // Bottom bar: how far each player is behind the world (his free time).
+  clockText() {
+    const el = $('coopChip'), c = game.campaign; if (!this.connected || !c || !c.coop) return;
+    const f = h => h >= 24 ? `${Math.floor(h / 24)} T. ${h % 24} Std.` : `${h} Std.`;
+    const me = this.role === 'guest' ? 'guest' : 'host', other = me === 'host' ? 'guest' : 'host';
+    const a = this.credit(me), b = this.credit(other);
+    el.textContent = `⚭ Koop · freie Zeit: du ${a ? f(a) : '–'} · Mitspieler ${b ? f(b) : '–'}`;
+    el.title = `Raumcode ${this.code}. Jede Aktion kostet Zeit; läuft sie, während der andere schon weiter ist, kostet sie die Welt nichts.\nDu: ${a ? f(a) + ' Zeit, die du nutzen kannst, ohne dass die Welt weiterläuft' : 'gleichauf mit der Welt'}.\nMitspieler: ${b ? f(b) + ' zurück' : 'gleichauf'}.`;
   },
   open() {
     const row = (label, html) => `<tr><td>${label}</td><td>${html}</td></tr>`;
@@ -5757,7 +5796,7 @@ const UI = {
     const chip = (k, v, lbl, cls = '') => `<span class="chip ${cls}" title="${tip(k)}">${resIcon(k, 18)}<b>${v}</b> <span class="lbl">${lbl}</span></span>`;
     $('resources').innerHTML = chip('corpses', r.corpses, 'Leichen') + chip('bones', r.bones, 'Knochen') + chip('souls', r.souls, 'Seelen')
       + chip('knowledge', r.knowledge, 'Wissen') + chip('command', `${used}/${lim}`, 'Kommando', used >= lim ? 'full' : '');
-    this.buildBadge(); this.newsBadge();
+    this.buildBadge(); this.newsBadge(); if (Coop.role) Coop.clockText();
     // Threat: one chip (mini bars + the highest faction), the full list on click.
     const list = ENEMY_FACTIONS.map(f => ({ f, v: Math.round(c.threat[f] || 0), living: Campaign.isLiving(f) })).sort((x, y) => (y.living - x.living) || (y.v - x.v));
     const top = list.find(x => x.living), warned = list.filter(x => x.living && x.v >= 50);
@@ -5966,12 +6005,12 @@ const UI = {
   },
   // Wait on the spot until a chosen time of day (night 22, morning 4, day 10, evening 16).
   openRest() {
-    if (Coop.guestBlocked('Rasten')) return; 
+
     if (game.mode !== 'world') return;
     const h = Campaign.hour(), opts = [[22, 'Nacht'], [4, 'Morgen'], [10, 'Tag'], [16, 'Abend']].map(([t, n]) => [t, n, (t - h + 24) % 24 || 24]);
     this.modal(`<h2>Rasten</h2><p class="small">Jetzt: ${Campaign.clockString(game.campaign.dayCount, h)}. Die Armee wartet, die Welt läuft weiter (Trupps, Bauten). Kämpfe beginnen zur Tageszeit der Ankunft – nachts sind die Toten stärker und schwerer zu entdecken.</p>
       <p>${opts.map(([t, n, w]) => `<button data-rest="${w}">bis ${n} (${t} Uhr, ${w} Std.)</button>`).join(' ')} <button data-rest="6">6 Stunden</button></p>`, [{ label: 'Abbrechen', action: () => {} }]);
-    document.querySelectorAll('[data-rest]').forEach(b => b.onclick = () => { Campaign.advanceHours(+b.dataset.rest); this.closeModal(); Campaign.healAtPhylactery(); SaveGame.save(); this.updateHeader(); this.renderInfo(); WorldView.refresh(); this.toast(`Gerastet: ${Campaign.clockString(game.campaign.dayCount, Campaign.hour())}.`); });
+    document.querySelectorAll('[data-rest]').forEach(b => b.onclick = () => { if (Coop.cmd({ op: 'rest', hours: +b.dataset.rest })) { this.closeModal(); this.toast('Gerastet (der Gastgeber rechnet die Zeit).', 3, false); return; } Campaign.advanceHours(+b.dataset.rest); this.closeModal(); Campaign.healAtPhylactery(); SaveGame.save(); this.updateHeader(); this.renderInfo(); WorldView.refresh(); this.toast(`Gerastet: ${Campaign.clockString(game.campaign.dayCount, Campaign.hour())}.`); });
   },
   roundBanner(n, sub) {
     let el = document.getElementById('roundBanner');
