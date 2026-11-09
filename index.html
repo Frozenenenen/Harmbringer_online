@@ -391,7 +391,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 130, "date": "2026-11-09", "changes": [{"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren, gleichzeitige Aktionen kosten keine Weltzeit, Gast kann rasten"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}, {"date": "04.11. 22:52", "text": "Debug im Kampf: Werte ändern, Einheit töten, Sieg, durch Wände"}]};
+const BUILD = {"version": 131, "date": "2026-11-10", "changes": [{"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner, Ergebnis fließt in die gemeinsame Welt"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2199,6 +2199,62 @@ const Coop = {
   },
   // Hours a player is behind the world (time he can spend without moving it).
   credit(who) { const c = game.campaign; if (!c || !c.coop || !c.coop.clock) return 0; return Math.max(0, c.dayCount * 24 + Campaign.hour() - (c.coop.clock[who] ?? 0)); },
+  // --- Battles of the guest (stage 4): fought on the guest's computer, the result goes to the host.
+  async guestBattle(node) {
+    const c = game.campaign;
+    if (this.inBattle || game.mode === 'battle') return;
+    this.inBattle = true; this.battleBase = JSON.stringify(c);
+    // His army fights as an expedition (no Lich); the battle's result ends up in exp.army / exp.nodeId.
+    this.guestExp = { id: 'coop', coopSelf: true, leader: c.coop.leader || 'nekromant', army: c.army, nodeId: c.nodeId, prevNodeId: c.prevNodeId, order: null };
+    try { await Battle.startBattle(node, this.guestExp); }
+    catch (e) { console.error(e); this.inBattle = false; }
+    if (game.mode !== 'battle') this.inBattle = false;
+  },
+  battleDone(rounds) {
+    const c = game.campaign, e = this.guestExp;
+    this.inBattle = false;
+    const after = JSON.parse(JSON.stringify(c));
+    after.army = e.army; after.nodeId = e.nodeId; after.prevNodeId = e.prevNodeId;
+    this.send({ t: 'result', base: this.battleBase, after: JSON.stringify(after), hours: rounds * BATTLE_HOURS_PER_ROUND });
+    this.guestExp = null; this.battleBase = null;
+    if (this.pendingSnap) { const j = this.pendingSnap; this.pendingSnap = null; this.applySnap(j); }
+  },
+  // Host: fold the changes of the guest's battle (before/after, guest's view) into the current world.
+  merge(m) {
+    const c = game.campaign, base = SaveGame.sanitize(JSON.parse(m.base)), after = SaveGame.sanitize(JSON.parse(m.after));
+    if (!base || !after || !c.coop) return;
+    const SKIP = new Set(['army', 'nodeId', 'prevNodeId', 'order', 'resources', 'coop', 'expeditions', 'travel', 'march', 'dayCount', 'hour', 'battles', 'news', 'newsUnread', 'debugCommand']);
+    const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+    const fold = (host, b, a) => {
+      for (const k of new Set([...Object.keys(b || {}), ...Object.keys(a || {})])) {
+        const x = a ? a[k] : undefined, y = b ? b[k] : undefined;
+        if (same(x, y)) continue;
+        if (x === undefined) delete host[k];
+        else if (typeof x === 'number' && typeof y === 'number') host[k] = (host[k] || 0) + (x - y);
+        else if (Array.isArray(x)) host[k] = Array.isArray(host[k]) ? [...host[k], ...x.filter(v => !host[k].some(h => same(h, v)))] : x;
+        else if (x && typeof x === 'object' && y && typeof y === 'object' && host[k] && typeof host[k] === 'object') fold(host[k], y, x);
+        else host[k] = x;
+      }
+    };
+    for (const k of Object.keys(after)) {
+      if (SKIP.has(k) || same(after[k], base[k])) continue;
+      if (c[k] && typeof c[k] === 'object' && !Array.isArray(c[k]) && base[k] && typeof base[k] === 'object') fold(c[k], base[k], after[k]);
+      else if (typeof after[k] === 'number' && typeof base[k] === 'number') c[k] = (c[k] || 0) + (after[k] - base[k]);
+      else if (Array.isArray(after[k])) fold(c, { [k]: base[k] }, { [k]: after[k] });
+      else c[k] = after[k];
+    }
+    c.news = [...(c.news || []), ...(after.news || []).slice((base.news || []).length)];
+    c.battles = (c.battles || 0) + 1;
+    // The guest's army and stores.
+    const e = Expeditions.get('coop');
+    if (e) {
+      if (after.army.length) { e.army = after.army; e.nodeId = after.nodeId; e.prevNodeId = after.prevNodeId; }
+      else { e.army = [{ type: e.leader, hp: DATA.units[e.leader].hp }]; e.nodeId = PHYLACTERY.id; e.prevNodeId = null; UI.toast('Das Heer deines Mitspielers ist gefallen; sein Anführer erhebt sich im Hügelgrab neu.', 6, 'world'); }
+    }
+    c.coop.res = after.resources;
+    this.actor = 'guest'; try { Campaign.advanceHours(Math.max(0, m.hours | 0)); } finally { this.actor = null; }
+    SaveGame.save(); UI.updateHeader(); UI.renderArmies(); UI.renderInfo(); WorldView.placeArmy(); WorldView.refresh(); Blight.refresh && Blight.refresh();
+  },
   // Guest: send a command; returns true when the guest is in a coop game (the caller then stops).
   cmd(m) { if (this.role !== 'guest') return false; this.send({ t: 'cmd', ...m }); return true; },
   isGuestArmy(id) { return this.role === 'host' && id === 'coop'; },
@@ -2215,6 +2271,8 @@ const Coop = {
     if (m.t === 'hello' && this.role === 'host') { this.connected = true; this.status('verbunden'); this.ensureGuestArmy();
       if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now()); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh(); UI.toast('Koop: Mitspieler ist beigetreten.', 5, 'world'); }
     else if (m.t === 'cmd' && this.role === 'host') this.exec(m);
+    else if (m.t === 'result' && this.role === 'host') { if (game.mode === 'world') this.merge(m); else (this.results = this.results || []).push(m); }
+    else if (m.t === 'battle' && this.role === 'guest') { try { const n = SaveGame.sanitize(JSON.parse(m.node)); if (n) { UI.toast(`Hinterhalt! ${n.name}.`, 5, false); this.guestBattle(n); } } catch (e) {} }
     else if (m.t === 'snap' && this.role === 'guest') this.applySnap(m.c);
     else if (m.t === 'chat') UI.toast(`Mitspieler: ${String(m.text).replace(/[<>"&`]/g, '').slice(0, 200)}`, 6, 'info');
     else if (m.t === 'bye') this.closed();
@@ -2226,9 +2284,11 @@ const Coop = {
     if (game.mode === 'battle') { this.pushSoon(); return; }
     this.send({ t: 'snap', c: JSON.stringify(game.campaign) });
     // Commands that arrived during a battle or a march.
+    if (game.mode === 'world' && this.results && this.results.length) { const q = this.results; this.results = []; q.forEach(m => this.merge(m)); }
     if (game.mode === 'world' && this.queue && this.queue.length) { const q = this.queue; this.queue = []; q.forEach(m => this.exec(m)); }
   },
   applySnap(json) {
+    if (this.inBattle || game.mode === 'battle') { this.pendingSnap = json; return; }   // never in the middle of his own battle
     const c = SaveGame.parse(json); if (!c) return;
     this.swapSides(c);                        // the guest's own army is the main army in his view
     const first = !this.connected; this.connected = true; this.status('verbunden (Gast)');
@@ -2817,6 +2877,13 @@ const Expeditions = {
       nextAmbush.ambush.fired = true;
       const node = nextAmbush.ambush.node, who = nextAmbush.id === 'lich' ? 'Lich-Armee' : this.name(this.get(nextAmbush.id));
       UI.toast(`Hinterhalt gegen ${who}! ${node.name}.`, 5, 'battle');
+      if (nextAmbush.id === 'coop' && Coop.active()) {
+        // The guest fights this one on his own computer; his army stops where it was, the others march on.
+        Coop.send({ t: 'battle', node: JSON.stringify(node) });
+        M.legs = M.legs.filter(l => l !== nextAmbush);
+        SaveGame.save();
+        return this.go(true);
+      }
       UI.updateHeader(); SaveGame.save();
       if (nextAmbush.id === 'lich') { c.prevNodeId = nextAmbush.fromId; await Battle.start(node); }
       else await Battle.start(node, this.get(nextAmbush.id));
@@ -4432,6 +4499,7 @@ let unitIdCounter = 1;
 const Battle = {
   // Safety net: if setting up a battle fails, go back to the world map instead of a half-built field.
   async start(node, exp = null) {
+    if (Coop.role === 'guest' && !(exp && exp.coopSelf)) return Coop.guestBattle(node);
     try { return await this.startBattle(node, exp); }
     catch (e) {
       console.error(e);
@@ -5151,7 +5219,7 @@ const Battle = {
     UI.news(`${result === 'victory' ? 'Sieg' : result === 'retreat' ? 'Rückzug' : result === 'withdraw' ? 'Abzug' : 'Niederlage'}: ${node.name}${node.encounter ? ' (unterwegs)' : ''} nach ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'}.`, 'battle');
     let html = '', endNow = false;
     // Coop: the guest's army fights for the guest's stores (loot goes to him).
-    const coopLoot = b.expedition && b.expedition.id === 'coop' && c.coop;
+    const coopLoot = Coop.role !== 'guest' && b.expedition && b.expedition.id === 'coop' && c.coop;
     const swapRes = () => { if (coopLoot) { const t = c.resources; c.resources = c.coop.res; c.coop.res = t; } };
     swapRes();
     // Time scale: a round lasts BATTLE_HOURS_PER_ROUND hours (time of day turns every 3 rounds = 6 h).
@@ -5325,6 +5393,7 @@ const Battle = {
   },
   // Back to the world map.
   exit() {
+    const coopRounds = Coop.inBattle && game.battle ? game.battle.round : null;
     const tr = game.view.tiles;
     const root = game.view.battleRoot;
     while (root.children.length) removeWithLabels(root.children[0]);
@@ -5342,6 +5411,7 @@ const Battle = {
     game.mode = 'world';
     UI.enterWorld();
     UI.selectNode(n.id);
+    if (coopRounds !== null) Coop.battleDone(coopRounds);
   }
 };
 
@@ -6124,8 +6194,8 @@ const UI = {
         if (act.node.id !== node.id) add(act.order === node.id ? `Befehl aufheben (${act.label})` : `Befehl: ${act.label} hierher (${Expeditions.days(act.army, act.node, node)} T.)`,
           () => Expeditions.setOrder(act.id, act.order === node.id ? null : node), true);
         if (Campaign.isEnemy(node)) {
-          if (here.id === node.id) add('Angreifen (Lich)', () => Battle.start(node), true);
-          for (const e of exps) if (e.nodeId === node.id) add(`Angreifen (${Expeditions.name(e)})`, () => Battle.start(node, e), true);
+          if (here.id === node.id) add(Coop.role === 'guest' ? 'Angreifen' : 'Angreifen (Lich)', () => Battle.start(node), true);
+          for (const e of exps) if (e.nodeId === node.id && e.id !== 'coop') add(`Angreifen (${Expeditions.name(e)})`, () => Battle.start(node, e), true);
         }
         for (const e of exps) if (e.nodeId === node.id && here.id === node.id) add(`${Expeditions.name(e)} vereinen`, () => Expeditions.merge(e), false);
       }
