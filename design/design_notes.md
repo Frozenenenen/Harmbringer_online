@@ -2198,7 +2198,7 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
-### Koop-Kampagne (Plan 09.11.2026, Stufe 1 umgesetzt)
+### Koop-Kampagne (Plan 09.11.2026, Stufen 1–2 umgesetzt)
 
 Zwei Spieler in einer Kampagne. Entscheidungen (Kevin, 09.11.2026):
 
@@ -2211,7 +2211,7 @@ Zwei Spieler in einer Kampagne. Entscheidungen (Kevin, 09.11.2026):
 Stufen:
 
 1. **Verbindung** (umgesetzt): Menü → Koop-Spiel, Raumcode (5 Zeichen), Gast sieht die Welt des Gastgebers live; Gast speichert nicht in seine eigenen Stände; Anzeige unten „⚭ Koop CODE: verbunden“.
-2. Befehle statt Direktaufrufe: Gast schickt Befehle (Reise, Rekrutieren, Bauen, Rasten), der Gastgeber führt sie aus und verteilt den neuen Stand. Eigenes Heer, eigene Vorräte.
+2. **Eigenes Heer und Befehle** (umgesetzt): Beim Beitritt bekommt der Gast einen Nekromanten mit 8 Skeletten und 6 Ghulen am Hügelgrab und eigene Vorräte (Startwerte, ohne Wissen). Er rekrutiert (an seinem Standort), baut im gemeinsamen Hügelgrab, kauft Verbesserungen und reist (Befehl + „Los“) mit seinen Vorräten; der Gastgeber führt die Befehle aus und verteilt den Stand. Beute aus Kämpfen seines Heers geht an ihn. Technik: Das Heer des Gasts ist eine Expedition `coop`; der Gast sieht die Kampagne „getauscht“ (sein Heer als Hauptarmee, der Lich als Expedition), der Gastgeber tauscht kurz, um einen Befehl auszuführen. Vorerst noch nicht für den Gast: Rasten, Ley-Sprung, Inventar, eigene Expeditionen; Kämpfe seines Heers spielt noch der Gastgeber (Stufe 4).
 3. Zeitleisten pro Spieler (siehe oben), Weltzeit = frühere Zeitleiste.
 4. Kämpfe des Gasts auf seinem Rechner, Ergebnis zurück an den Gastgeber; der Gastgeber spielt währenddessen weiter.
 5. Gemeinsame Kämpfe am selben Ort, Chat, Wiederverbinden, Speichern der Koop-Kampagne.
