@@ -68,6 +68,8 @@
   #threatChip .mini i { width: 4px; display: block; min-height: 2px; }
   #threatChip.warn { color: var(--blood); }
   #coopChip { height: 30px; white-space: nowrap; font-size: 13px; } #coopChip.off { color: var(--blood); }
+  #coopChip.flash { animation: coopFlash 0.6s ease-in-out 6; }
+  @keyframes coopFlash { 50% { background: var(--gold); color: #1b140c; } }
   #btnNews { height: 30px; position: relative; white-space: nowrap; }
   #btnNews .badge { display: inline-block; margin-left: 5px; min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--blood); color: #f4ecd6; font-size: 11px; line-height: 15px; }
   .newsDay { margin: 10px 0 2px; font-size: 13px; color: var(--ink-soft); border-bottom: 1px solid rgba(43,33,22,.25); }
@@ -391,7 +393,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 131, "date": "2026-11-10", "changes": [{"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner, Ergebnis fließt in die gemeinsame Welt"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}, {"date": "04.11. 23:01", "text": "Minimap: Zoom auf Maus oder Kamera umschaltbar"}]};
+const BUILD = {"version": 132, "date": "2026-11-11", "changes": [{"date": "11.11. 00:09", "text": "Koop: deutliche Meldung bei Beitritt und Trennung (Fenster, Blinken, Ton, Chronik)"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2258,7 +2260,15 @@ const Coop = {
   // Guest: send a command; returns true when the guest is in a coop game (the caller then stops).
   cmd(m) { if (this.role !== 'guest') return false; this.send({ t: 'cmd', ...m }); return true; },
   isGuestArmy(id) { return this.role === 'host' && id === 'coop'; },
-  closed() { this.connected = false; this.status('getrennt'); UI.toast('Koop: Verbindung getrennt.', 5, 'world'); },
+  closed() { if (!this.role) return; this.connected = false; this.status('getrennt'); this.announce('Verbindung getrennt', 'Die Verbindung zum Mitspieler ist abgebrochen. Über Menü → Koop-Spiel kann er wieder beitreten.'); },
+  // Hard to miss: a window (not in battle), a flashing chip, a sound and an entry in the chronicle.
+  announce(title, text) {
+    UI.news(`Koop: ${title}.`, 'world');
+    const chip = $('coopChip'); chip.classList.remove('flash'); void chip.offsetWidth; chip.classList.add('flash');
+    if (Sfx.ping) Sfx.ping();
+    if (game.mode === 'battle') { UI.toast(`Koop: ${title}.`, 8, false); return; }
+    UI.modal(`<h2>⚭ ${esc(title)}</h2><p>${esc(text)}</p>`, [{ label: 'Gut', primary: true, action: () => {} }]);
+  },
   leave() {
     try { if (this.link) this.link.close(); } catch (e) {}
     try { if (this.peer) this.peer.destroy(); } catch (e) {}
@@ -2269,7 +2279,7 @@ const Coop = {
   receive(m) {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'hello' && this.role === 'host') { this.connected = true; this.status('verbunden'); this.ensureGuestArmy();
-      if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now()); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh(); UI.toast('Koop: Mitspieler ist beigetreten.', 5, 'world'); }
+      if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now()); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh(); this.announce('Dein Mitspieler ist beigetreten', 'Er führt einen Nekromanten mit eigenem Heer und eigenen Vorräten, Start am Hügelgrab. Unten in der Leiste siehst du die freie Zeit von euch beiden.'); }
     else if (m.t === 'cmd' && this.role === 'host') this.exec(m);
     else if (m.t === 'result' && this.role === 'host') { if (game.mode === 'world') this.merge(m); else (this.results = this.results || []).push(m); }
     else if (m.t === 'battle' && this.role === 'guest') { try { const n = SaveGame.sanitize(JSON.parse(m.node)); if (n) { UI.toast(`Hinterhalt! ${n.name}.`, 5, false); this.guestBattle(n); } } catch (e) {} }
@@ -2295,7 +2305,7 @@ const Coop = {
     game.campaign = c;
     if (game.mode !== 'world') { game.mode = 'world'; UI.enterWorld(); }
     WorldView.placeArmy(); WorldView.refresh(); UI.updateHeader(); UI.renderArmies(); UI.renderInfo();
-    if (first) { const n = Campaign.armyNode(); game.view.cam.lookAtTile(n.q, n.r); UI.closeModal(); UI.toast('Koop: Du siehst die Welt deines Mitspielers.', 5, false); }
+    if (first) { const n = Campaign.armyNode(); game.view.cam.lookAtTile(n.q, n.r); this.announce('Verbunden', 'Du bist im Koop-Spiel. Dein Heer (Nekromant) steht am Hügelgrab, der Lich gehört deinem Mitspieler. Rekrutieren, Bauen, Reisen und Rasten gehen mit deinen eigenen Vorräten.'); }
   },
   // Things the guest cannot do yet (they move the shared time: stage 3).
   guestBlocked(what = 'Das') { if (this.role !== 'guest') return false; UI.toast(`Koop: ${what} geht als Gast noch nicht – kommt mit den eigenen Zeitleisten.`, 4, false); return true; },
@@ -4393,6 +4403,7 @@ const Sfx = {
   },
   death() { if (this.ensure()) { this.tone(90, 0.6, 'sine', 0.35, 0.4); this.hiss(0.4, 400, 1, 0.15); } },
   click() { if (this.ensure()) this.tone(1200, 0.05, 'square', 0.03); },
+  ping() { if (this.ensure()) { this.tone(660, 0.6, 'sine', 0.15); setTimeout(() => this.tone(990, 0.8, 'sine', 0.12), 180); } },   // coop: someone joined
   ability() { if (this.ensure()) { this.tone(440, 0.5, 'triangle', 0.12, 1.8); this.hiss(0.4, 5000, 3, 0.05); } },
   // Quiet looping ambience: wind on the map, a low drone in battle.
   ambience(kind) {
