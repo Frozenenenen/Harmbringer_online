@@ -2206,7 +2206,7 @@ Zwei Spieler in einer Kampagne. Entscheidungen (Kevin, 09.11.2026):
 - **Vorräte getrennt:** Jeder hat eigene Leichen, Knochen, Seelen, Wissen und eigenes Kommando. Beute und Einkommen gehen an den, der den Ort erobert hat.
 - **Kämpfe:** Nur der Beteiligte kämpft (auf seinem Rechner), der andere spielt weiter.
 - **Verbindung:** PeerJS (WebRTC, der öffentliche PeerJS-Dienst vermittelt nur den Raumcode), lokal zum Testen über BroadcastChannel (zwei Fenster im selben Browser).
-- **Rollen:** Gastgeber führt den Lich und rechnet die Welt. Gast führt ein eigenes Heer mit Kommandeur (Nekromant), startet am Hügelgrab.
+- **Rollen:** Gastgeber führt den Lich und rechnet die Welt. Gast wählt beim ersten Beitritt seinen Kommandeur (alle außer dem Lich: Nekromant, Todesritter, Ahnen) und startet am Hügelgrab mit demselben Heer (12 Ghule, 8 Skelette) und denselben Vorräten wie der Lich.
 
 Stufen:
 
@@ -2235,7 +2235,8 @@ Stufen:
 - Bedienung: angreifbare Kanten leuchten rot; Klick greift an (auch hinlaufen und angreifen); Tooltip zeigt LP und Schaden.
 - Flieger fliegen über Stadtmauer, Tor und Palisade (nicht über Häuser), Geister gehen hindurch.
 - **Neue Gebäude:** Scheune, Schmiede, Krug, Kornspeicher, Kreuzgang; geschlossene Blöcke ohne Tür (Bergfried, Steinturm) als Hindernisse, die Umwege erzwingen. Mehr Gebäude je Ort.
-- **Kommandeure** (Nekromant, Todesritter, Ahnen) im Kampf: LP ×3 + 2 je erobertem Ort, +10 Seelenschild.
+- **Kommandeure** (Nekromant, Todesritter, Ahnen) im Kampf: LP ×4 + 4 je erobertem Ort, +20 Seelenschild (11.11.2026, vorher ×3, +2, +10).
+- **Leibwache:** Lich und Kommandeure nehmen 35 % weniger Schaden. Lich-Bonus erhöht: je belegtem Kommando-Punkt und je erobertem Ort +6 LP (vorher 4) und +2 Seelenschild (vorher 1).
 - **Flieger** sind von Bodenwirkungen (geweihter Boden, Gelände-Fähigkeiten) nicht betroffen.
 - **Geschlossene Gebäude** (Bergfried, Steinturm) sind massive Steinblöcke: unbegehbar für alle (auch Geister und Flieger), sie nehmen die Sicht; niemand wird darin aufgestellt.
 - **Ballisten** (Stadtballiste, Balliste): Initiative 2 → 5, damit sie gegen schnelle Geister zum Zug kommen.

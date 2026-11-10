@@ -72,6 +72,9 @@
   #chatBox input { width: 100%; font-size: 15px; padding: 6px 10px; border: 2px solid var(--gold); background: #f4ecd6; box-shadow: 0 3px 10px rgba(0,0,0,.4); }
   .coopLog { max-height: 180px; overflow-y: auto; font-size: 14px; margin-bottom: 6px; } .coopLog .me { color: var(--ink-soft); }
   #coopChip.behind { color: #2c5a1e; }
+  .pickGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .pickCard { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px; text-align: center; }
+  .pickCard .portrait { width: 96px; height: 96px; } .pickCard b { font-size: 16px; }
   #coopChip.flash { animation: coopFlash 0.6s ease-in-out 6; }
   @keyframes coopFlash { 50% { background: var(--gold); color: #1b140c; } }
   #btnNews { height: 30px; position: relative; white-space: nowrap; }
@@ -281,7 +284,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=35"></script>
+<script src="data/world_data.js?v=36"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=14"></script>
 <script type="importmap">
@@ -398,7 +401,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 134, "date": "2026-11-11", "changes": [{"date": "11.11. 00:35", "text": "Koop: Anzeige, wer wie weit vorn liegt (bei beiden Spielern)"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}]};
+const BUILD = {"version": 135, "date": "2026-11-11", "changes": [{"date": "11.11. 00:57", "text": "Koop: Gast wählt seinen Kommandeur, gleicher Start wie der Lich; Anführer zäher (Leibwache −35 % Schaden, mehr LP und Schild)"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2152,15 +2155,25 @@ const Coop = {
   },
   opened() { if (this.role === 'guest') this.link.send({ t: 'hello' }); },
   // The guest's army: an expedition 'coop' led by a necromancer, with its own stores (c.coop.res).
-  ensureGuestArmy() {
+  // The guest's army: his chosen commander with the same start as the Lich (army and stores).
+  hasGuestArmy() { const c = game.campaign; return !!(c.coop && Expeditions.get('coop')); },
+  ensureGuestArmy(leader) {
     const c = game.campaign;
-    if (c.coop && Expeditions.get('coop')) return;
+    if (this.hasGuestArmy()) return;
+    if (!COMMANDER_TYPES.includes(leader)) leader = 'nekromant';
     const r0 = Campaign.create().resources;
-    c.coop = { res: { corpses: r0.corpses, bones: r0.bones, souls: r0.souls, knowledge: 0 }, leader: 'lich', code: this.code };
+    c.coop = { res: { ...r0 }, leader: 'lich', code: this.code };
     const unit = t => ({ type: t, hp: DATA.units[t].hp });
-    Expeditions.list().push({ id: 'coop', leader: 'nekromant', coop: true, nodeId: PHYLACTERY.id, prevNodeId: null, order: null,
-      army: [unit('nekromant'), ...Array.from({ length: 8 }, () => unit('skelett')), ...Array.from({ length: 6 }, () => unit('ghul'))] });
-    UI.toast('Koop: Dein Mitspieler führt einen Nekromanten mit eigenem Heer und eigenen Vorräten.', 6, 'world');
+    Expeditions.list().push({ id: 'coop', leader, coop: true, nodeId: PHYLACTERY.id, prevNodeId: null, order: null,
+      army: [unit(leader), ...ECON.startArmy.filter(t => t !== 'lich').map(unit)] });
+  },
+  // Guest: choose the commander (all but the Lich).
+  pick() {
+    const card = t => { const d = DATA.units[t];
+      return `<button class="pickCard" data-pick="${t}">${portraitHtml(t, d)}<b>${esc(d.name)}</b><span class="small">${d.hp} LP · ${d.damage} Schaden · ${d.move} Bewegung${d.range > 1 ? ' · Reichweite ' + d.range : ''}${d.flying ? ' · fliegt' : ''}${d.spectral ? ' · Geist' : ''}</span></button>`; };
+    UI.modal(`<h2>Wähle deinen Kommandeur</h2><p class="small">Der Lich gehört deinem Mitspieler. Dein Kommandeur führt ein eigenes Heer (12 Ghule, 8 Skelette) mit denselben Startvorräten wie der Lich. Im Kampf hat er vierfache Lebenspunkte, Seelenschild und eine Leibwache.</p>
+      <div class="pickGrid">${COMMANDER_TYPES.map(card).join('')}</div>`, []);
+    document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { UI.closeModal(); this.send({ t: 'cmd', op: 'pick', leader: b.dataset.pick }); UI.toast(`${DATA.units[b.dataset.pick].name} erhebt sich …`, 3, false); });
   },
   // Exchanges the Lich's side and the guest's side of the campaign (its own inverse). The guest always
   // looks at the world through this swap; the host swaps briefly to run a guest's command.
@@ -2175,6 +2188,11 @@ const Coop = {
   exec(m) {
     const c = game.campaign;
     if (game.mode !== 'world') { (this.queue = this.queue || []).push(m); return; }
+    if (m.op === 'pick') {
+      if (this.hasGuestArmy()) return;
+      this.ensureGuestArmy(m.leader); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh();
+      UI.toast(`Koop: Dein Mitspieler führt ${DATA.units[Expeditions.get('coop').leader].name}.`, 6, 'world'); return;
+    }
     if (m.op === 'go') { Expeditions.go(); return; }
     if (m.op === 'rest') { const h = Math.max(1, Math.min(48, m.hours | 0)); this.actor = 'guest'; try { Campaign.advanceHours(h); } finally { this.actor = null; }
       SaveGame.save(); UI.updateHeader(); WorldView.refresh(); return; }
@@ -2310,8 +2328,14 @@ const Coop = {
   send(m) { if (this.link) this.link.send(m); },
   receive(m) {
     if (!m || typeof m !== 'object') return;
-    if (m.t === 'hello' && this.role === 'host') { this.connected = true; this.status('verbunden'); this.ensureGuestArmy();
-      if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now()); SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh(); this.announce('Dein Mitspieler ist beigetreten', 'Er führt einen Nekromanten mit eigenem Heer und eigenen Vorräten, Start am Hügelgrab. Unten in der Leiste siehst du die freie Zeit von euch beiden.'); }
+    if (m.t === 'hello' && this.role === 'host') {
+      this.connected = true; this.status('verbunden');
+      if (!this.hasGuestArmy()) { this.send({ t: 'pick' }); this.push(); this.announce('Dein Mitspieler ist beigetreten', 'Er wählt gerade seinen Kommandeur.'); return; }
+      if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now());
+      SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh();
+      this.announce('Dein Mitspieler ist zurück', `Er führt ${DATA.units[Expeditions.get('coop').leader].name} und sein Heer. Unten siehst du, wer wie weit vorn liegt.`);
+    }
+    else if (m.t === 'pick' && this.role === 'guest') this.pick();
     else if (m.t === 'cmd' && this.role === 'host') this.exec(m);
     else if (m.t === 'result' && this.role === 'host') { if (game.mode === 'world') this.merge(m); else (this.results = this.results || []).push(m); }
     else if (m.t === 'battle' && this.role === 'guest') { try { const n = SaveGame.sanitize(JSON.parse(m.node)); if (n) { UI.toast(`Hinterhalt! ${n.name}.`, 5, false); this.guestBattle(n); } } catch (e) {} }
@@ -2332,12 +2356,13 @@ const Coop = {
   applySnap(json) {
     if (this.inBattle || game.mode === 'battle') { this.pendingSnap = json; return; }   // never in the middle of his own battle
     const c = SaveGame.parse(json); if (!c) return;
+    if (!c.coop || !(c.expeditions || []).some(e => e.id === 'coop')) { game.campaign = c; this.status('verbunden (Gast) – Kommandeur wählen'); return; }   // before the pick (the welcome comes after it)
     this.swapSides(c);                        // the guest's own army is the main army in his view
     const first = !this.connected && !this.retries; this.connected = true; this.retries = 0; this.status('verbunden (Gast)');
     game.campaign = c;
     if (game.mode !== 'world') { game.mode = 'world'; UI.enterWorld(); }
     WorldView.placeArmy(); WorldView.refresh(); UI.updateHeader(); UI.renderArmies(); UI.renderInfo();
-    if (first) { const n = Campaign.armyNode(); game.view.cam.lookAtTile(n.q, n.r); this.announce('Verbunden', 'Du bist im Koop-Spiel. Dein Heer (Nekromant) steht am Hügelgrab, der Lich gehört deinem Mitspieler. Rekrutieren, Bauen, Reisen und Rasten gehen mit deinen eigenen Vorräten.'); }
+    if (first) { const n = Campaign.armyNode(); game.view.cam.lookAtTile(n.q, n.r); this.announce('Verbunden', `Du bist im Koop-Spiel. Dein Heer (${DATA.units[c.coop.leader] ? DATA.units[c.coop.leader].name : 'Kommandeur'}) steht am Hügelgrab, der Lich gehört deinem Mitspieler. Rekrutieren, Bauen, Reisen und Rasten gehen mit deinen eigenen Vorräten.`); }
   },
   // Things the guest cannot do yet (they move the shared time: stage 3).
   guestBlocked(what = 'Das') { if (this.role !== 'guest') return false; UI.toast(`Koop: ${what} geht als Gast noch nicht – kommt mit den eigenen Zeitleisten.`, 4, false); return true; },
@@ -2787,8 +2812,11 @@ async function startTravel(target, resume = null) {
 // c.expeditions = [{ id, leader, army: [{type, hp}], nodeId, prevNodeId, order }].
 // =============================================================================
 const COMMANDER_TYPES = ['nekromant', 'todesritter', ...Object.keys(DATA.units).filter(k => DATA.units[k].ancestor)];
-// Commanders in battle: HP x3 plus 2 per conquered place, +10 soul shield.
-const COMMANDER_BONUS = { hpFactor: 3, hpPerConquest: 2, shield: 10 };
+// Commanders in battle: HP x4 plus 4 per conquered place, +20 soul shield.
+const COMMANDER_BONUS = { hpFactor: 4, hpPerConquest: 4, shield: 20 };
+// Leader guard: the Lich and commanders take this much less damage (bodyguards, wards).
+const LEADER_GUARD = 0.35;
+const isLeaderUnit = u => u.side === 'player' && (u.type === 'lich' || COMMANDER_TYPES.includes(u.type));
 const commanderHp = (type, won, baseHp = DATA.units[type].hp) => Math.round(baseHp * COMMANDER_BONUS.hpFactor + won * COMMANDER_BONUS.hpPerConquest);
 const EXPEDITION = { commandLimit: 30, requiresBuilding: 'deadHall' };
 const Expeditions = {
@@ -5084,6 +5112,7 @@ const Battle = {
   },
   applyDamage(target, dmg, killer, power) {
     if (game.battle) game.battle.contact = true;
+    if (isLeaderUnit(target) && dmg > 0 && dmg < 99999) dmg = Math.max(1, Math.round(dmg * (1 - LEADER_GUARD)));
     // Soul shield pool absorbs any damage first and does not regenerate during the battle.
     const absorbed = Math.min(target.shield || 0, dmg);
     target.shield = (target.shield || 0) - absorbed;
@@ -6421,6 +6450,7 @@ const UI = {
       <div class="ucStats">${st('⚔', d.damage + (n > 1 ? ` ×${n}` : ''), `Schaden ${d.damage}${n > 1 ? ` × ${n} = ${d.damage * n}` : ''}, ${POWER_NAMES[d.power]}`)}${st(d.range > 1 ? '➶' : '✊', d.range, 'Reichweite')}${st('👣', d.move, 'Bewegung')}${st('⚡', d.initiative, 'Initiative')}
         ${st('🛡', DEFENSE_NAMES[d.defense], 'Rüstung')}${d.magicResist ? st('✧', d.magicResist, 'Magieresistenz (5 % je Punkt)') : ''}${d.soulShield ? st('⛨', `${u.shield ?? d.soulShield}/${d.soulShield * u.startCount}`, 'Seelenschild') : ''}</div>
       <div class="ucRow"><span>Sinne</span> 👁 ${d.sight} · 👂 ${d.hear} · 👃 ${d.smell}${flags ? ' · ' + flags : ''}</div>
+      ${isLeaderUnit(u) ? `<div class="ucRow"><span>Anführer</span> nimmt ${Math.round(LEADER_GUARD * 100)} % weniger Schaden (Leibwache)</div>` : ''}
       ${Abilities.statusHtml(u) ? `<div class="ucRow"><span>Zustand</span> ${Abilities.statusHtml(u)}</div>` : ''}
       ${(d.abilities || []).length ? `<div class="ucRow"><span>Fähigkeiten</span> ${d.abilities.map(id => DATA.abilities[id]).filter(Boolean).map(a => `<span title="${esc(a.desc || '')}" style="border-bottom:1px dotted">${esc(a.name)}</span>`).join(', ')}</div>` : ''}
       <div class="ucRow"><span>Feld</span> ${DATA.floorTypes[t.floor].name}, Stufe ${t.level}${t.building !== null ? ' · ' + b.field.buildings[t.building].name : ''}${(() => { const e = DATA.floorTypes[t.floor].effect || {};

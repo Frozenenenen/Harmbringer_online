@@ -707,8 +707,8 @@ window.HARMBRINGER_DATA = {
     travelTilesPerDay: 39,
     // The Lich draws strength from his army (per command point in use at battle start) and grows
     // with every place he has conquered (start army 32 points: +128 HP, +16 damage, +32 soul shield).
-    lichArmyBonus: { hpPerCommand: 4, damagePerCommand: 0.5, shieldPerCommand: 1,
-                     hpPerConquest: 4, damagePerConquest: 0.5, shieldPerConquest: 1 },
+    lichArmyBonus: { hpPerCommand: 6, damagePerCommand: 0.5, shieldPerCommand: 2,
+                     hpPerConquest: 6, damagePerConquest: 0.5, shieldPerConquest: 2 },
     lichDeathDays: 3,                  // days lost when the Lich falls (phylactery level 2/3 shortens it, see buildings)
     // Loot for conquering a node, by type and size.
     nodeRewards: {
