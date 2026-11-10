@@ -2198,7 +2198,7 @@ Zwei gleichzeitige Effekte bei erfolgreicher Überraschung:
 - **Moor:** Unsichtbar für beide, aber gefährlich (versinken). Heimspiel für Irrlichter/Moorgeister.
 - **Hügelgrab-Ruine:** Innenräume, enge Gänge, Höhenunterschiede, dichte Deckung.
 
-### Koop-Kampagne (Plan 09.11.2026, Stufen 1–4 umgesetzt)
+### Koop-Kampagne (Plan 09.11.2026, Stufen 1–5 umgesetzt)
 
 Zwei Spieler in einer Kampagne. Entscheidungen (Kevin, 09.11.2026):
 
@@ -2214,7 +2214,8 @@ Stufen:
 2. **Eigenes Heer und Befehle** (umgesetzt): Beim Beitritt bekommt der Gast einen Nekromanten mit 8 Skeletten und 6 Ghulen am Hügelgrab und eigene Vorräte (Startwerte, ohne Wissen). Er rekrutiert (an seinem Standort), baut im gemeinsamen Hügelgrab, kauft Verbesserungen und reist (Befehl + „Los“) mit seinen Vorräten; der Gastgeber führt die Befehle aus und verteilt den Stand. Beute aus Kämpfen seines Heers geht an ihn. Technik: Das Heer des Gasts ist eine Expedition `coop`; der Gast sieht die Kampagne „getauscht“ (sein Heer als Hauptarmee, der Lich als Expedition), der Gastgeber tauscht kurz, um einen Befehl auszuführen. Vorerst noch nicht für den Gast: Rasten, Ley-Sprung, Inventar, eigene Expeditionen; Kämpfe seines Heers spielt noch der Gastgeber (Stufe 4).
 3. **Eigene Uhren** (umgesetzt): Jeder Spieler hat eine eigene Uhr, die Weltzeit ist die spätere der beiden. Eine Aktion (Reise, Marsch, Rast, Kampf, Portal, Ley-Sprung, Todesfrist) läuft ab der Uhr ihres Spielers; nur der Teil, der über die Weltzeit hinausgeht, lässt die Welt weiterlaufen (Trupps, totes Land, Einkommen, Bauten). Wer zurückliegt, hat „freie Zeit“ und kann sie nutzen, ohne dass die Welt weiterläuft – so kostet eine zweite, gleichzeitige Aktion nichts. Niemand muss warten. Anzeige unten: „⚭ Koop · freie Zeit: du … · Mitspieler …“. Der Gast kann jetzt auch rasten. (Abweichung von der ersten Planung „Weltzeit = frühere Uhr“: so muss keiner auf den anderen warten.)
 4. **Kämpfe des Gasts auf seinem Rechner** (umgesetzt): Greift der Gast an oder gerät sein Heer auf dem Marsch in einen Hinterhalt, läuft der Kampf bei ihm (sein Heer kämpft wie eine Expedition, Anführer Nekromant). Der Gastgeber spielt weiter; Stände, die währenddessen kommen, wartet der Gast ab. Danach schickt der Gast Vorher und Nachher, der Gastgeber übernimmt nur die Änderungen: Besitz der Orte, Bedrohung (als Differenz), Erholung, Inventar und andere Listen (vereinigt), neue Chronik-Einträge, Heer und Vorräte des Gasts; die Kampfdauer läuft über die Uhr des Gasts. Fällt sein ganzes Heer, erhebt sich sein Anführer im Hügelgrab neu. Bei einem Hinterhalt bleibt sein Heer am Startort stehen, die anderen Armeen marschieren weiter.
-5. Gemeinsame Kämpfe am selben Ort, Chat, Wiederverbinden, Speichern der Koop-Kampagne.
+5. **Chat, Wiederverbinden, Speichern** (umgesetzt): Enter öffnet im Spiel ein Chatfeld (auch im Kampf); Nachrichten erscheinen beim anderen 8 s mit Blinken der Koop-Anzeige, die letzten stehen im Koop-Fenster. Die Kampagne behält ihren Raumcode (`coopCode`), der Gast merkt sich den letzten Code; bricht die Verbindung ab, versucht der Gast 5-mal im Abstand von 6 s, wieder beizutreten. Heer, Vorräte und Uhr des Gasts stecken im Spielstand des Gastgebers; ist der Gast nicht da, bleibt sein Heer stehen (der Gastgeber kann es nicht führen).
+6. Gemeinsame Kämpfe am selben Ort (jeder steuert seine Einheiten).
 
 ### Mauern, Belagerung, Gebäude (umgesetzt 04.11.2026)
 

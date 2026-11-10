@@ -68,6 +68,9 @@
   #threatChip .mini i { width: 4px; display: block; min-height: 2px; }
   #threatChip.warn { color: var(--blood); }
   #coopChip { height: 30px; white-space: nowrap; font-size: 13px; } #coopChip.off { color: var(--blood); }
+  #chatBox { position: absolute; z-index: 30; left: 10px; bottom: calc(var(--bar) + 10px); width: 420px; max-width: calc(100% - 340px); }
+  #chatBox input { width: 100%; font-size: 15px; padding: 6px 10px; border: 2px solid var(--gold); background: #f4ecd6; box-shadow: 0 3px 10px rgba(0,0,0,.4); }
+  .coopLog { max-height: 180px; overflow-y: auto; font-size: 14px; margin-bottom: 6px; } .coopLog .me { color: var(--ink-soft); }
   #coopChip.flash { animation: coopFlash 0.6s ease-in-out 6; }
   @keyframes coopFlash { 50% { background: var(--gold); color: #1b140c; } }
   #btnNews { height: 30px; position: relative; white-space: nowrap; }
@@ -314,6 +317,7 @@
     <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
   </div>
 </div>
+<div id="chatBox" class="hidden"><input id="chatIn" maxlength="300" placeholder="Nachricht an den Mitspieler – Enter sendet, Esc schließt"></div>
 <div id="sidebar" class="hidden">
   <div id="minimap" class="hidden"><canvas id="miniMap" title="Linke Maustaste (Klick oder Ziehen): Kamera dorthin · Rechte Maustaste ziehen: Minimap verschieben · Mausrad: Zoom"></canvas>
   <div class="zoom"><button id="miniIn" title="Hineinzoomen">+</button><button id="miniOut" title="Herauszoomen">−</button><button id="miniMode">◎</button></div>
@@ -393,7 +397,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 132, "date": "2026-11-11", "changes": [{"date": "11.11. 00:09", "text": "Koop: deutliche Meldung bei Beitritt und Trennung (Fenster, Blinken, Ton, Chronik)"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}, {"date": "04.11. 23:14", "text": "Minimap: Kamera per Ziehen verschieben"}]};
+const BUILD = {"version": 133, "date": "2026-11-11", "changes": [{"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat (Enter), Wiederverbinden mit gleichem Raumcode, Gast-Heer bleibt beim Gastgeber gesperrt"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2121,7 +2125,10 @@ const Coop = {
     return link;
   },
   async host(local = false) {
-    this.leave(); this.role = 'host'; this.code = this.newCode();
+    this.leave(); this.role = 'host';
+    // A coop campaign keeps its room code, so the guest can come back with the same one.
+    const c = game.campaign; this.code = (c.coop && c.coop.code) || c.coopCode || this.newCode();
+    c.coopCode = this.code; if (c.coop) c.coop.code = this.code;
     if (local) { this.link = this.local(this.code); this.status('wartet (lokal)'); return this.code; }
     await this.loadPeer();
     await new Promise((ok, fail) => {
@@ -2133,7 +2140,8 @@ const Coop = {
     return this.code;
   },
   async join(code, local = false) {
-    this.leave(); this.role = 'guest'; this.code = code.trim().toUpperCase();
+    this.leave(); this.role = 'guest'; this.code = code.trim().toUpperCase(); this.isLocal = local;
+    try { localStorage.setItem('harmbringer_coopCode', this.code); } catch (e) {}
     document.body.classList.add('coopGuest');
     if (local) { this.link = this.local(this.code); this.link.send({ t: 'hello' }); this.status('verbindet (lokal)'); return; }
     await this.loadPeer();
@@ -2147,7 +2155,7 @@ const Coop = {
     const c = game.campaign;
     if (c.coop && Expeditions.get('coop')) return;
     const r0 = Campaign.create().resources;
-    c.coop = { res: { corpses: r0.corpses, bones: r0.bones, souls: r0.souls, knowledge: 0 }, leader: 'lich' };
+    c.coop = { res: { corpses: r0.corpses, bones: r0.bones, souls: r0.souls, knowledge: 0 }, leader: 'lich', code: this.code };
     const unit = t => ({ type: t, hp: DATA.units[t].hp });
     Expeditions.list().push({ id: 'coop', leader: 'nekromant', coop: true, nodeId: PHYLACTERY.id, prevNodeId: null, order: null,
       army: [unit('nekromant'), ...Array.from({ length: 8 }, () => unit('skelett')), ...Array.from({ length: 6 }, () => unit('ghul'))] });
@@ -2259,8 +2267,30 @@ const Coop = {
   },
   // Guest: send a command; returns true when the guest is in a coop game (the caller then stops).
   cmd(m) { if (this.role !== 'guest') return false; this.send({ t: 'cmd', ...m }); return true; },
-  isGuestArmy(id) { return this.role === 'host' && id === 'coop'; },
-  closed() { if (!this.role) return; this.connected = false; this.status('getrennt'); this.announce('Verbindung getrennt', 'Die Verbindung zum Mitspieler ist abgebrochen. Über Menü → Koop-Spiel kann er wieder beitreten.'); },
+  isGuestArmy(id) { return this.role !== 'guest' && id === 'coop'; },   // also while the guest is away
+  closed() {
+    if (!this.role) return;
+    // The guest tries to come back by himself (5 tries, every 6 s) before giving up.
+    if (this.role === 'guest' && !this.leaving && (this.retries || 0) < 5) {
+      this.retries = (this.retries || 0) + 1; this.connected = false; this.status(`getrennt – neuer Versuch ${this.retries}/5`);
+      clearTimeout(this.retryTimer); this.retryTimer = setTimeout(() => { if (this.role === 'guest' && !this.connected) this.join(this.code, this.isLocal).catch(() => this.closed()); }, 6000);
+      return;
+    }
+    this.connected = false; this.status('getrennt'); this.announce('Verbindung getrennt', 'Die Verbindung zum Mitspieler ist abgebrochen. Über Menü → Koop-Spiel kann er wieder beitreten.'); },
+  // Chat: short messages, shown for a while and kept (this session) in the coop window.
+  chat(text) {
+    text = String(text || '').trim().slice(0, 300); if (!text || !this.link) return;
+    this.send({ t: 'chat', text }); (this.log = this.log || []).push({ me: true, text });
+  },
+  hear(text) {
+    (this.log = this.log || []).push({ me: false, text });
+    UI.toast(`💬 Mitspieler: ${text}`, 8, false); if (Sfx.click) Sfx.click();
+    const chip = $('coopChip'); chip.classList.remove('flash'); void chip.offsetWidth; chip.classList.add('flash');
+  },
+  openChat() {
+    if (!this.connected) return;
+    const box = $('chatBox'); box.classList.remove('hidden'); const i = $('chatIn'); i.value = ''; i.focus();
+  },
   // Hard to miss: a window (not in battle), a flashing chip, a sound and an entry in the chronicle.
   announce(title, text) {
     UI.news(`Koop: ${title}.`, 'world');
@@ -2270,6 +2300,7 @@ const Coop = {
     UI.modal(`<h2>⚭ ${esc(title)}</h2><p>${esc(text)}</p>`, [{ label: 'Gut', primary: true, action: () => {} }]);
   },
   leave() {
+    clearTimeout(this.retryTimer);
     try { if (this.link) this.link.close(); } catch (e) {}
     try { if (this.peer) this.peer.destroy(); } catch (e) {}
     this.link = this.peer = null; this.connected = false; this.role = null;
@@ -2284,8 +2315,8 @@ const Coop = {
     else if (m.t === 'result' && this.role === 'host') { if (game.mode === 'world') this.merge(m); else (this.results = this.results || []).push(m); }
     else if (m.t === 'battle' && this.role === 'guest') { try { const n = SaveGame.sanitize(JSON.parse(m.node)); if (n) { UI.toast(`Hinterhalt! ${n.name}.`, 5, false); this.guestBattle(n); } } catch (e) {} }
     else if (m.t === 'snap' && this.role === 'guest') this.applySnap(m.c);
-    else if (m.t === 'chat') UI.toast(`Mitspieler: ${String(m.text).replace(/[<>"&`]/g, '').slice(0, 200)}`, 6, 'info');
-    else if (m.t === 'bye') this.closed();
+    else if (m.t === 'chat') this.hear(String(m.text).replace(/[<>"&`]/g, '').slice(0, 300));
+    else if (m.t === 'bye') { this.leaving = true; this.closed(); this.leaving = false; }
   },
   // Host: send the world (throttled; never in the middle of a battle).
   pushSoon() { clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 400); },
@@ -2301,7 +2332,7 @@ const Coop = {
     if (this.inBattle || game.mode === 'battle') { this.pendingSnap = json; return; }   // never in the middle of his own battle
     const c = SaveGame.parse(json); if (!c) return;
     this.swapSides(c);                        // the guest's own army is the main army in his view
-    const first = !this.connected; this.connected = true; this.status('verbunden (Gast)');
+    const first = !this.connected && !this.retries; this.connected = true; this.retries = 0; this.status('verbunden (Gast)');
     game.campaign = c;
     if (game.mode !== 'world') { game.mode = 'world'; UI.enterWorld(); }
     WorldView.placeArmy(); WorldView.refresh(); UI.updateHeader(); UI.renderArmies(); UI.renderInfo();
@@ -2330,6 +2361,8 @@ const Coop = {
       <table>${row('Eröffnen', '<button id="coopHost">Spiel eröffnen</button> <button id="coopHostLocal" title="Zweites Fenster im selben Browser">lokal</button>')}
       ${row('Beitreten', '<input id="coopCode" maxlength="5" placeholder="Code" style="width:90px;text-transform:uppercase"> <button id="coopJoin">Beitreten</button> <button id="coopJoinLocal">lokal</button>')}
       ${this.role ? row('', '<button id="coopLeave">Verbindung trennen</button>') : ''}</table>
+      ${this.connected ? `<h3>Chat</h3><div class="coopLog">${(this.log || []).slice(-12).map(l => `<div class="${l.me ? 'me' : ''}"><b>${l.me ? 'Du' : 'Mitspieler'}:</b> ${esc(l.text)}</div>`).join('') || '<span class="small">Noch nichts geschrieben. Im Spiel öffnet Enter das Chatfeld.</span>'}</div>
+        <input id="coopChatIn" maxlength="300" placeholder="Nachricht, Enter sendet" style="width:100%">` : ''}
       <p class="small">Verbindung direkt zwischen den Browsern (WebRTC). Der Raumcode wird über den öffentlichen PeerJS-Dienst vermittelt.</p>`,
       [{ label: 'Schließen', primary: true, action: () => {} }]);
     const run = async (f, label) => { try { await f(); this.open(); } catch (e) { this.leave(); UI.toast(`Koop: ${label} fehlgeschlagen (${e.message}).`, 6, false); } };
@@ -2337,7 +2370,9 @@ const Coop = {
     $('coopHostLocal').onclick = () => run(() => this.host(true), 'Eröffnen');
     $('coopJoin').onclick = () => run(() => this.join($('coopCode').value, false), 'Beitreten');
     $('coopJoinLocal').onclick = () => run(() => this.join($('coopCode').value, true), 'Beitreten');
-    if ($('coopLeave')) $('coopLeave').onclick = () => { this.send({ t: 'bye' }); this.leave(); this.open(); };
+    if ($('coopLeave')) $('coopLeave').onclick = () => { this.leaving = true; this.send({ t: 'bye' }); this.leave(); this.leaving = false; this.open(); };
+    try { const last = localStorage.getItem('harmbringer_coopCode'); if (last && !$('coopCode').value) $('coopCode').value = last; } catch (e) {}
+    if ($('coopChatIn')) { $('coopChatIn').onkeydown = ev => { if (ev.key === 'Enter') { this.chat($('coopChatIn').value); this.open(); setTimeout(() => $('coopChatIn') && $('coopChatIn').focus(), 0); } }; }
   }
 };
 window.addEventListener('pagehide', () => { if (Coop.role) Coop.send({ t: 'bye' }); });
@@ -5950,7 +5985,7 @@ const UI = {
     this.modal(`<h2>Steuerung</h2><h3>Weltkarte</h3><table>${row('W A S D', 'Kamera bewegen (oder Maus an den Rand)')}${row('Q E / rechte Maus', 'drehen und neigen')}${row('Mausrad', 'Zoom')}
       ${row('Klick', 'Ort, Trupp oder Gelände auswählen')}${row('H', 'Hügelgrab')}${row('R', 'nächster Ort zum Rekrutieren')}${row('B', 'Bauen')}${row('I', 'Inventar')}${row('N', 'Chronik der Weltereignisse')}${row('G', 'Los (Befehle mehrerer Armeen)')}${row('Leertaste halten', 'Reise beschleunigen')}</table>
       <h3>Kampf</h3><table>${row('Klick', 'bewegen, angreifen, auswählen')}${row('1–4', 'Fähigkeiten')}${row('Leertaste', 'Zug beenden')}${row('R', 'Rückzug')}${row('T', 'Feldkanten')}${row('K', 'Token-Modus')}</table>
-      <h3>Allgemein</h3><table>${row('Esc', 'Fenster schließen, Auswahl aufheben')}${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
+      <h3>Allgemein</h3><table>${row('Esc', 'Fenster schließen, Auswahl aufheben')}${row('Enter', 'Koop: Chat')}${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
   },
   // Build button: a running construction shows its days left, otherwise a dot when something can be started.
   buildBadge() {
@@ -6637,6 +6672,15 @@ function initInput() {
     document.addEventListener('mousedown', hide, true);
     document.addEventListener('wheel', hide, { passive: true });
   })();
+  // Coop chat field: Enter opens it, Enter sends, Esc closes.
+  $('chatIn').onkeydown = e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { Coop.chat($('chatIn').value); $('chatBox').classList.add('hidden'); $('chatIn').blur(); }
+    if (e.key === 'Escape') { $('chatBox').classList.add('hidden'); $('chatIn').blur(); }
+  };
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && Coop.connected && $('modal').classList.contains('hidden') && document.activeElement && document.activeElement.tagName !== 'INPUT' && $('chatBox').classList.contains('hidden')) { e.preventDefault(); Coop.openChat(); }
+  });
   // Esc closes the open window (same as its × / Schließen), before any other Esc use.
   window.addEventListener('keydown', e => {
     if (e.code !== 'Escape') return;
