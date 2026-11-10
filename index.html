@@ -71,6 +71,7 @@
   #chatBox { position: absolute; z-index: 30; left: 10px; bottom: calc(var(--bar) + 10px); width: 420px; max-width: calc(100% - 340px); }
   #chatBox input { width: 100%; font-size: 15px; padding: 6px 10px; border: 2px solid var(--gold); background: #f4ecd6; box-shadow: 0 3px 10px rgba(0,0,0,.4); }
   .coopLog { max-height: 180px; overflow-y: auto; font-size: 14px; margin-bottom: 6px; } .coopLog .me { color: var(--ink-soft); }
+  #coopChip.behind { color: #2c5a1e; }
   #coopChip.flash { animation: coopFlash 0.6s ease-in-out 6; }
   @keyframes coopFlash { 50% { background: var(--gold); color: #1b140c; } }
   #btnNews { height: 30px; position: relative; white-space: nowrap; }
@@ -397,7 +398,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 133, "date": "2026-11-11", "changes": [{"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat (Enter), Wiederverbinden mit gleichem Raumcode, Gast-Heer bleibt beim Gastgeber gesperrt"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}, {"date": "04.11. 23:17", "text": "Schnelle eigene Tooltips"}]};
+const BUILD = {"version": 134, "date": "2026-11-11", "changes": [{"date": "11.11. 00:35", "text": "Koop: Anzeige, wer wie weit vorn liegt (bei beiden Spielern)"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}, {"date": "04.11. 23:31", "text": "Minimap: Ausschnitt mit rechter Maustaste verschieben"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2343,16 +2344,19 @@ const Coop = {
   status(text) {
     const el = $('coopChip'); el.classList.remove('hidden'); el.classList.toggle('off', /getrennt/.test(text));
     el.textContent = `⚭ Koop ${this.code || ''}: ${text}`;
-    this.clockText(); el.title = `Raumcode ${this.code} – ${this.role === 'host' ? 'du eröffnest' : 'du bist Gast'}. Klick: Koop-Fenster`;
+    el.title = `Raumcode ${this.code} – ${this.role === 'host' ? 'du eröffnest' : 'du bist Gast'}. Klick: Koop-Fenster`; this.clockText();
   },
   // Bottom bar: how far each player is behind the world (his free time).
   clockText() {
     const el = $('coopChip'), c = game.campaign; if (!this.connected || !c || !c.coop) return;
     const f = h => h >= 24 ? `${Math.floor(h / 24)} T. ${h % 24} Std.` : `${h} Std.`;
     const me = this.role === 'guest' ? 'guest' : 'host', other = me === 'host' ? 'guest' : 'host';
+    // Whoever has done more lies ahead and sets the world time; the other catches up for free.
     const a = this.credit(me), b = this.credit(other);
-    el.textContent = `⚭ Koop · freie Zeit: du ${a ? f(a) : '–'} · Mitspieler ${b ? f(b) : '–'}`;
-    el.title = `Raumcode ${this.code}. Jede Aktion kostet Zeit; läuft sie, während der andere schon weiter ist, kostet sie die Welt nichts.\nDu: ${a ? f(a) + ' Zeit, die du nutzen kannst, ohne dass die Welt weiterläuft' : 'gleichauf mit der Welt'}.\nMitspieler: ${b ? f(b) + ' zurück' : 'gleichauf'}.`;
+    el.textContent = a ? `⚭ Koop · Mitspieler ${f(a)} vorn` : b ? `⚭ Koop · du ${f(b)} vorn` : '⚭ Koop · gleichauf';
+    el.classList.toggle('behind', a > 0);
+    el.title = `Raumcode ${this.code}.\nWer mehr Aktionen gemacht hat, liegt vorn und bestimmt die Weltzeit. Bis der andere aufgeholt hat, kosten seine Aktionen die Welt keine Zeit.\n`
+      + (a ? `Dein Mitspieler liegt ${f(a)} vorn: So viel Zeit kannst du nutzen, ohne dass die Welt weiterläuft.` : b ? `Du liegst ${f(b)} vorn: Deine nächsten Aktionen lassen die Welt weiterlaufen, dein Mitspieler holt in dieser Zeit kostenlos auf.` : 'Ihr seid gleichauf.');
   },
   open() {
     const row = (label, html) => `<tr><td>${label}</td><td>${html}</td></tr>`;
