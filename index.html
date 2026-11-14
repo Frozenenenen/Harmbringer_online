@@ -212,6 +212,25 @@
   .recSide button.on { outline: 2px solid var(--gold); background: #f4ecd6; }
   @media (max-width: 760px) { .recLayout { grid-template-columns: 1fr; } .recSide { position: static; flex-direction: row; flex-wrap: wrap; } }
   .buildRow { padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
+  .tabs { display: flex; gap: 4px; margin: 4px 0 8px; border-bottom: 2px solid var(--ink-soft); } .tabs button { border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 14px; font-size: 16px; opacity: .7; margin: 0; }
+  .tabs button.on { opacity: 1; background: var(--ink); color: var(--parchment); } .tBadge { display: inline-block; min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--undead); color: #f4ecd6; font-size: 11px; line-height: 16px; vertical-align: 2px; }
+  .bGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
+  .bCard { border: 1px solid var(--ink-soft); border-radius: 4px; padding: 8px 10px; background: rgba(255,255,255,.18); } .bCard.unbuilt { opacity: .82; border-style: dashed; } .bCard.busy { border-color: #8a6a2a; box-shadow: inset 0 0 0 1px #8a6a2a; }
+  .bCard .bHead { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 17px; } .bCard .bBtn { margin-left: auto; }
+  .pips { white-space: nowrap; } .pip { display: inline-block; width: 11px; height: 11px; margin-right: 3px; border: 1px solid var(--ink); border-radius: 50%; } .pip.on { background: var(--ink); } .pip.busy { background: #c9a227; }
+  .bLvl, .bNext { font-size: 13px; margin: 3px 0; line-height: 1.5; } .bNext { border-top: 1px dotted var(--ink-soft); padding-top: 4px; } .bBusy { font-size: 13px; color: #7a5a14; font-weight: bold; margin: 2px 0; }
+  .uchip { display: inline-block; padding: 0 6px; margin: 1px 2px 1px 0; border: 1px solid var(--ink-soft); border-radius: 9px; font-size: 12px; white-space: nowrap; background: rgba(255,255,255,.3); } .uchip.unknown { opacity: .5; font-style: italic; }
+  .uchip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; border: 1px solid rgba(0,0,0,.4); }
+  .rSlot { margin: 6px 0 12px; } .rSlot.locked { opacity: .5; } .rQ { font-style: italic; margin-bottom: 3px; }
+  .rPair { display: flex; align-items: stretch; gap: 8px; } .rOr { align-self: center; font-style: italic; font-size: 13px; }
+  .rOpt { flex: 1; border: 1px solid var(--ink-soft); border-radius: 4px; padding: 6px 9px; background: rgba(255,255,255,.18); } .rOpt.own { border: 2px solid #c9a227; background: rgba(201,162,39,.14); } .rOpt.other { opacity: .6; } .rOpt.run { border-color: #8a6a2a; }
+  .rOpt button { margin: 4px 0 0; font-size: 13px; padding: 2px 10px; }
+  .sPath { border: 1px solid var(--ink-soft); border-radius: 4px; padding: 6px 9px; margin: 6px 0; background: rgba(255,255,255,.15); } .sPath.has { border-color: #6a3a9a; }
+  .sHead { margin-bottom: 4px; } .sIcon { display: inline-block; width: 24px; font-size: 19px; text-align: center; }
+  .sSteps { display: flex; align-items: stretch; gap: 4px; } .sArrow { align-self: center; font-size: 20px; opacity: .6; }
+  .sStep { flex: 1; text-align: left; padding: 5px 7px; margin: 0; line-height: 1.25; white-space: normal; } .sStep b { display: block; font-size: 13px; } .sStep span { font-size: 11px; }
+  .sStep.own { background: var(--undead); color: #f4ecd6; opacity: 1; border-color: var(--undead); } .sStep.open { border: 2px solid #c9a227; cursor: pointer; } .sStep.locked { opacity: .45; }
+  @media (max-width: 760px) { .rPair, .sSteps { flex-direction: column; } .rOr, .sArrow { display: none; } }
   .buildRow .bHead { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px; }
   .buildRow .bBtn { margin-left: auto; }
   .armyList { font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
@@ -332,7 +351,7 @@
   <div id="worldButtons" class="hidden">
     <button id="btnHome" title="Zum Hügelgrab (H)"><span class="ic">⌂</span>Hügelgrab</button>
     <button id="btnRecruitSite" title="Nächster Ort zum Rekrutieren, mehrmals klicken für die nächsten (R)"><span class="ic">☠</span>Rekrutieren</button>
-    <button id="btnBuild" title="Gebäude im Hügelgrab bauen – geht von überall (B)"><span class="ic">⚒</span>Bauen</button>
+    <button id="btnBuild" title="Hügelgrab: Gebäude, Forschung, Pfade des Lichs – geht von überall (B)"><span class="ic">⚒</span>Ausbau</button>
     <button id="btnRest" title="Rasten bis zu einer Tageszeit – z. B. um nachts anzugreifen"><span class="ic">☾</span>Rasten</button>
     <button id="btnInventory" title="Artefakte und besondere Orte (I)"><span class="ic">✦</span>Inventar</button>
     <button id="btnMenu" title="Menü: Ton, Spielstände, Neues Spiel, Tastenkürzel"><span class="ic">☰</span>Menü</button>
@@ -404,7 +423,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 138, "date": "2026-11-14", "changes": [{"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}]};
+const BUILD = {"version": 139, "date": "2026-11-15", "changes": [{"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1388,7 +1407,7 @@ const Campaign = {
       for (const f of ENEMY_FACTIONS) c.threat[f] -= c.threat[f] * THREAT.dailyDecay;
       for (const node of this.ownedSpecials()) this.addResources(DATA.specials[node.special].income || {});
       Raids.day();
-      Base.day();
+      Base.day(); Upgrades.day();
     }
   },
   owner(node) { return game.campaign.owners[node.id]; },
@@ -1407,6 +1426,7 @@ const Campaign = {
     for (const id of c.equipped || []) if (DATA.artifacts[id]) add(DATA.artifacts[id].effect);
     for (const n of DATA.nodes) if (n.special && this.isConquered(n)) add(DATA.specials[n.special].buff);
     for (const s of Skills.all()) if (Skills.has(s.id)) add(s.fx);
+    for (const u of DATA.upgrades) if (u.fx && Upgrades.has(u.id)) add(u.fx);
     return e;
   },
   // Unconquered places along the road from -> to (within passRadius of the line), with their danger.
@@ -1958,34 +1978,49 @@ const Upgrades = {
   owned() { const c = game.campaign; return c ? (c.upgrades = c.upgrades || []) : []; },
   has(id) { return this.owned().includes(id); },
   inGroup(type, g) { const G = DATA.unitGroups[g]; return g === 'lich' ? type === 'lich' : G === '*' ? type !== 'lich' : (G || []).includes(type); },
+  // The other answer to the same question.
+  rival(u) { return DATA.upgrades.find(x => x.slot && x.slot === u.slot && x.id !== u.id) || null; },
+  days(u) { return u.days || 1 + u.level; },
   // Summed effects for a unit type.
   mods(type) {
-    const m = { hpPct: 0, damagePct: 0, shield: 0, mr: 0, ini: 0, lichHp: 0, lichDamage: 0, lichShield: 0 };
-    for (const u of DATA.upgrades) if (this.has(u.id) && this.inGroup(type, u.group)) for (const k in m) m[k] += u[k] || 0;
+    const m = { hpPct: 0, damagePct: 0, shield: 0, mr: 0, ini: 0, lichHp: 0, lichDamage: 0, lichShield: 0, move: 0, range: 0, noise: 0, scent: 0 };
+    const traits = [];
+    for (const u of DATA.upgrades) if (this.has(u.id) && this.inGroup(type, u.group)) { for (const k in m) m[k] += u[k] || 0; if (u.trait) traits.push(u.trait); }
+    m.traits = traits;
     return m;
   },
   blocker(u) {
     const c = game.campaign;
-    if (this.has(u.id)) return 'Erworben';
+    if (this.has(u.id)) return 'Erforscht';
+    if (c.research) return c.research.id === u.id ? 'Wird erforscht' : 'Es wird schon geforscht';
     if (Base.level(u.building) < u.level) return `Benötigt ${DATA.baseBuildings[u.building].name} Stufe ${u.level}`;
     for (const [k, v] of Object.entries(u.cost)) if ((c.resources[k] || 0) < v) return `Zu wenig ${RESOURCE_NAMES[k]}`;
     return null;
   },
+  // Start researching (one at a time). The answer holds once the days have passed.
   buy(id) {
     const u = DATA.upgrades.find(x => x.id === id); if (!u || this.blocker(u)) return;
     if (Coop.role === 'guest') Coop.cmd({ op: 'upgrade', id });
-    for (const [k, v] of Object.entries(u.cost)) game.campaign.resources[k] -= v;
-    this.owned().push(id); UI.toast(`${u.name}: ${u.text}`, 5); SaveGame.save(); UI.updateHeader(); Base.open();
+    const c = game.campaign;
+    for (const [k, v] of Object.entries(u.cost)) c.resources[k] -= v;
+    c.research = { id, daysLeft: this.days(u) };
+    UI.toast(`Forschung begonnen: ${u.name} (${c.research.daysLeft} ${c.research.daysLeft === 1 ? 'Tag' : 'Tage'}).`, 4); SaveGame.save(); UI.updateHeader(); Base.open();
   },
-  html(k) {
-    const list = DATA.upgrades.filter(u => u.building === k); if (!list.length) return '';
-    return '<div class="upgrades">' + list.map(u => { const b = this.blocker(u), own = this.has(u.id);
-      return `<div class="upg ${own ? 'own' : ''}"><b>${own ? '✔ ' : ''}${esc(u.name)}</b> <span class="small">${esc(u.text)}${own ? '' : ` · ${costHtml(u.cost, game.campaign.resources)}`}</span>
-        ${own ? '' : `<button data-upg="${u.id}" ${b ? 'disabled' : ''} title="${b || 'Kaufen'}">Kaufen</button>${b ? `<span class="small"> ${esc(b)}</span>` : ''}`}</div>`; }).join('') + '</div>';
-  }
+  day() {
+    const c = game.campaign, r = c.research;
+    if (!r) return;
+    if (--r.daysLeft > 0) return;
+    c.research = null;
+    const u = DATA.upgrades.find(x => x.id === r.id); if (!u) return;
+    const rv = this.rival(u);
+    if (rv && this.has(rv.id)) c.upgrades = this.owned().filter(x => x !== rv.id);
+    if (!this.has(u.id)) this.owned().push(u.id);
+    UI.toast(`Erforscht: ${u.name}. ${u.text}`, 6, 'world');
+  },
+  // How many questions of a building are answered / open (for the building cards).
+  count(k) { const slots = [...new Set(DATA.upgrades.filter(u => u.building === k).map(u => u.slot))]; return { all: slots.length, done: slots.filter(sl => DATA.upgrades.some(u => u.slot === sl && this.has(u.id))).length }; }
 };
 
-// Buildings in the barrow (DATA.baseBuildings). One construction at a time, it continues while travelling.
 const Base = {
   levels() {
     const c = game.campaign;
@@ -2029,31 +2064,84 @@ const Base = {
     UI.toast(`Fertig: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}.`, 5, 'world');
     Knowledge.discover();
   },
-  producesText(l) {
-    if (!l.produces) return '';
-    return 'Erhebt: ' + l.produces.map(t => Knowledge.known(t) ? DATA.units[t].name : '???').join(', ');
+  // Unit chips of a building level: known units by name, unknown ones as ???.
+  chips(l) {
+    return (l.produces || []).map(t => { const u = DATA.units[t], kn = Knowledge.known(t);
+      return `<span class="uchip ${kn ? '' : 'unknown'}" title="${kn ? esc(u.desc || '') : `Noch unbekannt${u.requiresKnowledge ? ` (Wissen ${u.requiresKnowledge})` : ''}`}">${kn ? `<i style="background:${u.color}"></i>${esc(u.name)}` : '???'}</span>`; }).join('');
   },
-  open() {
+  tab: 'build',
+  buildHtml() {
     const c = game.campaign, cost = o => costHtml(o, c.resources);
-    const rows = Object.entries(DATA.baseBuildings).map(([k, B]) => {
-      const L = this.level(k), next = B.levels[L], block = this.blocker(k);
-      const have = B.levels.slice(0, L).map(l => [l.text, this.producesText(l)].filter(Boolean).join(' ')).join('<br>');
-      const w = c.construction && c.construction.k === k ? ` · <b>im Bau: noch ${c.construction.daysLeft} ${c.construction.daysLeft === 1 ? 'Tag' : 'Tage'}</b>` : '';
-      // Name, level and the build button in one line; the text uses the full width below.
-      return `<div class="buildRow"><div class="bHead"><b>${B.name}</b> <span class="small">· Stufe ${L} / ${B.levels.length}${w}</span>
-          ${next ? `<span class="bBtn"><button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button>${block ? ` <span class="small">${esc(block)}</span>` : ''}</span>` : ''}</div>
-        ${have ? `<div class="small">${have}</div>` : ''}
-        ${next ? `<div class="small">Nächste Stufe: ${[next.text, this.producesText(next)].filter(Boolean).join(' ')} · Kosten: ${cost(next.cost)} · ${next.days} ${next.days === 1 ? 'Tag' : 'Tage'}</div>` : ''}
-        ${Upgrades.html(k)}</div>`;
+    const cards = Object.entries(DATA.baseBuildings).map(([k, B]) => {
+      const L = this.level(k), next = B.levels[L], block = this.blocker(k), busy = c.construction && c.construction.k === k;
+      const pips = B.levels.map((_, i) => `<span class="pip ${i < L ? 'on' : busy && i === L ? 'busy' : ''}"></span>`).join('');
+      const have = B.levels.slice(0, L).map((l, i) => `<div class="bLvl"><span class="small">Stufe ${i + 1}</span> ${esc(l.text || '')} ${this.chips(l)}</div>`).join('');
+      const rc = Upgrades.count(k);
+      return `<div class="bCard ${L ? '' : 'unbuilt'} ${busy ? 'busy' : ''}">
+        <div class="bHead"><b>${B.name}</b> <span class="pips" title="Stufe ${L} von ${B.levels.length}">${pips}</span>
+          ${next ? `<span class="bBtn"><button data-build="${k}" ${block ? 'disabled' : ''} title="${block || ''}">${L ? 'Ausbauen' : 'Bauen'}</button></span>` : '<span class="bBtn small">ausgebaut</span>'}</div>
+        ${busy ? `<div class="bBusy">Im Bau: noch ${c.construction.daysLeft} ${c.construction.daysLeft === 1 ? 'Tag' : 'Tage'}</div>` : ''}
+        ${have}
+        ${next ? `<div class="bNext"><span class="small">Stufe ${L + 1}</span> ${esc(next.text || '')} ${this.chips(next)}<br><span class="small">${cost(next.cost)} · ${next.days} ${next.days === 1 ? 'Tag' : 'Tage'}${block && !busy ? ` · <span class="bad">${esc(block)}</span>` : ''}</span></div>` : ''}
+        ${rc.all ? `<div class="small"><a href="#" data-tab="research">Forschung: ${rc.done} von ${rc.all} ${rc.all === 1 ? 'Frage' : 'Fragen'} beantwortet →</a></div>` : ''}</div>`;
     }).join('');
-    const r = c.resources;
-    UI.modal(`<h2>Hügelgrab – Bauen</h2><p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. Die Diener im Hügelgrab bauen auch, wenn der Lich fort ist.</p>
-      <div class="stickyRes">${resSummary(r)}</div>
-      <p class="small">${Knowledge.hint()}</p>${rows}`, [{ label: 'Schließen', primary: true, action: () => { UI.renderInfo(); UI.updateHeader(); } }]);
-    document.querySelectorAll('[data-build]').forEach(b => b.onclick = () => this.start(b.dataset.build));
-    document.querySelectorAll('[data-upg]').forEach(b => b.onclick = () => Upgrades.buy(b.dataset.upg));
+    return `<p class="small">Ein Bau zur Zeit; er geht weiter, während die Armee unterwegs ist. ${Knowledge.hint()}</p><div class="bGrid">${cards}</div>`;
+  },
+  researchHtml() {
+    const c = game.campaign, cost = o => costHtml(o, c.resources), r = c.research, ru = r && DATA.upgrades.find(u => u.id === r.id);
+    const groups = Object.entries(DATA.baseBuildings).map(([k, B]) => {
+      const slots = [...new Set(DATA.upgrades.filter(u => u.building === k).map(u => u.slot))];
+      if (!slots.length) return '';
+      const rows = slots.map(sl => {
+        const opts = DATA.upgrades.filter(u => u.slot === sl), lvl = opts[0].level, locked = this.level(k) < lvl;
+        const card = u => {
+          const own = Upgrades.has(u.id), rv = Upgrades.rival(u), swap = rv && Upgrades.has(rv.id), run = r && r.id === u.id, b = Upgrades.blocker(u);
+          return `<div class="rOpt ${own ? 'own' : ''} ${run ? 'run' : ''} ${swap && !run ? 'other' : ''}"><b>${own ? '✔ ' : ''}${esc(u.name)}</b> <span class="small">· ${DATA.unitGroups[u.group] === '*' ? 'alle' : u.group === 'lich' ? 'Lich' : GROUP_NAMES[u.group] || u.group}</span>
+            <div class="small">${esc(u.text)}</div>
+            ${own ? '' : run ? `<div class="bBusy">Wird erforscht: noch ${r.daysLeft} ${r.daysLeft === 1 ? 'Tag' : 'Tage'}</div>`
+              : `<div class="small">${cost(u.cost)} · ${Upgrades.days(u)} Tage</div><button data-upg="${u.id}" ${b ? 'disabled' : ''} title="${b || ''}">${swap ? 'Stattdessen erforschen' : 'Erforschen'}</button>${b && !locked && b !== 'Es wird schon geforscht' ? ` <span class="small bad">${esc(b)}</span>` : ''}`}</div>`;
+        };
+        return `<div class="rSlot ${locked ? 'locked' : ''}"><div class="rQ">${esc(DATA.researchSlots[sl] || '')}${locked ? ` <span class="small">· benötigt Stufe ${lvl}</span>` : ''}</div>
+          <div class="rPair">${card(opts[0])}<span class="rOr">oder</span>${opts[1] ? card(opts[1]) : ''}</div></div>`;
+      }).join('');
+      return `<h3>${B.name} <span class="small">Stufe ${this.level(k)}</span></h3>${rows}`;
+    }).join('');
+    return `<p class="small">Jede Frage hat zwei Antworten, nur eine gilt – sie bestimmt, wie eure Toten kämpfen. Forschen dauert Tage (eine Frage zur Zeit) und läuft weiter, während die Armee unterwegs ist. Umentscheiden kostet erneut.</p>
+      ${ru ? `<div class="bBusy">Forschung läuft: <b>${esc(ru.name)}</b>, noch ${r.daysLeft} ${r.daysLeft === 1 ? 'Tag' : 'Tage'}.</div>` : ''}${groups}`;
+  },
+  lichHtml() {
+    const c = game.campaign, won = DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && Campaign.isConquered(n)).length, free = Skills.free();
+    const paths = Object.entries(DATA.skills).map(([k, p]) => {
+      const steps = p.steps.map((st, i) => { const s2 = { ...st, path: k, i }, own = Skills.has(st.id), b = Skills.blocker(s2);
+        return `${i ? '<span class="sArrow">›</span>' : ''}<button class="sStep ${own ? 'own' : b ? 'locked' : 'open'}" data-skill="${st.id}" ${own || b ? 'disabled' : ''} title="${esc(st.text)}${own ? '' : b ? ' – ' + b : ' – klicken zum Lernen'}"><b>${esc(st.name)}</b><span>${esc(st.text)}</span></button>`; }).join('');
+      const n = p.steps.filter(st => Skills.has(st.id)).length;
+      return `<div class="sPath ${n ? 'has' : ''}"><div class="sHead"><span class="sIcon">${p.icon}</span><b>${esc(p.name)}</b> <span class="small">${n} / ${p.steps.length} · ${esc(p.text)}</span></div><div class="sSteps">${steps}</div></div>`;
+    }).join('');
+    const cmds = COMMANDER_TYPES.filter(t => DATA.units[t].aura && (Knowledge.known(t) || c.army.some(u => u.type === t))).map(t => `<span class="uchip" title="${esc(AURAS[DATA.units[t].aura].text)}"><i style="background:${DATA.units[t].color}"></i>${esc(DATA.units[t].name)}: ${AURAS[DATA.units[t].aura].name}</span>`).join('');
+    return `<p><b>${free}</b> ${free === 1 ? 'Punkt' : 'Punkte'} frei (${Skills.owned().length} von ${Skills.points()} vergeben). <span class="small">Der Lich wächst mit seinen Eroberungen: ${won} ${won === 1 ? 'Ort' : 'Orte'} erobert, der nächste Punkt kommt bei ${Skills.nextAt()}. Es gibt 24 Stufen, aber höchstens 20 Punkte – wählt, wie ihr Krieg führt.</span></p>
+      ${paths}
+      ${cmds ? `<h3>Auren eurer Kommandeure</h3><p class="small">Ein Kommandeur gibt seine Aura dem ganzen Heer, mit dem er kämpft.</p><p>${cmds}</p>` : ''}`;
+  },
+  open(tab) {
+    if (typeof tab === 'string') this.tab = tab;
+    const c = game.campaign, r = c.resources, keep = !$('modal').classList.contains('hidden') && $('modalBody').querySelector('.tabs') ? $('modalBody').scrollTop : 0;
+    const openB = Object.keys(DATA.baseBuildings).filter(k => !this.blocker(k)).length, openR = c.research ? 0 : DATA.upgrades.filter(u => !Upgrades.blocker(u)).length;
+    const tabs = [['build', '⚒ Gebäude', c.construction ? `${c.construction.daysLeft} T.` : openB || ''], ['research', '⚗ Forschung', c.research ? `${c.research.daysLeft} T.` : openR ? '!' : ''], ['lich', '♛ Pfade des Lichs', Skills.free() || '']];
+    const body = this.tab === 'research' ? this.researchHtml() : this.tab === 'lich' ? this.lichHtml() : this.buildHtml();
+    UI.modal(`<h2>Hügelgrab</h2>
+      <div class="tabs">${tabs.map(([k, name, badge]) => `<button data-tab="${k}" class="${this.tab === k ? 'on' : ''}">${name}${badge ? ` <span class="tBadge">${badge}</span>` : ''}</button>`).join('')}</div>
+      <div class="stickyRes">${resSummary(r)} <span class="cost" title="Kommando">${resIcon('command')}${Campaign.commandUsed()} / ${Campaign.commandLimit()}</span></div>
+      ${body}`, [{ label: 'Schließen', primary: true, action: () => { UI.renderInfo(); UI.updateHeader(); } }]);
+    $('modalBody').classList.add('wide');
+    $('modalBody').scrollTop = keep;
+    document.querySelectorAll('#modalBody [data-tab]').forEach(b => b.onclick = e => { e.preventDefault(); this.open(b.dataset.tab); $('modalBody').scrollTop = 0; });
+    document.querySelectorAll('#modalBody [data-build]').forEach(b => b.onclick = () => this.start(b.dataset.build));
+    document.querySelectorAll('#modalBody [data-upg]').forEach(b => b.onclick = () => Upgrades.buy(b.dataset.upg));
+    document.querySelectorAll('#modalBody [data-skill]').forEach(b => b.onclick = () => { if (Skills.learn(b.dataset.skill)) this.open(); });
   }
 };
+const GROUP_NAMES = { bone: 'Knochen-Untote', flesh: 'Fleisch-Untote', spirit: 'Geister', leaders: 'Anführer und Elite', ranged: 'Fernkämpfer' };
+
 // Skill tree of the Lich (data: skills). Six paths, four steps each, learned in order.
 // Points: 1 at the start, more with every conquest (1 + floor(sqrt(2 x conquered places))).
 const Skills = {
@@ -2470,6 +2558,8 @@ const SaveGame = {
     if (Array.isArray(c.expeditions)) c.expeditions = c.expeditions.filter(e => e && DATA.units[e.leader] && NODE_BY_ID[e.nodeId]).map(e => ({ ...e, army: army(e.army) }));
     for (const k of ['inventory', 'equipped']) if (k in c) c[k] = (Array.isArray(c[k]) ? c[k] : []).filter(id => DATA.artifacts[id]);
     if ('upgrades' in c) c.upgrades = (Array.isArray(c.upgrades) ? c.upgrades : []).filter(id => DATA.upgrades.some(u => u.id === id));
+    if (c.research && !(DATA.upgrades.some(u => u.id === c.research.id))) c.research = null;
+    if (c.research) c.research = { id: c.research.id, daysLeft: Math.max(1, Math.min(30, num(c.research.daysLeft, 1))) };
     if ('skills' in c) c.skills = [...new Set((Array.isArray(c.skills) ? c.skills : []).filter(id => Skills.all().some(x => x.id === id)))];
     if (c.buildings && typeof c.buildings === 'object') for (const k of Object.keys(c.buildings)) { if (!DATA.baseBuildings[k]) delete c.buildings[k]; else c.buildings[k] = Math.min(num(c.buildings[k]), DATA.baseBuildings[k].levels.length); }
     if (Array.isArray(c.raids)) c.raids = c.raids.filter(r => r && DATA.factions[r.faction] && NODE_BY_ID[r.targetId] && r.garrison && typeof r.garrison === 'object')
@@ -5083,11 +5173,13 @@ const Battle = {
       const m = Upgrades.mods(u.type), base = u.def, n = stackCount(u), fod = isFodder(base), eli = isElite(base);
       const hpPct = (fx.undeadHpPct || 0) + m.hpPct + (fod ? fx.fodderHpPct || 0 : 0) + (eli ? fx.eliteHpPct || 0 : 0);
       const dmgPct = (fx.undeadDamagePct || 0) + m.damagePct + (fod ? fx.fodderDamagePct || 0 : 0) + (eli ? fx.eliteDamagePct || 0 : 0);
-      const sh = m.shield + (eli ? fx.eliteShield || 0 : 0), mv = fx.move || 0, en = base.energy ? fx.energy || 0 : 0;
-      if (!hpPct && !dmgPct && !sh && !mv && !en && !fx.undeadMr && !fx.undeadIni && !m.mr && !m.ini) continue;
+      const sh = m.shield + (eli ? fx.eliteShield || 0 : 0), mv = (fx.move || 0) + m.move, en = base.energy ? fx.energy || 0 : 0;
+      const tr = m.traits.filter(t => !(base.traits || []).includes(t));
+      if (!hpPct && !dmgPct && !sh && !mv && !en && !fx.undeadMr && !fx.undeadIni && !m.mr && !m.ini && !m.range && !m.noise && !m.scent && !tr.length) continue;
       u.def = { ...base, hp: Math.round(base.hp * (1 + hpPct)), damage: Math.round(base.damage * (1 + dmgPct)),
         magicResist: base.magicResist + (fx.undeadMr || 0) + m.mr, initiative: base.initiative + (fx.undeadIni || 0) + m.ini, soulShield: (base.soulShield || 0) + sh,
-        move: base.move + mv, energy: (base.energy || 0) + en };
+        move: base.move + mv, energy: (base.energy || 0) + en, range: base.range + (base.range > 1 ? m.range : 0),
+        noise: Math.max(0, (base.noise || 0) + m.noise), scent: Math.max(0, (base.scent || 0) + m.scent), traits: [...(base.traits || []), ...tr] };
       u.hp = Math.round(u.hp / base.hp * u.def.hp); u.maxHp = n * u.def.hp; u.shield += sh * n; u.energy = u.def.energy || 0;
       u.nextTick = turnTicks(u.def);
     }
@@ -6467,11 +6559,16 @@ const UI = {
   buildBadge() {
     const c = game.campaign, btn = $('btnBuild'); if (!c || !btn) return;
     const w = c.construction;
-    const open = Object.keys(DATA.baseBuildings).filter(k => !Base.blocker(k)).length + DATA.upgrades.filter(u => !Upgrades.blocker(u)).length;
-    btn.innerHTML = '<span class="ic">⚒</span>Bauen' + (w ? `<span class="badge busy" title="im Bau">${w.daysLeft} T.</span>` : open ? `<span class="badge">${open}</span>` : '');
+    const r = c.research, pts = Skills.free() && Coop.role !== 'guest' ? Skills.free() : 0;
+    const open = Object.keys(DATA.baseBuildings).filter(k => !Base.blocker(k)).length + (r ? 0 : DATA.upgrades.some(u => !Upgrades.blocker(u)) ? 1 : 0) + pts;
+    const busy = w || r, days = Math.min(w ? w.daysLeft : 99, r ? r.daysLeft : 99);
+    btn.innerHTML = '<span class="ic">⚒</span>Ausbau' + (busy ? `<span class="badge busy" title="in Arbeit">${days} T.</span>` : open ? `<span class="badge">${open}</span>` : '');
+    const ru = r && DATA.upgrades.find(u => u.id === r.id);
     btn.title = (w ? `Im Bau: ${DATA.baseBuildings[w.k].name} Stufe ${w.level}, noch ${w.daysLeft} ${w.daysLeft === 1 ? 'Tag' : 'Tage'}. ` : '')
-      + (open ? `${open} ${open === 1 ? 'Gebäude oder Verbesserung kann' : 'Gebäude oder Verbesserungen können'} jetzt gebaut werden. ` : '')
-      + 'Gebäude im Hügelgrab bauen – geht von überall (B)';
+      + (ru ? `Forschung: ${ru.name}, noch ${r.daysLeft} ${r.daysLeft === 1 ? 'Tag' : 'Tage'}. ` : '')
+      + (pts ? `${pts} ${pts === 1 ? 'Punkt' : 'Punkte'} für die Pfade des Lichs frei. ` : '')
+      + (open ? 'Es gibt etwas zu bauen, zu erforschen oder zu lernen. ' : '')
+      + 'Hügelgrab: Gebäude, Forschung, Pfade des Lichs – geht von überall (B)';
   },
   layoutInfo() {},
   clearSelection() {
@@ -6727,7 +6824,7 @@ const UI = {
       if (Garrisons.canGarrison(node)) add('Besatzung zurücklassen', () => Garrisons.openLeave(node), false);
       if (Garrisons.canGarrison(node) && Garrisons.of(node).length) add('Besatzung aufnehmen', () => Garrisons.takeBack(node), false);
       if (here.id === node.id && Pantheons.portalPossible(node)) add(`Portal errichten (${Object.entries(LEY.portalCost).map(([k, v]) => v + ' ' + RESOURCE_NAMES[k]).join(', ')}, ${LEY.portalDays} Tage)`, () => Pantheons.buildPortal(node), true, !!Pantheons.portalBlocker());
-      if (here.id === node.id && node === PHYLACTERY) add('Bauen', () => Base.open(), true);
+      if (here.id === node.id && node === PHYLACTERY) add('Ausbau', () => Base.open(), true);
       if (here.id === node.id && Stranded.of(node).length) add(`Verwaiste aufnehmen (${Stranded.of(node).length})`, () => Stranded.pickUp(node), true);
     }
   },

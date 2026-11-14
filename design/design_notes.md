@@ -2358,6 +2358,32 @@ Ziel: Die Armee soll ausdrücken, **wie** man spielen will. Fünf Richtungen, je
 | Eile | Reisen +20 % | +1 Initiative | +1 Bewegung | +5 % Schaden je gelaufenem Feld |
 | Bollwerk | +10 % LP | −10 % erlittener Schaden | 5 % Heilung je Zug | Anführer −20 % Schaden, Lich +100 LP |
 
+### Hügelgrab-Fenster: Gebäude, Forschung, Pfade des Lichs (umgesetzt 15.11.2026)
+
+Ein Fenster (Knopf „Ausbau“, Taste B, von überall) mit drei Reitern; jeder Reiter zeigt in einer Marke, ob etwas zu tun ist oder wie viele Tage noch laufen.
+
+- **Gebäude:** Karten statt Textzeilen. Stufenpunkte (● gebaut, gelb im Bau), je Stufe die Einheiten als Marken (unbekannte als „???“ mit dem nötigen Wissen), nächste Stufe mit Kosten und Dauer, Verweis auf die Forschung des Gebäudes.
+- **Forschung:** Statt 13 Verbesserungen zum Abhaken gibt es 13 **Fragen mit je zwei Antworten, von denen nur eine gilt** (`researchSlots`, `upgrades[*].slot`). Die Antwort legt fest, wie die Gruppe kämpft – z. B. Knochen: schärfer (+15 % Schaden) *oder* umwickelt (Lautstärke −1); Fleisch: zäher *oder* einbalsamiert (Geruch −2); Geister: schneller *oder* Meuchler. Forschen dauert 1 + Stufe Tage, eine Frage zur Zeit (`c.research`), läuft wie der Bau weiter, während die Armee unterwegs ist. Umentscheiden kostet erneut und ersetzt die alte Antwort.
+- **Pfade des Lichs:** der Skillbaum (siehe „Spielstile“), dazu die Auren der bekannten Kommandeure.
+
+| Gebäude | Frage | Antwort A | Antwort B |
+|-|-|-|-|
+| Knochenwerkstatt 1 | Wie werden die Knochen bearbeitet? | Geschärft: +15 % Schaden | Umwickelt: Lautstärke −1 |
+| Knochenwerkstatt 2 | Wie wird das Gerippe gebaut? | Verstrebt: +20 % LP | Leicht: +1 Bewegung |
+| Knochenwerkstatt 3 | Was verbessert die Schützen? | Visiere: +20 % Schaden, +1 Initiative | Lange Sehnen: +1 Reichweite |
+| Leichengrube 1 | Womit werden die Leichen behandelt? | Kalk und Pech: +20 % LP | Einbalsamiert: Geruch −2 |
+| Leichengrube 2 | Wie kämpft das Fleisch? | Fäulnisbiss: +15 % Schaden | Rudeltrieb: Schwarm |
+| Leichengrube 3 | Wie wird genäht? | Doppelte Nähte: +10 % LP, +2 Schild | Wucherndes Fleisch: zäh |
+| Seelenzwinger 1 | Woran hängen die Seelen? | Seelenbindung: +3 Schild | Hungrige Seelen: +20 % Schaden |
+| Seelenzwinger 2 | Was treibt die Geister? | Kalte Flamme: +1 Initiative, +15 % Schaden | Grabeskälte: Meuchler |
+| Totenhalle 1 | Wofür steht die Halle? | Banner: +20 % LP, +10 % Schaden | Leibgarde: +6 Schild |
+| Totenhalle 2 | Wie wird das Heer gedrillt? | Eiserne Zucht: +1 Magieresistenz | Gewaltmarsch: +1 Initiative |
+| Wissensaltar 1 | Was wird aus den Schriften gelernt? | Verbotene Schriften: +5 % Schaden | Anatomie: Überraschung +25 % |
+| Phylakterium 1 | Was nährt das Phylakterium? | Seelenanker: Lich +40 LP | Seelenquell: +2 Energie |
+| Phylakterium 2 | Wonach greift der Lich? | Krone aus Staub: +8 Schaden, +20 Schild | Herrscherwille: +10 Kommando |
+
+Alte Spielstände behalten ihre gekauften Verbesserungen (das sind jeweils die Antworten A).
+
 ---
 
 ## Mythologie-Wissen als Belohnung

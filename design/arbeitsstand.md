@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 15.11.2026, 01:30 Uhr · letzte veröffentlichte Version: 138 (Spielstile)
+Stand: 15.11.2026, 02:30 Uhr · letzte veröffentlichte Version: 139 (Hügelgrab-Fenster, Forschung, Pfade des Lichs)
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -13,8 +13,8 @@ Drei Etappen, jede wird einzeln getestet, dokumentiert, mit `make_version.py` ve
 | Etappe | Inhalt | Stand |
 |-|-|-|
 | A | Schleichen 2.0 | **fertig, Version 137** (beschrieben im Design-Dokument, Abschnitt „Schleichen 2.0“). Rest: Lock- und Nebel-Fähigkeit, kommen mit Etappe B |
-| B | Spielstile: Einheiten-Merkmale, neue Einheiten, Kommandeure mit Auren, Skillbaum des Lichs | **Regeln und Daten fertig, Version 138** (Design-Dokument „Spielstile“). Der Skillbaum hat noch **kein Fenster** – das kommt mit Etappe C |
-| C | Hügelgrab-Fenster neu: Gebäude / Forschung mit Entweder-oder-Wahl / Lich | offen (Entwurf unten) |
+| B | Spielstile: Einheiten-Merkmale, neue Einheiten, Kommandeure mit Auren, Skillbaum des Lichs | **fertig, Version 138/139** (Design-Dokument „Spielstile“) |
+| C | Hügelgrab-Fenster neu: Gebäude / Forschung mit Entweder-oder-Wahl / Pfade des Lichs | **fertig, Version 139** (Design-Dokument „Hügelgrab-Fenster“) |
 
 ## Diagnose: Warum Anschleichen nicht ging (Messung vor dem Umbau)
 
@@ -52,11 +52,21 @@ Beschrieben im Design-Dokument, Abschnitt „Spielstile: Merkmale, neue Einheite
 - Neue Effekt-Schlüssel in `b.fx`: `noise`, `scentPct`, `sneakMove`, `surprisePct`, `sightCut`, `fodderDamagePct`, `fodderHpPct`, `eliteHpPct`, `eliteDamagePct`, `eliteShield`, `move`, `energy`, `energyRegen`, `abilityPct`, `cooldown`, `chargePct`, `damageTakenPct`, `regenPct`, `leaderGuard`.
 - Test: `scratchpad/t/style.js` (nur in der Sitzung) prüft Merkmale, Auren, Locken, Nebel, Skills in einem echten Kampf – alles grün.
 
-**Offen:** Fenster für den Skillbaum (`Skills.learn(id)` ist fertig, es fehlt nur die Oberfläche) → Etappe C. Balance der neuen Einheiten ist geschätzt, nicht simuliert.
+Balance der neuen Einheiten ist geschätzt, nicht simuliert.
 
-## Etappe C – Hügelgrab-Fenster (Entwurf, noch nichts eingebaut)
+## Etappe C – Hügelgrab-Fenster (fertig)
 
-Ein Fenster mit drei Reitern: **Gebäude** (Karten mit Stufenpunkten und den Einheiten, die sie freischalten) · **Forschung** · **Lich** (Skillbaum). Forschung: die 13 vorhandenen Verbesserungen (`upgrades` in `world_data.js`) werden zu Plätzen mit je zwei sich ausschließenden Optionen; Forschen dauert Tage (`c.research = { id, daysLeft }`, läuft in `Base.day()` weiter); Optionen können Merkmale verleihen. Alte Spielstände behalten, was sie haben; Umentscheiden kostet erneut.
+Beschrieben im Design-Dokument, Abschnitt „Hügelgrab-Fenster: Gebäude, Forschung, Pfade des Lichs“. Code: `Base.open(tab)`, `Base.buildHtml/researchHtml/lichHtml/chips`, `Upgrades` (jetzt Forschung: `rival`, `days`, `buy` startet, `day` schließt ab, `count`), `UI.buildBadge`, Daten `researchSlots` + `upgrades` (26 Antworten in 13 Fragen) in `data/world_data.js`.
+
+## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
+
+- **Kevins Rückmeldung abwarten:** Spielgefühl beim Schleichen (Kegelgröße am Tag, Tempo der Streifen, ob „Posten rufen sofort“ zu hart ist) – alle Stellschrauben stehen in `STEALTH`.
+- **Balance:** neue Einheiten und Auren sind geschätzt. `tools/sim.py` kennt Merkmale und Auren noch nicht.
+- **Koop:** Forschung und Skillbaum gehören dem Gastgeber (`c.research`, `c.skills`); der Gast sieht sie, lernt aber nicht. Eigene Pfade für den Gast-Kommandeur wären ein eigener Schritt.
+- **Gegner-KI:** nutzt die neuen Merkmale nicht (kein Gegner hat welche). Wachen könnten nach einem Alarm Verstärkung aus Nachbarorten rufen.
+- **Rekrutieren:** Filter nach Spielstil (Schleichen, Masse, Bollwerk …) neben den vorhandenen Kategorien.
+- **Bilder:** `design/ui_bilder.md` Abschnitt 0 (8 Einheiten, 6 Pfad-Symbole, Merkmals- und Wachen-Symbole, Banner Angriffsplan).
+- Weiter offen aus früheren Sitzungen: Koop Stufe 6 (gemeinsame Schlachten), Ley-Sprung/Inventar/Expeditionen für den Gast, Bedrohungswellen, Wissen durch Kills, Pantheon-Magie, Flussnetz, Rangabzeichen; Kevins offene Entscheidungen (Hügelgrab angreifbar, Lagergrenzen, Späher).
 
 ## Werkzeuge zum Testen
 

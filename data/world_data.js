@@ -790,20 +790,45 @@ window.HARMBRINGER_DATA = {
     ranged: ["bogner", "schleuderer", "knochenschuetze", "knochenballiste"],
     all: "*"
   },
+  // Research: every slot is a question with two answers, only one of them holds (slot). Researching
+  // takes 1 + level days (one at a time) and goes on while the army is away; changing one's mind
+  // costs again. Effects per group: hpPct, damagePct (shares), shield (per creature), mr, ini, move,
+  // range, noise, scent (flat), trait (TRAIT_INFO), lichHp/lichDamage/lichShield (the Lich only);
+  // fx = campaign effects (Campaign.effects()).
+  researchSlots: {
+    bw1: "Wie werden die Knochen bearbeitet?", bw2: "Wie wird das Gerippe gebaut?", bw3: "Was verbessert die Schützen?",
+    cp1: "Womit werden die Leichen behandelt?", cp2: "Wie kämpft das Fleisch?", cp3: "Wie wird genäht?",
+    sk1: "Woran hängen die Seelen?", sk2: "Was treibt die Geister?",
+    dh1: "Wofür steht die Halle?", dh2: "Wie wird das Heer gedrillt?",
+    ka1: "Was wird aus den Schriften gelernt?", ph1: "Was nährt das Phylakterium?", ph2: "Wonach greift der Lich?"
+  },
   upgrades: [
-    { id: "sharpBones",  building: "boneWorkshop", level: 1, name: "Geschärfte Knochen", group: "bone", damagePct: 0.15, cost: { bones: 1500 }, text: "Knochen-Untote +15 % Schaden." },
-    { id: "bracedJoints", building: "boneWorkshop", level: 2, name: "Verstrebte Gelenke", group: "bone", hpPct: 0.2, cost: { bones: 2400, corpses: 10 }, text: "Knochen-Untote +20 % Lebenspunkte." },
-    { id: "boneSights",  building: "boneWorkshop", level: 3, name: "Knochenvisiere", group: "ranged", damagePct: 0.2, ini: 1, cost: { bones: 3600, souls: 4 }, text: "Fernkämpfer +20 % Schaden, +1 Initiative." },
-    { id: "limePitch",   building: "corpsePit", level: 1, name: "Kalk und Pech", group: "flesh", hpPct: 0.2, cost: { corpses: 30 }, text: "Fleisch-Untote +20 % Lebenspunkte." },
-    { id: "rotBite",     building: "corpsePit", level: 2, name: "Fäulnisbiss", group: "flesh", damagePct: 0.15, cost: { corpses: 45, bones: 900 }, text: "Fleisch-Untote +15 % Schaden." },
-    { id: "stitched",    building: "corpsePit", level: 3, name: "Doppelte Nähte", group: "flesh", shield: 2, hpPct: 0.1, cost: { corpses: 75, souls: 6 }, text: "Fleisch-Untote +10 % LP und +2 Seelenschild je Kreatur." },
-    { id: "soulBind",    building: "soulKennel", level: 1, name: "Seelenbindung", group: "spirit", shield: 3, cost: { souls: 8 }, text: "Geister +3 Seelenschild je Kreatur." },
-    { id: "coldFlame",   building: "soulKennel", level: 2, name: "Kalte Flamme", group: "spirit", ini: 1, damagePct: 0.15, cost: { souls: 14 }, text: "Geister +1 Initiative, +15 % Schaden." },
-    { id: "deadBanner",  building: "deadHall", level: 1, name: "Banner der Toten", group: "leaders", hpPct: 0.2, damagePct: 0.1, cost: { corpses: 30, bones: 1500, souls: 4 }, text: "Anführer und Elite +20 % LP, +10 % Schaden." },
-    { id: "ironDiscipline", building: "deadHall", level: 2, name: "Eiserne Zucht", group: "all", mr: 1, cost: { bones: 3000, souls: 10 }, text: "Alle Untoten +1 Magieresistenz." },
-    { id: "forbidden",   building: "knowledgeAltar", level: 1, name: "Verbotene Schriften", group: "all", damagePct: 0.05, cost: { souls: 12, corpses: 20 }, text: "Alle Untoten +5 % Schaden." },
-    { id: "soulAnchor",  building: "phylactery", level: 1, name: "Seelenanker", group: "lich", lichHp: 40, cost: { souls: 6, corpses: 20 }, text: "Der Lich +40 Lebenspunkte." },
-    { id: "crownOfDust", building: "phylactery", level: 2, name: "Krone aus Staub", group: "lich", lichDamage: 8, lichShield: 20, cost: { souls: 15, bones: 3000 }, text: "Der Lich +8 Schaden, +20 Seelenschild." }
+    { id: "sharpBones",  slot: "bw1", building: "boneWorkshop", level: 1, name: "Geschärfte Knochen", group: "bone", damagePct: 0.15, cost: { bones: 1500 }, text: "Knochen-Untote +15 % Schaden." },
+    { id: "wrappedBones", slot: "bw1", building: "boneWorkshop", level: 1, name: "Umwickelte Knochen", group: "bone", noise: -1, cost: { bones: 900, corpses: 8 }, text: "Knochen-Untote klappern nicht mehr: Lautstärke −1." },
+    { id: "bracedJoints", slot: "bw2", building: "boneWorkshop", level: 2, name: "Verstrebte Gelenke", group: "bone", hpPct: 0.2, cost: { bones: 2400, corpses: 10 }, text: "Knochen-Untote +20 % Lebenspunkte." },
+    { id: "lightFrames", slot: "bw2", building: "boneWorkshop", level: 2, name: "Leichte Gerippe", group: "bone", move: 1, cost: { bones: 2400, souls: 2 }, text: "Knochen-Untote +1 Bewegung." },
+    { id: "boneSights",  slot: "bw3", building: "boneWorkshop", level: 3, name: "Knochenvisiere", group: "ranged", damagePct: 0.2, ini: 1, cost: { bones: 3600, souls: 4 }, text: "Fernkämpfer +20 % Schaden, +1 Initiative." },
+    { id: "longSinews",  slot: "bw3", building: "boneWorkshop", level: 3, name: "Lange Sehnen", group: "ranged", range: 1, cost: { bones: 3600, corpses: 20 }, text: "Fernkämpfer +1 Reichweite." },
+    { id: "limePitch",   slot: "cp1", building: "corpsePit", level: 1, name: "Kalk und Pech", group: "flesh", hpPct: 0.2, cost: { corpses: 30 }, text: "Fleisch-Untote +20 % Lebenspunkte." },
+    { id: "embalmed",    slot: "cp1", building: "corpsePit", level: 1, name: "Einbalsamiert", group: "flesh", scent: -2, cost: { corpses: 24, bones: 600 }, text: "Fleisch-Untote stinken kaum noch: Geruch −2." },
+    { id: "rotBite",     slot: "cp2", building: "corpsePit", level: 2, name: "Fäulnisbiss", group: "flesh", damagePct: 0.15, cost: { corpses: 45, bones: 900 }, text: "Fleisch-Untote +15 % Schaden." },
+    { id: "packInstinct", slot: "cp2", building: "corpsePit", level: 2, name: "Rudeltrieb", group: "flesh", trait: "SWARM", cost: { corpses: 60 }, text: "Fleisch-Untote kämpfen als Schwarm: +2 % Schaden je Kreatur über 10 im Stapel (höchstens +40 %)." },
+    { id: "stitched",    slot: "cp3", building: "corpsePit", level: 3, name: "Doppelte Nähte", group: "flesh", shield: 2, hpPct: 0.1, cost: { corpses: 75, souls: 6 }, text: "Fleisch-Untote +10 % LP und +2 Seelenschild je Kreatur." },
+    { id: "rampantFlesh", slot: "cp3", building: "corpsePit", level: 3, name: "Wucherndes Fleisch", group: "flesh", trait: "REGEN", cost: { corpses: 90, souls: 4 }, text: "Fleisch-Untote sind zäh: heilen jeden Zug 10 % ihrer Lebenspunkte." },
+    { id: "soulBind",    slot: "sk1", building: "soulKennel", level: 1, name: "Seelenbindung", group: "spirit", shield: 3, cost: { souls: 8 }, text: "Geister +3 Seelenschild je Kreatur." },
+    { id: "hungrySouls", slot: "sk1", building: "soulKennel", level: 1, name: "Hungrige Seelen", group: "spirit", damagePct: 0.2, cost: { souls: 8 }, text: "Geister +20 % Schaden." },
+    { id: "coldFlame",   slot: "sk2", building: "soulKennel", level: 2, name: "Kalte Flamme", group: "spirit", ini: 1, damagePct: 0.15, cost: { souls: 14 }, text: "Geister +1 Initiative, +15 % Schaden." },
+    { id: "graveChill",  slot: "sk2", building: "soulKennel", level: 2, name: "Grabeskälte", group: "spirit", trait: "ASSASSIN", cost: { souls: 16 }, text: "Geister werden Meuchler: Überraschungsschlag +100 % statt +25 %." },
+    { id: "deadBanner",  slot: "dh1", building: "deadHall", level: 1, name: "Banner der Toten", group: "leaders", hpPct: 0.2, damagePct: 0.1, cost: { corpses: 30, bones: 1500, souls: 4 }, text: "Anführer und Elite +20 % LP, +10 % Schaden." },
+    { id: "lifeGuard",   slot: "dh1", building: "deadHall", level: 1, name: "Leibgarde", group: "leaders", shield: 6, cost: { corpses: 30, bones: 1500, souls: 4 }, text: "Anführer und Elite +6 Seelenschild je Kreatur." },
+    { id: "ironDiscipline", slot: "dh2", building: "deadHall", level: 2, name: "Eiserne Zucht", group: "all", mr: 1, cost: { bones: 3000, souls: 10 }, text: "Alle Untoten +1 Magieresistenz." },
+    { id: "forcedMarch", slot: "dh2", building: "deadHall", level: 2, name: "Gewaltmarsch", group: "all", ini: 1, cost: { bones: 3000, souls: 10 }, text: "Alle Untoten +1 Initiative." },
+    { id: "forbidden",   slot: "ka1", building: "knowledgeAltar", level: 1, name: "Verbotene Schriften", group: "all", damagePct: 0.05, cost: { souls: 12, corpses: 20 }, text: "Alle Untoten +5 % Schaden." },
+    { id: "anatomy",     slot: "ka1", building: "knowledgeAltar", level: 1, name: "Anatomie der Lebenden", group: "all", fx: { surprisePct: 0.25 }, cost: { souls: 8, corpses: 30 }, text: "Die Toten wissen, wo es weh tut: Überraschungsschläge +25 %." },
+    { id: "soulAnchor",  slot: "ph1", building: "phylactery", level: 1, name: "Seelenanker", group: "lich", lichHp: 40, cost: { souls: 6, corpses: 20 }, text: "Der Lich +40 Lebenspunkte." },
+    { id: "soulWell",    slot: "ph1", building: "phylactery", level: 1, name: "Seelenquell", group: "lich", fx: { energy: 2 }, cost: { souls: 8, corpses: 10 }, text: "Lich und Zauberer +2 Energie." },
+    { id: "crownOfDust", slot: "ph2", building: "phylactery", level: 2, name: "Krone aus Staub", group: "lich", lichDamage: 8, lichShield: 20, cost: { souls: 15, bones: 3000 }, text: "Der Lich +8 Schaden, +20 Seelenschild." },
+    { id: "rulersWill",  slot: "ph2", building: "phylactery", level: 2, name: "Herrscherwille", group: "lich", fx: { commandLimit: 10 }, cost: { souls: 15, bones: 3000 }, text: "+10 Kommando." }
   ],
 
   // Skill tree of the Lich: six paths (playstyles), four steps each, learned in order.
