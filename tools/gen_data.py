@@ -23,7 +23,7 @@ T, F = True, False
 units = [
  # --- Lich-Armee ---
  U("Lich","Lich","Unique","Commander","Undead","Der Spieler. Unsterblich durch das Phylakterium.",
-   60,10,6,3,12,3,"Soul",1,F,"Unarmored",8,20, 5,4,2,1,3,2,F,F,0, ab=("LichSoulDrain","LichRetreat")),
+   60,10,6,3,12,3,"Soul",1,F,"Unarmored",8,20, 5,4,2,1,3,2,F,F,0, ab=("LichSoulDrain","LichGraveWhisper","LichRetreat")),
  U("Skeleton","Skelett","CannonFodder","Melee","Undead","Speer und Rundschild. Billig, leise, zerbrechlich.",
    10,0,5,3,5,1,"Pierce",1,T,"Light",0,0, 3,2,0,2,1,1,F,F,-1, k=2, ab=("SkeletonReassemble",)),
  U("Zombie","Zombie","CannonFodder","Melee","Undead","Langsam, zäh, stinkt.",
@@ -42,6 +42,23 @@ units = [
    70,3,2,2,14,1,"Blunt",1,T,"Medium",1,0, 3,2,2,4,4,4,F,F,-8, l=15, ab=("FleshGiantCrush",)),
  U("BoneDragon","Knochendrache","Warrior","Tank","Undead","Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",
    120,4,5,6,18,2,"Soul",1,T,"Heavy",4,4, 6,4,3,4,2,4,F,T,-16, k=30, s=6),
+ # --- Spielstile (14.11.2026): Meuchler, Bollwerk, Trommler, Hexer, Reiter und drei Kommandeure mit Aura ---
+ U("Nachzehrer","Nachzehrer","Warrior","Scout","Undead","Wiedergänger, der im Grab an seinem Leichentuch kaut. Kommt lautlos und nimmt, wen er ahnungslos findet.",
+   14,0,7,4,9,1,"Rend",1,F,"Unarmored",1,0, 4,3,2,1,1,1,F,F,-2, l=2),
+ U("CryptWarden","Gruftwächter","Warrior","Tank","Undead","Grabwächter mit einem Turmschild aus Sargdeckeln. Weicht nicht und deckt seine Nachbarn.",
+   38,0,3,2,7,1,"Blunt",1,T,"Heavy",2,4, 3,2,1,3,2,2,F,F,-3, l=1, k=4),
+ U("BoneDrummer","Knochentrommler","Warrior","Support","Undead","Schlägt auf Schädeln den Takt. Wo er trommelt, laufen die Billigen schneller und schlagen härter – und jeder hört es.",
+   12,0,5,3,3,1,"Blunt",1,F,"Light",0,0, 3,2,0,4,1,1,F,F,-2, k=3),
+ U("BoneHexer","Knochenhexer","Warrior","Caster","Undead","Zauberkundiger aus Gebeinen. Ruft Grabesnebel und schleudert Markbolzen.",
+   14,8,5,3,6,4,"Soul",1,F,"Light",3,2, 4,3,0,1,1,2,F,F,-3, l=1, k=3, ab=("HexerGraveFog","HexerMarrowBolt")),
+ U("BoneRider","Knochenreiter","Warrior","Scout","Undead","Skelett auf einem Skelettross. Wer weit anreitet, trifft hart.",
+   22,0,6,6,8,1,"Pierce",1,T,"Medium",1,0, 4,3,0,3,1,3,F,F,-3, l=1, k=5),
+ U("PlagueReeve","Seuchenvogt","Commander","Commander","Undead","Totengräber der Pestjahre. Führt die Masse: Unter ihm sind die Billigen mehr wert.",
+   22,4,4,3,7,1,"Poison",1,T,"Light",3,4, 4,3,2,2,3,2,F,F,5, l=4, s=1, ab=("ZombieInfect",)),
+ U("NightReeve","Nachtvogt","Commander","Scout","Undead","Henker, der nur nachts richtete. Unter ihm geht ein Heer wie ein Schatten.",
+   20,4,7,4,9,1,"Rend",1,F,"Light",3,4, 5,4,2,0,1,2,F,F,4, l=2, s=2),
+ U("CryptLord","Gruftfürst","Commander","Tank","Undead","Fürst aus der Steinkammer. Wo er steht, weicht keiner.",
+   40,4,3,2,10,1,"Blunt",1,T,"Heavy",4,8, 4,3,1,3,2,3,F,F,6, l=3, k=5, s=3, ab=("DeathKnightShieldWall",)),
  # --- Engel der Kirche (biblisch: Ophanim, Cherubim, Seraphim) ---
  U("Ophan","Ophan","Warrior","Tank","Clergy","Brennendes Rad voller Augen. Rollt durch die Reihen der Toten.",
    40,3,4,4,10,1,"Holy",1,T,"Divine",6,6, 6,4,2,2,0,3,F,T,0, ab=("ClericCenser",)),
@@ -90,7 +107,7 @@ units = [
  U("BogCorpse","Moorleiche","Warrior","Tank","Undead","Untote Version des Moorgeists. Freigeschaltet durch Moorgeist-Kills.",
    28,2,3,2,8,1,"Blunt",1,T,"Unarmored",2,0, 3,3,2,2,4,3,F,F,-3, l=3, ab=("MoorGrip","BogCorpseMire")),
  U("DeathLight","Totenlicht","CannonFodder","Scout","Undead","Untote Version des Irrlichts. Grünes Licht, verwirrt Lebende.",
-   6,0,9,5,3,1,"Arcane",1,F,"Unarmored",6,2, 6,3,0,0,0,1,T,T,-1, s=1, ab=("DeathLightConfusion",)),
+   6,0,9,5,3,1,"Arcane",1,F,"Unarmored",6,2, 6,3,0,0,0,1,T,T,-1, s=1, ab=("DeathLightConfusion","DeathLightLure")),
  U("FallenSister","Gefallene Schwester","Warrior","Support","Undead","Untote Heideschwester mit erloschener Laterne.",
    14,4,5,3,4,2,"Soul",1,F,"Light",4,2, 4,3,2,1,2,2,F,F,-2, l=1, s=1, ab=("FallenSisterGraveWater",)),
  U("GraveDruidess","Grabdruidin","Warrior","Caster","Undead","Mumifizierte Hügelgrab-Druidin.",
@@ -173,10 +190,10 @@ GAME_UNITS = [
  # Spiel-ID, Design-Zeile, Extras
  ("lich", "Lich", dict(shape="octahedron", color="#5a2d82", desc="Untoter Herrscher. Fällt er, ist der Kampf verloren und er kehrt ins Hügelgrab zurück.")),
  ("ghul", "Ghoul", dict(shape="capsule", color="#6b7d4a", desc="Billig, zäh, zerfleischt seine Opfer (schlechte Leichen).")),
- ("skelett", "Skeleton", dict(shape="cone", color="#d8d0b8", desc="Sauberer Stich, gute Leichen.")),
+ ("skelett", "Skeleton", dict(traits=["SWARM"], shape="cone", color="#d8d0b8", desc="Sauberer Stich, gute Leichen.")),
  ("bogner", "SkeletonArcher", dict(shape="cylinder", color="#ece4cc", cost=dict(bones=150))),
- ("leichenhund", "CorpseHound", dict(shape="box", color="#5a4a3a")),
- ("zombie", "Zombie", dict(shape="capsule", color="#7f8f62", desc="Langsam und zäh. Hält Türen und Engstellen.")),
+ ("leichenhund", "CorpseHound", dict(traits=["HITRUN"], shape="box", color="#5a4a3a")),
+ ("zombie", "Zombie", dict(traits=["SWARM"], shape="capsule", color="#7f8f62", desc="Langsam und zäh. Hält Türen und Engstellen.")),
  ("schleuderer", "BoneSlinger", dict(shape="cylinder", color="#bfb59a", requiresKnowledge=2)),
  ("geist", "Ghost", dict(shape="sphere", color="#a9c7d6", requiresKnowledge=3, desc="Lautlos, fliegt, geht durch Wände. Seelenschaden bringt Seelen.")),
  ("bauer", "Peasant", dict(shape="cone", color="#a08a5a")),
@@ -194,23 +211,32 @@ GAME_UNITS = [
  # Advanced undead from the design data (unlocked by knowledge; where to recruit: RECRUIT_AT in index.html)
  ("knochenschuetze", "BoneArcher", dict(shape="cylinder", color="#e0d8c0", requiresKnowledge=4)),
  ("moorleiche", "BogCorpse", dict(shape="capsule", color="#4a4030", requiresKnowledge=3, requiresPantheon="heide")),
- ("todesritter", "DeathKnight", dict(shape="box", color="#3a3a44", requiresKnowledge=7)),
+ ("todesritter", "DeathKnight", dict(traits=["GUARD"], shape="box", color="#3a3a44", requiresKnowledge=7)),
  ("totenlicht", "DeathLight", dict(shape="sphere", color="#9be05a", requiresKnowledge=5, requiresPantheon="heide")),
  ("gefallene_schwester", "FallenSister", dict(shape="cone", color="#6a4a5a", requiresKnowledge=6)),
  ("grabdruidin", "GraveDruidess", dict(shape="cone", color="#4a5a3a", requiresKnowledge=8, requiresPantheon="heide")),
- ("nekromant", "Necromancer", dict(shape="octahedron", color="#2a1a3a", requiresKnowledge=9)),
+ ("nekromant", "Necromancer", dict(aura="SORCERY", shape="octahedron", color="#2a1a3a", requiresKnowledge=9)),
  ("knochenballiste", "Ballista", dict(shape="box", color="#8a7a5a", requiresKnowledge=10)),
- ("fleischriese", "FleshGiant", dict(shape="capsule", color="#8a5a4a", requiresKnowledge=5)),
+ ("fleischriese", "FleshGiant", dict(traits=["REGEN"], shape="capsule", color="#8a5a4a", requiresKnowledge=5)),
  ("knochendrache", "BoneDragon", dict(shape="octahedron", color="#d8d0b8", requiresKnowledge=16, requiresPantheon="spreewald")),
  ("wasserleiche", "DrownedCorpse", dict(shape="capsule", color="#5a6a70", requiresKnowledge=6, requiresPantheon="wattenmeer")),
+ # Playstyles (14.11.2026): traits = special rules of the unit (TRAIT_INFO in index.html), aura = commander aura (AURAS)
+ ("nachzehrer", "Nachzehrer", dict(shape="capsule", color="#4a4a52", requiresKnowledge=2, traits=["ASSASSIN"])),
+ ("knochentrommler", "BoneDrummer", dict(shape="cone", color="#cfc4a0", requiresKnowledge=2, traits=["DRUM"])),
+ ("gruftwaechter", "CryptWarden", dict(shape="box", color="#6a6a70", requiresKnowledge=3, traits=["GUARD", "REGEN"])),
+ ("knochenhexer", "BoneHexer", dict(shape="cone", color="#7a5a9a", requiresKnowledge=3)),
+ ("knochenreiter", "BoneRider", dict(shape="box", color="#d0c8b0", requiresKnowledge=4, traits=["CHARGE"])),
+ ("nachtvogt", "NightReeve", dict(shape="octahedron", color="#1e2230", requiresKnowledge=3, commander=True, aura="SHADOW", traits=["ASSASSIN"])),
+ ("seuchenvogt", "PlagueReeve", dict(shape="octahedron", color="#6a7a3a", requiresKnowledge=4, commander=True, aura="HORDE")),
+ ("gruftfuerst", "CryptLord", dict(shape="octahedron", color="#8a8a92", requiresKnowledge=6, commander=True, aura="BULWARK", traits=["GUARD"])),
  ("ophan", "Ophan", dict(shape="sphere", color="#e8c050")),
  ("cherub", "Cherub", dict(shape="octahedron", color="#e0d0a0")),
  ("seraph", "Seraph", dict(shape="octahedron", color="#ff9a40")),
- ("reiterfuerst", "BronzeRider", dict(shape="octahedron", color="#b08a4a", ancestor=True)),
- ("huenenkoenig", "BarrowKing", dict(shape="octahedron", color="#cfc4a8", ancestor=True)),
- ("widukind", "WidukindShade", dict(shape="octahedron", color="#5a6a5a", ancestor=True)),
- ("ratsherr", "RungholtAlderman", dict(shape="octahedron", color="#4a6a7a", ancestor=True)),
- ("totenjaeger", "DeathHunter", dict(shape="box", color="#3a2a2a", requiresKnowledge=10, requiresPantheon="wodan")),
+ ("reiterfuerst", "BronzeRider", dict(aura="RIDE", traits=["CHARGE"], shape="octahedron", color="#b08a4a", ancestor=True)),
+ ("huenenkoenig", "BarrowKing", dict(aura="BULWARK", shape="octahedron", color="#cfc4a8", ancestor=True)),
+ ("widukind", "WidukindShade", dict(aura="HORDE", shape="octahedron", color="#5a6a5a", ancestor=True)),
+ ("ratsherr", "RungholtAlderman", dict(aura="SORCERY", shape="octahedron", color="#4a6a7a", ancestor=True)),
+ ("totenjaeger", "DeathHunter", dict(traits=["CHARGE"], shape="box", color="#3a2a2a", requiresKnowledge=10, requiresPantheon="wodan")),
  # Heath pantheon and clergy units for the mythic places of the wider map
  ("kleriker", "Cleric", dict(shape="cone", color="#cfc6a8")),
  ("heideschwester", "HeathSister", dict(shape="cone", color="#9a7a8a")),
@@ -247,6 +273,14 @@ def A(row, name, trig, tgt, pat, area, rng, eff, pt, val, st="None", dur=0, en=0
 abilities = [
  A("LichSoulDrain","Seelenentzug","Active","Enemy","SinglePoint",0,3,"Damage","Soul",8,en=3,cd=1,
    desc="8 Seelenschaden; Lich heilt sich um den angerichteten Schaden"),
+ A("LichGraveWhisper","Totenflüstern","Active","Ground","Radius",3,6,"Lure","Arcane",0,en=2,cd=2,
+   desc="Ein Flüstern auf dem Zielfeld: Wachen im Umkreis 3 werden misstrauisch und gehen nachsehen, schlagen aber keinen Alarm"),
+ A("DeathLightLure","Irrlichtern","Active","Ground","Radius",4,6,"Lure","Arcane",0,cd=2,
+   desc="Ein Licht auf dem Zielfeld lockt Wachen im Umkreis 4 dorthin; sie schlagen keinen Alarm"),
+ A("HexerGraveFog","Grabesnebel","Active","Ground","Radius",1,4,"Fog","Arcane",0,dur=3,en=3,cd=3,
+   desc="Nebel auf dem Zielfeld und seinen Nachbarn für 3 Runden: Wer darin steht, wird nur aus 1 Feld gesehen; Fernangriffe auf ihn −50 %"),
+ A("HexerMarrowBolt","Markbolzen","Active","Enemy","SinglePoint",0,4,"Damage","Soul",5,"Cursed",2,en=2,cd=1,
+   desc="5 Seelenschaden je Hexer; das Ziel ist 2 Züge verflucht (−25 % Schaden)"),
  A("LichRetreat","Rückzug","Active","Self","SinglePoint",0,0,"Teleport","Arcane",0,"Marked",1,
    desc="Lich verlässt nach 1 Runde das Feld; in der Rückzugsrunde Marked"),
  A("SkeletonReassemble","Wiederzusammensetzen","OnDeath","Self","SinglePoint",0,0,"Heal","Heal",5,
@@ -329,7 +363,7 @@ ENUMS = {
  "Trigger": {"Active","OnDamageTaken","OnDamageDealt","OnDeath","OnAllyDeath","OnTurnStart","OnTurnEnd","Passive"},
  "Target": {"Self","Ally","Enemy","AllAllies","AllEnemies","Ground"},
  "Pattern": {"SinglePoint","Radius","Ring","Cone","Line","VShape"},
- "Effect": {"Damage","Heal","ApplyStatus","Stun","Push","Teleport","Summon","ModifyTerrain"},
+ "Effect": {"Damage","Heal","ApplyStatus","Stun","Push","Teleport","Summon","ModifyTerrain","Lure","Fog"},
  "Status": {"None","Poisoned","Burning","Bleeding","Stunned","Slowed","Hasted","Shielded","Enhanced","Cursed","Regeneration","Marked","Confused"},
 }
 ab_ids = {a["Name"] for a in abilities}
@@ -589,6 +623,9 @@ def game_unit(gid, row, extra):
         d["rarityBonus"] = round(f - 1, 2)
     if "requiresPantheon" in extra: d["requiresPantheon"] = extra["requiresPantheon"]
     if extra.get("ancestor"): d["ancestor"] = True
+    if extra.get("commander"): d["commander"] = True
+    if extra.get("traits"): d["traits"] = extra["traits"]
+    if extra.get("aura"): d["aura"] = extra["aura"]
     d["energy"] = u["MaxEnergy"]
     d["shape"], d["color"] = extra["shape"], extra["color"]
     d["desc"] = extra.get("desc") or u["DescriptionText"]

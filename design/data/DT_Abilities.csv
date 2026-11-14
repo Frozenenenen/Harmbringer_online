@@ -1,5 +1,9 @@
 Name,AbilityName,Trigger,Target,Pattern,AreaSize,Range,Effect,PowerType,Value,Status,Duration,EnergyCost,Cooldown,RequiresCorpse,ConditionFloors,Description
 LichSoulDrain,Seelenentzug,Active,Enemy,SinglePoint,0,3,Damage,Soul,8,None,0,3,1,False,(),8 Seelenschaden; Lich heilt sich um den angerichteten Schaden
+LichGraveWhisper,Totenflüstern,Active,Ground,Radius,3,6,Lure,Arcane,0,None,0,2,2,False,(),"Ein Flüstern auf dem Zielfeld: Wachen im Umkreis 3 werden misstrauisch und gehen nachsehen, schlagen aber keinen Alarm"
+DeathLightLure,Irrlichtern,Active,Ground,Radius,4,6,Lure,Arcane,0,None,0,0,2,False,(),Ein Licht auf dem Zielfeld lockt Wachen im Umkreis 4 dorthin; sie schlagen keinen Alarm
+HexerGraveFog,Grabesnebel,Active,Ground,Radius,1,4,Fog,Arcane,0,None,3,3,3,False,(),"Nebel auf dem Zielfeld und seinen Nachbarn für 3 Runden: Wer darin steht, wird nur aus 1 Feld gesehen; Fernangriffe auf ihn −50 %"
+HexerMarrowBolt,Markbolzen,Active,Enemy,SinglePoint,0,4,Damage,Soul,5,Cursed,2,2,1,False,(),5 Seelenschaden je Hexer; das Ziel ist 2 Züge verflucht (−25 % Schaden)
 LichRetreat,Rückzug,Active,Self,SinglePoint,0,0,Teleport,Arcane,0,Marked,1,0,0,False,(),Lich verlässt nach 1 Runde das Feld; in der Rückzugsrunde Marked
 SkeletonReassemble,Wiederzusammensetzen,OnDeath,Self,SinglePoint,0,0,Heal,Heal,5,None,0,0,0,False,(),Einmal pro Kampf mit 5 HP wieder aufstehen; nicht nach Blunt- oder Holy-Tod
 ZombieInfect,Seuchenbiss,OnDamageDealt,Enemy,SinglePoint,0,1,ApplyStatus,Poison,2,Poisoned,2,0,0,False,(),Getroffenes Ziel wird vergiftet

@@ -1237,6 +1237,14 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Nekromant | Undead | Commander / Caster | 2 | 18 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 5 / 4 | 4/3/2 | 1/2 | – | +4 | 2L 2S |
 | Fleischriese | Undead | Warrior / Tank | 4 | 70 | 3 | 2 | 2 | 14 | 1 | Blunt | Medium | 1 / 0 | 3/2/2 | 4/4 | – | -8 | 15L |
 | Knochendrache | Undead | Warrior / Tank | 4 | 120 | 4 | 5 | 6 | 18 | 2 | Soul | Heavy | 4 / 4 | 6/4/3 | 4/2 | Flug | -16 | 30K 6S |
+| Nachzehrer | Undead | Warrior / Scout | 1 | 14 | 0 | 7 | 4 | 9 | 1 | Rend | Unarmored | 1 / 0 | 4/3/2 | 1/1 | – | -2 | 2L |
+| Gruftwächter | Undead | Warrior / Tank | 2 | 38 | 0 | 3 | 2 | 7 | 1 | Blunt | Heavy | 2 / 4 | 3/2/1 | 3/2 | – | -3 | 1L 4K |
+| Knochentrommler | Undead | Warrior / Support | 1 | 12 | 0 | 5 | 3 | 3 | 1 | Blunt | Light | 0 / 0 | 3/2/0 | 4/1 | – | -2 | 3K |
+| Knochenhexer | Undead | Warrior / Caster | 2 | 14 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 3 / 2 | 4/3/0 | 1/1 | – | -3 | 1L 3K |
+| Knochenreiter | Undead | Warrior / Scout | 3 | 22 | 0 | 6 | 6 | 8 | 1 | Pierce | Medium | 1 / 0 | 4/3/0 | 3/1 | – | -3 | 1L 5K |
+| Seuchenvogt | Undead | Commander / Commander | 2 | 22 | 4 | 4 | 3 | 7 | 1 | Poison | Light | 3 / 4 | 4/3/2 | 2/3 | – | +5 | 4L 1S |
+| Nachtvogt | Undead | Commander / Scout | 2 | 20 | 4 | 7 | 4 | 9 | 1 | Rend | Light | 3 / 4 | 5/4/2 | 0/1 | – | +4 | 2L 2S |
+| Gruftfürst | Undead | Commander / Tank | 3 | 40 | 4 | 3 | 2 | 10 | 1 | Blunt | Heavy | 4 / 8 | 4/3/1 | 3/2 | – | +6 | 3L 5K 3S |
 | Ophan | Clergy | Warrior / Tank | 3 | 40 | 3 | 4 | 4 | 10 | 1 | Holy | Divine | 6 / 6 | 6/4/2 | 2/0 | Flug | +0 | – |
 | Cherub | Clergy | Warrior / Caster | 3 | 45 | 4 | 5 | 4 | 12 | 2 | Holy | Divine | 6 / 8 | 8/6/4 | 2/0 | Flug | +0 | – |
 | Seraph | Clergy | Warrior / Caster | 4 | 55 | 6 | 7 | 5 | 14 | 3 | Holy | Divine | 7 / 10 | 8/6/4 | 2/0 | Flug | +0 | – |
@@ -1326,11 +1334,15 @@ Sonderfälle, die die Tabelle nicht ausdrückt (Zweit-Effekte, Bedingungen wie �
 | ID | Name | Einheit | Auslöser | Ziel / Muster | Reichw. | Effekt | Wert | Status (Züge) | Energie / CD | Beschreibung |
 |-|-|-|-|-|-|-|-|-|-|-|
 | `LichSoulDrain` | Seelenentzug | Lich | Active | Enemy / SinglePoint | 3 | Damage (Soul) | 8 | – | 3 / 1 | 8 Seelenschaden; Lich heilt sich um den angerichteten Schaden |
+| `LichGraveWhisper` | Totenflüstern | Lich | Active | Ground / Radius 3 | 6 | Lure (Arcane) | 0 | – | 2 / 2 | Ein Flüstern auf dem Zielfeld: Wachen im Umkreis 3 werden misstrauisch und gehen nachsehen, schlagen aber keinen Alarm |
+| `DeathLightLure` | Irrlichtern | Totenlicht | Active | Ground / Radius 4 | 6 | Lure (Arcane) | 0 | – | 0 / 2 | Ein Licht auf dem Zielfeld lockt Wachen im Umkreis 4 dorthin; sie schlagen keinen Alarm |
+| `HexerGraveFog` | Grabesnebel | Knochenhexer | Active | Ground / Radius 1 | 4 | Fog (Arcane) | 0 | – (3) | 3 / 3 | Nebel auf dem Zielfeld und seinen Nachbarn für 3 Runden: Wer darin steht, wird nur aus 1 Feld gesehen; Fernangriffe auf ihn −50 % |
+| `HexerMarrowBolt` | Markbolzen | Knochenhexer | Active | Enemy / SinglePoint | 4 | Damage (Soul) | 5 | Cursed (2) | 2 / 1 | 5 Seelenschaden je Hexer; das Ziel ist 2 Züge verflucht (−25 % Schaden) |
 | `LichRetreat` | Rückzug | Lich | Active | Self / SinglePoint | 0 | Teleport (Arcane) | 0 | Marked (1) | 0 / 0 | Lich verlässt nach 1 Runde das Feld; in der Rückzugsrunde Marked |
 | `SkeletonReassemble` | Wiederzusammensetzen | Skelett | OnDeath | Self / SinglePoint | 0 | Heal (Heal) | 5 | – | 0 / 0 | Einmal pro Kampf mit 5 HP wieder aufstehen; nicht nach Blunt- oder Holy-Tod |
-| `ZombieInfect` | Seuchenbiss | Zombie, Schlangenkönig, Ertrunkener | OnDamageDealt | Enemy / SinglePoint | 1 | ApplyStatus (Poison) | 2 | Poisoned (2) | 0 / 0 | Getroffenes Ziel wird vergiftet |
+| `ZombieInfect` | Seuchenbiss | Zombie, Seuchenvogt, Schlangenkönig, Ertrunkener | OnDamageDealt | Enemy / SinglePoint | 1 | ApplyStatus (Poison) | 2 | Poisoned (2) | 0 / 0 | Getroffenes Ziel wird vergiftet |
 | `GhoulCorpseEater` | Leichenfresser | Ghul | Active | Ground / SinglePoint | 1 | Heal (Heal) | 8 | – | 0 / 2 | Frisst angrenzende Leiche: +8 HP, die Leiche ist als Beute verloren *(braucht Leiche)* |
-| `DeathKnightShieldWall` | Schildwall | Todesritter, Hünenkönig | Active | Ally / Radius 1 | 0 | ApplyStatus (Blunt) | 5 | Shielded (1) | 2 / 2 | Todesritter und Nachbarn erhalten Schild 5 bis zum nächsten Zug |
+| `DeathKnightShieldWall` | Schildwall | Todesritter, Gruftfürst, Hünenkönig | Active | Ally / Radius 1 | 0 | ApplyStatus (Blunt) | 5 | Shielded (1) | 2 / 2 | Todesritter und Nachbarn erhalten Schild 5 bis zum nächsten Zug |
 | `NecroRaiseDead` | Totenruf | Nekromant, Ratsherr von Rungholt | Active | Ground / SinglePoint | 3 | Summon (Soul) | 1 | – | 4 / 2 | Verbraucht Leiche auf Zielfeld, erzeugt 1 Skelett *(braucht Leiche)* |
 | `FleshGiantCrush` | Zermalmen | Fleischriese, Hünenkönig, Schlangenkönig, Blanker Hans | Active | Enemy / Cone 1 | 1 | Damage (Blunt) | 10 | Stunned (1) | 3 / 2 | Trifft 3 Felder im Kegel, betäubt |
 | `PeasantMob` | Rottenmut | Widukinds Schatten, Bauer, Sachsenkrieger, Lutki | OnTurnStart | Self / SinglePoint | 0 | ApplyStatus (Pierce) | 0 | Enhanced (1) | 0 / 0 | Enhanced, wenn mind. 2 Bauern angrenzen |
@@ -2296,6 +2308,56 @@ Nachts und morgens sind etwa 30–40 % der Gruppen Posten, am Tag die Hälfte. A
 **Unverändert:** Begegnungen unterwegs – alle alarmiert. Hohe Bedrohung (ab 50) oder ein Trupp derselben Fraktion – gewarnt, alle alarmiert und in Stellung.
 
 Werte: `STEALTH` und `APPROACH` in `index.html`. Testwerkzeug: `tools/test/sneak.js` (spielt ganze Kämpfe mit einem einfachen Bot).
+### Spielstile: Merkmale, neue Einheiten, Auren (umgesetzt 15.11.2026)
+
+Ziel: Die Armee soll ausdrücken, **wie** man spielen will. Fünf Richtungen, jede mit eigenen Einheiten, einem Kommandeur und einem Pfad im Skillbaum des Lichs.
+
+| Spielstil | Einheiten | Kommandeur (Aura) | Pfad des Lichs |
+|-|-|-|-|
+| Schleichen | Nachzehrer, Geist, Totenlicht (lockt), Knochenhexer (Nebel) | Nachtvogt (Schatten) | Schatten |
+| Masse statt Klasse | Skelett, Zombie (Schwarm), Knochentrommler | Seuchenvogt, Widukind (Horde) | Flut |
+| Klasse statt Masse | Todesritter, Fleischriese, Knochendrache | – | Auslese |
+| Schwer, kaum zu töten | Gruftwächter, Todesritter (Schildwache), Fleischriese (zäh) | Gruftfürst, Hünenkönig (Bollwerk) | Bollwerk |
+| Beweglich | Leichenhund (zuschlagen und weg), Knochenreiter, Totenjäger (Sturmangriff) | Reiterfürst (Ritt) | Eile |
+| Aktive Fähigkeiten | Knochenhexer, Grabdruidin, Gefallene Schwester | Nekromant, Ratsherr (Hexerei) | Hexerei |
+
+**Merkmale** (`traits` der Einheit, Werte in `TRAITS`, Texte in `TRAIT_INFO`):
+
+| Merkmal | Wirkung | Wer |
+|-|-|-|
+| Meuchler | Überraschungsschlag +100 % statt +25 % | Nachzehrer, Nachtvogt |
+| Schwarm | +2 % Schaden je Kreatur über 10 im Stapel, höchstens +40 % | Skelett, Zombie |
+| Sturmangriff | +10 % Schaden je gelaufenem Feld, höchstens +50 % | Knochenreiter, Totenjäger, Reiterfürst |
+| Zuschlagen und weg | nach Laufen und Angriff noch einmal halbe Bewegung | Leichenhund |
+| Schildwache | benachbarte Verbündete −25 % Schaden | Gruftwächter, Todesritter, Gruftfürst |
+| Zäh | heilt jeden Zug 10 % der Lebenspunkte | Gruftwächter, Fleischriese |
+| Trommler | Billige im Umkreis 3: +15 % Schaden, +1 Bewegung; sehr laut (Lautstärke 4) | Knochentrommler |
+
+**Neue Einheiten:** Nachzehrer (Wissen 2, Leichengrube 1), Knochentrommler (Wissen 2, Knochenwerkstatt 1), Knochenhexer (Wissen 3, Knochenwerkstatt 1; Grabesnebel, Markbolzen), Gruftwächter (Wissen 3, Leichengrube 2), Knochenreiter (Wissen 4, Knochenwerkstatt 2). **Neue Kommandeure** (Totenhalle; erhöhen das Kommandolimit, können Expeditionen führen, stehen dem Koop-Gast zur Wahl): Nachtvogt (Wissen 3), Seuchenvogt (Wissen 4), Gruftfürst (Wissen 6, Totenhalle 2).
+
+**Auren** (`aura` der Einheit, `AURAS`): gelten den ganzen Kampf, wenn der Kommandeur dabei ist; jede Aura zählt einmal.
+
+| Aura | Wirkung |
+|-|-|
+| Schatten | Lautstärke −1, Geruch halb so weit, Überraschungsschläge +25 % |
+| Horde | Billige Untote +20 % Schaden und Lebenspunkte |
+| Bollwerk | alle Untoten −15 % erlittener Schaden |
+| Ritt | alle Untoten +1 Bewegung, +5 % Schaden je gelaufenem Feld (höchstens +25 %) |
+| Hexerei | Fähigkeiten +25 % Wirkung, +1 Energie je Zug |
+
+**Werkzeuge zum Schleichen:** Der Lich hat „Totenflüstern“ (2 Energie): Wachen im Umkreis 3 des Zielfelds gehen nachsehen, schlagen aber dafür keinen Alarm. Das Totenlicht kann dasselbe („Irrlichtern“, Umkreis 4, ohne Energie). Der Knochenhexer legt „Grabesnebel“: Wer darin steht, wird nur aus 1 Feld gesehen; Fernangriffe in den Nebel −50 %.
+
+**Skillbaum des Lichs** (`skills` in `world_data.js`): sechs Pfade mit je vier Stufen, in Reihenfolge zu lernen. Punkte: 1 zu Beginn, dann 1 + ⌊√(2 × eroberte Orte)⌋ (2 Orte → 3 Punkte, 8 → 5, 32 → 9, alle 192 → 20 von 24). Man kann also nicht alles haben.
+
+| Pfad | 1 | 2 | 3 | 4 |
+|-|-|-|-|-|
+| Schatten | Lautstärke −1 | Geruch halb so weit | Überraschung +50 % | Wachen sehen 1 Feld weniger, leise 1 Feld weiter |
+| Flut | +10 Kommando | +25 % Leichen und Knochen | Billige +15 % Schaden und LP | +20 Kommando |
+| Auslese | Krieger +15 % LP | Krieger +15 % Schaden | Krieger +3 Seelenschild | Krieger +20 % LP und Schaden |
+| Hexerei | +2 Energie | Fähigkeiten +25 % | Abklingzeit −1 | Fähigkeiten +25 %, +1 Energie je Zug |
+| Eile | Reisen +20 % | +1 Initiative | +1 Bewegung | +5 % Schaden je gelaufenem Feld |
+| Bollwerk | +10 % LP | −10 % erlittener Schaden | 5 % Heilung je Zug | Anführer −20 % Schaden, Lich +100 LP |
+
 ---
 
 ## Mythologie-Wissen als Belohnung
@@ -2645,17 +2707,17 @@ Beantwortet die offene Frage „Welche Gebäude-Typen in der Basis konkret?". St
 | Phylakterium | 1 | Start | – | – | – | Start. Lager 50 L / 50 K / 10 S. Lich-Rückkehr nach Tod: 3 Tage |
 | Phylakterium | 2 | 20L 20K 5S | 3 | Phylakterium 1 | – | Lager 100/100/20. Rückkehr 2 Tage |
 | Phylakterium | 3 | 40L 40K 10S 10E | 5 | Phylakterium 2 | – | Lager 200/200/40. Rückkehr 1 Tag. Zweite Expedition möglich |
-| Knochenwerkstatt | 1 | Start | – | – | Skelett, Skelett-Bogenschütze, Knochenschleuderer | Start. Auskochen: 1 Leiche → 2 Knochen. Schleuderer erst mit Spielwissen 2 |
-| Knochenwerkstatt | 2 | 10L 10K | 2 | Knochenwerkstatt 1 + Armbrust-Handwerk | Knochenschütze | Knochenschützen |
+| Knochenwerkstatt | 1 | Start | – | – | Skelett, Skelett-Bogenschütze, Knochenschleuderer, Knochentrommler, Knochenhexer | Start. Auskochen: 1 Leiche → 2 Knochen. Schleuderer erst mit Spielwissen 2 |
+| Knochenwerkstatt | 2 | 10L 10K | 2 | Knochenwerkstatt 1 + Armbrust-Handwerk | Knochenschütze, Knochenreiter | Knochenschützen, Knochenreiter |
 | Knochenwerkstatt | 3 | 20L 30K 2S | 4 | Knochenwerkstatt 2 | Balliste, Knochendrache | Belagerung, Knochendrache |
-| Leichengrube | 1 | Start | – | – | Zombie, Ghul, Leichenhund | Start |
-| Leichengrube | 2 | 15L 10K | 2 | Leichengrube 1 + Moorwissen | Moorleiche, Wasserleiche | Moorleichen, Wasserleichen |
+| Leichengrube | 1 | Start | – | – | Zombie, Ghul, Leichenhund, Nachzehrer | Start |
+| Leichengrube | 2 | 15L 10K | 2 | Leichengrube 1 + Moorwissen | Moorleiche, Wasserleiche, Gruftwächter | Moorleichen, Wasserleichen, Gruftwächter |
 | Leichengrube | 3 | 30L 20K 5S | 4 | Leichengrube 2 | Fleischriese | Fleischriesen |
 | Seelenzwinger | 1 | 10L 10K 3S | 2 | – | Geist | Kommando-Limit 15 → 20 |
 | Seelenzwinger | 2 | 20L 20K 6S | 3 | Seelenzwinger 1 + Irrlicht-Bann | Totenlicht | Limit 25, Totenlichter |
 | Seelenzwinger | 3 | 40L 40K 12S 10E | 5 | Seelenzwinger 2 | – | Limit 30 |
-| Totenhalle | 1 | 15L 20K 3S | 3 | – | Todesritter, Nekromant | Kommandeure. 1 Ahne pro Expedition |
-| Totenhalle | 2 | 25L 30K 6S | 4 | Totenhalle 1 | Gefallene Schwester, Grabdruidin, Totenjäger | Untote Heide-Varianten (jeweils mit Wissen). 2 Ahnen pro Expedition |
+| Totenhalle | 1 | 15L 20K 3S | 3 | – | Todesritter, Nekromant, Nachtvogt, Seuchenvogt | Kommandeure. 1 Ahne pro Expedition |
+| Totenhalle | 2 | 25L 30K 6S | 4 | Totenhalle 1 | Gefallene Schwester, Grabdruidin, Totenjäger, Gruftfürst | Untote Heide-Varianten (jeweils mit Wissen). 2 Ahnen pro Expedition |
 | Wissensaltar | 1 | 5L 5K | 1 | – | – | Wandelt erbeutetes Wissen in Freischaltungen. Voraussetzung für alle untoten Varianten |
 | Knochenschmiede | 1 | 20L 30K 4S | 3 | Knochenwerkstatt 1 + Zwergenschmiede | – | Todesritter +2 SoulShield dauerhaft |
 | Heidealtar | 1 | 30L 20K 10S 10E | 5 | Wissensaltar 1 + Herz der Heide | – | Eigene Untote heilen auf Heather-Feldern 2 HP/Runde. Pantheon-Synergien der Heide |

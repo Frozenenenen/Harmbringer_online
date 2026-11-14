@@ -350,6 +350,60 @@ def build(unit):
     if unit == "totenjaeger":
         m = Mesh(); skeleton(m, bone="#cfc4a8"); arms(m, "#cfc4a8", "#cfc4a8", rr=0.03); cloak(m, "#2a3a2a"); antlers(m, "#6a4a2a", 1.62)
         spear(m, wood="#3a2a1a", tip="#7a8a7a"); m.O((0, 1.4, -0.02), (0.22, 0.08, 0.14), "#2a3a2a"); return m
+    # --- playstyle units (14.11.2026) -----------------------------------
+    if unit == "nachzehrer":
+        m = human(skin="#9a9a8a", shirt="#c8c2b0", pants="#b0aa98", boots="#8a8a7a", r=(0.3, 1.0, 0.3), l=(-0.3, 1.0, 0.3))
+        hood(m, "#d0cab8", 1.54); cloak(m, "#c8c2b0", w=0.4)
+        m.B((0, 1.44, 0.14), (0.1, 0.12, 0.03), "#e0dac8")                                                        # shroud end in the mouth
+        for sx in (-1, 1):
+            m.B((sx * 0.04, 1.55, 0.125), (0.03, 0.02, 0.01), "#ff5a3a")
+            for k in (-0.03, 0.0, 0.03): m.C((sx * 0.3 + k, 1.0, 0.3), (sx * 0.3 + k, 0.92, 0.4), 0.012, 0.0, "#3a3a34", seg=3)
+        return m
+    if unit == "gruftwaechter":
+        m = Mesh(); skeleton(m, bone="#bdb6a0"); arms(m, "#bdb6a0", "#bdb6a0", rr=0.04)
+        m.B((0, 1.18, 0.02), (0.4, 0.5, 0.2), "#5a5a60"); helmet_kettle(m, "#5a5a60", 1.6)                         # breastplate
+        m.B((-0.27, 0.95, 0.24), (0.5, 1.2, 0.06), "#4a3a2a"); m.B((-0.27, 0.95, 0.275), (0.06, 0.9, 0.01), "#8a8a8a")
+        m.B((-0.27, 1.15, 0.275), (0.34, 0.06, 0.01), "#8a8a8a")                                                  # coffin lid as a tower shield, with a cross
+        hammer(m, head_="#6a6a6a", length=0.9)
+        return scaled(m, 1.1)
+    if unit == "knochentrommler":
+        m = Mesh(); skeleton(m); arms(m, "#e4dcc6", "#e4dcc6", rr=0.03, r=(0.2, 1.05, 0.3), l=(-0.2, 1.05, 0.3))
+        m.C((0, 0.82, 0.32), (0, 1.0, 0.32), 0.2, 0.2, "#6a4a2a", seg=10); m.C((0, 1.0, 0.32), (0, 1.01, 0.32), 0.2, 0.2, "#e0d6b8", seg=10)   # drum
+        for sx in (-1, 1): m.C((sx * 0.2, 1.05, 0.3), (sx * 0.08, 1.04, 0.34), 0.015, 0.015, "#e4dcc6", seg=3)       # bone sticks
+        m.O((0.0, 0.9, 0.53), (0.07, 0.08, 0.07), "#e4dcc6", 3, 6)                                                 # skull on the drum
+        m.C((0, 1.62, 0), (0, 1.8, 0), 0.1, 0.0, "#7a2a2a", seg=5)                                                  # red cap
+        return m
+    if unit == "knochenhexer":
+        m = Mesh(); skeleton(m, bone="#d8d0b8"); robe(m, "#4a3a6a", top=1.0, r_top=0.16, r_bot=0.3); arms(m, "#4a3a6a", "#d8d0b8", rr=0.04)
+        hood(m, "#3a2a5a", 1.55); staff(m, wood="#d8d0b8", orb="#b07aff", length=1.9)
+        m.O((L_HAND[0], L_HAND[1] + 0.1, L_HAND[2] + 0.05), (0.09, 0.09, 0.09), "#c8d8e0", 3, 6)                     # ball of mist
+        return m
+    if unit == "knochenreiter":
+        m = Mesh(); horse(m, "#d8d0b8", "#8a8070", eye="#7aff9a", saddle="#3a2a1a")
+        rider(m, "#e4dcc6", "#5a4a3a", "#e4dcc6", "#e4dcc6", eyes="#7aff9a")
+        helmet_kettle(m, "#6a6a70", 2.2); spear(m, (0.27, 1.6, 0.25), wood="#4a3420", tip="#b8b8b8", length=2.6)
+        shield(m, (-0.27, 1.6, 0.25), face="#5a4a3a", rim="#7a6a50", r=0.2)
+        return m
+    if unit == "nachtvogt":
+        m = human(skin="#a8a090", shirt="#1e2230", pants="#14161e", boots="#0e0e14", belt="#5a1414")
+        hood(m, "#14161e", 1.54); cloak(m, "#14161e", w=0.52)
+        m.B((0, 1.53, 0.125), (0.16, 0.1, 0.01), "#0e0e14")                                                       # executioner's mask
+        for sx in (-1, 1): m.B((sx * 0.04, 1.55, 0.135), (0.03, 0.02, 0.01), "#9be05a")
+        sword(m, blade="#8a8a94", hilt="#2a1414", length=1.25)                                                     # executioner's sword
+        return m
+    if unit == "seuchenvogt":
+        m = robed("#4a5230", skin="#9aa080", sleeve="#3a4024", eyes="#c8e050", belt="#3a2a1a"); cloak(m, "#3a4024", w=0.48)
+        m.C((0, 1.62, 0), (0, 1.64, 0), 0.24, 0.24, "#2a2a20", seg=10); m.C((0, 1.64, 0), (0, 1.76, 0), 0.12, 0.1, "#2a2a20", seg=8)      # wide hat
+        m.C((0, 1.5, 0.1), (0, 1.44, 0.34), 0.05, 0.01, "#d8d0b8", seg=5)                                          # beak mask
+        staff(m, wood="#4a3420", length=1.8); m.B((R_HAND[0], 0.2, R_HAND[2]), (0.16, 0.22, 0.02), "#6a6a6a")      # grave digger's spade
+        lantern(m, glow="#c8e050")
+        return m
+    if unit == "gruftfuerst":
+        m = Mesh(); skeleton(m, bone="#cfc8b4"); arms(m, "#6a6a72", "#cfc8b4", rr=0.05)
+        m.B((0, 1.16, 0.0), (0.44, 0.56, 0.26), "#6a6a72"); m.B((0, 1.41, 0), (0.54, 0.1, 0.3), "#7a7a84")            # plate and pauldrons
+        crown(m, "#9a9a6a", 1.64, 0.12, 6); cloak(m, "#3a2a3a", w=0.56)
+        hammer(m, head_="#8a8a90", length=1.3); shield(m, face="#4a4a52", rim="#9a9a6a", round_=False)
+        return scaled(m, 1.3)
     # --- people -------------------------------------------------------
     if unit == "bauer":
         m = human(shirt="#8a7a5a", pants="#5a4a32", hair="#6a4a2a", belt="#4a3a22"); pitchfork(m)
@@ -609,7 +663,8 @@ UNITS = ["lich", "ghul", "skelett", "bogner", "leichenhund", "zombie", "schleude
          "moorleiche", "todesritter", "totenlicht", "gefallene_schwester", "grabdruidin", "nekromant", "knochenballiste",
          "fleischriese", "totenjaeger", "knochendrache",
          "sachsenkrieger", "wodansrabe", "wilder_jaeger", "hackelberg", "lutki", "wassermann", "rusalka", "mittagsfrau",
-         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche", "reiterfuerst", "huenenkoenig", "widukind", "ratsherr", "ophan", "cherub", "seraph"]
+         "schlangenkoenig", "ertrunkener", "wattjungfrau", "klabautermann", "blanker_hans", "wasserleiche", "reiterfuerst", "huenenkoenig", "widukind", "ratsherr", "ophan", "cherub", "seraph",
+         "nachzehrer", "gruftwaechter", "knochentrommler", "knochenhexer", "knochenreiter", "nachtvogt", "seuchenvogt", "gruftfuerst"]
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)

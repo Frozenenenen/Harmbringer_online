@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 15.11.2026, 00:15 Uhr · letzte veröffentlichte Version: 136 (Schleichen 2.0)
+Stand: 15.11.2026, 01:30 Uhr · letzte veröffentlichte Version: 138 (Spielstile)
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -12,8 +12,8 @@ Drei Etappen, jede wird einzeln getestet, dokumentiert, mit `make_version.py` ve
 
 | Etappe | Inhalt | Stand |
 |-|-|-|
-| A | Schleichen 2.0 | **fertig, Version 136** (beschrieben im Design-Dokument, Abschnitt „Schleichen 2.0“). Rest: Lock- und Nebel-Fähigkeit, kommen mit Etappe B |
-| B | Spielstile: Einheiten-Merkmale, neue Einheiten, Kommandeure mit Auren, Skillbaum des Lichs | offen (Entwurf unten) |
+| A | Schleichen 2.0 | **fertig, Version 137** (beschrieben im Design-Dokument, Abschnitt „Schleichen 2.0“). Rest: Lock- und Nebel-Fähigkeit, kommen mit Etappe B |
+| B | Spielstile: Einheiten-Merkmale, neue Einheiten, Kommandeure mit Auren, Skillbaum des Lichs | **Regeln und Daten fertig, Version 138** (Design-Dokument „Spielstile“). Der Skillbaum hat noch **kein Fenster** – das kommt mit Etappe C |
 | C | Hügelgrab-Fenster neu: Gebäude / Forschung mit Entweder-oder-Wahl / Lich | offen (Entwurf unten) |
 
 ## Diagnose: Warum Anschleichen nicht ging (Messung vor dem Umbau)
@@ -42,33 +42,17 @@ Regeln stehen im Design-Dokument (`design/design_notes.md`, „Schleichen 2.0“
 - Schon vorbereitet, aber noch ohne Inhalt: `b.fog` (Felder im Nebel → Sicht 1), leise Fähigkeiten in `castAbility` (Effekte `LURE`, `FOG`, `HEAL`), `TRAITS.assassin` in `Battle.surpriseMul`, Schleich-Boni aus `b.fx`: `noise`, `scentPct`, `sneakMove`, `surprisePct`, `sightCut`.
 - Gemessen mit `tools/test/sneak.js` (einfacher Bot, 10 Dörfer, Startarmee): am Tag lautlose Siege Schleichen 3 / Stürmen 1, Verluste 0,3 / 1,2; nachts beide 2 (Dörfer sind für 12 Ghule zu schwach, um Stürmen zu bestrafen). Größere Orte schafft der Bot nicht lautlos – das soll Können und passende Einheiten brauchen (Etappe B).
 
-**Offen aus A (wandert in B):** Fähigkeits-Effekte `LURE` (Totenlicht lockt Wachen zu einem Feld: `lookAt` setzen, Argwohn auf höchstens 90) und `FOG` (Grabesnebel füllt `b.fog` für einige Runden) in `tools/gen_data.py` und `Abilities.use`.
+## Etappe B – Spielstile (Regeln fertig)
 
-## Etappe B – Spielstile (Entwurf, noch nichts eingebaut)
+Beschrieben im Design-Dokument, Abschnitt „Spielstile: Merkmale, neue Einheiten, Auren“. Für die Weiterarbeit:
 
-**Merkmale** (`traits` je Einheit, aus `tools/gen_data.py` exportiert; Wirkung vor allem in `Abilities.damageMul`, `moveOf`, `Battle.computeOptions`):
+- Daten: `tools/gen_data.py` (Zeilen unter „Spielstile (14.11.2026)“, `GAME_UNITS`-Extras `traits`, `aura`, `commander`; Fähigkeiten `LichGraveWhisper`, `DeathLightLure`, `HexerGraveFog`, `HexerMarrowBolt`; Effekte `Lure`, `Fog`), `tools/campaign_data.py` (Produktion), `data/world_data.js` (`baseBuildings.produces`, `unitGroups`, **`skills`**).
+- Figuren: `tools/build_units.py` (Block „playstyle units“), Bilder-Prompts in `design/ui_bilder.md` Abschnitt 0.
+- Code in `index.html`: `TRAITS`, `TRAIT_INFO`, `AURAS`, `hasTrait`, `isFodder`, `isElite`, `traitHtml`; `Abilities.damageMul` (Schwarm, Sturmangriff, Trommler, Schildwache, Nebel), `Abilities.drummed`, `moveOf`, `Abilities.fog`, `Alarm.lure`, `Battle.applyAuras`, `Battle.applyArmyEffects` (liest `b.fx`), `Skills` (Punkte, `blocker`, `learn`), `Campaign.effects()` zählt gelernte Skills mit.
+- Neue Effekt-Schlüssel in `b.fx`: `noise`, `scentPct`, `sneakMove`, `surprisePct`, `sightCut`, `fodderDamagePct`, `fodderHpPct`, `eliteHpPct`, `eliteDamagePct`, `eliteShield`, `move`, `energy`, `energyRegen`, `abilityPct`, `cooldown`, `chargePct`, `damageTakenPct`, `regenPct`, `leaderGuard`.
+- Test: `scratchpad/t/style.js` (nur in der Sitzung) prüft Merkmale, Auren, Locken, Nebel, Skills in einem echten Kampf – alles grün.
 
-| Merkmal | Wirkung | Spielstil |
-|-|-|-|
-| ASSASSIN | Überraschungsschlag ×2 statt ×1,25 | Schleichen |
-| SWARM | +2 % Schaden je Kreatur über 10 im Stapel, max. +40 % | Masse statt Klasse |
-| CHARGE | +10 % Schaden je gelaufenem Feld, max. +50 % | Beweglich |
-| HITRUN | volle Bewegung nach dem Angriff | Beweglich |
-| GUARD | benachbarte Verbündete −25 % Schaden | Schwer, untötbar |
-| REGEN | heilt jede Runde | Schwer, untötbar |
-| DRUM | Aura: billige Einheiten +15 % Schaden, +1 Bewegung | Masse |
-
-**Neue Einheiten** (je: Zeile in `gen_data.py`, Figur in `tools/build_units.py`, dann `build_units.py`, `render_portraits.py`, `build_game_figures.py`, `build_gallery.py`; Produzent in `baseBuildings`; Bild-Prompt in `design/ui_bilder.md`). Schon vorhanden und daher **nicht** doppeln: `totenjaeger` (Reiter, Wissen 10), `totenlicht` (Irrlicht – bekommt die Lockfähigkeit).
-
-- `nachzehrer` – Meuchler (ASSASSIN, leise, geruchsarm), Wissen 2
-- `gruftwaechter` – schwerer Schildträger (GUARD), Wissen 3
-- `knochentrommler` – Trommler (DRUM), Wissen 2
-- `knochenhexer` – Zauberer mit Grabesnebel (FOG), Wissen 3
-- evtl. ein früher leichter Reiter (CHARGE/HITRUN), falls der Totenjäger zu spät kommt
-
-**Kommandeure mit Auren** (`COMMANDER_TYPES` verallgemeinern; je Armee einer): neu `seuchenvogt` (Horde), `nachtvogt` (Schatten: Lautstärke −1, Geruch halb, Überraschung +25 %), `gruftfuerst` (Bollwerk: −20 % erlittener Schaden). Bestehende bekommen Auren: Nekromant/Ratsherr Hexerei, Todesritter Vorkämpfer, Reiterfürst Ritt, Hünenkönig Bollwerk, Widukind Horde.
-
-**Skillbaum des Lichs** (`DATA.skills` in `data/world_data.js`, Handarbeit): 6 Pfade × 4 Stufen – Schatten, Flut (Masse), Auslese (Klasse), Hexerei, Eile, Bollwerk. Punkte = 1 + ⌊√(2 × eroberte Orte)⌋. Wirkungen laufen über `Campaign.effects()`; das Schleichen liest daraus schon `noise`, `scentPct`, `sneakMove`, `surprisePct`, `sightCut` (`Stealth.fx()` = `b.fx`).
+**Offen:** Fenster für den Skillbaum (`Skills.learn(id)` ist fertig, es fehlt nur die Oberfläche) → Etappe C. Balance der neuen Einheiten ist geschätzt, nicht simuliert.
 
 ## Etappe C – Hügelgrab-Fenster (Entwurf, noch nichts eingebaut)
 

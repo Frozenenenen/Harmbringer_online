@@ -22,7 +22,184 @@ color, colorful, photo, 3d render, glossy, modern, anime, cartoon, text, letters
 
 ## Offen
 
-164 Bilder. Reihenfolge = Priorität (Abschnitt 1–4 machen das UI schon spürbar schöner).
+189 Bilder. Reihenfolge = Priorität (Abschnitt 1–4 machen das UI schon spürbar schöner). Abschnitt 0 sind die neuesten.
+
+### 0 Neu am 15.11.2026: Spielstile, Skillbaum, Schleichen
+
+#### `einheiten/nachzehrer.jpg` · 3:4
+Verwendung: Nachzehrer (Meuchler)
+
+```
+half-length portrait of a gaunt revenant wrapped in a burial shroud, chewing on the end of the shroud, long clawed fingers, glowing eyes, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/gruftwaechter.jpg` · 3:4
+Verwendung: Gruftwächter (Schildwache)
+
+```
+half-length portrait of an armoured skeleton guard in a kettle helmet holding a coffin lid with an iron cross as a tower shield, a hammer in the other hand, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/knochentrommler.jpg` · 3:4
+Verwendung: Knochentrommler
+
+```
+half-length portrait of a skeleton drummer in a pointed cap beating a drum with two thigh bones, a skull tied to the drum, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/knochenhexer.jpg` · 3:4
+Verwendung: Knochenhexer
+
+```
+half-length portrait of a skeleton sorcerer in a hooded robe with a bone staff, a ball of fog swirling in his open hand, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/knochenreiter.jpg` · 3:4
+Verwendung: Knochenreiter
+
+```
+portrait of a skeleton rider in a kettle helmet with lance and round shield on a skeletal horse, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/nachtvogt.jpg` · 3:4
+Verwendung: Nachtvogt (Kommandeur, Aura Schatten)
+
+```
+half-length portrait of a medieval executioner in a black hood and mask with a long two-handed executioner's sword, standing in deep shadow, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/seuchenvogt.jpg` · 3:4
+Verwendung: Seuchenvogt (Kommandeur, Aura Horde)
+
+```
+half-length portrait of a plague-year grave digger in a wide-brimmed hat and a beaked mask, a spade over his shoulder and a lantern in his hand, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `einheiten/gruftfuerst.jpg` · 3:4
+Verwendung: Gruftfürst (Kommandeur, Aura Bollwerk)
+
+```
+half-length portrait of a crowned skeleton prince in heavy plate armour with a great shield and a war hammer, in front of a megalithic stone chamber, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/pfad_schatten.png` · 1:1
+Verwendung: Lich-Pfad Schatten (Schleichen)
+
+```
+a hooded figure melting into its own long shadow, a sleeping watchman's lantern on the ground, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/pfad_flut.png` · 1:1
+Verwendung: Lich-Pfad Flut (Masse statt Klasse)
+
+```
+an endless crowd of skeletons pouring out of open graves like a wave, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/pfad_auslese.png` · 1:1
+Verwendung: Lich-Pfad Auslese (Klasse statt Masse)
+
+```
+a single crowned skeleton knight standing on a heap of broken weapons, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/pfad_hexerei.png` · 1:1
+Verwendung: Lich-Pfad Hexerei (aktive Fähigkeiten)
+
+```
+a skeletal hand holding a burning soul flame above an open book of spells, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/pfad_eile.png` · 1:1
+Verwendung: Lich-Pfad Eile (Beweglichkeit)
+
+```
+a skeleton horse in full gallop with flying mane, seen from the side, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/pfad_bollwerk.png` · 1:1
+Verwendung: Lich-Pfad Bollwerk (schwer, untötbar)
+
+```
+a wall of overlapping coffin-lid shields with a skull looking over the rim, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/merkmal_meuchler.png` · 1:1
+Verwendung: Merkmal Meuchler
+
+```
+a dagger held behind a back in a bony hand, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/merkmal_schwarm.png` · 1:1
+Verwendung: Merkmal Schwarm
+
+```
+a tight cluster of many small skulls, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/merkmal_sturmangriff.png` · 1:1
+Verwendung: Merkmal Sturmangriff
+
+```
+a lowered lance with a fluttering pennon, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/merkmal_schildwache.png` · 1:1
+Verwendung: Merkmal Schildwache
+
+```
+a tower shield planted in the ground, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/merkmal_zaeh.png` · 1:1
+Verwendung: Merkmal Zäh
+
+```
+a cracked bone bound with a growing vine of stitches, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/merkmal_trommler.png` · 1:1
+Verwendung: Merkmal Trommler
+
+```
+a drum with two crossed thigh bones, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/wache_schlaeft.png` · 1:1
+Verwendung: Wache schläft (Marke über der Einheit)
+
+```
+a snuffed-out candle with a thin trail of smoke, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/wache_posten.png` · 1:1
+Verwendung: Wache auf Posten
+
+```
+a wide-open human eye, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/wache_streife.png` · 1:1
+Verwendung: Wache auf Streife
+
+```
+a lantern on a pole with footprints around it in a circle, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `icons/glocke.png` · 1:1
+Verwendung: Glöckner / Glocke läutet
+
+```
+a swinging church bell with its rope, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+#### `banner/angriffsplan.jpg` · 3:1
+Verwendung: Kopfbild des Fensters „Angriff auf …“ (Seite wählen)
+
+```
+wide scene of a small medieval village at night seen from a dark heath hill, a few watch fires, skeletal figures crouching in the tall grass in the foreground, wind bending the grass, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
 
 ### 1 Grundlagen (Rahmen, Papier, Titel)
 

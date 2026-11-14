@@ -1,5 +1,5 @@
 Name,UnitName,Rank,Role,Faction,DescriptionText,HP,MaxEnergy,Initiative,MoveRange,AttackDamage,AttackRange,PowerType,AttacksPerTurn,CanCounter,DefenseType,MagicResist,SoulShield,SightRange,HearRadius,SmellRadius,NoiseLevel,ScentLevel,Size,IsSpectral,IsFlying,CommandPoints,CorpsesCost,BonesCost,SoulsCost,Abilities
-Lich,Lich,Unique,Commander,Undead,Der Spieler. Unsterblich durch das Phylakterium.,60,10,6,3,12,3,Soul,1,False,Unarmored,8,20,5,4,2,1,3,2,False,False,0,0,0,0,"(""LichSoulDrain"",""LichRetreat"")"
+Lich,Lich,Unique,Commander,Undead,Der Spieler. Unsterblich durch das Phylakterium.,60,10,6,3,12,3,Soul,1,False,Unarmored,8,20,5,4,2,1,3,2,False,False,0,0,0,0,"(""LichSoulDrain"",""LichGraveWhisper"",""LichRetreat"")"
 Skeleton,Skelett,CannonFodder,Melee,Undead,"Speer und Rundschild. Billig, leise, zerbrechlich.",10,0,5,3,5,1,Pierce,1,True,Light,0,0,3,2,0,2,1,1,False,False,-1,0,2,0,"(""SkeletonReassemble"")"
 Zombie,Zombie,CannonFodder,Melee,Undead,"Langsam, zäh, stinkt.",20,0,3,2,6,1,Blunt,1,True,Unarmored,0,0,2,2,3,2,4,2,False,False,-1,1,0,0,"(""ZombieInfect"")"
 Ghoul,Ghul,CannonFodder,Melee,Undead,Vierbeiniger Aasfresser mit Krallen.,18,0,5,3,6,1,Rend,1,True,Unarmored,1,0,3,2,4,2,4,2,False,False,-2,1,0,0,"(""GhoulCorpseEater"")"
@@ -9,6 +9,14 @@ Ballista,Balliste,Machine,Siege,Undead,Knochen-Belagerungsgeschütz.,25,0,5,1,20
 Necromancer,Nekromant,Commander,Caster,Undead,"Generischer Kommandeur, ruft Tote.",18,8,5,3,6,4,Soul,1,False,Light,5,4,4,3,2,1,2,2,False,False,4,2,0,2,"(""NecroRaiseDead"")"
 FleshGiant,Fleischriese,Warrior,Tank,Undead,Aus 15 Leichen vernäht.,70,3,2,2,14,1,Blunt,1,True,Medium,1,0,3,2,2,4,4,4,False,False,-8,15,0,0,"(""FleshGiantCrush"")"
 BoneDragon,Knochendrache,Warrior,Tank,Undead,"Aus den Gebeinen eines Lindwurms gefügt. Fliegt, sein Totenhauch trifft zwei Felder weit.",120,4,5,6,18,2,Soul,1,True,Heavy,4,4,6,4,3,4,2,4,False,True,-16,0,30,6,()
+Nachzehrer,Nachzehrer,Warrior,Scout,Undead,"Wiedergänger, der im Grab an seinem Leichentuch kaut. Kommt lautlos und nimmt, wen er ahnungslos findet.",14,0,7,4,9,1,Rend,1,False,Unarmored,1,0,4,3,2,1,1,1,False,False,-2,2,0,0,()
+CryptWarden,Gruftwächter,Warrior,Tank,Undead,Grabwächter mit einem Turmschild aus Sargdeckeln. Weicht nicht und deckt seine Nachbarn.,38,0,3,2,7,1,Blunt,1,True,Heavy,2,4,3,2,1,3,2,2,False,False,-3,1,4,0,()
+BoneDrummer,Knochentrommler,Warrior,Support,Undead,"Schlägt auf Schädeln den Takt. Wo er trommelt, laufen die Billigen schneller und schlagen härter – und jeder hört es.",12,0,5,3,3,1,Blunt,1,False,Light,0,0,3,2,0,4,1,1,False,False,-2,0,3,0,()
+BoneHexer,Knochenhexer,Warrior,Caster,Undead,Zauberkundiger aus Gebeinen. Ruft Grabesnebel und schleudert Markbolzen.,14,8,5,3,6,4,Soul,1,False,Light,3,2,4,3,0,1,1,2,False,False,-3,1,3,0,"(""HexerGraveFog"",""HexerMarrowBolt"")"
+BoneRider,Knochenreiter,Warrior,Scout,Undead,"Skelett auf einem Skelettross. Wer weit anreitet, trifft hart.",22,0,6,6,8,1,Pierce,1,True,Medium,1,0,4,3,0,3,1,3,False,False,-3,1,5,0,()
+PlagueReeve,Seuchenvogt,Commander,Commander,Undead,Totengräber der Pestjahre. Führt die Masse: Unter ihm sind die Billigen mehr wert.,22,4,4,3,7,1,Poison,1,True,Light,3,4,4,3,2,2,3,2,False,False,5,4,0,1,"(""ZombieInfect"")"
+NightReeve,Nachtvogt,Commander,Scout,Undead,"Henker, der nur nachts richtete. Unter ihm geht ein Heer wie ein Schatten.",20,4,7,4,9,1,Rend,1,False,Light,3,4,5,4,2,0,1,2,False,False,4,2,0,2,()
+CryptLord,Gruftfürst,Commander,Tank,Undead,"Fürst aus der Steinkammer. Wo er steht, weicht keiner.",40,4,3,2,10,1,Blunt,1,True,Heavy,4,8,4,3,1,3,2,3,False,False,6,3,5,3,"(""DeathKnightShieldWall"")"
 Ophan,Ophan,Warrior,Tank,Clergy,Brennendes Rad voller Augen. Rollt durch die Reihen der Toten.,40,3,4,4,10,1,Holy,1,True,Divine,6,6,6,4,2,2,0,3,False,True,0,0,0,0,"(""ClericCenser"")"
 Cherub,Cherub,Warrior,Caster,Clergy,"Vier Gesichter, vier Flügel, ein Körper voller Augen. Sieht alles.",45,4,5,4,12,2,Holy,1,True,Divine,6,8,8,6,4,2,0,3,False,True,0,0,0,0,"(""WitchHex"")"
 Seraph,Seraph,Warrior,Caster,Clergy,"Sechs Flügel aus Feuer. Wer ihn ansieht, verbrennt.",55,6,7,5,14,3,Holy,1,False,Divine,7,10,8,6,4,2,0,4,False,True,0,0,0,0,"(""SisterConsecrate"",""ClericCenser"")"
@@ -30,7 +38,7 @@ Wode,Der Wode,Unique,Melee,HeathSpirits,Anführer der Wilden Jagd. Pantheon der 
 DwarfKing,Hügelgrab-Zwergenkönig,Unique,Tank,HeathSpirits,Hüter der Gräber. Pantheon der Heide.,50,6,3,2,11,1,Blunt,1,True,Divine,6,4,4,6,4,2,1,2,False,False,0,0,0,0,"(""DwarfKingForge"",""DwarfKingTreasureCurse"",""DwarfKingStoneSkin"")"
 HeathQueen,Die Heidekönigin,Unique,Caster,Witches,Herrin des Wilseder Bergs. Pantheon der Heide.,60,10,6,2,10,4,Arcane,1,False,Divine,8,10,6,5,5,1,2,3,False,False,0,0,0,0,"(""HeathQueenLeyBond"",""HeathQueenBloom"",""HeathQueenThorns"")"
 BogCorpse,Moorleiche,Warrior,Tank,Undead,Untote Version des Moorgeists. Freigeschaltet durch Moorgeist-Kills.,28,2,3,2,8,1,Blunt,1,True,Unarmored,2,0,3,3,2,2,4,3,False,False,-3,3,0,0,"(""MoorGrip"",""BogCorpseMire"")"
-DeathLight,Totenlicht,CannonFodder,Scout,Undead,"Untote Version des Irrlichts. Grünes Licht, verwirrt Lebende.",6,0,9,5,3,1,Arcane,1,False,Unarmored,6,2,6,3,0,0,0,1,True,True,-1,0,0,1,"(""DeathLightConfusion"")"
+DeathLight,Totenlicht,CannonFodder,Scout,Undead,"Untote Version des Irrlichts. Grünes Licht, verwirrt Lebende.",6,0,9,5,3,1,Arcane,1,False,Unarmored,6,2,6,3,0,0,0,1,True,True,-1,0,0,1,"(""DeathLightConfusion"",""DeathLightLure"")"
 FallenSister,Gefallene Schwester,Warrior,Support,Undead,Untote Heideschwester mit erloschener Laterne.,14,4,5,3,4,2,Soul,1,False,Light,4,2,4,3,2,1,2,2,False,False,-2,1,0,1,"(""FallenSisterGraveWater"")"
 GraveDruidess,Grabdruidin,Warrior,Caster,Undead,Mumifizierte Hügelgrab-Druidin.,14,5,6,3,7,4,Arcane,1,False,Light,5,2,4,3,4,1,3,2,False,False,-3,1,1,1,"(""GraveDruidessBind"",""DruidessEarthBind"")"
 DrownedCorpse,Wasserleiche,Warrior,Tank,Undead,Untote Version der Ertrunkenen von Rungholt. Freigeschaltet durch den Sturz der Versunkenen Städte.,26,3,3,3,8,1,Blunt,1,True,Unarmored,3,2,3,2,4,2,4,2,False,False,-3,2,0,1,"(""MoorGrip"",""BogCorpseMire"")"
