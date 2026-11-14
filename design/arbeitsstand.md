@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 14.11.2026, 23:15 Uhr · letzte veröffentlichte Version: 135 (`b02cff6`)
+Stand: 15.11.2026, 00:15 Uhr · letzte veröffentlichte Version: 136 (Schleichen 2.0)
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -12,7 +12,7 @@ Drei Etappen, jede wird einzeln getestet, dokumentiert, mit `make_version.py` ve
 
 | Etappe | Inhalt | Stand |
 |-|-|-|
-| A | Schleichen 2.0 | **Code eingebaut, noch nicht getestet, noch nicht committet** |
+| A | Schleichen 2.0 | **fertig, Version 136** (beschrieben im Design-Dokument, Abschnitt „Schleichen 2.0“). Rest: Lock- und Nebel-Fähigkeit, kommen mit Etappe B |
 | B | Spielstile: Einheiten-Merkmale, neue Einheiten, Kommandeure mit Auren, Skillbaum des Lichs | offen (Entwurf unten) |
 | C | Hügelgrab-Fenster neu: Gebäude / Forschung mit Entweder-oder-Wahl / Lich | offen (Entwurf unten) |
 
@@ -33,43 +33,16 @@ Ursachen:
 4. Misstrauische liefen schnurstracks zur nächsten Untoten-Einheit.
 5. Der Spieler hatte keine Mittel: keine leise Gangart, keine Wahl der Seite, keine Ablenkung, keine Belohnung.
 
-## Etappe A – Schleichen 2.0 (Entwurf = eingebauter Stand)
+## Etappe A – Schleichen 2.0 (fertig)
 
-Alles in `index.html`. Werte stehen gesammelt in `const STEALTH` (über `const Stealth`), Feldgröße in `const APPROACH` (über `class Battlefield`).
+Regeln stehen im Design-Dokument (`design/design_notes.md`, „Schleichen 2.0“). Für die Weiterarbeit wichtig:
 
-**Anmarschzone.** `Battlefield` hat `core` (= `node.size`, danach richtet sich die Siedlung) und ein größeres `size` (30 bei Orten bis 16, sonst mindestens 40; Begegnungen unverändert). `Battle.deploy` stellt erst die Verteidiger, ruft bei Ankunft `SURPRISE` `Alarm.assign(b)` und stellt die Untoten dann außerhalb jeder Sichtweite auf (`far + APPROACH.margin`).
+- Code: `STEALTH`, `Stealth` (Wahrnehmung: `exposure`, `preview`, `sightRange`, `loudness`, `smellRange`), `Alarm` (`assign`, `raise`, `check`, `look`, `noise`, `crash`, `shout`, `runToBell`, `investigate`, `goHome`, `patrol`, `roundEnd`, `timeChanged`), `APPROACH` + `Battlefield.core`, `Battle.deploy`, `UI.attackPlan`, `Battle.start(node, exp, plan)`.
+- Wachen-Felder: `aw`, `alert`, `role`, `asleep`, `home`, `homeFacing`, `away`, `lookAt`, `route`, `routeAt`, `shouted`, `stim`, `found`. Kampf-Felder: `b.fx` (= `Campaign.effects()` beim Kampfstart), `b.bodies`, `b.fog`, `b.shouts`, `b.bell`, `b.bellRunner`, `b.threatAdded`, `b.silent`.
+- Schon vorbereitet, aber noch ohne Inhalt: `b.fog` (Felder im Nebel → Sicht 1), leise Fähigkeiten in `castAbility` (Effekte `LURE`, `FOG`, `HEAL`), `TRAITS.assassin` in `Battle.surpriseMul`, Schleich-Boni aus `b.fx`: `noise`, `scentPct`, `sneakMove`, `surprisePct`, `sightCut`.
+- Gemessen mit `tools/test/sneak.js` (einfacher Bot, 10 Dörfer, Startarmee): am Tag lautlose Siege Schleichen 3 / Stürmen 1, Verluste 0,3 / 1,2; nachts beide 2 (Dörfer sind für 12 Ghule zu schwach, um Stürmen zu bestrafen). Größere Orte schafft der Bot nicht lautlos – das soll Können und passende Einheiten brauchen (Etappe B).
 
-**Rollen der Wachen** (`Alarm.assign`): Posten (`role: 'post'`, auf einem Ring um den Ort, Blick nach außen), Streife (`'patrol'`, läuft einen Ring aus 6 Wegpunkten, 2 Felder pro Zug), Ruhende (`'rest'`, nachts `asleep`: sehen nichts, hören und riechen halb so weit). Nachts ~30 % Posten, tags ~50 %. Einzigartige, Maschinen und Sinnes-Typen (`SENSE_TYPES`) schlafen nie. Bei Tageszeitwechsel: `Alarm.timeChanged()`.
-
-**Argwohn 0–100** (`e.aw`) statt Schalter; 50 = misstrauisch, 100 = alarmiert; ohne Reiz −20 pro Runde (`Alarm.roundEnd`), unter 50 beruhigt sich die Wache und geht zurück (`e.away`, `Alarm.goHome`).
-
-| Reiz | Argwohn | Regel |
-|-|-|-|
-| Sicht nah (≤ halbe Sichtweite) | +100 | Kegel ±1 Richtung, Sichtlinie; geprüft auf **jedem Schritt** des Wegs (`Stealth.exposure`) |
-| Sicht fern | +60 | Sichtweite: Tageszeit, Deckung des Bodens (`STEALTH.cover`: hohes Gras/Sumpf/Moor −2, Heide/Matsch/Friedhof −1), Größe (klein −1, groß +1/+2), Geister −1, Nebel → 1 |
-| bleibt in Sicht (Rundenende) | +30 | `Alarm.look(e, true)` |
-| Gehör | +40 | Radius = Gehör × Lautstärke / 2; Lautstärke = `noise` der Einheit, +1 ab 12 Kreaturen, **−2 beim Schleichen** (höchstens halbe Bewegung, aufgerundet) |
-| Geruch (einmal pro Runde) | +30 | Radius = Geruch × Wind (1,5 / 0,5) × `scent` / 3; Geister riechen nicht |
-| Tote gefunden | +60 | gefallene Verteidiger (`b.bodies`) in Sicht; Ghul-Leichenfraß beseitigt sie |
-| Kampflärm | +40 | im Umkreis max(3, Gehör); **nicht**, wenn ein Stapel durch einen Überraschungsschlag komplett fällt („lautlos“) |
-| Krachen (Tor, Mauer, lauter Zauber) | 100 | `Alarm.crash` |
-
-**Alarmkette.** Der Alarm breitet sich nicht mehr von selbst aus. Ein Alarmierter ruft in seinem nächsten Zug (`Alarm.shout`, Radius max(3, 2 × Gehör)) – stirbt er vorher, weiß es keiner. Der erste Rufer in der Nähe (≤ 10 Felder) von Kirche, Kapelle oder Wachturm wird Glöckner (`b.bellRunner`, Symbol 🔔) und läuft hin (`Alarm.runToBell`); kommt er an, sind alle wach (`b.bell`).
-
-**Misstrauische** gehen zum Ort des Reizes (`e.lookAt`), schauen sich dort um (`Alarm.investigate`), statt zur nächsten Einheit zu laufen.
-
-**Belohnung** (`Battle.finish`): Sieg ohne einen einzigen Ruf = „Lautlos“: die Bedrohung aus diesem Angriff wird zurückgenommen (`b.threatAdded`), +25 % Leichen und Knochen. Glocke geläutet: Bedrohung der Fraktion +10.
-
-**Angriffsplan** (`UI.attackPlan`, vor jedem Angriff über die Knöpfe): Kompass mit 6 Seiten, Wind in der Mitte, grün = gegen den Wind, rot = mit dem Wind; Umgehen kostet 1 Std. pro Sechstel; „Bis zur Nacht warten“. `Battle.start(node, exp, plan)` mit `plan.dir`. Tests, die `Battle.start(node)` direkt rufen, laufen ohne Dialog.
-
-**Anzeige.** Marken über den Wachen: z schläft, • wach, ↻ Streife, ? misstrauisch, ! alarmiert, 🔔 Glöckner; darunter ein Argwohn-Balken. Kegel: gelb = ferne Sicht (misstrauisch), orange = nahe Sicht (Alarm). Bewegungsfelder: grün = leise, blau = normal. Wegvorschau: hell = unbemerkt, orange = misstrauisch, rot = Alarm, dazu Text im Tooltip (`Stealth.preview`). Einheitenkarte zeigt Rolle, Sinne und Argwohn.
-
-**Noch zu tun für A**
-
-- [ ] Testen: `meas.js` (Start-Messung Tag/Nacht), echter Kampf im Test-Browser, Regressionstests (`test_*.js`), Koop-Tests.
-- [ ] Werkzeuge: Fähigkeits-Effekte `LURE` (Totenlicht lockt Wachen zu einem Feld, höchstens bis knapp unter Alarm) und `FOG` (Grabesnebel: `b.fog`, Sicht auf Einheiten im Nebel = 1) in `tools/gen_data.py` und `Abilities.use`. `b.fog` und die Ausnahme „leise Fähigkeiten“ in `castAbility` sind schon vorbereitet.
-- [ ] `const TRAITS` anlegen (wird von `Battle.surpriseMul` für das Merkmal ASSASSIN erwartet, kommt mit Etappe B).
-- [ ] Design-Dokument: Abschnitt „Alarm schlagen“ durch das neue System ersetzen. `BUGS.md` bei Bedarf.
+**Offen aus A (wandert in B):** Fähigkeits-Effekte `LURE` (Totenlicht lockt Wachen zu einem Feld: `lookAt` setzen, Argwohn auf höchstens 90) und `FOG` (Grabesnebel füllt `b.fog` für einige Runden) in `tools/gen_data.py` und `Abilities.use`.
 
 ## Etappe B – Spielstile (Entwurf, noch nichts eingebaut)
 
@@ -103,4 +76,6 @@ Ein Fenster mit drei Reitern: **Gebäude** (Karten mit Stufenpunkten und den Ein
 
 ## Werkzeuge zum Testen
 
-Liegen nur im flüchtigen Arbeitsordner der Sitzung, nicht im Repo. Prinzip zum Nachbauen: Playwright (Chromium ist vorinstalliert) lädt `index.html` über `file://`, leitet die Three.js-Adressen von jsDelivr auf eine lokale Kopie um und hängt vor dem letzten `</script>` eine Zeile an, die `Battle, game, newGame, DATA, UI, Campaign, Alarm, Stealth …` als `window.__T` herausgibt. Danach per `page.evaluate` ein neues Spiel starten und `Battle.start(node)` rufen. **Nicht** Kevins Browser im Claude-Desktop zum Testen benutzen.
+- Im Repo: `tools/test/` (`sneak.js` spielt ganze Kämpfe mit Attrappen statt echter Grafik, siehe `tools/test/README.md`).
+- Nur im flüchtigen Arbeitsordner der Sitzung: Bildschirmfotos mit echter Grafik (`real.js`) und ältere Einzeltests. Prinzip zum Nachbauen: Playwright lädt `index.html` über `file://`, leitet die Three.js-Adressen von jsDelivr auf eine lokale Kopie von three@0.160.0 um (Chromium mit `--use-angle=swiftshader`) und hängt vor dem letzten `</script>` eine Zeile an, die `Battle, game, newGame, DATA, UI, …` als `window.__T` herausgibt.
+- **Nicht** Kevins Browser im Claude-Desktop zum Testen benutzen.

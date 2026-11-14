@@ -2252,25 +2252,50 @@ Stufen:
 - **Schwimmer:** Wasserleiche, Wassermann, Ertrunkener, Wattjungfrau, Klabautermann, Blanker Hans – Wasser (auch tiefes) kostet sie 1.
 - **Fenster:** Fernkämpfer schießen auch auf ein direkt angrenzendes Feld durchs Fenster (Deckung, kein Konter); Nahkampf bleibt blockiert.
 
-### Alarm schlagen (umgesetzt 04.11.2026)
+### Schleichen 2.0 (umgesetzt 14.11.2026, ersetzt „Alarm schlagen“ vom 04.11.)
 
-Nicht gleich alle Verteidiger kämpfen. Jeder Gegner hat einen Zustand:
+**Warum neu:** Bei der alten Fassung startete die Armee auf den kleinen Feldern (156 von 193 Orten) schon in Sichtweite, Entdeckung war ein Schalter, der Alarm lief von selbst weiter, und der Spieler hatte keine Mittel. Messung vorher (Startarmee, 40 Orte): am Tag nur 17 Orte unbemerkt betreten, nachts 31; Abstand zur nächsten Wache 3,9 Felder. Nachher: 40 von 40, Abstand 9,1 (Tag) bzw. 7,2 (Nacht).
 
-| Zustand | Marke | Verhalten |
+**Anmarschzone.** Um jede Siedlung liegt offenes Land: Das Kampffeld ist größer als der Ort (30 Felder bei Orten bis 16, sonst mindestens 40). Die Untoten starten außerhalb jeder Sichtweite.
+
+**Angriffsplan.** Vor dem Angriff wählt man die Seite (Kompass mit sechs Richtungen). Gegen den Wind riecht einen niemand, mit dem Wind trägt der Geruch dreimal so weit. Den Ort zu umgehen kostet eine Stunde je Sechstel. „Bis zur Nacht warten“ ist dort ebenfalls möglich.
+
+**Rollen der Wachen**
+
+| Rolle | Marke | Verhalten |
 |-|-|-|
-| ahnungslos | z | steht still, handelt nicht |
-| misstrauisch | ? | geht dem Verdacht nach (Schritt zur nächsten Untoten-Einheit), noch kein Angriff |
-| alarmiert | ! | kämpft; ruft im ersten Zug (weckt alle im doppelten Hörradius) |
+| Posten | • | steht am Rand, blickt nach außen, ruft sofort, wenn er sicher ist |
+| Streife | ↻ | läuft einen Ring um den Ort (2 Felder pro Zug), ruft sofort |
+| Ruhende | • / z | im Ort, Blick zufällig; nachts und am nebligen frühen Morgen schlafen sie (z): sehen nichts, hören und riechen halb so weit |
 
-- Entdeckt ein Wächter eine Einheit (Sicht, Gehör, Geruch), wird er alarmiert. Kampflärm (3 Felder) und Fähigkeiten (2 Felder) wecken Nachbarn.
-- **Glocken:** Ruft ein Wächter in oder neben Kirche/Turm, ist sofort das ganze Feld alarmiert.
-- Alarm breitet sich pro Runde 4 Felder aus; nach 3 ruhigen Runden werden die Wachen unruhig (misstrauisch).
-- **Überraschungstreffer:** Angriff auf nicht alarmierte Gegner +25 % Schaden, kein Konter.
-- **Spürer** (Priester, Mönche, Kleriker, Heideschwestern, Hexen, Druiden, Heidekönigin, Zwergenkönig): doppelte Hör- und Riechweite, beginnen misstrauisch, rufen doppelt so weit.
-- Begegnungen unterwegs: alle alarmiert. Hohe Bedrohung (≥ 50) oder Trupp derselben Fraktion: gewarnt, alle alarmiert.
-- Anzeige: Sichtkegel (gelb ahnungslos, orange misstrauisch), Pfadvorschau rot auf Feldern, auf denen die Einheit bemerkt würde. Stinkende Einheiten (Geruch 3+, Ghule, Zombies) ziehen eine Stinkfahne mit dem Wind.
-- Messung (70 Orte): Startarmee 30 % Überraschungstreffer (vorher 9 %), Geisterarmee 31 % (vorher 53 %, Spürer bemerken Geister früher).
+Nachts und morgens sind etwa 30–40 % der Gruppen Posten, am Tag die Hälfte. Anführer, Maschinen und Spürer (Priester, Mönche, Kleriker, Heideschwestern, Hexen, Druiden, Heidekönigin, Zwergenkönig; doppelte Hör- und Riechweite) schlafen nie.
 
+**Argwohn 0–100** statt Schalter. 50 = misstrauisch (?), 100 = alarmiert (!). Ohne neuen Reiz sinkt er um 20 pro Runde; unter 50 beruhigt sich die Wache und geht auf ihren Platz zurück.
+
+| Reiz | Argwohn | Regel |
+|-|-|-|
+| Sicht nah (bis halbe Sichtweite) | +100 | im Kegel, mit Sichtlinie; zählt auf jedem Schritt des Wegs |
+| Sicht fern | +60 | Sichtweite je Tageszeit; hohes Gras, Sumpf, Moor −2; Heide, Matsch, Friedhof −1; kleine Einheiten −1, große +1/+2, Geister −1 |
+| bleibt in Sicht (Rundenende) | +30 | |
+| Gehör | +40 | Radius = Gehör × Lautstärke ÷ 2. Lautstärke = Wert der Einheit, +1 ab 12 Kreaturen, **−2 beim Schleichen** (höchstens halbe Bewegung) |
+| Geruch (je Runde) | +30 | Radius = Geruch × Wind (1,5 mit, 0,5 gegen) × Geruchswert der Einheit ÷ 3 |
+| Tote gefunden | +60 | gefallene Verteidiger in Sicht; Ghule können sie fressen |
+| Kampflärm | +40 | im Umkreis von mindestens 3 Feldern |
+| Krachen (Tor, Mauer, lauter Zauber) | 100 | |
+
+**Überraschung und Stille.** Wer nicht alarmiert ist, bekommt einen Überraschungsschlag (+25 %, kein Konter). Fällt der Stapel in diesem einen Schlag, hört es niemand. Überlebt er, ist er alarmiert, und der Kampf macht Lärm.
+
+**Alarmkette.** Der Alarm breitet sich nicht mehr von selbst aus. Posten und Streifen rufen sofort; alle anderen rufen in ihrem nächsten Zug – wer vorher stirbt, hat niemanden geweckt. Ein Ruf weckt alle im doppelten Hörradius (mindestens 3 Felder). Der erste Rufer in der Nähe von Kirche, Kapelle oder Wachturm läuft zur Glocke (🔔); erreicht er sie, ist das ganze Feld wach.
+
+**Misstrauische** gehen zum Ort des Reizes und sehen sich dort um (nicht mehr zur nächsten Einheit).
+
+**Lohn.** Sieg ohne einen einzigen Ruf = „Lautlos“: Die Bedrohung steigt durch diesen Angriff nicht, +25 % Leichen und Knochen. Läutet die Glocke: Bedrohung der Fraktion +10.
+
+**Anzeige.** Argwohn-Balken über der Wache; Kegel gelb (fern, macht misstrauisch) und orange (nah, Alarm); Bewegungsfelder grün = leise, blau = normal; Wegvorschau hell / orange / rot mit Begründung im Tooltip; die Einheitenkarte zeigt Rolle, Sinne und Argwohn.
+
+**Unverändert:** Begegnungen unterwegs – alle alarmiert. Hohe Bedrohung (ab 50) oder ein Trupp derselben Fraktion – gewarnt, alle alarmiert und in Stellung.
+
+Werte: `STEALTH` und `APPROACH` in `index.html`. Testwerkzeug: `tools/test/sneak.js` (spielt ganze Kämpfe mit einem einfachen Bot).
 ---
 
 ## Mythologie-Wissen als Belohnung

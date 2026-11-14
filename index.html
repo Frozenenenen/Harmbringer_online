@@ -183,6 +183,7 @@
   #battleLog p { margin: 0 0 3px; }
   #battleLog .hit { color: var(--blood); }
   #battleLog .good { color: var(--undead); }
+  #modalBody .good { color: var(--undead); } #modalBody .bad { color: var(--blood); }
   #battleButtons { position: absolute; right: 10px; bottom: 0; height: 64px; display: flex; gap: 6px; z-index: 6; align-items: center; max-width: 60%; }
   #battleButtons #abilityBar { flex-wrap: nowrap; overflow-x: auto; }
   #battleButtons #abilityBar { margin: 0 6px 0 0; }
@@ -270,7 +271,8 @@
   .nodeLabel.raidLabel { background: rgba(90,24,20,.88); color: #f2e6cf; font-size: 13px; }
   .unitLabel { width: 40px; pointer-events: none; transform: translateY(-6px); }
   .unitLabel .alertMark { display: block; text-align: center; font: bold 18px Georgia, serif; text-shadow: 0 0 4px #000; }
-  .alertMark.unaware { color: #c8c8c8; font-size: 13px; font-style: italic; } .alertMark.suspicious { color: #f0d040; } .alertMark.alarmed { color: #ff4030; }
+  .alertMark.unaware { color: #e8e2c8; font-size: 15px; } .alertMark.unaware.asleep { color: #a8b4d8; font-size: 13px; font-style: italic; }
+  .unitLabel .awbar { display: none; width: 34px; height: 4px; margin: 0 auto 1px; background: rgba(0,0,0,0.6); border: 1px solid #000; } .unitLabel .awbar > div { height: 100%; width: 0; } .alertMark.suspicious { color: #f0d040; } .alertMark.alarmed { color: #ff4030; }
   .unitLabel .stIcons { font-size: 12px; color: #fff; text-shadow: 0 0 3px #000; margin-right: 2px; }
   .unitLabel .tokName { display: none; } body.tokens .unitLabel { width: 70px; } body.tokens .unitLabel .tokName { display: block; font-size: 11px; color: #fff; text-shadow: 0 0 3px #000; white-space: nowrap; }
   .stackCount { display: block; text-align: center; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; margin-bottom: 1px; }
@@ -401,7 +403,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 135, "date": "2026-11-11", "changes": [{"date": "11.11. 00:57", "text": "Koop: Gast wählt seinen Kommandeur, gleicher Start wie der Lich; Anführer zäher (Leibwache −35 % Schaden, mehr LP und Schild)"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}, {"date": "04.11. 23:59", "text": "Ley-Sprung: Gründe anzeigen"}, {"date": "04.11. 23:38", "text": "Fels heißt jetzt Geröll"}]};
+const BUILD = {"version": 137, "date": "2026-11-14", "changes": [{"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}, {"date": "09.11. 17:18", "text": "CLAUDE.md: Hinweis auf ui_bilder.md"}, {"date": "09.11. 17:18", "text": "UI-Bilder: Prompt-Liste im Dürer-Stil"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2229,13 +2231,13 @@ const Coop = {
   // Hours a player is behind the world (time he can spend without moving it).
   credit(who) { const c = game.campaign; if (!c || !c.coop || !c.coop.clock) return 0; return Math.max(0, c.dayCount * 24 + Campaign.hour() - (c.coop.clock[who] ?? 0)); },
   // --- Battles of the guest (stage 4): fought on the guest's computer, the result goes to the host.
-  async guestBattle(node) {
+  async guestBattle(node, plan = null) {
     const c = game.campaign;
     if (this.inBattle || game.mode === 'battle') return;
     this.inBattle = true; this.battleBase = JSON.stringify(c);
     // His army fights as an expedition (no Lich); the battle's result ends up in exp.army / exp.nodeId.
     this.guestExp = { id: 'coop', coopSelf: true, leader: c.coop.leader || 'nekromant', army: c.army, nodeId: c.nodeId, prevNodeId: c.prevNodeId, order: null };
-    try { await Battle.startBattle(node, this.guestExp); }
+    try { await Battle.startBattle(node, this.guestExp, plan); }
     catch (e) { console.error(e); this.inBattle = false; }
     if (game.mode !== 'battle') this.inBattle = false;
   },
@@ -3482,13 +3484,16 @@ function groupByType(list) {
   return [...out].map(([type, hps]) => ({ type, hps }));
 }
 
+const APPROACH = { small: 30, large: 40, margin: 2 };   // field size incl. approach zone; distance kept from the guards' sight
 class Battlefield {
   constructor(node) {
     this.node = node;
-    this.size = node.size;
+    // The settlement is laid out for `core`; around it lies open land to sneak up through.
+    this.core = node.size;
+    this.size = node.encounter ? node.size : Math.max(node.size, node.size <= 16 ? APPROACH.small : APPROACH.large);
     this.cq = node.q; this.cr = node.r;
-    this.q0 = node.q - node.size / 2;
-    this.r0 = node.r - node.size / 2;
+    this.q0 = node.q - this.size / 2;
+    this.r0 = node.r - this.size / 2;
     this.seed = stringSeed(node.id);
     this.rng = makeRng(this.seed);
     this.tiles = new Array(this.size * this.size);
@@ -3542,7 +3547,7 @@ class Battlefield {
   }
 
   build() {
-    const type = this.node.type, size = this.size;
+    const type = this.node.type, size = this.core;
     const set = DATA.buildingSets[type];
     if (type === 'WORLDLY') {
       for (const t of this.tilesWithin(this.cq, this.cr, 3)) if (!this.isWater(t)) t.floor = 'COBBLESTONE';
@@ -3790,7 +3795,7 @@ class Battlefield {
   // Fences: lines of 4-6 tiles in direction d; edge (d+1)%6 becomes cover on both sides.
   placeFences(count) {
     for (let f = 0; f < count; f++) {
-      let t = this.randomTileWithin(this.size / 2 - 2);
+      let t = this.randomTileWithin(this.core / 2 - 2);
       const d = Math.floor(this.rng() * 6), len = 4 + Math.floor(this.rng() * 3), e = (d + 1) % 6;
       for (let i = 0; i < len && t; i++) {
         if (t.building !== null) break;
@@ -4176,7 +4181,7 @@ const BattleView = {
     group.add(ped, body, token);
     const el = document.createElement('div');
     el.className = 'unitLabel';
-    el.innerHTML = `<span class="alertMark"></span><span class="tokName">${esc(def.name)}</span><span class="stIcons"></span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
+    el.innerHTML = `<span class="alertMark"></span><div class="awbar"><div></div></div><span class="tokName">${esc(def.name)}</span><span class="stIcons"></span><span class="stackCount"></span><div class="hpbar ${u.side === 'player' ? 'player' : ''}"><div></div></div>`;
     const label = new CSS2DObject(el);
     label.position.y = body.position.y + (tpl ? tpl.userData.height * body.scale.y + 0.5 : 3.2 * s);
     group.add(label);
@@ -4200,7 +4205,14 @@ const BattleView = {
     const st = u.view.el.querySelector('.stIcons');
     if (st) st.textContent = Object.keys(u.status || {}).map(k => STATUS_ICONS[k] || '').join('');
     const al = u.view.el.querySelector('.alertMark');
-    if (al) { al.textContent = u.side !== 'enemy' ? '' : u.alert === 'unaware' ? 'z' : u.alert === 'suspicious' ? '?' : '!'; al.className = 'alertMark ' + (u.alert || ''); }
+    if (al) {
+      const b = game.battle, st = b && b.arrival === 'SURPRISE' && b.state === 'stealth';
+      const bell = b && b.bellRunner === u;
+      al.textContent = u.side !== 'enemy' ? '' : bell ? '🔔' : u.alert === 'suspicious' ? '?' : u.alert === 'alarmed' ? '!' : u.asleep ? 'z' : u.role === 'patrol' ? '↻' : '•';
+      al.className = 'alertMark ' + (u.alert || '') + (u.asleep ? ' asleep' : '');
+      const bar = u.view.el.querySelector('.awbar');
+      if (bar) { const show = u.side === 'enemy' && st && u.alert !== 'alarmed' && (u.aw || 0) > 0; bar.style.display = show ? 'block' : 'none'; bar.firstChild.style.width = Math.min(100, u.aw || 0) + '%'; bar.firstChild.style.background = (u.aw || 0) >= STEALTH.suspicious ? '#ff8a2a' : '#f0d040'; }
+    }
   },
   floatText(u, text, heal) {
     const el = document.createElement('div');
@@ -4301,48 +4313,96 @@ function removeWithLabels(obj) {
 }
 
 // =============================================================================
-// Stealth (PROMPT 9): facing, sight cones, hearing and smell.
+// Stealth 2.0: awareness instead of a switch.
+// Every defender has an awareness value 0..100 (`aw`). Stimuli raise it: seeing an undead
+// (cone, range, line of sight, cover of the ground, size), hearing a move (unit noise, big
+// stacks, sneaking = half movement), smelling the dead (unit scent, wind, once per round),
+// finding a body, fighting nearby. 50 = suspicious (walks to the stimulus), 100 = alarmed.
+// Quiet rounds let it sink again. Guards have a role: post (awake, looks outward), patrol
+// (walks a ring), rest (asleep at night: blind, hears and smells half as far).
 // =============================================================================
+const STEALTH = {
+  suspicious: 50, alarmed: 100, decay: 20,
+  sightNear: 100, sightFar: 60, linger: 30, hear: 40, smell: 30, corpse: 60, fight: 40, lure: 60,
+  cover: { GRASS_TALL: 2, SWAMP: 2, BOG: 2, HEATHER: 1, MUD: 1, GRAVEYARD_GROUND: 1 },
+  bigStack: 12, sneakNoise: -2, sleepSense: 0.5, noiseDiv: 2, scentDiv: 3, fogSight: 1,
+  fightRadius: 3, shoutMin: 3, bellReach: 10, silentLoot: 0.25, bellThreat: 10, flankHours: 1
+};
+// Unit vector of a hex direction (0 = north, clockwise), matching vectorToDirection.
+function dirVec(d) {
+  const a = hexToWorld(0, 0);
+  for (let k = 0; k < 6; k++) {
+    const [q, r] = neighbor(0, 0, k), c = hexToWorld(q, r), l = Math.hypot(c.x - a.x, c.z - a.z);
+    if (vectorToDirection(c.x - a.x, c.z - a.z) === d) return { x: (c.x - a.x) / l, z: (c.z - a.z) / l };
+  }
+  return { x: 0, z: 1 };
+}
 const Stealth = {
+  fx() { return (game.battle && game.battle.fx) || {}; },
   inCone(enemy, tq, tr) {
     const a = hexToWorld(enemy.q, enemy.r), b = hexToWorld(tq, tr);
     const dir = vectorToDirection(b.x - a.x, b.z - a.z);
     const diff = Math.min((dir - enemy.facing + 6) % 6, (enemy.facing - dir + 6) % 6);
     return diff <= 1;
   },
-  sees(field, enemy, tq, tr) {
+  // How far guard `e` can make out unit `u` standing on tile `t` (cover, size, fog).
+  sightRange(e, u, t) {
+    const b = game.battle, s = u.def.size;
+    let r = Weather.sightOf(b, e) - (STEALTH.cover[t.floor] || 0) + (s >= 4 ? 2 : s === 3 ? 1 : s <= 1 ? -1 : 0) - (u.def.spectral ? 1 : 0) - (this.fx().sightCut || 0);
+    if (b.fog && b.fog.has(b.field.index(t))) r = Math.min(r, STEALTH.fogSight);
+    return Math.max(1, r);
+  },
+  sees(field, enemy, tq, tr, range) {
     const dist = hexDistance(enemy.q, enemy.r, tq, tr);
-    if (dist > Weather.sightOf(game.battle, enemy) || dist === 0 || !this.inCone(enemy, tq, tr)) return false;
+    if (enemy.asleep || dist === 0 || dist > (range ?? Weather.sightOf(game.battle, enemy)) || !this.inCone(enemy, tq, tr)) return false;
     return Combat.lineOfSight(field, field.get(enemy.q, enemy.r), field.get(tq, tr)).clear;
   },
-  // Does `enemy` detect undead unit `u`? Returns the sense or null.
-  detects(field, enemy, u) {
-    const dist = hexDistance(enemy.q, enemy.r, u.q, u.r);
-    if (this.sees(field, enemy, u.q, u.r)) return 'Sicht';
-    const k = Alarm.sense(enemy);
-    if (dist <= enemy.def.hear * k && u.def.size >= 2 && u.movedThisTurn) return 'Gehör';
-    if (dist <= Weather.smellOf(game.battle, enemy, u) * k && !u.def.spectral) return 'Geruch';
-    return null;
+  // Sneaking: at most half the movement (rounded up).
+  sneakSteps(u) { return Math.ceil(moveOf(u) / 2) + (this.fx().sneakMove || 0); },
+  loudness(u, steps) {
+    if (!steps) return 0;
+    return Math.max(0, (u.def.noise || 0) + (stackCount(u) >= STEALTH.bigStack ? 1 : 0) + (steps <= this.sneakSteps(u) ? STEALTH.sneakNoise : 0) + (this.fx().noise || 0));
   },
-  check(battle, units) {
-    for (const e of battle.units) {
-      if (e.side !== 'enemy' || !e.alive) continue;
-      for (const u of units) {
-        if (!u.alive) continue;
-        const sense = this.detects(battle.field, e, u);
-        if (sense) return { enemy: e, unit: u, sense };
-      }
+  hearRange(e, u, steps) { return e.def.hear * Alarm.sense(e) * (e.asleep ? STEALTH.sleepSense : 1) * this.loudness(u, steps) / STEALTH.noiseDiv; },
+  smellRange(e, u) {
+    if (u.def.spectral || !u.def.scent) return 0;
+    return Weather.smellOf(game.battle, e, u) * Alarm.sense(e) * (e.asleep ? STEALTH.sleepSense : 1) * u.def.scent / STEALTH.scentDiv * (1 + (this.fx().scentPct || 0));
+  },
+  // What guard `e` gains from unit `u` walking `path` (tiles, last one = where it ends). A path of
+  // one tile is "stands there". Sight counts on every step, hearing where the move ends.
+  exposure(e, u, path) {
+    const f = game.battle.field, dest = path[path.length - 1], steps = path.length - 1;
+    let gain = 0, sense = null;
+    for (let i = steps ? 1 : 0; i < path.length; i++) {
+      const t = path[i], r = this.sightRange(e, u, t);
+      if (!this.sees(f, e, t.q, t.r, r)) continue;
+      const g = hexDistance(e.q, e.r, t.q, t.r) <= Math.ceil(r / 2) ? STEALTH.sightNear : STEALTH.sightFar;
+      if (g > gain) { gain = g; sense = 'Sicht'; }
     }
-    return null;
+    if (gain < STEALTH.hear && steps && hexDistance(e.q, e.r, dest.q, dest.r) <= this.hearRange(e, u, steps)) { gain = STEALTH.hear; sense = 'Gehör'; }
+    return { gain, sense };
   },
+  // Worst outcome of a planned move over all guards who are not alarmed yet: { level 0|1|2, text }.
+  preview(u, path) {
+    let level = 0, text = '';
+    for (const e of Alarm.enemies()) {
+      if (e.alert === 'alarmed') continue;
+      const x = this.exposure(e, u, path); if (!x.gain) continue;
+      const aw = (e.aw || 0) + x.gain, l = aw >= STEALTH.alarmed ? 2 : aw >= STEALTH.suspicious ? 1 : 0;
+      if (l > level || !text) { level = Math.max(level, l); text = `${e.def.name}: ${x.sense} → ${l === 2 ? 'Alarm' : l === 1 ? 'misstrauisch' : 'horcht auf'}`; }
+    }
+    return { level, text };
+  },
+  // Cone tiles of all awake guards who are not alarmed; _near marks the half where a look is enough.
   coneTiles(battle) {
     const set = new Map();
     for (const e of battle.units) {
-      if (e.side !== 'enemy' || !e.alive || e.alert === 'alarmed') continue;
-      for (const t of battle.field.tilesWithin(e.q, e.r, Weather.sightOf(battle, e))) {
+      if (e.side !== 'enemy' || !e.alive || e.alert === 'alarmed' || e.asleep) continue;
+      const R = Weather.sightOf(battle, e);
+      for (const t of battle.field.tilesWithin(e.q, e.r, R)) {
         if (!this.sees(battle.field, e, t.q, t.r)) continue;
-        const k = battle.field.index(t);
-        if (!set.has(k) || e.alert === 'suspicious') set.set(k, Object.assign(t, { _alert: e.alert }));
+        const k = battle.field.index(t), near = hexDistance(e.q, e.r, t.q, t.r) <= Math.ceil(R / 2);
+        if (!set.has(k) || near) set.set(k, Object.assign(t, { _near: near || (set.has(k) && t._near) }));
       }
     }
     return [...set.values()];
@@ -4484,86 +4544,265 @@ const Sfx = {
 };
 
 // =============================================================================
-// Alarm: defenders are unaware (z), suspicious (?) or alarmed (!). Only suspicious and alarmed
-// stacks take turns. Whoever spots the undead is alarmed alone; on his next turn he shouts and
-// wakes everyone within twice his hearing; then the alarm spreads 4 tiles per round. An alarmed
-// defender on or next to a church or watch tower rings the bell: the whole field is awake.
-// Unaware targets take +25 % damage and cannot strike back. Priests, witches and druids sense
-// the dead: double hearing and smell, they start suspicious and shout twice as far.
+// Alarm: defenders are unaware (asleep z, awake •, patrol ↻), suspicious (?) or alarmed (!).
+// Unaware stacks do not act (patrols walk their round). A suspicious guard walks to what he
+// noticed and calms down again if nothing follows. A post or patrol who discovers the undead
+// shouts at once; everybody else shouts on his next turn and wakes everyone within twice his
+// hearing – kill him before and nobody knows. The alarm does
+// not spread by itself. If a church, chapel or watch tower is near, the first shouter runs to
+// the bell; when he gets there the whole field is awake. Guards who see a dead comrade grow
+// suspicious. Unaware targets take a surprise hit (+25 %, no counter); a stack wiped out in
+// one surprise hit dies without a sound. Priests, witches and druids sense the dead: double
+// hearing and smell, they never sleep and shout twice as far.
 // =============================================================================
 const SENSE_TYPES = new Set(['hexe', 'brockenhexe', 'druidin', 'druide', 'heidekoenigin', 'zwergenkoenig', 'priester', 'moench', 'kleriker', 'heideschwester']);
-const ALARM = { spreadPerRound: 4, surpriseBonus: 1.25, restlessAfterRounds: 3, combatNoise: 3 };
+const ALARM = { surpriseBonus: 1.25 };
+const TRAITS = { assassin: 0.75 };
+const BELL_BUILDINGS = ['church', 'chapel', 'tower'];
+const ROLE_NAMES = { post: 'Posten', patrol: 'Streife', rest: 'ruht' };
 const Alarm = {
   enemies(state) { return Battle.alive('enemy').filter(e => !state || e.alert === state); },
   sense(e) { return SENSE_TYPES.has(e.type) ? 2 : 1; },
   awake(e) { return e.alert === 'alarmed'; },
   set(e, state, why) {
     const b = game.battle; if (!e.alive || e.alert === 'alarmed' || e.alert === state) return;
-    const was = e.alert; e.alert = state;
-    if (was === 'unaware') e.nextTick = Math.max(e.nextTick, (b.lastTick || 0) + Math.round(turnTicks(e.def) * 0.5));
-    if (state === 'alarmed') { e.shouted = false; BattleView.floatText(e, '!'); }
-    else BattleView.floatText(e, '?');
+    const was = e.alert; e.alert = state; e.asleep = false;
+    // A guard who did not take turns so far needs a moment to get going.
+    if (was === 'unaware' && e.role !== 'patrol' && !e.away) e.nextTick = Math.max(e.nextTick, (b.lastTick || 0) + Math.round(turnTicks(e.def) * 0.5));
+    if (state === 'alarmed') { e.aw = STEALTH.alarmed; e.shouted = false; BattleView.floatText(e, '!'); }
+    else { e.aw = Math.max(e.aw || 0, STEALTH.suspicious); BattleView.floatText(e, '?'); }
     BattleView.updateHp(e);
     if (why) Battle.log(why, 'hit');
-    if (state === 'alarmed' && b.state === 'stealth') { b.state = 'fight'; UI.toast('Alarm! Die Verteidiger sind aufgeschreckt.'); }
+    if (state === 'alarmed' && !b.firstAlarm) { b.firstAlarm = true; UI.toast('Entdeckt! Wer Alarm schlägt, weckt die anderen – bringt ihn vorher zum Schweigen.', 5); }
+    if (b.state === 'stealth' && !this.enemies().some(o => o.alert !== 'alarmed')) b.state = 'fight';
   },
-  // After a move or an attack: does any defender notice one of these undead?
-  check(units) {
-    const b = game.battle;
+  // Raise awareness by a stimulus at `at` (the guard will look and walk there).
+  raise(e, gain, sense, who, at) {
+    const b = game.battle; if (!e.alive || e.alert === 'alarmed' || !(gain > 0)) return;
+    e.aw = Math.min(STEALTH.alarmed, (e.aw || 0) + gain); e.stim = b.round;
+    if (at) e.lookAt = { q: at.q, r: at.r };
+    // Guards on watch (post, patrol) shout the moment they are sure; the others need their next turn.
+    const onWatch = !e.asleep && (e.role === 'post' || e.role === 'patrol');
+    if (e.aw >= STEALTH.alarmed) { this.set(e, 'alarmed', `${e.def.name} ${who ? 'entdeckt ' + who : 'ist alarmiert'} (${sense})!`); if (onWatch && e.alive && !e.shouted) this.shout(e); }
+    else if (e.aw >= STEALTH.suspicious && e.alert === 'unaware') this.set(e, 'suspicious', `${e.def.name} wird misstrauisch (${sense}).`);
+    else BattleView.updateHp(e);
+  },
+  // After an undead unit walked `path` (default: it stands where it is).
+  check(u, path) {
+    const b = game.battle, f = b.field;
+    if (!u.alive) return;
+    path = path && path.length ? path : [f.get(u.q, u.r)];
+    const dest = path[path.length - 1];
     for (const e of this.enemies()) {
       if (e.alert === 'alarmed') continue;
-      for (const u of units) {
-        if (!u.alive) continue;
-        const sense = Stealth.detects(b.field, e, u);
-        if (!sense) continue;
-        if (sense === 'Sicht' || e.alert === 'suspicious') this.set(e, 'alarmed', `${e.def.name} entdeckt ${u.def.name} (${sense})!`);
-        else this.set(e, 'suspicious', `${e.def.name} wird misstrauisch (${sense}).`);
-        break;
+      const x = Stealth.exposure(e, u, path);
+      if (x.gain) this.raise(e, x.gain, x.sense, u.def.name, dest);
+    }
+    Battle.refreshCones();
+  },
+  // The guard looks around (after his own move, and once per round): undead in sight, bodies.
+  look(e, lingering) {
+    const b = game.battle, f = b.field;
+    if (!e.alive || e.alert === 'alarmed' || e.asleep) return;
+    for (const u of Battle.alive('player')) {
+      const t = f.get(u.q, u.r), r = Stealth.sightRange(e, u, t);
+      if (!Stealth.sees(f, e, u.q, u.r, r)) continue;
+      const near = hexDistance(e.q, e.r, u.q, u.r) <= Math.ceil(r / 2);
+      this.raise(e, lingering && !near ? STEALTH.linger : near ? STEALTH.sightNear : STEALTH.sightFar, 'Sicht', u.def.name, t);
+      if (e.alert === 'alarmed') return;
+    }
+    for (const i of b.bodies || []) {
+      if (!(b.corpses.get(i) > 0) || (e.found && e.found.has(i))) continue;
+      const t = f.tiles[i];
+      if (!t || (hexDistance(e.q, e.r, t.q, t.r) > 1 && !Stealth.sees(f, e, t.q, t.r))) continue;
+      (e.found = e.found || new Set()).add(i);
+      this.raise(e, STEALTH.corpse, 'Tote gefunden', null, t);
+      if (e.alert === 'alarmed') return;
+    }
+  },
+  // Fighting is loud: guards within earshot of a fight prick up their ears.
+  noise(at) {
+    for (const e of this.enemies()) {
+      if (e.alert === 'alarmed') continue;
+      if (hexDistance(e.q, e.r, at.q, at.r) <= Math.max(STEALTH.fightRadius, e.def.hear * this.sense(e)) * (e.asleep ? STEALTH.sleepSense : 1)) this.raise(e, STEALTH.fight, 'Kampflärm', null, at);
+    }
+    Battle.refreshCones();
+  },
+  // Loud crash (gate, wall, spell): everyone within `radius` is alarmed at once.
+  crash(at, radius, why) {
+    for (const e of this.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, at.q, at.r) <= radius) this.raise(e, STEALTH.alarmed, why || 'Lärm', null, at);
+    Battle.refreshCones();
+  },
+  // Tiles from which the bell of a church, chapel or watch tower can be rung.
+  bellSpots(f) {
+    if (f.bellSpots) return f.bellSpots;
+    const out = new Set();
+    for (const t of f.tiles) {
+      if (!t || t.building === null || !f.buildings[t.building] || !BELL_BUILDINGS.includes(f.buildings[t.building].key)) continue;
+      if (f.walkable(t) && !f.isWater(t)) out.add(t);
+      for (let d = 0; d < 6; d++) { const n = f.neighborTile(t, d); if (n && n.building === null && f.walkable(n) && !f.isWater(n)) out.add(n); }
+    }
+    return f.bellSpots = [...out];
+  },
+  // An alarmed defender's first turn: shout. The first shouter near a bell runs for it.
+  shout(e) {
+    const b = game.battle; if (e.shouted) return; e.shouted = true; b.shouts = (b.shouts || 0) + 1;
+    const r = Math.max(STEALTH.shoutMin, e.def.hear * 2 * this.sense(e)); let woke = 0;
+    for (const o of this.enemies()) if (o !== e && o.alert !== 'alarmed' && hexDistance(o.q, o.r, e.q, e.r) <= r) { o.lookAt = { q: e.q, r: e.r }; this.set(o, 'alarmed'); woke++; }
+    Battle.log(`${e.def.name} schlägt Alarm${woke ? ` – ${woke} ${woke === 1 ? 'Gruppe wacht' : 'Gruppen wachen'} auf` : ' – niemand hört es'}.`, 'hit');
+    Sfx.ensure() && Sfx.tone(520, 0.25, 'square', 0.08);
+    if (!b.bell && !b.bellRunner && e.def.rank !== 'MACHINE' && this.enemies().some(o => o.alert !== 'alarmed')) {
+      const spot = this.bellSpots(b.field).filter(t => hexDistance(t.q, t.r, e.q, e.r) <= STEALTH.bellReach).sort((x, y) => hexDistance(x.q, x.r, e.q, e.r) - hexDistance(y.q, y.r, e.q, e.r))[0];
+      if (spot) {
+        b.bellRunner = e; e.bellAt = spot; BattleView.updateHp(e);
+        const f = b.field, B = [spot, ...[0, 1, 2, 3, 4, 5].map(d => f.neighborTile(spot, d))].map(t => t && t.building !== null && f.buildings[t.building]).find(x => x && BELL_BUILDINGS.includes(x.key));
+        Battle.log(`${e.def.name} rennt zur Glocke (${B ? B.name : 'Glockenturm'})! Haltet ihn auf.`, 'hit');
+        UI.toast(`${e.def.name} rennt zur Glocke!`, 4, false);
       }
     }
     Battle.refreshCones();
   },
-  // Fighting is loud: defenders within earshot of a fight grow suspicious.
-  noise(at) {
-    for (const e of this.enemies('unaware')) if (hexDistance(e.q, e.r, at.q, at.r) <= Math.max(ALARM.combatNoise, e.def.hear * this.sense(e))) this.set(e, 'suspicious', `${e.def.name} hört Kampflärm.`);
-  },
-  // An alarmed defender's first turn: shout, maybe ring the bell.
-  shout(e) {
-    const b = game.battle; if (e.shouted) return; e.shouted = true;
-    const r = Math.max(2, e.def.hear * 2 * this.sense(e)); let woke = 0;
-    for (const o of this.enemies()) if (o !== e && o.alert !== 'alarmed' && hexDistance(o.q, o.r, e.q, e.r) <= r) { this.set(o, 'alarmed'); woke++; }
-    Battle.log(`${e.def.name} schlägt Alarm${woke ? ` – ${woke} ${woke === 1 ? 'Gruppe wacht' : 'Gruppen wachen'} auf` : ''}.`, 'hit');
-    const f = b.field, here = f.get(e.q, e.r);
-    const bellTile = [here, ...[0, 1, 2, 3, 4, 5].map(d => f.neighborTile(here, d))].find(t => t && t.building !== null && ['church', 'tower'].includes(f.buildings[t.building].key));
-    if (bellTile && this.enemies().some(o => o.alert !== 'alarmed')) {
-      for (const o of this.enemies()) this.set(o, 'alarmed');
-      Battle.log(`Die Glocke im ${f.buildings[bellTile.building].name} läutet – das ganze Feld ist wach!`, 'hit'); UI.toast('Die Glocke läutet!');
+  // The bell runner's turn. Returns true if the turn is used up.
+  async runToBell(e) {
+    const b = game.battle, f = b.field, spot = e.bellAt;
+    if (!spot || b.bell) return false;
+    if (hexDistance(e.q, e.r, spot.q, spot.r) > 0 && !(await this.walk(e, spot, moveOf(e)))) { b.bellRunner = null; e.bellAt = null; BattleView.updateHp(e); return false; }
+    if (game.battle !== b || !e.alive) return true;
+    if (hexDistance(e.q, e.r, spot.q, spot.r) === 0) {
+      b.bell = true; b.bellRunner = null; e.bellAt = null;
+      for (const o of this.enemies()) { o.shouted = true; if (o.alert !== 'alarmed') this.set(o, 'alarmed'); }
+      BattleView.updateHp(e);
+      Battle.log('Die Glocke läutet – das ganze Feld ist wach, und das Umland hört es!', 'hit'); UI.toast('Die Glocke läutet!', 4, false);
       Sfx.ensure() && Sfx.tone(660, 1.5, 'sine', 0.2);
+      Battle.refreshCones();
+    }
+    return true;
+  },
+  // Walk towards `to` (at most `limit` movement). Sets the facing; false if no step closer was possible.
+  async walk(e, to, limit) {
+    const b = game.battle, f = b.field, here = f.get(e.q, e.r);
+    const reach = Pathfinding.reachable(f, e, Math.max(1, Math.min(limit, moveOf(e))));
+    const d = t => hexDistance(t.q, t.r, to.q, to.r);
+    const dest = reach.tiles.filter(t => !t.unit || t.unit === e).sort((x, y) => d(x) - d(y) || reach.cost.get(f.index(x)) - reach.cost.get(f.index(y)))[0];
+    if (!dest || dest === here || d(dest) >= d(here)) return false;
+    const path = Pathfinding.path(f, reach, dest);
+    if (!path || path.length < 2) return false;
+    await Battle.moveAlong(e, path);
+    const a = hexToWorld(path[path.length - 2].q, path[path.length - 2].r), c = hexToWorld(dest.q, dest.r);
+    e.facing = vectorToDirection(c.x - a.x, c.z - a.z);
+    return true;
+  },
+  turn(e, dir) { e.facing = (dir + 6) % 6; const p = hexToWorld(e.q, e.r), v = dirVec(e.facing); BattleView.face(e, p.x + v.x, p.z + v.z); },
+  faceTo(e, at) { const p = hexToWorld(e.q, e.r), a = hexToWorld(at.q, at.r); if (Math.hypot(a.x - p.x, a.z - p.z) > 1e-3) this.turn(e, vectorToDirection(a.x - p.x, a.z - p.z)); },
+  // Suspicious defenders walk to what they noticed and look around there.
+  async investigate(e) {
+    const b = game.battle;
+    const at = e.lookAt || e.home || { q: e.q, r: e.r };
+    if (hexDistance(e.q, e.r, at.q, at.r) > 1) { if (await this.walk(e, at, 3)) e.away = true; this.faceTo(e, at); }
+    else this.turn(e, e.facing + 1);                 // arrived: look around
+    if (game.battle !== b) return;
+    this.look(e);
+    Battle.refreshCones();
+  },
+  // Calmed down away from his post: walk back.
+  async goHome(e) {
+    const b = game.battle, h = e.home;
+    if (!h || hexDistance(e.q, e.r, h.q, h.r) === 0 || !(await this.walk(e, h, moveOf(e)))) {
+      e.away = false;
+      if (e.homeFacing !== undefined) this.turn(e, e.homeFacing);
+      if (e.role === 'rest' && this.sleepTime(b) && this.sleeper(e)) e.asleep = true;
+      BattleView.updateHp(e);
+    }
+    if (game.battle !== b) return;
+    this.look(e);
+    Battle.refreshCones();
+  },
+  // A patrol walks its ring, two tiles per turn.
+  async patrol(e) {
+    const b = game.battle, R = e.route;
+    if (!R || !R.length) return;
+    let wp = R[e.routeAt % R.length];
+    if (hexDistance(e.q, e.r, wp.q, wp.r) <= 1) { e.routeAt = (e.routeAt + 1) % R.length; wp = R[e.routeAt]; }
+    if (!(await this.walk(e, wp, 2))) { e.routeAt = (e.routeAt + 1) % R.length; this.faceTo(e, R[e.routeAt]); }
+    if (game.battle !== b) return;
+    this.look(e);
+    Battle.refreshCones();
+  },
+  // People sleep through the night and the foggy early morning.
+  sleepTime(b) { return ['NIGHT', 'MORNING'].includes(TIMES[b.time].key); },
+  sleeper(e) { return !SENSE_TYPES.has(e.type) && e.def.rank !== 'UNIQUE' && e.def.rank !== 'MACHINE'; },
+  // Roles at the start of a surprise arrival: posts on the rim looking outward, a patrol or two,
+  // everyone else rests (asleep at night). Called from deploy, before the undead are placed.
+  assign(b) {
+    const f = b.field, night = this.sleepTime(b), day = TIMES[b.time].key === 'DAY';
+    const rng = makeRng(f.seed + 17 + game.campaign.dayCount * 31);
+    const es = b.units.filter(u => u.side === 'enemy');
+    const cd = t => hexDistance(t.q, t.r, f.cq, f.cr);
+    const onWall = e => { const t = f.get(e.q, e.r); return !!(t && (t.walkway || t.tower || (t.building !== null && f.buildings[t.building] && ['tower', 'walltower'].includes(f.buildings[t.building].key)))); };
+    const free = es.filter(e => e.def.rank !== 'UNIQUE' && e.def.rank !== 'MACHINE' && !onWall(e) && e.def.move >= 2);
+    const nPatrol = Math.min(free.length ? free.length - 1 : 0, night ? (es.length >= 3 ? 1 : 0) : Math.min(2, Math.floor(es.length / 3)));
+    const nPost = Math.max(0, Math.min(free.length - nPatrol, Math.max(1, Math.round(es.length * (night ? 0.3 : day ? 0.5 : 0.4)))));
+    const ring = Math.max(2, Math.min(f.cityWall ? 6 : 99, Math.max(...es.map(e => cd(e))) + 1));
+    const order = free.slice().sort((x, y) => hash2(x.q, x.r, f.seed + 5) - hash2(y.q, y.r, f.seed + 5));
+    const off = Math.floor(rng() * 6);
+    const outward = e => { const c = hexToWorld(f.cq, f.cr), p = hexToWorld(e.q, e.r); return Math.hypot(p.x - c.x, p.z - c.z) < 1e-3 ? Math.floor(rng() * 6) : vectorToDirection(p.x - c.x, p.z - c.z); };
+    const land = t => t && !t.unit && t.building === null && f.walkable(t) && !f.isWater(t);
+    // Spot on the ring in direction d (walk out from the center, then the nearest free land tile).
+    const ringSpot = (d, rad) => {
+      let q = f.cq, r = f.cr;
+      for (let i = 0; i < rad; i++) [q, r] = neighbor(q, r, [0, 1, 2, 3, 4, 5].find(k => { const [a, c] = neighbor(q, r, k), p0 = hexToWorld(q, r), p1 = hexToWorld(a, c); return vectorToDirection(p1.x - p0.x, p1.z - p0.z) === d; }) ?? 0);
+      return f.tilesWithin(q, r, 2).filter(land).sort((x, y) => hexDistance(x.q, x.r, q, r) - hexDistance(y.q, y.r, q, r))[0] || null;
+    };
+    const move = (e, t) => { if (!t) return; f.get(e.q, e.r).unit = null; e.q = t.q; e.r = t.r; t.unit = e; };
+    for (const e of es) { e.aw = 0; e.alert = 'unaware'; e.shouted = false; e.role = onWall(e) ? 'post' : 'rest'; e.away = false; e.stim = 0; }
+    order.slice(0, nPost).forEach((e, i) => { e.role = 'post'; move(e, ringSpot((off + Math.round(i * 6 / nPost)) % 6, ring)); });
+    order.slice(nPost, nPost + nPatrol).forEach((e, i) => {
+      e.role = 'patrol';
+      e.route = [0, 1, 2, 3, 4, 5].map(d => ringSpot((d + off) % 6, ring + 1)).filter(Boolean).map(t => ({ q: t.q, r: t.r }));
+      if (i % 2) e.route.reverse();
+      if (e.route.length < 3) { e.role = 'rest'; e.route = null; return; }
+      const k = Math.floor(rng() * e.route.length), t0 = f.get(e.route[k].q, e.route[k].r);
+      if (land(t0)) move(e, t0);
+      e.routeAt = (k + 1) % e.route.length;
+    });
+    for (const e of es) {
+      e.facing = e.role === 'post' ? outward(e) : e.role === 'patrol' && e.route ? (() => { const p = hexToWorld(e.q, e.r), w = hexToWorld(e.route[e.routeAt].q, e.route[e.routeAt].r); return vectorToDirection(w.x - p.x, w.z - p.z); })() : Math.floor(rng() * 6);
+      e.home = { q: e.q, r: e.r }; e.homeFacing = e.facing;
+      e.asleep = night && e.role === 'rest' && this.sleeper(e);
     }
   },
+  // Dusk and dawn: sleepers wake, resting guards lie down.
+  timeChanged() {
+    const b = game.battle, night = this.sleepTime(b);
+    let n = 0;
+    for (const e of this.enemies('unaware')) {
+      if (e.role !== 'rest' || e.away || !this.sleeper(e) || e.asleep === night) continue;
+      e.asleep = night; n++; BattleView.updateHp(e);
+    }
+    if (n) Battle.log(night ? `Es wird still: ${n} ${n === 1 ? 'Gruppe legt' : 'Gruppen legen'} sich schlafen.` : `Es wird Tag: ${n} ${n === 1 ? 'Gruppe wacht' : 'Gruppen wachen'} auf.`, night ? 'good' : 'hit');
+  },
+  // Once per round: smell, a look around (undead still in sight, bodies), then calm down.
   roundEnd() {
     const b = game.battle;
-    const awake = this.enemies('alarmed');
-    for (const e of this.enemies()) if (e.alert !== 'alarmed' && awake.some(a => a.shouted && hexDistance(a.q, a.r, e.q, e.r) <= ALARM.spreadPerRound * Math.max(1, b.round - (a.alarmRound || b.round))))
-      this.set(e, 'alarmed');
-    for (const a of awake) a.alarmRound = a.alarmRound || b.round;
-    if (!awake.length && b.round > ALARM.restlessAfterRounds && !b.restless) {
-      b.restless = true;
-      for (const e of this.enemies('unaware')) this.set(e, 'suspicious');
-      Battle.log('Die Wachen werden unruhig – etwas stimmt nicht.', 'hit');
+    if (b.arrival !== 'SURPRISE') return;
+    const pl = Battle.alive('player');
+    for (const e of this.enemies()) {
+      if (e.alert === 'alarmed') continue;
+      const before = e.aw || 0, recent = (e.stim || 0) >= b.round - 1;
+      const s = pl.find(u => hexDistance(e.q, e.r, u.q, u.r) <= Stealth.smellRange(e, u));
+      if (s) this.raise(e, STEALTH.smell, 'Geruch', s.def.name, b.field.get(s.q, s.r));
+      this.look(e, true);
+      if (e.alert === 'alarmed') continue;
+      if ((e.aw || 0) > before) { e.stim = b.round - 1; continue; }      // counts for the round that just ended
+      if (recent || !(e.aw > 0)) continue;
+      e.aw = Math.max(0, e.aw - STEALTH.decay);
+      if (e.alert === 'suspicious' && e.aw < STEALTH.suspicious) {
+        e.alert = 'unaware'; e.lookAt = null;
+        e.away = !!e.home && hexDistance(e.q, e.r, e.home.q, e.home.r) > 0;
+        Battle.log(`${e.def.name} beruhigt sich wieder.`, 'good');
+      }
+      BattleView.updateHp(e);
     }
-  },
-  // Suspicious defenders look around and walk towards what they heard.
-  async investigate(e) {
-    const b = game.battle, f = b.field, pl = Battle.alive('player');
-    const near = pl.sort((x, y) => hexDistance(x.q, x.r, e.q, e.r) - hexDistance(y.q, y.r, e.q, e.r))[0];
-    if (!near) return;
-    const pa = hexToWorld(near.q, near.r), pe = hexToWorld(e.q, e.r);
-    e.facing = vectorToDirection(pa.x - pe.x, pa.z - pe.z); BattleView.face(e, pa.x, pa.z);
-    const reach = Pathfinding.reachable(f, e, Math.min(2, moveOf(e)));
-    const dest = reach.tiles.filter(t => !t.unit || t.unit === e).sort((x, y) => hexDistance(x.q, x.r, near.q, near.r) - hexDistance(y.q, y.r, near.q, near.r))[0];
-    if (dest && dest !== f.get(e.q, e.r)) await Battle.moveAlong(e, Pathfinding.path(f, reach, dest));
-    for (const u of pl) { const s = Stealth.detects(f, e, u); if (s) { this.set(e, 'alarmed', `${e.def.name} findet ${u.def.name} (${s})!`); break; } }
     Battle.refreshCones();
   }
 };
@@ -4576,9 +4815,9 @@ const Alarm = {
 let unitIdCounter = 1;
 const Battle = {
   // Safety net: if setting up a battle fails, go back to the world map instead of a half-built field.
-  async start(node, exp = null) {
-    if (Coop.role === 'guest' && !(exp && exp.coopSelf)) return Coop.guestBattle(node);
-    try { return await this.startBattle(node, exp); }
+  async start(node, exp = null, plan = null) {
+    if (Coop.role === 'guest' && !(exp && exp.coopSelf)) return Coop.guestBattle(node, plan);
+    try { return await this.startBattle(node, exp, plan); }
     catch (e) {
       console.error(e);
       if (this.saved) { const c = game.campaign, sv = this.saved; c.army = sv.army; c.nodeId = sv.nodeId; c.prevNodeId = sv.prevNodeId; c.travel = sv.travel; this.saved = null; }
@@ -4586,7 +4825,7 @@ const Battle = {
       UI.toast(`Der Kampf konnte nicht beginnen (${e.message}). Bitte melden.`, 8, false);
     }
   },
-  async startBattle(node, exp = null) {
+  async startBattle(node, exp = null, plan = null) {
     const c = game.campaign;
     if (this.starting) return;
     // An expedition fights with its own army: swap it in as the campaign army for the battle.
@@ -4600,19 +4839,22 @@ const Battle = {
     UI.toast('Die Toten erheben sich …');
     await Figures.ensure([...c.army.map(a => a.type), ...Campaign.garrisonFor(node), ...Object.values(SUMMON_TYPE)]);
     this.starting = false;
+    const thr0 = { ...c.threat };
+    const warned = !node.encounter && ((c.threat[node.faction] || 0) >= 50 || Raids.list().some(r => r.faction === node.faction));
     if (!node.encounter) Campaign.registerAttack(node);
     const field = new Battlefield(node);
     const origin = NODE_BY_ID[c.prevNodeId] && c.prevNodeId !== node.id ? NODE_BY_ID[c.prevNodeId] : PHYLACTERY;
     const cpos = hexToWorld(node.q, node.r), opos = hexToWorld(origin.q, origin.r);
     let dx = opos.x - cpos.x, dz = opos.z - cpos.z;
     if (Math.hypot(dx, dz) < 1e-3) { dx = 0; dz = 1; }
-    const len = Math.hypot(dx, dz), dir = { x: dx / len, z: dz / len };
+    const len = Math.hypot(dx, dz), dir = plan && plan.dir !== undefined && plan.dir !== null ? dirVec(plan.dir) : { x: dx / len, z: dz / len };
     const b = game.battle = {
       node, field, dir, units: [], log: [], round: 1, lastTick: null, current: null,
       state: 'fight', busy: false, retreatPending: false, kills: [], reach: null, targets: [],
       selected: null, hover: null, over: false, corpses: new Map(), abilityMode: null,
-      time: Weather.startTime(node), wind: Math.floor(hash2(node.q, node.r, c.dayCount * 7 + 3) * 6), arrival: 'STANDARD',
-      expedition: exp, leader: exp ? exp.leader : 'lich'
+      time: Weather.startTime(node), wind: Battle.windAt(node), arrival: node.encounter ? 'STANDARD' : warned ? 'WARNED' : 'SURPRISE',
+      expedition: exp, leader: exp ? exp.leader : 'lich', fx: Campaign.effects(), bodies: new Set(), fog: new Map(), shouts: 0,
+      threatAdded: Object.fromEntries(Object.keys(c.threat).map(f => [f, (c.threat[f] || 0) - (thr0[f] || 0)]))
     };
     // Player army.
     for (const g of groupByType(c.army)) b.units.push(this.makeStack(g.type, 'player', 'UNDEAD', g.hps));
@@ -4650,26 +4892,25 @@ const Battle = {
     const mr = Math.round((node.r + pl.reduce((s, u) => s + u.r, 0) / pl.length) / 2);
     cam.lookAtTile(mq, mr);
     cam.yaw = Math.atan2(dir.x, dir.z);
-    cam.distance = Math.min(CAM.maxZoom, 25 + node.size * 1.4);
+    cam.distance = Math.min(CAM.maxZoom, 25 + Math.min(field.size, node.size + 10) * 1.4);
     game.mode = 'battle';
     UI.enterBattle();
     this.log(`${node.encounter ? node.name + '!' : 'Angriff auf ' + node.name + '!'} (${b.units.filter(u => u.side === 'enemy').reduce((n, u) => n + stackCount(u), 0)} Verteidiger in ${b.units.filter(u => u.side === 'enemy').length} Gruppen)`, 'hit');
 
     // Stealth phase (PROMPT 9).
     const base = vectorToDirection(dir.x, dir.z), rng = makeRng(field.seed + 17);
-    for (const u of b.units) if (u.side === 'enemy') u.facing = (base + Math.floor(rng() * 3) - 1 + 6) % 6;
+    if (b.arrival !== 'SURPRISE') for (const u of b.units) if (u.side === 'enemy') u.facing = (base + Math.floor(rng() * 3) - 1 + 6) % 6;
+    for (const u of b.units) if (u.side === 'enemy' && u.view) { Alarm.turn(u, u.facing); BattleView.updateHp(u); }
     Weather.apply(b);
     for (const u of b.units) if (u.side === 'enemy' && BOSS_LINES[u.type]) { Narrator.speak(u.type, BOSS_LINES[u.type], 'boss_' + u.type, u.faction); break; }
     const T = TIMES[b.time], windTxt = `Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}`;
     this.log(`${T.name}${T.foggy ? ', Nebel' : ''} · ${windTxt}. ${b.time === 0 ? 'Die Toten sind in ihrem Element.' : b.time === 2 ? 'Das Tageslicht stärkt die Lebenden.' : ''}`);
-    const alarm = !node.encounter && ((game.campaign.threat[node.faction] || 0) >= 50 || Raids.list().some(r => r.faction === node.faction));
-    const senses = Object.keys(node.garrison || {}).some(t => ['hexe', 'brockenhexe', 'druidin', 'heidekoenigin', 'zwergenkoenig', 'priester'].includes(t));
-    const quiet = Weather.noise(b) <= 2 && (b.time === 0 || T.foggy);
+    const alarm = warned;
     const enemies = b.units.filter(u => u.side === 'enemy');
     if (node.encounter) {
       // Ambush on the road (or an intercepted war party): everyone is awake.
       b.arrival = node.raidId ? 'STANDARD' : 'AMBUSH'; b.state = 'fight';
-      for (const u of enemies) { u.alert = 'alarmed'; u.shouted = true; }
+      for (const u of enemies) { u.alert = 'alarmed'; u.aw = 100; u.shouted = true; }
       if (!node.raidId) {
         for (const u of b.units) if (u.side === 'enemy') u.nextTick -= roundFrac(4); else Abilities.addStatus(u, 'SLOWED', 1, 0, true);
         UI.toast('Hinterhalt! Der Feind ist zuerst am Zug, eure Reihen sind ungeordnet.', 5);
@@ -4677,24 +4918,23 @@ const Battle = {
       }
     } else if (alarm) {
       b.arrival = 'WARNED'; b.state = 'fight';
-      for (const u of enemies) { u.alert = 'alarmed'; u.shouted = true; u.nextTick -= roundFrac(2); Abilities.addStatus(u, 'SHIELDED', 1, 2 * stackCount(u), true); }
+      for (const u of enemies) { u.alert = 'alarmed'; u.aw = 100; u.shouted = true; u.nextTick -= roundFrac(2); Abilities.addStatus(u, 'SHIELDED', 1, 2 * stackCount(u), true); }
       UI.toast('Vorwarnung! Die Verteidiger sind gewarnt und stehen in Stellung.', 5);
       this.log('Vorwarnung: Gegner in Stellung, etwas geschützt und früher am Zug.', 'hit');
     } else {
-      // Normal arrival: everyone unaware, those who sense the dead suspicious; then who notices whom.
-      b.arrival = 'SURPRISE'; b.state = 'stealth';
-      for (const u of enemies) u.alert = SENSE_TYPES.has(u.type) ? 'suspicious' : 'unaware';
-      if (!quiet) Alarm.check(b.units.filter(u => u.side === 'player'));
-      const awake = enemies.filter(u => u.alert === 'alarmed').length, wary = enemies.filter(u => u.alert === 'suspicious').length;
-      if (awake) UI.toast(`Entdeckt! ${awake} ${awake === 1 ? 'Gruppe ist' : 'Gruppen sind'} alarmiert – die übrigen ahnen noch nichts.`, 5);
-      else UI.toast(`${quiet ? (b.time === 0 ? 'Die Nacht deckt euch.' : 'Der Nebel deckt euch.') : 'Unbemerkt.'} Die Wachen ahnen nichts${wary ? `, ${wary} sind misstrauisch` : ''}.`, 5);
-      this.log(`Schleichen: ${enemies.length - awake - wary} ahnungslos (z), ${wary} misstrauisch (?), ${awake} alarmiert (!). Ahnungslose handeln nicht; Treffer auf sie sind Überraschungstreffer (+25 %, kein Konter). Wer Alarm schlägt, weckt die anderen.`, 'good');
+      // Normal arrival: nobody knows yet. Roles and sleep were set in deploy (Alarm.assign).
+      b.state = 'stealth';
+      for (const u of b.units) if (u.side === 'player') Alarm.check(u);
+      const n = k => enemies.filter(k).length;
+      const asleep = n(u => u.asleep), posts = n(u => u.role === 'post' && !u.asleep), pat = n(u => u.role === 'patrol'), seen = n(u => u.alert !== 'unaware');
+      UI.toast(seen ? `${seen} ${seen === 1 ? 'Gruppe hat' : 'Gruppen haben'} etwas bemerkt.` : `Unbemerkt. ${asleep ? asleep + ' schlafen, ' : ''}${posts} ${posts === 1 ? 'Posten wacht' : 'Posten wachen'}${pat ? `, ${pat} ${pat === 1 ? 'Streife geht' : 'Streifen gehen'} um` : ''}.`, 5);
+      this.log(`Schleichen: ${asleep} schlafen (z), ${posts} Posten (•), ${pat} Streife (↻), ${enemies.length - asleep - posts - pat} ruhen wach. Halbe Bewegung = leise (grüne Felder). Kegel: gelb = misstrauisch, orange = Alarm. Posten und Streifen rufen sofort, alle anderen erst in ihrem nächsten Zug.`, 'good');
     }
     this.refreshCones();
     if (!exp) SaveGame.save();
     UI.roundBanner(1, `${node.name} · ${TIMES[b.time].name}`);
     Narrator.hint('Kampf: Die Einheit mit dem goldenen Ring ist am Zug. Blaue Felder = Bewegung, rote = angreifbare Gegner, über einem Gegner siehst du den erwarteten Schaden. Fähigkeiten unten rechts (Tasten 1–4), Leertaste beendet den Zug.', 'battle');
-    Narrator.hint('Solange die Gegner euch nicht bemerkt haben (Schleich-Modus), ist der erste Angriff ein Überraschungsangriff. Der Wind trägt den Geruch der Toten.', 'stealth');
+    if (b.arrival === 'SURPRISE') Narrator.hint('Anschleichen: Wachen sehen nur in ihren Kegel (gelb = misstrauisch, orange = Alarm). Wer höchstens die halbe Bewegung geht (grüne Felder), ist leise. Der Wind trägt den Geruch der Toten – nähert euch gegen den Wind. Hohes Gras, Heide und Moor verbergen. Schlafende (z) sehen nichts.', 'stealth2');
     if (b.field.cityWall) this.log('Die Stadt ist ummauert: Schützen stehen auf dem Wehrgang und in den Türmen. Tore lassen sich rammen (jede Einheit, langsam), die Mauer brechen nur Belagerungswaffen und Riesen (Balliste, Fleischriese, Knochendrache, Hünenkönig). Flieger fliegen hinüber, Geister gehen hindurch.', 'hit');
     else if (b.field.edgeInfo && [...b.field.edgeInfo.values()].some(x => x.kind === 'palisade')) this.log('Eine Palisade umgibt den Ort: Lücken lassen sich nutzen, das Holz lässt sich einschlagen.', 'hit');
     // Some places need special troops (flyers, ghosts, swimmers). Say so at once – withdrawal costs nothing yet.
@@ -4709,6 +4949,10 @@ const Battle = {
     }
     this.nextTurn();
   },
+  // Wind direction (where it blows to) at a place on the current day.
+  windAt(node) { return Math.floor(hash2(node.q, node.r, game.campaign.dayCount * 7 + 3) * 6); },
+  // Damage factor of a hit on a target that does not expect it.
+  surpriseMul(att) { const fx = (game.battle && game.battle.fx) || {}; return ALARM.surpriseBonus + (fx.surprisePct || 0) + (att && att.def.traits && att.def.traits.includes('ASSASSIN') ? TRAITS.assassin : 0); },
   // A stack of `hps.length` creatures. Wounds are pooled so only the top creature is wounded
   // (never fewer creatures than came in).
   makeStack(type, side, faction, hps) {
@@ -4766,7 +5010,7 @@ const Battle = {
     const def = DATA.units[type];
     const u = { id: unitIdCounter++, type, def, side, faction, hp: hp ?? def.hp, maxHp: def.hp, startCount: 1, q: 0, r: 0,
       shield: def.soulShield || 0, nextTick: turnTicks(def), alive: true, facing: 0, movedThisTurn: false, idleTurns: 0, view: null,
-      alert: 'alarmed', shouted: true };          // the battle start decides who is unaware
+      alert: 'alarmed', aw: 100, shouted: true };          // the battle start decides who is unaware
     Abilities.init(u);
     return u;
   },
@@ -4777,26 +5021,8 @@ const Battle = {
     // Closed blocks (keep, stone tower: no door) are obstacles, nobody starts inside.
     const closed = t => t.building !== null && f.buildings[t.building] && !f.buildings[t.building].doors.length && f.buildings[t.building].key !== 'walltower';
     const canStand = (u, t) => t && !t.unit && !closed(t) && (u.def.flying || (SWIMMERS.has(u.type) && f.walkable(t)) || (f.walkable(t) && !f.isWater(t)));
-    const players = b.units.filter(u => u.side === 'player');
-    const D = Math.min(size / 2 - 2, 12);
-    const free = f.tiles.filter(t => t && t.building === null && f.walkable(t) && !f.isWater(t));
-    const scored = free.map(t => {
-      const p = hexToWorld(t.q, t.r), vx = p.x - cpos.x, vz = p.z - cpos.z;
-      return { t, proj: (vx * b.dir.x + vz * b.dir.z) / ROW_SPACING, perp: Math.abs(vx * b.dir.z - vz * b.dir.x) / ROW_SPACING,
-        dist: hexDistance(t.q, t.r, f.cq, f.cr) };
-    });
-    let slack = 0, cands = [];
-    while (cands.length < players.length && slack < size) {
-      cands = scored.filter(s => s.dist <= D + slack && s.proj >= D - 2 - slack).sort((a, c) => a.perp - c.perp || c.proj - a.proj);
-      slack++;
-    }
-    for (const u of players) {
-      const s = cands.find(s => canStand(u, s.t));
-      const t = s ? s.t : free.find(t => canStand(u, t));
-      this.putUnit(u, t);
-    }
-    // Enemies within min(size/4, 8) of the center, preferably in buildings (max 2 per building).
-    const Re = Math.min(size / 4, 8);
+    // Enemies within min(core/4, 8) of the center, preferably in buildings (max 2 per building).
+    const Re = Math.min(f.core / 4, 8);
     const area = f.tilesWithin(f.cq, f.cr, Re).sort((a, c) => hash2(a.q, a.r, f.seed) - hash2(c.q, c.r, f.seed));
     const ordered = [...area.filter(t => t.building !== null), ...area.filter(t => t.building === null)];
     const perBuilding = {};
@@ -4814,6 +5040,30 @@ const Battle = {
       if (!t) t = ordered.find(x => canStand(u, x) && (x.building === null || (u.def.rank !== 'MACHINE' && (perBuilding[x.building] || 0) < 2)));
       if (!t) t = f.tiles.filter(x => canStand(u, x)).sort((a, c) => hexDistance(a.q, a.r, f.cq, f.cr) - hexDistance(c.q, c.r, f.cq, f.cr))[0];
       if (t && t.building !== null) perBuilding[t.building] = (perBuilding[t.building] || 0) + 1;
+      this.putUnit(u, t);
+    }
+    const players = b.units.filter(u => u.side === 'player');
+    // Surprise arrival: roles, posts and patrols first; the undead start outside everyone's sight.
+    let D = Math.min(f.core / 2 - 2, 12);
+    if (b.arrival === 'SURPRISE') {
+      Alarm.assign(b);
+      const far = Math.max(0, ...b.units.filter(u => u.side === 'enemy').map(e => hexDistance(e.q, e.r, f.cq, f.cr) + (e.asleep ? 2 : Weather.sightOf(b, e) + 1)));
+      D = Math.max(Math.min(D, size / 2 - 2), Math.min(size / 2 - 2, far + APPROACH.margin));
+    }
+    const free = f.tiles.filter(t => t && t.building === null && f.walkable(t) && !f.isWater(t));
+    const scored = free.map(t => {
+      const p = hexToWorld(t.q, t.r), vx = p.x - cpos.x, vz = p.z - cpos.z;
+      return { t, proj: (vx * b.dir.x + vz * b.dir.z) / ROW_SPACING, perp: Math.abs(vx * b.dir.z - vz * b.dir.x) / ROW_SPACING,
+        dist: hexDistance(t.q, t.r, f.cq, f.cr) };
+    });
+    let slack = 0, cands = [];
+    while (cands.length < players.length && slack < size) {
+      cands = scored.filter(s => s.dist <= D + slack && s.proj >= D - 2 - slack).sort((a, c) => a.perp - c.perp || c.proj - a.proj);
+      slack++;
+    }
+    for (const u of players) {
+      const s = cands.find(s => canStand(u, s.t));
+      const t = s ? s.t : free.find(t => canStand(u, t));
       this.putUnit(u, t);
     }
   },
@@ -4838,7 +5088,7 @@ const Battle = {
   },
   candidates() {
     const b = game.battle;
-    return this.alive().filter(u => u.side === 'player' || u.alert !== 'unaware');
+    return this.alive().filter(u => u.side === 'player' || u.alert !== 'unaware' || u.role === 'patrol' || u.away);
   },
   // Predicts the next n turns for the initiative bar.
   forecast(n) { return this.forecastRounds(n).map(x => x.u); },
@@ -4896,6 +5146,7 @@ const Battle = {
       const T = TIMES[b.time];
       this.log(`Die Zeit vergeht: ${T.name}${T.foggy ? ', Nebel zieht auf' : ''}.`, b.time === 0 ? 'good' : '');
       UI.toast(`${T.name}${T.foggy ? ' – Nebel' : ''}`);
+      if (b.arrival === 'SURPRISE') Alarm.timeChanged();
       this.refreshCones();
     }
     const heath = Base.sum('heathHeal');
@@ -4972,7 +5223,11 @@ const Battle = {
   },
   drawOptions() {
     const b = game.battle, list = [];
-    if (b.reach) for (const t of b.reach.tiles) if (t.unit !== b.current) list.push({ t, color: '#3b6fd8' });
+    const u0 = b.current, hush = b.reach && b.state === 'stealth' && u0.side === 'player' && Stealth.loudness(u0, 99) > 0 ? Stealth.sneakSteps(u0) : 0;
+    if (b.reach) for (const t of b.reach.tiles) if (t.unit !== b.current) {
+      const quiet = hush && (Pathfinding.path(b.field, b.reach, t) || []).length - 1 <= hush;
+      list.push({ t, color: quiet ? '#2fae7a' : '#3b6fd8' });
+    }
     for (const u of b.targets) list.push({ t: b.field.get(u.q, u.r), color: u.side === b.current.side ? '#3fae4a' : '#d03030', lift: 0.02 });
     for (const u of (b.approach || new Map()).keys()) list.push({ t: b.field.get(u.q, u.r), color: '#e07a5a', lift: 0.02 });
     BattleView.markEdges([...(b.edgeTargets || []), ...(b.edgeApproach || new Map()).values()]);
@@ -4980,7 +5235,7 @@ const Battle = {
   },
   refreshCones() {
     const b = game.battle;
-    BattleView.setOverlay(BattleView.coneOverlay, Stealth.coneTiles(b).map(t => ({ t, color: t._alert === 'suspicious' ? '#ff8a2a' : '#ffd23a' })));
+    BattleView.setOverlay(BattleView.coneOverlay, Stealth.coneTiles(b).map(t => ({ t, color: t._near ? '#ff8a2a' : '#ffd23a' })));
   },
   // Animated movement along a path of tiles.
   async moveAlong(u, path) {
@@ -5031,7 +5286,7 @@ const Battle = {
     if (x.via && x.via !== f.get(u.q, u.r)) {
       const path = Pathfinding.path(f, b.reach, x.via);
       b.busy = true; this.clearOptions();
-      await this.moveAlong(u, path); u.hasMoved = true; b.busy = false; Alarm.check([u]);
+      await this.moveAlong(u, path); u.hasMoved = true; b.busy = false; Alarm.check(u, path);
     }
     b.busy = true; this.clearOptions();
     const m = BattleView.edgeMeshes.find(mm => { const e = mm.userData.edge, t = f.get(e.q, e.r); return t && f.edgeKey(t, e.d) === x.key; });
@@ -5041,7 +5296,7 @@ const Battle = {
     const dmg = this.edgeDamage(u, x), S = SIEGE_EDGES[x.info.kind];
     x.info.hp -= dmg; Sfx.hit && Sfx.hit('BLUNT');
     this.log(`${u.def.name} trifft ${S.name}: −${dmg} (${Math.max(0, x.info.hp)} / ${x.info.max}).`, 'good');
-    for (const e of Alarm.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, x.t.q, x.t.r) <= 8) Alarm.set(e, 'alarmed', `${e.def.name} hört das Krachen!`);
+    Alarm.crash(x.t, 8, 'Krachen');
     if (x.info.hp <= 0) {
       f.breach(x.t, x.d);
       game.view.tiles.rebuild(); BattleView.rebuildEdges(f);
@@ -5064,7 +5319,7 @@ const Battle = {
     await this.moveAlong(u, path);
     u.hasMoved = true;
     b.busy = false;
-    Alarm.check([u]);
+    Alarm.check(u, path);
     this.computeOptions();
     if (target.alive && b.targets.includes(target)) await this.playerAttack(target);
     else if (!b.targets.length) { await wait(0.25); this.endTurn(); }
@@ -5077,7 +5332,7 @@ const Battle = {
     await this.moveAlong(u, path);
     u.hasMoved = true;
     b.busy = false;
-    Alarm.check([u]);
+    Alarm.check(u, path);
     this.computeOptions();
     if (!b.targets.length) { await wait(0.25); this.endTurn(); }
   },
@@ -5102,7 +5357,7 @@ const Battle = {
     b.busy = false;
     if (b.over) return;
     if (target.alive) Alarm.set(target, 'alarmed', surprise ? `${target.def.name} schreckt auf!` : '');
-    Alarm.noise(b.field.get(target.q, target.r)); Alarm.check([u]);
+    else if (surprise) this.log('Lautlos – niemand hat etwas gehört.', 'good');
     // Attack first, move afterwards: the unit keeps its turn while it still has its move.
     if (u.alive && !u.hasMoved && b.current === u) {
       this.computeOptions();
@@ -5119,7 +5374,7 @@ const Battle = {
     const before = stackCount(target);
     target.hp -= dmg - absorbed;
     let deaths = before - stackCount(target);
-    if (deaths) { const i = game.battle.field.index(game.battle.field.get(target.q, target.r)); game.battle.corpses.set(i, (game.battle.corpses.get(i) || 0) + deaths); }
+    if (deaths) { const i = game.battle.field.index(game.battle.field.get(target.q, target.r)); game.battle.corpses.set(i, (game.battle.corpses.get(i) || 0) + deaths); if (target.side === 'enemy' && game.battle.bodies) game.battle.bodies.add(i); }
     if (target.hp <= 0 && Abilities.beforeDeath(target, power)) deaths = before - stackCount(target);
     BattleView.updateHp(target);
     if (dmg > 0 && power) { BattleView.burst(target, power); Sfx.hit(power); if (target.hp > 0) BattleView.recoil(target); }
@@ -5145,11 +5400,13 @@ const Battle = {
       this.log(`${att.def.name} heilt ${target.def.name} (+${h}).`);
       return;
     }
-    const dmg = Math.round(Combat.damage(prof, target.def, from.level, tt.level, chk.cover) * Abilities.damageMul(att, target) * (surprise ? ALARM.surpriseBonus : 1));
+    const dmg = Math.round(Combat.damage(prof, target.def, from.level, tt.level, chk.cover) * Abilities.damageMul(att, target) * (surprise ? this.surpriseMul(att) : 1));
     if (dmg === 0) this.log(`${target.def.name} ist immun gegen ${POWER_NAMES[prof.power]}-Schaden.`, 'hit');
     else this.log(`${att.def.name} trifft ${target.def.name}: ${dmg} Schaden${chk.cover ? ' (Deckung)' : ''}${surprise ? ' – Überraschung!' : ''}.`, att.side === 'player' ? 'good' : 'hit');
     this.applyDamage(target, dmg, att, prof.power);
     if (b.over) return;
+    // A stack that falls in one surprise blow dies without a sound; everything else is heard.
+    if (!(surprise && !target.alive)) Alarm.noise(tt);
     Abilities.afterHit(att, target, dmg);
     // Counter: surviving melee targets with counter strike back once at 50 %.
     if (target.alive && chk.dist === 1 && !chk.window && target.def.counter && !surprise && !(target.status && target.status.LEADERLESS)) {
@@ -5213,8 +5470,8 @@ const Battle = {
     await Abilities.use(u, id, tile);
     b.busy = false;
     if (b.over || game.battle !== b) return;
-    for (const e of Alarm.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, tile.q, tile.r) <= 2) Alarm.set(e, 'alarmed');
-    Alarm.noise(tile); Alarm.check([u]);
+    const ab = DATA.abilities[id];
+    if (!(['LURE', 'FOG', 'HEAL'].includes(ab.effect) || ab.target === 'SELF' || id === 'GhoulCorpseEater')) { Alarm.crash(tile, 2, 'Zauber'); Alarm.noise(tile); }
     if (u.alive && !u.hasMoved && b.current === u) {
       this.computeOptions();
       if (b.reach && b.reach.tiles.some(t => !t.unit)) return;
@@ -5297,6 +5554,7 @@ const Battle = {
     c.battles++;
     UI.news(`${result === 'victory' ? 'Sieg' : result === 'retreat' ? 'Rückzug' : result === 'withdraw' ? 'Abzug' : 'Niederlage'}: ${node.name}${node.encounter ? ' (unterwegs)' : ''} nach ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'}.`, 'battle');
     let html = '', endNow = false;
+    if (b.bell && !node.encounter && c.threat[node.faction] !== undefined) c.threat[node.faction] = Math.min(100, c.threat[node.faction] + STEALTH.bellThreat);
     // Coop: the guest's army fights for the guest's stores (loot goes to him).
     const coopLoot = Coop.role !== 'guest' && b.expedition && b.expedition.id === 'coop' && c.coop;
     const swapRes = () => { if (coopLoot) { const t = c.resources; c.resources = c.coop.res; c.coop.res = t; } };
@@ -5315,6 +5573,14 @@ const Battle = {
       for (const [k, v] of Object.entries(reward0)) reward[k] = Math.floor(v * Math.pow(0.5, plundered));
       if (!node.encounter) c.plundered[node.id] = plundered + 1;
       const loot = { corpses, bones, souls };
+      // Nobody called for help: the village simply falls silent. No news spreads, nothing is carried off or hidden.
+      const silent = !node.encounter && b.arrival === 'SURPRISE' && !b.shouts && !b.bell;
+      if (silent) {
+        loot.corpses = Math.floor(loot.corpses * (1 + STEALTH.silentLoot)); loot.bones = Math.floor(loot.bones * (1 + STEALTH.silentLoot));
+        for (const [f, v] of Object.entries(b.threatAdded || {})) if (v > 0) c.threat[f] = Math.max(0, (c.threat[f] || 0) - v);
+        c.silent = (c.silent || 0) + 1;
+      }
+      b.silent = silent;
       if (knowledgeBonus) loot.knowledge = knowledgeBonus;
       for (const [k, v] of Object.entries(reward)) loot[k] = (loot[k] || 0) + v;
       // A Lich wastes nothing: own fallen (not ghosts, machines or summoned) return half their corpses and bones.
@@ -5400,6 +5666,8 @@ const Battle = {
         : node.encounter
         ? `<h2>${node.name} abgewehrt</h2><p>${b.kills.length} Feinde gefallen. Der Weg ist frei, die Reise geht weiter.</p>`
         : `<h2>Sieg bei ${node.name}</h2><p>${node.name} gehört nun den Untoten. ${b.kills.length} Feinde gefallen.</p>`;
+      if (b.silent) html += `<p class="good"><b>Lautlos.</b> Niemand hat Alarm geschlagen: Die Bedrohung steigt durch diesen Angriff nicht, und es bleibt mehr zu holen (+${Math.round(STEALTH.silentLoot * 100)} % Leichen und Knochen).</p>`;
+      else if (b.bell) html += `<p class="small">Die Glocke hat geläutet – das Umland weiß Bescheid (Bedrohung +${STEALTH.bellThreat}).</p>`;
       html += `
 <h3>Beute</h3><p class="loot">${Object.entries(loot).filter(([, v]) => v > 0).map(([k, v]) => `<span class="cost">${resIcon(k, 20)}<b>${v}</b> ${RESOURCE_NAMES[k]}</span>`).join(' ') || 'nichts'}</p>${Object.values(recycled).some(v => v > 0) ? `<p class="small">Davon aus den eigenen Gefallenen zurückgewonnen: ${costHtml(recycled)}</p>` : ''}
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${ancestorText}${pantheonText}`;
@@ -5757,8 +6025,10 @@ const EnemyAI = {
     await wait(0.2);
     if (game.battle !== b) return;
     // Suspicious defenders only investigate; alarmed ones shout on their first turn.
+    if (u.alert === 'unaware') { if (u.away) await Alarm.goHome(u); else if (u.role === 'patrol') await Alarm.patrol(u); return; }
     if (u.alert === 'suspicious') { await Alarm.investigate(u); return; }
     if (u.alert === 'alarmed' && !u.shouted) Alarm.shout(u);
+    if (b.bellRunner === u && !b.bell && await Alarm.runToBell(u)) return;
     // 0. Abilities (spells, buffs, summons) from where the unit stands.
     if (await Abilities.aiUse(u)) return;
 
@@ -5916,6 +6186,54 @@ const UI = {
     this.show('modal', true);
   },
   closeModal() { this.show('modal', false); },
+  // Before an attack: from which side? Against the wind the dead are not smelled; going around
+  // the place costs an hour per sixth of the circle. Waiting for the night is offered as well.
+  attackPlan(node, exp = null) {
+    const c = game.campaign;
+    const prevId = exp ? exp.prevNodeId : c.prevNodeId;
+    const origin = NODE_BY_ID[prevId] && prevId !== node.id ? NODE_BY_ID[prevId] : PHYLACTERY;
+    const a = hexToWorld(node.q, node.r), o = hexToWorld(origin.q, origin.r);
+    const march = Math.hypot(o.x - a.x, o.z - a.z) < 1e-3 ? 3 : vectorToDirection(o.x - a.x, o.z - a.z);
+    const wind = Battle.windAt(node), ang = (x, y) => Math.min((x - y + 6) % 6, (y - x + 6) % 6);
+    const warned = (c.threat[node.faction] || 0) >= 50 || Raids.list().some(r => r.faction === node.faction);
+    const h = Campaign.hour(), T = TIMES[Campaign.timeIndex(h)], toNight = (22 - h + 24) % 24;
+    const cost = d => ang(d, march) * STEALTH.flankHours, upwind = d => ang((d + 3) % 6, wind) >= 2;
+    const SHORT = ['N', 'NO', 'SO', 'S', 'SW', 'NW'];
+    let sel = march;
+    const spot = d => { const v = dirVec(d); return `left:${110 + v.x * 84 - 34}px;top:${110 + v.z * 84 - 24}px`; };
+    const timeNote = { NIGHT: 'Nacht: Die meisten schlafen, Posten sehen 2 Felder weniger weit. Die Toten sind stärker.', MORNING: 'Früher Morgen: Viele schlafen noch, der Nebel nimmt den Posten 3 Felder Sicht.',
+      DAY: 'Tag: Alle sind wach und sehen weit. Die Lebenden sind stärker.', EVENING: 'Abend: Alle sind wach, die Sicht lässt nach.' }[T.key];
+    const buttons = [{ label: 'Angreifen', primary: true, action: () => {
+      const hrs = cost(sel);
+      if (hrs && !Coop.cmd({ op: 'rest', hours: hrs })) Campaign.advanceHours(hrs);
+      Battle.start(node, exp, { dir: sel });
+    } }];
+    if (!['NIGHT', 'MORNING'].includes(T.key) && Coop.role !== 'guest' && !warned) buttons.push({ label: `Bis zur Nacht warten (${toNight} Std.)`, keepOpen: true, action: () => { Campaign.advanceHours(toNight); this.updateHeader(); SaveGame.save(); this.attackPlan(node, exp); } });
+    buttons.push({ label: 'Abbrechen' });
+    this.modal(`<h2>Angriff auf ${esc(node.name)}</h2>
+      ${warned ? '<p class="bad"><b>Die Verteidiger sind gewarnt</b> (Bedrohung ab 50 oder ein Trupp unterwegs): kein Anschleichen, sie stehen in Stellung.</p>'
+        : '<p class="small">Die Wachen wissen noch nichts. Wählt die Seite, von der die Toten kommen: <b>Gegen den Wind</b> (grün) riecht euch niemand, <b>mit dem Wind</b> (rot) trägt der Leichengeruch dreimal so weit. Den Ort zu umgehen kostet Zeit.</p>'}
+      <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+        <div style="position:relative;width:220px;height:220px;flex:none">
+          <div title="Der Wind weht nach ${DIR_NAMES[wind]}" style="position:absolute;left:80px;top:80px;width:60px;height:60px;border-radius:50%;border:1px solid var(--line, #6a5a3a);display:flex;align-items:center;justify-content:center;flex-direction:column">
+            <span style="font-size:26px;line-height:1;transform:rotate(${wind * 60}deg);display:inline-block">↑</span><span class="small" style="font-size:10px">Wind</span></div>
+          ${[0, 1, 2, 3, 4, 5].map(d => `<button data-dir="${d}" title="Von ${DIR_NAMES[d]} anrücken" style="position:absolute;${spot(d)};width:68px;height:48px;padding:2px;line-height:1.15;border-width:2px;border-style:solid;border-color:${upwind(d) ? '#3f8f4a' : '#a03a30'}"><b>${SHORT[d]}</b><br><span class="small" style="font-size:11px">${cost(d) ? '+' + cost(d) + ' Std.' : 'sofort'}</span></button>`).join('')}
+        </div>
+        <div style="flex:1;min-width:220px">
+          <p><b>${T.name}</b>, ${h} Uhr · Wind aus ${DIR_NAMES[(wind + 3) % 6]}</p>
+          <p class="small">${timeNote}</p>
+          <p id="planSel"></p>
+          <p class="small">Im Kampf: höchstens halbe Bewegung = leise. Hohes Gras, Heide, Moor und Sumpf verbergen. Wer einen Stapel mit einem Überraschungsschlag auslöscht, bleibt unbemerkt.</p>
+        </div>
+      </div>`, buttons);
+    const paint = () => {
+      document.querySelectorAll('#modalBody [data-dir]').forEach(el => { const on = +el.dataset.dir === sel; el.style.background = on ? 'var(--gold, #c9a227)' : ''; el.style.color = on ? '#1a1408' : ''; });
+      const el = $('planSel');
+      if (el) el.innerHTML = `Anrücken von <b>${DIR_NAMES[sel]}</b>${sel === march ? ' (Marschrichtung)' : ''}: ${cost(sel) ? `${cost(sel)} Std. Umweg` : 'kein Umweg'} · ${upwind(sel) ? '<span class="good">gegen den Wind</span>' : '<span class="bad">mit dem Wind – man riecht euch früh</span>'}`;
+    };
+    document.querySelectorAll('#modalBody [data-dir]').forEach(el => el.onclick = () => { sel = +el.dataset.dir; paint(); });
+    paint();
+  },
 
   // ---- World map ----------------------------------------------------------
   enterWorld() {
@@ -6267,14 +6585,14 @@ const UI = {
       const exps = Expeditions.list(), act = Expeditions.active();
       if (!exps.length) {
         if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
-        else if (Campaign.isEnemy(node)) add('Angreifen', () => Battle.start(node), true);
+        else if (Campaign.isEnemy(node)) add('Angreifen', () => UI.attackPlan(node), true);
       } else {
         // Several armies: orders first, then "Los".
         if (act.node.id !== node.id) add(act.order === node.id ? `Befehl aufheben (${act.label})` : `Befehl: ${act.label} hierher (${Expeditions.days(act.army, act.node, node)} T.)`,
           () => Expeditions.setOrder(act.id, act.order === node.id ? null : node), true);
         if (Campaign.isEnemy(node)) {
-          if (here.id === node.id) add(Coop.role === 'guest' ? 'Angreifen' : 'Angreifen (Lich)', () => Battle.start(node), true);
-          for (const e of exps) if (e.nodeId === node.id && e.id !== 'coop') add(`Angreifen (${Expeditions.name(e)})`, () => Battle.start(node, e), true);
+          if (here.id === node.id) add(Coop.role === 'guest' ? 'Angreifen' : 'Angreifen (Lich)', () => UI.attackPlan(node), true);
+          for (const e of exps) if (e.nodeId === node.id && e.id !== 'coop') add(`Angreifen (${Expeditions.name(e)})`, () => UI.attackPlan(node, e), true);
         }
         for (const e of exps) if (e.nodeId === node.id && here.id === node.id) add(`${Expeditions.name(e)} vereinen`, () => Expeditions.merge(e), false);
       }
@@ -6442,7 +6760,9 @@ const UI = {
     const flags = [d.flying && 'fliegt', d.spectral && 'spektral', d.counter && 'Konter'].filter(Boolean).join(', ');
     const n = stackCount(u);
     const st = (ic, v, tip) => `<span class="st" title="${tip}">${ic} ${v}</span>`;
-    const mark = u.side === 'enemy' && u.alert ? { unaware: ' · <i>ahnungslos</i>', suspicious: ' · <b style="color:#a07a00">misstrauisch</b>', alarmed: ' · <b style="color:var(--blood)">alarmiert</b>' }[u.alert] : '';
+    const stealthy = game.battle && game.battle.arrival === 'SURPRISE';
+    const mark = u.side === 'enemy' && u.alert ? { unaware: ` · <i>${u.asleep ? 'schläft' : 'ahnungslos'}</i>`, suspicious: ' · <b style="color:#a07a00">misstrauisch</b>', alarmed: ` · <b style="color:var(--blood)">alarmiert${stealthy && !u.shouted ? ' (hat noch nicht gerufen)' : ''}</b>` }[u.alert]
+      + (stealthy && u.alert !== 'alarmed' ? ` · ${u.asleep ? 'sieht nichts, hört halb so weit' : `${ROLE_NAMES[u.role] || 'Wache'}, Sicht ${Weather.sightOf(game.battle, u)}, Gehör ${u.def.hear * Alarm.sense(u)}, Geruch ${u.def.smell * Alarm.sense(u)}`}${u.aw ? ` · Argwohn ${Math.round(u.aw)} %` : ''}` : '') : '';
     $(target).innerHTML = `${portraitHtml(u.type, d)}<h3 style="margin:0">${n > 1 ? n + '× ' : ''}${esc(d.name)}</h3>
       <div class="small">${u.side === 'player' ? 'Untote' : DATA.factions[u.faction].name}${n !== u.startCount ? ` · ${n} von ${u.startCount}` : ''}${mark}</div>
       <div class="hpbar ${u.side === 'player' ? 'player' : ''}" style="margin-top:4px" title="Lebenspunkte gesamt"><div style="width:${100 * u.hp / u.maxHp}%"></div></div>
@@ -6587,7 +6907,14 @@ function onHover(ev) {
     UI.renderHoverCard(t.unit && t.unit.alive ? t.unit : null);
     if (myTurn && !t.unit) {
       const c = b.reach.cost.get(b.field.index(t));
-      if (b.reach.tiles.includes(t)) extra += `<br>Weg: ${c} von ${cur.def.move} Bewegungspunkten`;
+      if (b.reach.tiles.includes(t)) {
+        extra += `<br>Weg: ${c} von ${cur.def.move} Bewegungspunkten`;
+        if (b.state === 'stealth') {
+          const path = Pathfinding.path(b.field, b.reach, t) || [t], pv = Stealth.preview(cur, path), loud = Stealth.loudness(cur, path.length - 1);
+          extra += `<br><span class="small">${loud ? (path.length - 1 <= Stealth.sneakSteps(cur) ? 'leise' : 'normal') + ` (Lautstärke ${loud})` : 'lautlos'}${STEALTH.cover[t.floor] ? ` · Deckung −${STEALTH.cover[t.floor]} Sicht` : ''}</span>`;
+          if (pv.text) extra += `<br><b style="color:${pv.level === 2 ? '#ff6a5a' : pv.level === 1 ? '#ffb040' : '#f0d870'}">${esc(pv.text)}</b>`;
+        }
+      }
       else extra += '<br><i>außer Reichweite</i>';
       if (cur.def.flying) extra += ' <span class="small">(fliegt: jedes Feld kostet 1)</span>';
     }
@@ -6604,10 +6931,9 @@ function onHover(ev) {
   const dest = t && b.reach.tiles.includes(t) && !t.unit ? t : t && t.unit && b.approach && b.approach.get(t.unit);
   if (dest) {
     const path = Pathfinding.path(b.field, b.reach, dest) || [];
-    // Tiles on which a defender who is not yet alarmed would notice this unit: red.
-    const watchers = Alarm.enemies().filter(e => e.alert !== 'alarmed'), oq = cur.q, or = cur.r, om = cur.movedThisTurn;
-    const seen = x => { cur.q = x.q; cur.r = x.r; cur.movedThisTurn = true; const r = watchers.some(e => Stealth.detects(b.field, e, cur)); cur.q = oq; cur.r = or; cur.movedThisTurn = om; return r; };
-    BattleView.setOverlay(BattleView.pathOverlay, path.slice(1).map(x => ({ t: x, color: watchers.length && seen(x) ? '#e02828' : '#f0d870', lift: 0.03 })));
+    // Colour of the way: what the guards would make of this move (pale = nothing, orange = suspicious, red = alarm).
+    const pv = b.state === 'stealth' && path.length ? Stealth.preview(cur, path) : { level: 0 };
+    BattleView.setOverlay(BattleView.pathOverlay, path.slice(1).map(x => ({ t: x, color: pv.level === 2 ? '#e02828' : pv.level === 1 ? '#ff8a2a' : '#f0d870', lift: 0.03 })));
   } else BattleView.setOverlay(BattleView.pathOverlay, []);
 }
 function initInput() {
