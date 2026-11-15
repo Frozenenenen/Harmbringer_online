@@ -1237,13 +1237,13 @@ Prozentwert = wie viel des Schadens tatsächlich ankommt.
 | Nekromant | Undead | Commander / Caster | 2 | 18 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 5 / 4 | 4/3/2 | 1/2 | – | +4 | 2L 2S |
 | Fleischriese | Undead | Warrior / Tank | 4 | 70 | 3 | 2 | 2 | 14 | 1 | Blunt | Medium | 1 / 0 | 3/2/2 | 4/4 | – | -8 | 15L |
 | Knochendrache | Undead | Warrior / Tank | 4 | 120 | 4 | 5 | 6 | 18 | 2 | Soul | Heavy | 4 / 4 | 6/4/3 | 4/2 | Flug | -16 | 30K 6S |
-| Nachzehrer | Undead | Warrior / Scout | 1 | 14 | 0 | 7 | 4 | 9 | 1 | Rend | Unarmored | 1 / 0 | 4/3/2 | 1/1 | – | -2 | 2L |
-| Gruftwächter | Undead | Warrior / Tank | 2 | 38 | 0 | 3 | 2 | 7 | 1 | Blunt | Heavy | 2 / 4 | 3/2/1 | 3/2 | – | -3 | 1L 4K |
+| Nachzehrer | Undead | Warrior / Scout | 1 | 12 | 0 | 6 | 4 | 7 | 1 | Rend | Unarmored | 1 / 0 | 4/3/2 | 1/1 | – | -2 | 2L |
+| Gruftwächter | Undead | Warrior / Tank | 2 | 30 | 0 | 3 | 2 | 7 | 1 | Blunt | Heavy | 2 / 2 | 3/2/1 | 3/2 | – | -3 | 1L 4K |
 | Knochentrommler | Undead | Warrior / Support | 1 | 12 | 0 | 5 | 3 | 3 | 1 | Blunt | Light | 0 / 0 | 3/2/0 | 4/1 | – | -2 | 3K |
 | Knochenhexer | Undead | Warrior / Caster | 2 | 14 | 8 | 5 | 3 | 6 | 4 | Soul | Light | 3 / 2 | 4/3/0 | 1/1 | – | -3 | 1L 3K |
-| Knochenreiter | Undead | Warrior / Scout | 3 | 22 | 0 | 6 | 6 | 8 | 1 | Pierce | Medium | 1 / 0 | 4/3/0 | 3/1 | – | -3 | 1L 5K |
+| Knochenreiter | Undead | Warrior / Scout | 3 | 20 | 0 | 6 | 6 | 7 | 1 | Pierce | Medium | 1 / 0 | 4/3/0 | 3/1 | – | -3 | 1L 5K |
 | Seuchenvogt | Undead | Commander / Commander | 2 | 22 | 4 | 4 | 3 | 7 | 1 | Poison | Light | 3 / 4 | 4/3/2 | 2/3 | – | +5 | 4L 1S |
-| Nachtvogt | Undead | Commander / Scout | 2 | 20 | 4 | 7 | 4 | 9 | 1 | Rend | Light | 3 / 4 | 5/4/2 | 0/1 | – | +4 | 2L 2S |
+| Nachtvogt | Undead | Commander / Scout | 2 | 20 | 4 | 7 | 4 | 8 | 1 | Rend | Light | 3 / 4 | 5/4/2 | 0/1 | – | +4 | 2L 2S |
 | Gruftfürst | Undead | Commander / Tank | 3 | 40 | 4 | 3 | 2 | 10 | 1 | Blunt | Heavy | 4 / 8 | 4/3/1 | 3/2 | – | +6 | 3L 5K 3S |
 | Ophan | Clergy | Warrior / Tank | 3 | 40 | 3 | 4 | 4 | 10 | 1 | Holy | Divine | 6 / 6 | 6/4/2 | 2/0 | Flug | +0 | – |
 | Cherub | Clergy | Warrior / Caster | 3 | 45 | 4 | 5 | 4 | 12 | 2 | Holy | Divine | 6 / 8 | 8/6/4 | 2/0 | Flug | +0 | – |
@@ -2270,7 +2270,7 @@ Stufen:
 
 **Anmarschzone.** Um jede Siedlung liegt offenes Land: Das Kampffeld ist größer als der Ort (30 Felder bei Orten bis 16, sonst mindestens 40). Die Untoten starten außerhalb jeder Sichtweite.
 
-**Angriffsplan.** Vor dem Angriff wählt man die Seite (Kompass mit sechs Richtungen). Gegen den Wind riecht einen niemand, mit dem Wind trägt der Geruch dreimal so weit. Den Ort zu umgehen kostet eine Stunde je Sechstel. „Bis zur Nacht warten“ ist dort ebenfalls möglich.
+**Angriffsplan (freischaltbar).** Von Haus aus greifen die Toten aus der Richtung an, aus der sie marschiert sind, und der Wind wird nicht angezeigt. Wer „Windlesen“ lernt (Pfad Schatten, Stufe 1) oder „Windkunde“ erforscht (Wissensaltar), wählt vor dem Angriff die Seite (Kompass mit sechs Richtungen) und sieht den Wind auch im Kampf. Gegen den Wind riecht einen niemand, mit dem Wind trägt der Geruch dreimal so weit. Den Ort zu umgehen kostet eine Stunde je Sechstel. „Bis zur Nacht warten“ ist dort ebenfalls möglich.
 
 **Rollen der Wachen**
 
@@ -2351,7 +2351,7 @@ Ziel: Die Armee soll ausdrücken, **wie** man spielen will. Fünf Richtungen, je
 
 | Pfad | 1 | 2 | 3 | 4 |
 |-|-|-|-|-|
-| Schatten | Lautstärke −1 | Geruch halb so weit | Überraschung +50 % | Wachen sehen 1 Feld weniger, leise 1 Feld weiter |
+| Schatten | Windlesen: Angriffsplan mit Seitenwahl und Windanzeige | Lautstärke −1, Geruch halb so weit | Überraschung +50 % | Wachen sehen 1 Feld weniger, leise 1 Feld weiter |
 | Flut | +10 Kommando | +25 % Leichen und Knochen | Billige +15 % Schaden und LP | +20 Kommando |
 | Auslese | Krieger +15 % LP | Krieger +15 % Schaden | Krieger +3 Seelenschild | Krieger +20 % LP und Schaden |
 | Hexerei | +2 Energie | Fähigkeiten +25 % | Abklingzeit −1 | Fähigkeiten +25 %, +1 Energie je Zug |
@@ -2363,7 +2363,7 @@ Ziel: Die Armee soll ausdrücken, **wie** man spielen will. Fünf Richtungen, je
 Ein Fenster (Knopf „Ausbau“, Taste B, von überall) mit drei Reitern; jeder Reiter zeigt in einer Marke, ob etwas zu tun ist oder wie viele Tage noch laufen.
 
 - **Gebäude:** Karten statt Textzeilen. Stufenpunkte (● gebaut, gelb im Bau), je Stufe die Einheiten als Marken (unbekannte als „???“ mit dem nötigen Wissen), nächste Stufe mit Kosten und Dauer, Verweis auf die Forschung des Gebäudes.
-- **Forschung:** Statt 13 Verbesserungen zum Abhaken gibt es 13 **Fragen mit je zwei Antworten, von denen nur eine gilt** (`researchSlots`, `upgrades[*].slot`). Die Antwort legt fest, wie die Gruppe kämpft – z. B. Knochen: schärfer (+15 % Schaden) *oder* umwickelt (Lautstärke −1); Fleisch: zäher *oder* einbalsamiert (Geruch −2); Geister: schneller *oder* Meuchler. Forschen dauert 1 + Stufe Tage, eine Frage zur Zeit (`c.research`), läuft wie der Bau weiter, während die Armee unterwegs ist. Umentscheiden kostet erneut und ersetzt die alte Antwort.
+- **Forschung:** Statt 13 Verbesserungen zum Abhaken gibt es 14 **Fragen mit je zwei Antworten, von denen nur eine gilt** (`researchSlots`, `upgrades[*].slot`). Die Antwort legt fest, wie die Gruppe kämpft – z. B. Knochen: schärfer (+15 % Schaden) *oder* umwickelt (Lautstärke −1); Fleisch: zäher *oder* einbalsamiert (Geruch −2); Geister: schneller *oder* Meuchler. Forschen dauert 1 + Stufe Tage, eine Frage zur Zeit (`c.research`), läuft wie der Bau weiter, während die Armee unterwegs ist. Umentscheiden kostet erneut und ersetzt die alte Antwort.
 - **Pfade des Lichs:** der Skillbaum (siehe „Spielstile“), dazu die Auren der bekannten Kommandeure.
 
 | Gebäude | Frage | Antwort A | Antwort B |
@@ -2379,10 +2379,18 @@ Ein Fenster (Knopf „Ausbau“, Taste B, von überall) mit drei Reitern; jeder 
 | Totenhalle 1 | Wofür steht die Halle? | Banner: +20 % LP, +10 % Schaden | Leibgarde: +6 Schild |
 | Totenhalle 2 | Wie wird das Heer gedrillt? | Eiserne Zucht: +1 Magieresistenz | Gewaltmarsch: +1 Initiative |
 | Wissensaltar 1 | Was wird aus den Schriften gelernt? | Verbotene Schriften: +5 % Schaden | Anatomie: Überraschung +25 % |
+| Wissensaltar 1 | Was verraten die Schriften über das Land? | Windkunde: Angriffsplan mit Seitenwahl und Windanzeige | Wegekunde: Reisen +15 % |
 | Phylakterium 1 | Was nährt das Phylakterium? | Seelenanker: Lich +40 LP | Seelenquell: +2 Energie |
 | Phylakterium 2 | Wonach greift der Lich? | Krone aus Staub: +8 Schaden, +20 Schild | Herrscherwille: +10 Kommando |
 
 Alte Spielstände behalten ihre gekauften Verbesserungen (das sind jeweils die Antworten A).
+
+### Aufforderungen, Spielstil-Filter, Ton, Balance (umgesetzt 15.11.2026)
+
+- **Aufforderungen wie in Civilization:** Sobald wieder gebaut, geforscht oder ein Pfad gelernt werden kann und der Platz frei ist, erscheint unten rechts ein pulsierender Knopf („Bauplatz frei“, „Forschung frei“, „Pfad wählen“) mit leisem Klang. Ein Klick öffnet das Hügelgrab im passenden Reiter; „×“ blendet ihn bis zum nächsten Tag aus (`UI.todoList`, `UI.todo`).
+- **Rekrutieren nach Spielstil:** zweite Filtergruppe Schleichen, Masse, Klasse, Bollwerk, Beweglich, Fähigkeiten – abgeleitet aus Merkmalen, Auren und Werten.
+- **Ton** (`Sfx`, Werte in `SFX`): Der Wind besteht aus vier Schichten gefilterten Rauschens (Grollen, Körper links und rechts, wandernder Zug, dünnes Pfeifen bei starken Böen); Böen kommen und gehen zufällig. Die Rauschschleife ist 11 s lang und an der Naht überblendet (vorher 2 s, als Pulsieren hörbar). Dazu: Hall und Begrenzer auf allen Effekten, leichte Zufallsabweichung je Treffer, Schritte im Kampf (Knochen klacken, Fleisch tappt, Geister lautlos; laute Einheiten treten lauter), Glocke mit Obertönen, Horn beim Alarmruf, Trommel zum Rundenwechsel, Klang für Sieg und Niederlage, leiser Tick auf Knöpfen, Lautstärkeregler im Menü. Pegel sind gemessen (Wind im Mittel −35 dB, Böen −32 dB, Treffer −28 bis −33 dB, kein Übersteuern), aber nicht nach Gehör abgestimmt.
+- **Balance** (`tools/balance_styles.py`): vergleicht Kampfwert je Kommando-Punkt und je Kosten aller Untoten im Spielstand, Merkmale als Faktoren. Danach abgeschwächt: Nachzehrer (LP 14 → 12, Initiative 7 → 6, Schaden 9 → 7), Gruftwächter (LP 38 → 30, Seelenschild 4 → 2), Knochenreiter (LP 22 → 20, Schaden 8 → 7), Nachtvogt (Schaden 9 → 8). Die neuen Einheiten liegen jetzt bei 1,0–1,25 des Durchschnitts (vorher 1,4–1,6).
 
 ---
 

@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 15.11.2026, 02:30 Uhr · letzte veröffentlichte Version: 139 (Hügelgrab-Fenster, Forschung, Pfade des Lichs)
+Stand: 15.11.2026, ca. 01:15 Uhr · letzte veröffentlichte Version: 140
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -58,13 +58,22 @@ Balance der neuen Einheiten ist geschätzt, nicht simuliert.
 
 Beschrieben im Design-Dokument, Abschnitt „Hügelgrab-Fenster: Gebäude, Forschung, Pfade des Lichs“. Code: `Base.open(tab)`, `Base.buildHtml/researchHtml/lichHtml/chips`, `Upgrades` (jetzt Forschung: `rival`, `days`, `buy` startet, `day` schließt ab, `count`), `UI.buildBadge`, Daten `researchSlots` + `upgrades` (26 Antworten in 13 Fragen) in `data/world_data.js`.
 
+## Nachträge vom 15.11. (fertig, Version 140)
+
+Beschrieben im Design-Dokument, Abschnitt „Aufforderungen, Spielstil-Filter, Ton, Balance“.
+
+- **Windlesen ist freischaltbar** (Kevins Wunsch): `UI.attack(node, exp)` öffnet den Angriffsplan nur mit dem Effekt `attackPlan` (Skill `sh1` „Windlesen“ oder Forschung `windLore` „Windkunde“); sonst direkter Angriff aus der Marschrichtung, Wind im Kampf nicht angezeigt.
+- **Aufforderungen** (Kevins Wunsch, wie Civilization): `UI.todoList`, `UI.todo`, Element `#todoBar`.
+- **Ton:** `Sfx` neu aufgebaut (`setup`, `makeLoop`, `ambience`, `gusts`, `step`, `bell`, `horn`, `fanfare`, `drum`, `setVolume`). Gemessen mit einem Offline-Audiokontext, **nicht gehört** – Kevins Ohr entscheidet; Stellschrauben in `SFX` und in den Zahlen von `Sfx.gusts`.
+- **Spielstil-Filter** beim Rekrutieren (`STYLES` in `UI.openRecruit`).
+- **Balance:** `tools/balance_styles.py`; vier neue Einheiten abgeschwächt.
+
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
 - **Kevins Rückmeldung abwarten:** Spielgefühl beim Schleichen (Kegelgröße am Tag, Tempo der Streifen, ob „Posten rufen sofort“ zu hart ist) – alle Stellschrauben stehen in `STEALTH`.
-- **Balance:** neue Einheiten und Auren sind geschätzt. `tools/sim.py` kennt Merkmale und Auren noch nicht.
+- **Balance:** Faustregel-Vergleich ist gemacht (`tools/balance_styles.py`); ganze Schlachten mit Merkmalen und Auren sind nicht simuliert. Auffällig stark im Vergleich: Balliste, Knochendrache, Todesritter (alt), Geist.
 - **Koop:** Forschung und Skillbaum gehören dem Gastgeber (`c.research`, `c.skills`); der Gast sieht sie, lernt aber nicht. Eigene Pfade für den Gast-Kommandeur wären ein eigener Schritt.
 - **Gegner-KI:** nutzt die neuen Merkmale nicht (kein Gegner hat welche). Wachen könnten nach einem Alarm Verstärkung aus Nachbarorten rufen.
-- **Rekrutieren:** Filter nach Spielstil (Schleichen, Masse, Bollwerk …) neben den vorhandenen Kategorien.
 - **Bilder:** `design/ui_bilder.md` Abschnitt 0 (8 Einheiten, 6 Pfad-Symbole, Merkmals- und Wachen-Symbole, Banner Angriffsplan).
 - Weiter offen aus früheren Sitzungen: Koop Stufe 6 (gemeinsame Schlachten), Ley-Sprung/Inventar/Expeditionen für den Gast, Bedrohungswellen, Wissen durch Kills, Pantheon-Magie, Flussnetz, Rangabzeichen; Kevins offene Entscheidungen (Hügelgrab angreifbar, Lagergrenzen, Späher).
 

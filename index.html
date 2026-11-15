@@ -92,6 +92,7 @@
   #threats .threat.hot { color: var(--blood); }
   #menuPop { position: absolute; right: calc(var(--side) + 8px); display: flex; flex-direction: column; gap: 5px; padding: 8px; min-width: 170px; }
   #menuPop button { text-align: left; }
+  #volRow { display: flex; align-items: center; gap: 6px; padding: 0 2px; } #volRow input { flex: 1; min-width: 0; accent-color: var(--undead); }
   .threat .bar { height: 6px; border: 1px solid var(--ink); background: #f4ecd6; margin-top: 1px; }
   .threat .bar div { height: 100%; }
   .threat.dead { opacity: .45; text-decoration: line-through; }
@@ -244,6 +245,13 @@
   .aStats { font-size: 11px; display: flex; flex-wrap: wrap; gap: 0 7px; } .aStats .st { white-space: nowrap; }
 
   /* Toast messages */
+  /* Prompts like in Civilization: something can be started again (build, research, Lich path). */
+  #todoBar { position: absolute; right: calc(var(--side) + 12px); bottom: calc(var(--bar) + 12px); z-index: 7; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  #todoBar .todo { display: flex; align-items: stretch; box-shadow: 0 2px 10px rgba(0,0,0,.55); border-radius: 4px; animation: todoPulse 1.8s ease-in-out infinite; }
+  #todoBar .todo button { margin: 0; font-size: 16px; padding: 8px 14px; background: #c9a227; color: #1a1408; border: 2px solid #2b2116; border-radius: 4px 0 0 4px; font-weight: bold; text-align: left; }
+  #todoBar .todo button span { display: block; font-size: 12px; font-weight: normal; }
+  #todoBar .todo button.later { border-left: none; border-radius: 0 4px 4px 0; padding: 0 9px; background: #e9dfc4; font-weight: normal; }
+  @keyframes todoPulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.035); filter: brightness(1.15); } }
   #toast { position: absolute; top: 168px; left: 50%; transform: translateX(-50%); padding: 8px 18px; font-size: 17px; z-index: 15;
     transition: opacity .4s; text-align: center; max-width: 80%; }
 
@@ -306,7 +314,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=37"></script>
+<script src="data/world_data.js?v=38"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=15"></script>
 <script type="importmap">
@@ -336,6 +344,7 @@
     <p class="small">Oberer Balken: Bedrohung. Unterer, roter Balken: wie viele Truppen der Fraktion noch leben (alle Orte und Trupps, gemessen am Anfang). Die Bedrohung steigt durch Angriffe auf Orte der Fraktion. Ab 50 % sind ihre Orte gewarnt: alle Wachen sofort alarmiert. Hohe Bedrohung schickt mehr Trupps aus.</p></div>
   <div id="menuPop" class="panel hidden">
     <button id="btnSound" title="Ton an/aus (Taste M)">Ton: aus</button>
+    <label id="volRow" title="Lautstärke"><span class="small">Lautstärke</span> <input id="volume" type="range" min="0" max="150" step="5" value="100"></label>
     <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
     <button id="btnHelp" title="Steuerung und Tastenkürzel">Tastenkürzel</button>
     <button id="btnCoop" title="Koop-Kampagne zu zweit: eröffnen oder beitreten">Koop-Spiel</button>
@@ -380,6 +389,7 @@
 </div>
 <div id="edgeTip" class="panel hidden"></div>
 
+<div id="todoBar" class="hidden"></div>
 <div id="toast" class="panel hidden"></div>
 <div id="debug" class="hidden"></div>
 <div id="debugTools" class="panel hidden"></div>
@@ -423,7 +433,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 139, "date": "2026-11-15", "changes": [{"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}, {"date": "09.11. 23:11", "text": "Koop Stufe 1: Verbindung und gemeinsame Welt"}]};
+const BUILD = {"version": 140, "date": "2026-11-15", "changes": [{"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -4585,12 +4595,13 @@ const Weather = {
 // Short effects per power type, deaths, UI clicks, and a quiet wind / drone ambience.
 // M or the speaker button mutes; the choice is remembered per browser.
 // =============================================================================
+const SFX = { master: 0.5, reverb: 0.22, windWorld: 0.5, windBattle: 0.3, gustAhead: 60, loopSeconds: 11, fade: 0.75 };
 const Sfx = {
-  ctx: null, master: null, amb: null, muted: false,
+  ctx: null, master: null, bus: null, amb: null, muted: false, volume: 1,
   init() {
     // Off by default (sound is opt-in via M or the speaker button); the choice is remembered.
     this.muted = true;
-    try { this.muted = localStorage.getItem('harmbringer_sound') !== 'on'; } catch (e) { /* ignore */ }
+    try { this.muted = localStorage.getItem('harmbringer_sound') !== 'on'; const v = parseFloat(localStorage.getItem('harmbringer_volume')); if (v >= 0 && v <= 1.5) this.volume = v; } catch (e) { /* ignore */ }
     const start = () => { this.ensure(); window.removeEventListener('pointerdown', start); window.removeEventListener('keydown', start); };
     window.addEventListener('pointerdown', start); window.addEventListener('keydown', start);
     // Hidden tab, minimized window or a closed panel: silence; back again: resume. Leaving the page closes the audio.
@@ -4598,67 +4609,191 @@ const Sfx = {
     const resume = () => { if (this.ctx && this.ctx.state === 'suspended' && !document.hidden) this.ctx.resume(); };
     document.addEventListener('visibilitychange', () => (document.hidden ? pause() : resume()));
     window.addEventListener('blur', pause); window.addEventListener('focus', resume);
-    window.addEventListener('pagehide', () => { if (this.ctx) { try { this.ctx.close(); } catch (e) { /* ignore */ } this.ctx = null; } });
+    window.addEventListener('pagehide', () => this.close());
+    // A soft tick for every button.
+    document.addEventListener('click', e => { if (this.ctx && e.target && e.target.closest && e.target.closest('button')) this.click(); }, true);
+  },
+  close() {
+    if (this.amb && this.amb.timer) clearInterval(this.amb.timer);
+    if (this.ctx) { try { this.ctx.close(); } catch (e) { /* ignore */ } }
+    this.ctx = this.amb = this.master = this.bus = null;
   },
   ensure() {
     if (this.ctx) return this.ctx;
     if (this.muted) return null;                     // no audio context at all while the sound is off
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-    this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : 0.5; this.master.connect(this.ctx.destination);
-    // White noise buffer for hits and wind.
-    const n = this.ctx.sampleRate * 2, buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
-    this.noise = buf;
+    this.setup(new AC());
     this.ambience(game.mode === 'battle' ? 'battle' : 'world');
     return this.ctx;
+  },
+  // Builds the mixer on a context (also used with an offline context to measure the sounds):
+  // effects -> bus -> master -> limiter -> out, plus a small hall on the bus.
+  setup(c) {
+    this.ctx = c;
+    const lim = c.createDynamicsCompressor(); lim.threshold.value = -14; lim.knee.value = 10; lim.ratio.value = 5; lim.attack.value = 0.004; lim.release.value = 0.25;
+    this.master = c.createGain(); this.master.gain.value = SFX.master * this.volume; this.master.connect(lim).connect(c.destination);
+    this.bus = c.createGain(); this.bus.connect(this.master);
+    const sr = c.sampleRate;
+    // Hall: decaying noise as impulse response.
+    const n = Math.floor(sr * 1.8), ir = c.createBuffer(2, n, sr);
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.8); }
+    const verb = c.createConvolver(); verb.buffer = ir; const send = c.createGain(); send.gain.value = SFX.reverb;
+    this.bus.connect(send).connect(verb).connect(this.master);
+    // Short white noise for hits; long pink and brown loops for the wind (a short loop is heard as a pulse).
+    const w = c.createBuffer(1, sr * 2, sr), wd = w.getChannelData(0);
+    for (let i = 0; i < wd.length; i++) wd[i] = Math.random() * 2 - 1;
+    this.noise = w; this.pink = this.makeLoop('pink'); this.brown = this.makeLoop('brown');
+  },
+  // Noise loop whose tail is cross-faded into its head, so the seam cannot be heard.
+  makeLoop(kind) {
+    const c = this.ctx, sr = c.sampleRate, n = Math.floor(sr * SFX.loopSeconds), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, last = 0;
+    for (let i = 0; i < n; i++) {
+      const w = Math.random() * 2 - 1;
+      if (kind === 'brown') { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+      else {                                                    // pink noise after Paul Kellet
+        b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852; b3 = 0.8665 * b3 + w * 0.3104856;
+        b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898;
+        d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
+      }
+    }
+    const x = Math.floor(sr * SFX.fade);
+    for (let i = 0; i < x; i++) { const k = i / x; d[i] = d[i] * Math.sqrt(k) + d[n - x + i] * Math.sqrt(1 - k); }   // equal power
+    return buf;
   },
   toggle() {
     this.muted = !this.muted;
     try { localStorage.setItem('harmbringer_sound', this.muted ? 'off' : 'on'); } catch (e) { /* ignore */ }
-    if (this.muted && this.ctx) { try { this.ctx.close(); } catch (e) { /* ignore */ } this.ctx = null; this.amb = this.drone = null; }   // switched off: close it completely
+    if (this.muted) this.close();   // switched off: close it completely
     if (!this.muted) this.ensure();
     const b = document.getElementById('btnSound'); if (b) b.textContent = this.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
     UI.toast(this.muted ? 'Ton aus' : 'Ton an');
   },
-  env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); },
-  tone(freq, dur, type = 'sine', peak = 0.3, slide = 0) {
-    const c = this.ctx; if (!c || this.muted) return;
-    const t = c.currentTime, o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
-    this.env(g, t, 0.01, peak, dur); o.connect(g).connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+  setVolume(v) {
+    this.volume = Math.max(0, Math.min(1.5, v));
+    try { localStorage.setItem('harmbringer_volume', String(this.volume)); } catch (e) { /* ignore */ }
+    if (this.master) this.master.gain.setTargetAtTime(SFX.master * this.volume, this.ctx.currentTime, 0.05);
   },
-  hiss(dur, freq, q = 1, peak = 0.3) {
+  // A little chance in every sound: the same hit never sounds exactly the same twice.
+  vary(x, pct = 0.07) { return x * (1 + (Math.random() * 2 - 1) * pct); },
+  env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); },
+  tone(freq, dur, type = 'sine', peak = 0.3, slide = 0, delay = 0, attack = 0.01) {
     const c = this.ctx; if (!c || this.muted) return;
-    const t = c.currentTime, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-    s.buffer = this.noise; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
-    this.env(g, t, 0.005, peak, dur); s.connect(f).connect(g).connect(this.master); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+    const t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+    this.env(g, t, attack, peak, dur); o.connect(g).connect(this.bus); o.start(t); o.stop(t + dur + 0.05);
+  },
+  hiss(dur, freq, q = 1, peak = 0.3, delay = 0, type = 'bandpass') {
+    const c = this.ctx; if (!c || this.muted) return;
+    const t = c.currentTime + delay, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noise; f.type = type; f.frequency.value = freq; f.Q.value = q;
+    this.env(g, t, 0.005, peak, dur); s.connect(f).connect(g).connect(this.bus); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  },
+  // A buzzy voice through a low-pass: horns, groans.
+  voice(freq, dur, cutoff, peak, slide = 0, delay = 0, attack = 0.06) {
+    const c = this.ctx; if (!c || this.muted) return;
+    const t = c.currentTime + delay, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(freq, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+    f.type = 'lowpass'; f.frequency.value = cutoff; f.Q.value = 1;
+    this.env(g, t, attack, peak, dur); o.connect(f).connect(g).connect(this.bus); o.start(t); o.stop(t + dur + 0.05);
   },
   hit(power) {
     if (!this.ensure()) return;
+    const v = x => this.vary(x);
     switch (power) {
-      case 'SOUL': this.tone(520, 0.5, 'sine', 0.18, 0.4); this.tone(780, 0.4, 'triangle', 0.08, 0.5); break;
-      case 'HOLY': this.tone(880, 0.9, 'sine', 0.15); this.tone(1320, 0.7, 'sine', 0.08); break;
-      case 'ARCANE': case 'CHAOS': this.tone(300, 0.35, 'sawtooth', 0.07, 2.2); this.hiss(0.25, 3000, 4, 0.08); break;
-      case 'FIRE': this.hiss(0.5, 900, 0.7, 0.25); break;
-      case 'POISON': this.hiss(0.35, 1800, 6, 0.12); break;
-      case 'PIERCE': this.hiss(0.12, 2500, 2, 0.3); this.tone(220, 0.08, 'square', 0.05); break;
-      case 'SIEGE': this.tone(70, 0.5, 'sine', 0.45, 0.5); this.hiss(0.3, 300, 1, 0.3); break;
-      case 'HEAL': this.tone(660, 0.4, 'sine', 0.12, 1.5); break;
-      default: this.tone(110, 0.18, 'sine', 0.4, 0.5); this.hiss(0.12, 700, 1, 0.25);   // blunt, rend
+      case 'SOUL': this.tone(v(520), 0.55, 'sine', 0.16, 0.4); this.tone(v(780), 0.45, 'triangle', 0.07, 0.5); this.hiss(0.5, v(2600), 5, 0.04); break;
+      case 'HOLY': this.tone(v(880), 0.9, 'sine', 0.13); this.tone(v(1320), 0.7, 'sine', 0.07); this.tone(v(1760), 0.5, 'sine', 0.035); break;
+      case 'ARCANE': case 'CHAOS': this.tone(v(300), 0.35, 'sawtooth', 0.06, 2.2); this.hiss(0.25, v(3000), 4, 0.08); break;
+      case 'FIRE': this.hiss(0.55, v(900), 0.7, 0.5); this.hiss(0.3, v(2400), 1.5, 0.18, 0.04); this.tone(v(90), 0.3, 'sine', 0.2, 0.6); break;
+      case 'POISON': this.hiss(0.4, v(1800), 6, 0.12); this.tone(v(180), 0.25, 'sine', 0.1, 0.7); break;
+      case 'PIERCE': this.hiss(0.1, v(2600), 2, 0.45); this.tone(v(2100), 0.16, 'sine', 0.09); this.tone(v(3170), 0.11, 'sine', 0.05); this.tone(v(150), 0.1, 'sine', 0.3, 0.6); break;
+      case 'SIEGE': this.tone(v(70), 0.55, 'sine', 0.45, 0.5); this.hiss(0.35, v(300), 1, 0.3); this.hiss(0.6, v(140), 0.8, 0.2, 0.05, 'lowpass'); break;
+      case 'HEAL': this.tone(v(660), 0.4, 'sine', 0.11, 1.5); this.tone(v(990), 0.35, 'sine', 0.05, 1.5, 0.08); break;
+      case 'REND': this.hiss(0.16, v(1500), 1.2, 0.26); this.hiss(0.1, v(3400), 2, 0.1, 0.03); this.tone(v(120), 0.15, 'sine', 0.3, 0.5); break;
+      default: this.tone(v(105), 0.2, 'sine', 0.42, 0.5); this.hiss(0.12, v(650), 1, 0.24); this.hiss(0.08, v(180), 0.8, 0.2, 0, 'lowpass');   // blunt
     }
   },
-  death() { if (this.ensure()) { this.tone(90, 0.6, 'sine', 0.35, 0.4); this.hiss(0.4, 400, 1, 0.15); } },
-  click() { if (this.ensure()) this.tone(1200, 0.05, 'square', 0.03); },
-  ping() { if (this.ensure()) { this.tone(660, 0.6, 'sine', 0.15); setTimeout(() => this.tone(990, 0.8, 'sine', 0.12), 180); } },   // coop: someone joined
-  ability() { if (this.ensure()) { this.tone(440, 0.5, 'triangle', 0.12, 1.8); this.hiss(0.4, 5000, 3, 0.05); } },
-  // Quiet looping ambience: wind on the map, a low drone in battle.
+  death() { if (this.ensure()) { this.voice(this.vary(150, 0.15), 0.7, 520, 0.09, 0.4); this.tone(this.vary(85), 0.5, 'sine', 0.2, 0.45, 0.12); this.hiss(0.45, 380, 1, 0.13, 0.1); } },
+  click() { if (this.ensure()) this.hiss(0.035, 2400, 3, 0.28); },
+  ping() { if (this.ensure()) { this.tone(660, 0.6, 'sine', 0.15); this.tone(990, 0.8, 'sine', 0.12, 0, 0.18); } },   // coop: someone joined
+  ability() { if (this.ensure()) { this.tone(this.vary(440), 0.5, 'triangle', 0.11, 1.8); this.hiss(0.45, 5000, 3, 0.045); this.tone(this.vary(220), 0.6, 'sine', 0.07, 0.5); } },
+  // One step on the battlefield: bones clack, flesh thuds, ghosts are silent. Louder units step louder.
+  step(u) {
+    if (!this.ctx || this.muted || !u || !u.def) return;
+    const loud = Math.min(4, u.def.noise || 0); if (!loud || u.def.spectral || u.def.flying) return;
+    const p = 0.1 + 0.09 * loud;
+    if (/skelett|knochen|bogner|schleuderer|gruft|huenen|totenjaeger/.test(u.type)) { this.hiss(0.04, this.vary(1900, 0.2), 7, p * 1.3); this.hiss(0.05, this.vary(260, 0.2), 1, p, 0, 'lowpass'); }
+    else this.hiss(0.07, this.vary(170, 0.2), 0.8, p * 2, 0, 'lowpass');
+    if (u.def.size >= 3) this.tone(this.vary(60), 0.14, 'sine', 0.045 * loud, 0.6);
+  },
+  // Church bell: a strike of inharmonic partials that ring out slowly.
+  bell(base = 196) {
+    if (!this.ensure()) return;
+    for (const [r, p, d] of [[0.5, 0.12, 3.2], [1, 0.16, 2.6], [1.19, 0.085, 2.0], [1.5, 0.06, 1.6], [2, 0.07, 1.3], [2.51, 0.035, 0.9], [3.01, 0.025, 0.7]]) this.tone(base * r, d, 'sine', p, 0, 0, 0.004);
+    this.hiss(0.05, 2200, 1.5, 0.12);
+  },
+  // A guard raises the alarm: two short horn calls.
+  horn() { if (this.ensure()) { this.voice(294, 0.32, 1100, 0.14); this.voice(392, 0.5, 1300, 0.16, 0, 0.3); } },
+  // Battle won / lost.
+  fanfare(won) {
+    if (!this.ensure()) return;
+    if (won) { this.voice(147, 1.6, 700, 0.1, 0, 0, 0.25); this.voice(220, 1.4, 800, 0.075, 0, 0.35, 0.25); this.tone(74, 1.8, 'sine', 0.15, 0, 0, 0.2); }
+    else { this.voice(131, 1.8, 480, 0.085, 0.7, 0, 0.3); this.tone(65, 2.0, 'sine', 0.13, 0.7, 0, 0.3); }
+  },
+  drum() { if (this.ensure()) { this.tone(this.vary(72), 0.3, 'sine', 0.3, 0.55); this.hiss(0.08, 200, 0.8, 0.12, 0, 'lowpass'); } },
+  // Looping ambience. World: wind over the heath. Battle: quieter wind and a slowly beating drone.
+  // The wind has four layers of filtered noise (rumble, body, a moving whoosh, a thin whistle in
+  // strong gusts); gusts rise and fall at random and are scheduled ahead on the audio clock.
   ambience(kind) {
     const c = this.ctx; if (!c) return;
-    if (this.amb) { try { this.amb.stop(); this.drone && this.drone.stop(); } catch (e) { /* ignore */ } this.amb = this.drone = null; }
-    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-    s.buffer = this.noise; s.loop = true; f.type = 'lowpass'; f.frequency.value = kind === 'battle' ? 260 : 420; g.gain.value = kind === 'battle' ? 0.05 : 0.07;
-    s.connect(f).connect(g).connect(this.master); s.start(); this.amb = s;
-    if (kind === 'battle') { const o = c.createOscillator(), og = c.createGain(); o.type = 'sine'; o.frequency.value = 55; og.gain.value = 0.04; o.connect(og).connect(this.master); o.start(); this.drone = o; }
+    if (this.amb) {
+      const old = this.amb; clearInterval(old.timer);
+      try { old.out.gain.setTargetAtTime(0, c.currentTime, 0.4); } catch (e) { /* ignore */ }
+      setTimeout(() => { for (const s of old.sources) { try { s.stop(); } catch (e) { /* ignore */ } } }, 2500);
+    }
+    const out = c.createGain(); out.gain.value = 0; out.connect(this.master);
+    out.gain.setTargetAtTime(kind === 'battle' ? SFX.windBattle : SFX.windWorld, c.currentTime, 1.2);
+    const A = this.amb = { kind, out, sources: [], until: c.currentTime };
+    const src = (buf, offset) => { const s = c.createBufferSource(); s.buffer = buf; s.loop = true; s.loopEnd = buf.duration - SFX.fade; s.start(0, offset); A.sources.push(s); return s; };
+    const filt = (type, f, q) => { const x = c.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = q; return x; };
+    const gain = v => { const g = c.createGain(); g.gain.value = v; return g; };
+    A.rumble = gain(0.2); src(this.brown, 1.7).connect(filt('lowpass', 130, 0.5)).connect(A.rumble).connect(out);
+    A.lps = []; A.bodies = [];
+    [[0, -0.6], [5.3, 0.6]].forEach(([off, side]) => {            // two different stretches of noise, left and right
+      const lp = filt('lowpass', 420, 0.4), g = gain(0.14); let x = src(this.pink, off).connect(lp).connect(g);
+      if (c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = side; x = x.connect(p); }
+      x.connect(out); A.lps.push(lp); A.bodies.push(g);
+    });
+    A.bp = filt('bandpass', 420, 1.1); A.whoosh = gain(0.1);
+    let tail = src(this.pink, 3.9).connect(A.bp).connect(A.whoosh);
+    if (c.createStereoPanner) {                                   // the gusts drift slowly from side to side
+      const pan = c.createStereoPanner(), lfo = c.createOscillator(), depth = gain(0.6);
+      lfo.frequency.value = 0.045; lfo.connect(depth).connect(pan.pan); lfo.start(); A.sources.push(lfo); tail = tail.connect(pan);
+    }
+    tail.connect(out);
+    A.bw = filt('bandpass', 1500, 10); A.whistle = gain(0); src(this.pink, 6.4).connect(A.bw).connect(A.whistle).connect(out);
+    if (kind === 'battle') {
+      const g = gain(0.045); g.connect(out);
+      for (const f of [55, 55.6, 82.5]) { const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(g); o.start(); A.sources.push(o); }
+    }
+    this.gusts(A, SFX.gustAhead);
+    A.timer = setInterval(() => { if (!this.ctx || this.amb !== A) { clearInterval(A.timer); return; } if (A.until - this.ctx.currentTime < SFX.gustAhead / 2) this.gusts(A, SFX.gustAhead); }, 10000);
+  },
+  // Schedules gusts from A.until for `seconds`: mostly a light breeze, now and then a strong blow.
+  gusts(A, seconds) {
+    const c = this.ctx; let t = Math.max(A.until, c.currentTime); const end = t + seconds;
+    while (t < end) {
+      const k = Math.pow(Math.random(), 1.7), rise = 1.2 + Math.random() * 3.2, hold = 0.8 + Math.random() * 4.5, tc = rise / 3;
+      A.rumble.gain.setTargetAtTime(0.14 + 0.2 * k, t, tc);
+      for (const g of A.bodies) g.gain.setTargetAtTime(0.08 + 0.24 * k, t, tc);
+      for (const f of A.lps) f.frequency.setTargetAtTime(300 + 520 * k, t, tc);
+      A.whoosh.gain.setTargetAtTime(0.03 + 0.4 * k, t, tc);
+      A.bp.frequency.setTargetAtTime(300 + 760 * k, t, tc);
+      A.whistle.gain.setTargetAtTime(k > 0.55 ? 0.09 * (k - 0.55) / 0.45 : 0, t, tc * 1.5);
+      A.bw.frequency.setTargetAtTime(1050 + 900 * k + Math.random() * 300, t, rise);
+      t += rise + hold;
+    }
+    A.until = t;
   }
 };
 
@@ -4809,7 +4944,7 @@ const Alarm = {
     const r = Math.max(STEALTH.shoutMin, e.def.hear * 2 * this.sense(e)); let woke = 0;
     for (const o of this.enemies()) if (o !== e && o.alert !== 'alarmed' && hexDistance(o.q, o.r, e.q, e.r) <= r) { o.lookAt = { q: e.q, r: e.r }; this.set(o, 'alarmed'); woke++; }
     Battle.log(`${e.def.name} schlägt Alarm${woke ? ` – ${woke} ${woke === 1 ? 'Gruppe wacht' : 'Gruppen wachen'} auf` : ' – niemand hört es'}.`, 'hit');
-    Sfx.ensure() && Sfx.tone(520, 0.25, 'square', 0.08);
+    Sfx.horn();
     if (!b.bell && !b.bellRunner && e.def.rank !== 'MACHINE' && this.enemies().some(o => o.alert !== 'alarmed')) {
       const spot = this.bellSpots(b.field).filter(t => hexDistance(t.q, t.r, e.q, e.r) <= STEALTH.bellReach).sort((x, y) => hexDistance(x.q, x.r, e.q, e.r) - hexDistance(y.q, y.r, e.q, e.r))[0];
       if (spot) {
@@ -4832,7 +4967,7 @@ const Alarm = {
       for (const o of this.enemies()) { o.shouted = true; if (o.alert !== 'alarmed') this.set(o, 'alarmed'); }
       BattleView.updateHp(e);
       Battle.log('Die Glocke läutet – das ganze Feld ist wach, und das Umland hört es!', 'hit'); UI.toast('Die Glocke läutet!', 4, false);
-      Sfx.ensure() && Sfx.tone(660, 1.5, 'sine', 0.2);
+      Sfx.bell(); setTimeout(() => Sfx.bell(), 1100); setTimeout(() => Sfx.bell(), 2200);
       Battle.refreshCones();
     }
     return true;
@@ -5063,8 +5198,8 @@ const Battle = {
     for (const u of b.units) if (u.side === 'enemy' && u.view) { Alarm.turn(u, u.facing); BattleView.updateHp(u); }
     Weather.apply(b);
     for (const u of b.units) if (u.side === 'enemy' && BOSS_LINES[u.type]) { Narrator.speak(u.type, BOSS_LINES[u.type], 'boss_' + u.type, u.faction); break; }
-    const T = TIMES[b.time], windTxt = `Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}`;
-    this.log(`${T.name}${T.foggy ? ', Nebel' : ''} · ${windTxt}. ${b.time === 0 ? 'Die Toten sind in ihrem Element.' : b.time === 2 ? 'Das Tageslicht stärkt die Lebenden.' : ''}`);
+    const T = TIMES[b.time], windTxt = b.fx.attackPlan ? ` · Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}` : '';
+    this.log(`${T.name}${T.foggy ? ', Nebel' : ''}${windTxt}. ${b.time === 0 ? 'Die Toten sind in ihrem Element.' : b.time === 2 ? 'Das Tageslicht stärkt die Lebenden.' : ''}`);
     const alarm = warned;
     const enemies = b.units.filter(u => u.side === 'enemy');
     if (node.encounter) {
@@ -5094,7 +5229,7 @@ const Battle = {
     if (!exp) SaveGame.save();
     UI.roundBanner(1, `${node.name} · ${TIMES[b.time].name}`);
     Narrator.hint('Kampf: Die Einheit mit dem goldenen Ring ist am Zug. Blaue Felder = Bewegung, rote = angreifbare Gegner, über einem Gegner siehst du den erwarteten Schaden. Fähigkeiten unten rechts (Tasten 1–4), Leertaste beendet den Zug.', 'battle');
-    if (b.arrival === 'SURPRISE') Narrator.hint('Anschleichen: Wachen sehen nur in ihren Kegel (gelb = misstrauisch, orange = Alarm). Wer höchstens die halbe Bewegung geht (grüne Felder), ist leise. Der Wind trägt den Geruch der Toten – nähert euch gegen den Wind. Hohes Gras, Heide und Moor verbergen. Schlafende (z) sehen nichts.', 'stealth2');
+    if (b.arrival === 'SURPRISE') Narrator.hint('Anschleichen: Wachen sehen nur in ihren Kegel (gelb = misstrauisch, orange = Alarm). Wer höchstens die halbe Bewegung geht (grüne Felder), ist leise. Der Wind trägt den Geruch der Toten. Hohes Gras, Heide und Moor verbergen. Schlafende (z) sehen nichts.', 'stealth2');
     if (b.field.cityWall) this.log('Die Stadt ist ummauert: Schützen stehen auf dem Wehrgang und in den Türmen. Tore lassen sich rammen (jede Einheit, langsam), die Mauer brechen nur Belagerungswaffen und Riesen (Balliste, Fleischriese, Knochendrache, Hünenkönig). Flieger fliegen hinüber, Geister gehen hindurch.', 'hit');
     else if (b.field.edgeInfo && [...b.field.edgeInfo.values()].some(x => x.kind === 'palisade')) this.log('Eine Palisade umgibt den Ort: Lücken lassen sich nutzen, das Holz lässt sich einschlagen.', 'hit');
     // Some places need special troops (flyers, ghosts, swimmers). Say so at once – withdrawal costs nothing yet.
@@ -5426,7 +5561,7 @@ const Battle = {
     dest.unit = u;
     for (let i = 1; i < path.length; i++) {
       const a = path[i - 1], c = path[i], pa = hexToWorld(a.q, a.r), pc = hexToWorld(c.q, c.r);
-      BattleView.face(u, pc.x, pc.z);
+      BattleView.face(u, pc.x, pc.z); Sfx.step(u);
       await tween(STEP_SECONDS, k => {
         const ya = surfaceY(a), yc = surfaceY(c);
         u.view.group.position.set(pa.x + (pc.x - pa.x) * k, ya + (yc - ya) * k + Math.sin(k * Math.PI) * 0.4, pa.z + (pc.z - pa.z) * k);
@@ -5734,6 +5869,7 @@ const Battle = {
     if (b.over) return;
     b.over = true;
     c.battles++;
+    if (result === 'victory' || result === 'defeat') Sfx.fanfare(result === 'victory');
     UI.news(`${result === 'victory' ? 'Sieg' : result === 'retreat' ? 'Rückzug' : result === 'withdraw' ? 'Abzug' : 'Niederlage'}: ${node.name}${node.encounter ? ' (unterwegs)' : ''} nach ${b.round} ${b.round === 1 ? 'Runde' : 'Runden'}.`, 'battle');
     let html = '', endNow = false;
     if (b.bell && !node.encounter && c.threat[node.faction] !== undefined) c.threat[node.faction] = Math.min(100, c.threat[node.faction] + STEALTH.bellThreat);
@@ -6403,6 +6539,13 @@ const UI = {
     this.show('modal', true);
   },
   closeModal() { this.show('modal', false); },
+  // Attack a place. Reading the wind and choosing the side is learned (Lich path "Schatten" or
+  // research "Windkunde", effect attackPlan); without it the dead simply come the way they marched.
+  attack(node, exp = null) {
+    if (Campaign.effects().attackPlan) return this.attackPlan(node, exp);
+    Narrator.hint('Die Toten greifen aus der Richtung an, aus der sie kamen. Wer den Wind lesen und die Seite wählen will, lernt „Windlesen“ (Ausbau → Pfade des Lichs → Schatten) oder erforscht „Windkunde“ am Wissensaltar.', 'noplan');
+    return Battle.start(node, exp);
+  },
   // Before an attack: from which side? Against the wind the dead are not smelled; going around
   // the place costs an hour per sixth of the circle. Waiting for the night is offered as well.
   attackPlan(node, exp = null) {
@@ -6480,7 +6623,7 @@ const UI = {
     const chip = (k, v, lbl, cls = '') => `<span class="chip ${cls}" title="${tip(k)}">${resIcon(k, 18)}<b>${v}</b> <span class="lbl">${lbl}</span></span>`;
     $('resources').innerHTML = chip('corpses', r.corpses, 'Leichen') + chip('bones', r.bones, 'Knochen') + chip('souls', r.souls, 'Seelen')
       + chip('knowledge', r.knowledge, 'Wissen') + chip('command', `${used}/${lim}`, 'Kommando', used >= lim ? 'full' : '');
-    this.buildBadge(); this.newsBadge(); if (Coop.role) Coop.clockText();
+    this.buildBadge(); this.todo(); this.newsBadge(); if (Coop.role) Coop.clockText();
     // Threat: one chip (mini bars + the highest faction), the full list on click.
     const list = ENEMY_FACTIONS.map(f => ({ f, v: Math.round(c.threat[f] || 0), living: Campaign.isLiving(f) })).sort((x, y) => (y.living - x.living) || (y.v - x.v));
     const top = list.find(x => x.living), warned = list.filter(x => x.living && x.v >= 50);
@@ -6554,6 +6697,35 @@ const UI = {
       ${row('Klick', 'Ort, Trupp oder Gelände auswählen')}${row('H', 'Hügelgrab')}${row('R', 'nächster Ort zum Rekrutieren')}${row('B', 'Bauen')}${row('I', 'Inventar')}${row('N', 'Chronik der Weltereignisse')}${row('G', 'Los (Befehle mehrerer Armeen)')}${row('Leertaste halten', 'Reise beschleunigen')}</table>
       <h3>Kampf</h3><table>${row('Klick', 'bewegen, angreifen, auswählen')}${row('1–4', 'Fähigkeiten')}${row('Leertaste', 'Zug beenden')}${row('R', 'Rückzug')}${row('T', 'Feldkanten')}${row('K', 'Token-Modus')}</table>
       <h3>Allgemein</h3><table>${row('Esc', 'Fenster schließen, Auswahl aufheben')}${row('Enter', 'Koop: Chat')}${row('M', 'Ton an/aus')}${row('F3', 'Debug-Fenster')}</table>`, [{ label: 'Schließen', primary: true, action: () => {} }]);
+  },
+  // Prompts like in Civilization: whenever a building, a research or a Lich path can be started
+  // and nothing is running in that slot, a pulsing button says so until it is used or put off
+  // ("später" hides it until the next day).
+  todoList() {
+    const c = game.campaign, out = [];
+    if (!c) return out;
+    const B = Object.keys(DATA.baseBuildings).filter(k => !Base.blocker(k));
+    if (!c.construction && B.length) out.push({ key: 'build', tab: 'build', label: '⚒ Bauplatz frei', sub: B.length === 1 ? `${DATA.baseBuildings[B[0]].name} kann ${Base.level(B[0]) ? 'ausgebaut' : 'gebaut'} werden` : `${B.length} Gebäude zur Wahl` });
+    const R = c.research ? [] : DATA.upgrades.filter(u => !Upgrades.blocker(u));
+    if (R.length) out.push({ key: 'research', tab: 'research', label: '⚗ Forschung frei', sub: `${new Set(R.map(u => u.slot)).size} ${new Set(R.map(u => u.slot)).size === 1 ? 'Frage' : 'Fragen'} offen` });
+    const S = Coop.role === 'guest' ? [] : Skills.all().filter(x => !Skills.blocker(x));
+    if (S.length) out.push({ key: 'lich', tab: 'lich', label: '♛ Pfad wählen', sub: `${Skills.free()} ${Skills.free() === 1 ? 'Punkt' : 'Punkte'} frei` });
+    return out;
+  },
+  todo() {
+    const el = $('todoBar'), c = game.campaign; if (!el) return;
+    const sn = this.todoSnooze = this.todoSnooze || {};
+    const list = c && (game.mode === 'world' || game.mode === 'travel') ? this.todoList().filter(t => !(sn[t.key] >= c.dayCount)) : [];
+    const sig = list.map(t => t.key + ':' + t.sub).join('|');
+    if (sig === this.todoSig) { el.classList.toggle('hidden', !list.length); return; }
+    // A prompt that was not there before: a soft chime.
+    const had = (this.todoSig || '').split('|').map(x => x.split(':')[0]);
+    if (list.some(t => !had.includes(t.key)) && this.todoSig !== undefined) { Sfx.ensure() && (Sfx.tone(587, 0.5, 'sine', 0.09), Sfx.tone(880, 0.7, 'sine', 0.07, 0, 0.14)); }
+    this.todoSig = sig;
+    el.innerHTML = list.map(t => `<div class="todo"><button data-todo="${t.tab}" title="Hügelgrab öffnen (B)">${t.label}<span>${esc(t.sub)}</span></button><button class="later" data-later="${t.key}" title="Später – bis morgen ausblenden">×</button></div>`).join('');
+    el.classList.toggle('hidden', !list.length);
+    el.querySelectorAll('[data-todo]').forEach(b => b.onclick = () => { if (game.mode === 'world' || game.mode === 'travel') Base.open(b.dataset.todo); });
+    el.querySelectorAll('[data-later]').forEach(b => b.onclick = () => { sn[b.dataset.later] = game.campaign.dayCount; this.todo(); });
   },
   // Build button: a running construction shows its days left, otherwise a dot when something can be started.
   buildBadge() {
@@ -6702,6 +6874,7 @@ const UI = {
     document.querySelectorAll('[data-rest]').forEach(b => b.onclick = () => { if (Coop.cmd({ op: 'rest', hours: +b.dataset.rest })) { this.closeModal(); this.toast('Gerastet (der Gastgeber rechnet die Zeit).', 3, false); return; } Campaign.advanceHours(+b.dataset.rest); this.closeModal(); Campaign.healAtPhylactery(); SaveGame.save(); this.updateHeader(); this.renderInfo(); WorldView.refresh(); this.toast(`Gerastet: ${Campaign.clockString(game.campaign.dayCount, Campaign.hour())}.`); });
   },
   roundBanner(n, sub) {
+    if (n > 1) Sfx.drum();
     let el = document.getElementById('roundBanner');
     if (!el) { el = document.createElement('div'); el.id = 'roundBanner'; document.body.appendChild(el); }
     const b = game.battle, T = b ? TIMES[b.time] : null;
@@ -6807,14 +6980,14 @@ const UI = {
       const exps = Expeditions.list(), act = Expeditions.active();
       if (!exps.length) {
         if (here.id !== node.id) add('Hierher ziehen', () => startTravel(node), true);
-        else if (Campaign.isEnemy(node)) add('Angreifen', () => UI.attackPlan(node), true);
+        else if (Campaign.isEnemy(node)) add('Angreifen', () => UI.attack(node), true);
       } else {
         // Several armies: orders first, then "Los".
         if (act.node.id !== node.id) add(act.order === node.id ? `Befehl aufheben (${act.label})` : `Befehl: ${act.label} hierher (${Expeditions.days(act.army, act.node, node)} T.)`,
           () => Expeditions.setOrder(act.id, act.order === node.id ? null : node), true);
         if (Campaign.isEnemy(node)) {
-          if (here.id === node.id) add(Coop.role === 'guest' ? 'Angreifen' : 'Angreifen (Lich)', () => UI.attackPlan(node), true);
-          for (const e of exps) if (e.nodeId === node.id && e.id !== 'coop') add(`Angreifen (${Expeditions.name(e)})`, () => UI.attackPlan(node, e), true);
+          if (here.id === node.id) add(Coop.role === 'guest' ? 'Angreifen' : 'Angreifen (Lich)', () => UI.attack(node), true);
+          for (const e of exps) if (e.nodeId === node.id && e.id !== 'coop') add(`Angreifen (${Expeditions.name(e)})`, () => UI.attack(node, e), true);
         }
         for (const e of exps) if (e.nodeId === node.id && here.id === node.id) add(`${Expeditions.name(e)} vereinen`, () => Expeditions.merge(e), false);
       }
@@ -6836,15 +7009,25 @@ const UI = {
     const CATS = [['all', 'Alle', () => true], ['melee', 'Nahkampf', (t, u) => u.range <= 1 && u.power !== 'HEAL'], ['ranged', 'Fernkampf', (t, u) => u.range > 1 && u.role !== 'CASTER' && !siegeDef(t, u)],
       ['siege', 'Belagerung', siegeDef], ['caster', 'Zauber und Heilung', (t, u) => u.role === 'CASTER' || u.power === 'HEAL'], ['flying', 'Flieger', (t, u) => u.flying],
       ['spectral', 'Geister (durch Wände)', (t, u) => u.spectral], ['swim', 'Schwimmer', t => SWIMMERS.has(t)], ['leader', 'Anführer', (t, u) => (u.commandPoints || 0) < 0]];
+    // Playstyles: which units carry a way of fighting (traits, auras, values).
+    const tr = (u, ...ks) => ks.some(k => (u.traits || []).includes(k)), act = u => (u.abilities || []).some(id => DATA.abilities[id] && DATA.abilities[id].trigger === 'ACTIVE');
+    const STYLES = [['st_stealth', 'Schleichen', (t, u) => tr(u, 'ASSASSIN') || u.aura === 'SHADOW' || ((u.noise || 0) <= 1 && !siegeDef(t, u)) || (u.abilities || []).some(id => ['LURE', 'FOG'].includes((DATA.abilities[id] || {}).effect))],
+      ['st_mass', 'Masse', (t, u) => isFodder(u) || tr(u, 'SWARM', 'DRUM') || u.aura === 'HORDE'],
+      ['st_elite', 'Klasse', (t, u) => isElite(u) && (u.commandPoints || 0) >= 4],
+      ['st_tank', 'Bollwerk', (t, u) => u.role === 'TANK' || tr(u, 'GUARD', 'REGEN') || u.aura === 'BULWARK'],
+      ['st_mobile', 'Beweglich', (t, u) => u.move >= 5 || tr(u, 'CHARGE', 'HITRUN') || u.aura === 'RIDE'],
+      ['st_magic', 'Fähigkeiten', (t, u) => act(u) || u.aura === 'SORCERY']];
     const cost = (u, k) => (u.cost || {})[k] || 0;
     const SORTS = [['name', 'Name', u => u.name], ['corpses', 'Leichen', u => cost(u, 'corpses')], ['bones', 'Knochen', u => cost(u, 'bones')], ['souls', 'Seelen', u => cost(u, 'souls')],
       ['command', 'Kommando', u => u.commandPoints || 0], ['hp', 'Lebenspunkte', u => u.hp], ['damage', 'Schaden', u => u.damage], ['initiative', 'Initiative', u => u.initiative],
       ['move', 'Bewegung', u => u.move], ['range', 'Reichweite', u => u.range]];
     this.recruitCat = this.recruitCat || 'all'; this.recruitSort = this.recruitSort || 'name'; this.recruitDir = this.recruitDir || 1;
-    const all = Recruitment.candidates(), cat = CATS.find(x => x[0] === this.recruitCat) || CATS[0], srt = SORTS.find(x => x[0] === this.recruitSort) || SORTS[0];
+    const all = Recruitment.candidates(), cat = [...CATS, ...STYLES].find(x => x[0] === this.recruitCat) || CATS[0], srt = SORTS.find(x => x[0] === this.recruitSort) || SORTS[0];
     const list = all.filter(([t, u]) => cat[2](t, u)).sort(([, a], [, b]) => { const x = srt[2](a), y = srt[2](b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * this.recruitDir || a.name.localeCompare(b.name); });
-    const side = `<div class="recSide"><h3>Kategorie</h3>${CATS.map(([k, n, f]) => { const cnt = all.filter(([t, u]) => f(t, u)).length;
-        return `<button data-rcat="${k}" class="${k === cat[0] ? 'on' : ''}" ${cnt ? '' : 'disabled'}>${n} <span class="small">${cnt}</span></button>`; }).join('')}
+    const catBtn = ([k, n, f]) => { const cnt = all.filter(([t, u]) => f(t, u)).length;
+        return `<button data-rcat="${k}" class="${k === cat[0] ? 'on' : ''}" ${cnt ? '' : 'disabled'}>${n} <span class="small">${cnt}</span></button>`; };
+    const side = `<div class="recSide"><h3>Kategorie</h3>${CATS.map(catBtn).join('')}
+      <h3 title="Welche Einheiten zu welcher Art zu kämpfen passen">Spielstil</h3>${STYLES.map(catBtn).join('')}
       <h3>Sortieren</h3>${SORTS.map(([k, n]) => `<button data-rsort="${k}" class="${k === srt[0] ? 'on' : ''}">${['corpses', 'bones', 'souls', 'command'].includes(k) ? resIcon(k) : ''}${n}${k === srt[0] ? (this.recruitDir > 0 ? ' ▲' : ' ▼') : ''}</button>`).join('')}</div>`;
     const rows = list.map(([type, u]) => {
       const block = Recruitment.blocker(type);
@@ -6902,7 +7085,7 @@ const UI = {
   // ---- Battle -------------------------------------------------------------
   enterBattle() {
     Sfx.ambience('battle');
-    ['header', 'info', 'sidebar', 'threatPop', 'menuPop'].forEach(id => this.show(id, false));
+    ['header', 'info', 'sidebar', 'threatPop', 'menuPop', 'todoBar'].forEach(id => this.show(id, false));
     ['initBar', 'roundInfo', 'unitCard', 'battleLog', 'battleButtons', 'battleBar'].forEach(id => this.show(id, true));
     $('battleLog').innerHTML = ''; $('battleLog').classList.remove('open');
     $('btnEdges').classList.toggle('on', !!game.showEdges);
@@ -6940,7 +7123,7 @@ const UI = {
     const who = !cur ? '' : cur.side === 'player' ? `Am Zug: ${cur.def.name}` : `Gegner am Zug: ${cur.def.name}`;
     const T = TIMES[b.time], left = ROUNDS_PER_TIME - ((b.round - 1) % ROUNDS_PER_TIME);
     const myNext = fr.findIndex((x, i) => i > 0 && x.u.side === 'player');
-    $('roundInfo').innerHTML = `Runde ${b.round} · <span title="${T.name}: Untote ${Math.round((T.undead - 1) * 100)} %, Lebende ${Math.round((T.living - 1) * 100)} % Schaden, Sicht der Gegner ${T.sight >= 0 ? '+' : ''}${T.sight}${T.foggy ? ', Nebel: Fernkampf −1 Reichweite' : ''}. Wechsel in ${left} ${left === 1 ? 'Runde' : 'Runden'}.">${T.name}${T.foggy ? ' (Nebel)' : ''}</span> · <span title="Gegen den Wind riechen die Lebenden die Toten weiter, mit dem Wind kaum.">Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}</span> · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}<b>${esc(who)}</b>${cur && cur.side !== 'player' && myNext > 0 ? ` · deine nächste Einheit in ${myNext} ${myNext === 1 ? 'Zug' : 'Zügen'}` : ''}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
+    $('roundInfo').innerHTML = `Runde ${b.round} · <span title="${T.name}: Untote ${Math.round((T.undead - 1) * 100)} %, Lebende ${Math.round((T.living - 1) * 100)} % Schaden, Sicht der Gegner ${T.sight >= 0 ? '+' : ''}${T.sight}${T.foggy ? ', Nebel: Fernkampf −1 Reichweite' : ''}. Wechsel in ${left} ${left === 1 ? 'Runde' : 'Runden'}.">${T.name}${T.foggy ? ' (Nebel)' : ''}</span>${b.fx && b.fx.attackPlan ? ` · <span title="Windlesen: Gegen den Wind riecht euch niemand, mit dem Wind trägt der Leichengeruch weit.">Wind aus ${DIR_NAMES[(b.wind + 3) % 6]}</span>` : ''} · ${b.state === 'stealth' ? 'Schleich-Modus · ' : ''}<b>${esc(who)}</b>${cur && cur.side !== 'player' && myNext > 0 ? ` · deine nächste Einheit in ${myNext} ${myNext === 1 ? 'Zug' : 'Zügen'}` : ''}${b.retreatPending ? ' · Rückzug befohlen' : ''}`;
     this.renderUnitCard(b.selected || cur);
     const myTurn = cur && cur.side === 'player' && !b.busy && !b.over;
     $('btnEndTurn').disabled = !myTurn;
@@ -7286,6 +7469,8 @@ function initInput() {
   $('btnBuild').onclick = () => { if (game.mode === 'world') Base.open(); };
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnSound').onclick = () => Sfx.toggle();
+  $('volume').value = Math.round(Sfx.volume * 100); $('volume').oninput = e => Sfx.setVolume(+e.target.value / 100);
+  $('volume').onchange = () => Sfx.drum();
   $('btnSound').textContent = Sfx.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
   $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.', 3.5, false); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
