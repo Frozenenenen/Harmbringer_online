@@ -88,7 +88,7 @@
   #threatPop .threat .bar { grid-column: 1 / 3; }
   #threatPop .threat .bar.troops { height: 5px; margin-top: 2px; } #threatPop .threat .bar.troops div { background: var(--blood); }
   #threatPop .threat .small { grid-column: 1 / 3; font-size: 11px; }
-  #threatPop { max-height: calc(100% - var(--bar) - 30px); overflow-y: auto; }
+  #threatPop { max-height: calc(100% - var(--bar) - 30px); overflow-y: auto; z-index: 9; }
   #threats .threat.hot { color: var(--blood); }
   #menuPop { position: absolute; right: calc(var(--side) + 8px); display: flex; flex-direction: column; gap: 5px; padding: 8px; min-width: 170px; }
   #menuPop button { text-align: left; }
@@ -246,7 +246,7 @@
 
   /* Toast messages */
   /* Prompts like in Civilization: something can be started again (build, research, Lich path). */
-  #todoBar { position: absolute; right: calc(var(--side) + 12px); bottom: calc(var(--bar) + 12px); z-index: 7; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  #todoBar { position: absolute; left: 12px; bottom: calc(var(--bar) + 12px); z-index: 7; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
   #todoBar .todo { display: flex; align-items: stretch; box-shadow: 0 2px 10px rgba(0,0,0,.55); border-radius: 4px; animation: todoPulse 1.8s ease-in-out infinite; }
   #todoBar .todo button { margin: 0; font-size: 16px; padding: 8px 14px; background: #c9a227; color: #1a1408; border: 2px solid #2b2116; border-radius: 4px 0 0 4px; font-weight: bold; text-align: left; }
   #todoBar .todo button span { display: block; font-size: 12px; font-weight: normal; }
@@ -267,6 +267,7 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.faded { opacity: .72; }
+  .doctrine { font-size: 14px; margin: 2px 0 4px; cursor: help; } .doctrine .small { font-size: 12px; }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
   .nodeLabel[data-danger="low"] { border-left: 5px solid #4a9a3a; } .nodeLabel[data-danger="mid"] { border-left: 5px solid #d0a020; } .nodeLabel[data-danger="high"] { border-left: 5px solid #c0302a; }
   .recruitBtns { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-end; max-width: 210px; }
@@ -315,7 +316,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=38"></script>
+<script src="data/world_data.js?v=39"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=15"></script>
 <script type="importmap">
@@ -434,7 +435,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 141, "date": "2026-11-15", "changes": [{"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}]};
+const BUILD = {"version": 142, "date": "2026-11-15", "changes": [{"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1685,6 +1686,7 @@ const Campaign = {
     const list = [];
     for (const [type, n] of Object.entries(node.garrison)) for (let i = 0; i < n; i++) list.push(type);
     if (!list.length) return list;
+    list.splice(0, list.length, ...Doctrine.garrison(node.faction, list));
     const threat = game.campaign.threat[node.faction] || 0;
     const extra = Math.floor(threat / THREAT.reinforcementPer);
     let best = null, bestN = -1;
@@ -1856,8 +1858,9 @@ const Raids = {
       p.holding = this.armyNear(p.q, p.r) || this.armyNear(t.q, t.r);
       if (p.holding) continue;
       const dq = t.q - p.q, dr = t.r - p.r, dist = Math.hypot(dq, dr);
-      if (dist <= RAIDS.tilesPerDay) { this.retake(p, t); continue; }
-      p.q += dq / dist * RAIDS.tilesPerDay; p.r += dr / dist * RAIDS.tilesPerDay;
+      const speed = this.speed(p);
+      if (dist <= speed) { this.retake(p, t); continue; }
+      p.q += dq / dist * speed; p.r += dr / dist * speed;
     }
     // Alliance: once a faction is at 90 % threat, the living stand together (more and stronger parties).
     const alliance = ENEMY_FACTIONS.some(f => c.threat[f] >= 90 && Campaign.isLiving(f));
@@ -1878,7 +1881,7 @@ const Raids = {
       if (Campaign.owner(o) !== o.faction || list.some(p => p.originId === o.id) || Pantheons.fallenFaction(o.faction)) continue;
       if (c.raidFactionDay[o.faction] !== undefined && c.dayCount - c.raidFactionDay[o.faction] < RAIDS.factionCooldown) continue;
       if (Campaign.recovery(o) < 1) continue;                    // only places at full strength send troops
-      const chance = (pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0)) * (alliance && !pid ? 2 : 1);
+      const chance = (pid ? RAIDS.mythicChance : RAIDS.chanceBase + RAIDS.chancePerThreat * (c.threat[o.faction] || 0)) * (alliance && !pid ? 2 : 1) * Doctrine.raid(o.faction, 'chance');
       if (Math.random() >= chance) continue;
       const t = this.pickTarget(o.q, o.r, taken, pid || null, Campaign.strength(Object.entries(o.garrison).filter(([u]) => DATA.units[u].rank !== 'UNIQUE').flatMap(([u, n]) => Array(Math.round(n * RAIDS.strength)).fill(u))));
       if (!t) continue;
@@ -1890,10 +1893,12 @@ const Raids = {
       break;                                             // at most one new party per day
     }
   },
+  // Tiles per day of a war party (fast factions ride faster).
+  speed(p) { return RAIDS.tilesPerDay * Doctrine.raid(p.faction, 'speed'); },
   create(o, t) {
     const garrison = {};
     const types = Object.entries(o.garrison).filter(([u]) => DATA.units[u].rank !== 'UNIQUE');
-    const strength = RAIDS.strength * (game.campaign.alliance ? 1.5 : 1);
+    const strength = RAIDS.strength * (game.campaign.alliance ? 1.5 : 1) * Doctrine.raid(o.faction, 'strength');
     for (const [u, n] of types) { const k = Math.round(n * strength); if (k > 0) garrison[u] = k; }
     let total = Object.values(garrison).reduce((a, b) => a + b, 0);
     if (total < RAIDS.minUnits && types.length) garrison[types[0][0]] = (garrison[types[0][0]] || 0) + RAIDS.minUnits - total;
@@ -2276,6 +2281,66 @@ const Base = {
   }
 };
 const GROUP_NAMES = { bone: 'Knochen-Untote', flesh: 'Fleisch-Untote', spirit: 'Geister', leaders: 'Anführer und Elite', ranged: 'Fernkämpfer' };
+
+// Doctrines: how a faction tends to fight (data: factions[*].doctrine). Garrisons, the watch,
+// unit values and traits, war parties and the choice of targets follow it, so every faction
+// asks for a different answer – as the undead choose between mass, speed or stealth.
+const Doctrine = {
+  of(f) { return (DATA.factions[f] && DATA.factions[f].doctrine) || null; },
+  // Summed changes for one unit type.
+  mods(D, type) {
+    const m = { hpPct: 0, damagePct: 0, ini: 0, move: 0, mr: 0, range: 0, shield: 0, sight: 0, hear: 0, energy: 0, curseOnHit: 0, traits: [] };
+    for (const src of [D.all, (D.units || {})[type]]) if (src) for (const [k, v] of Object.entries(src)) { if (k === 'traits') m.traits.push(...v); else m[k] = (m[k] || 0) + v; }
+    return m;
+  },
+  // Garrison (list of unit types) in the faction's composition; leaders are never multiplied.
+  garrison(f, list) {
+    const D = this.of(f); if (!D || !D.garrison) return list;
+    const counts = {}; for (const t of list) counts[t] = (counts[t] || 0) + 1;
+    return Object.entries(counts).flatMap(([t, n]) => Array(Math.max(1, Math.round(n * (DATA.units[t].rank === 'UNIQUE' ? 1 : D.garrison[t] ?? D.garrison['*'] ?? 1)))).fill(t));
+  },
+  raid(f, key) { const D = this.of(f); return (D && D.raid && D.raid[key]) || 1; },
+  // Battle start: the defenders get the values and traits of their doctrine.
+  apply(b) {
+    const D = this.of(b.node.faction); b.doctrine = D; b.efx = (D && D.fx) || {};
+    if (!D) return;
+    for (const u of b.units) if (u.side === 'enemy') this.applyTo(u, D);
+    Battle.log(`${DATA.factions[b.node.faction].name} – ${D.name} (${D.style}): ${D.text}`, 'hit');
+  },
+  applyTo(u, D) {
+    const m = this.mods(D, u.type), base = u.def, n = stackCount(u), tr = m.traits.filter(t => !(base.traits || []).includes(t));
+    if (!tr.length && !Object.entries(m).some(([k, v]) => k !== 'traits' && v)) return;
+    u.def = { ...base, hp: Math.round(base.hp * (1 + m.hpPct)), damage: Math.round(base.damage * (1 + m.damagePct)), initiative: base.initiative + m.ini, move: base.move + m.move,
+      magicResist: base.magicResist + m.mr, range: base.range + (base.range > 1 ? m.range : 0), soulShield: (base.soulShield || 0) + m.shield, sight: base.sight + m.sight, hear: base.hear + m.hear,
+      energy: (base.energy || 0) + (base.energy ? m.energy : 0), traits: [...(base.traits || []), ...tr], curseOnHit: m.curseOnHit || base.curseOnHit || 0 };
+    u.hp = Math.round(u.hp / base.hp * u.def.hp); u.maxHp = n * u.def.hp; u.shield += m.shield * n; u.energy = u.def.energy || 0; u.nextTick = turnTicks(u.def);
+  },
+  // Ambush (heath spirits): once the undead are noticed, but not before round 2, more of them
+  // appear behind the undead army.
+  ambush(b) {
+    const D = b.doctrine, A = D && D.ambush;
+    if (!A || b.ambushed || b.round < 2 || (b.arrival === 'SURPRISE' && !b.firstAlarm)) return;
+    b.ambushed = true;
+    const f = b.field, pl = Battle.alive('player'); if (!pl.length) return;
+    const cd = t => hexDistance(t.q, t.r, f.cq, f.cr);
+    const rear = pl.slice().sort((x, y) => cd(y) - cd(x))[0];
+    const spots = f.tilesWithin(rear.q, rear.r, 5).filter(t => !t.unit && t.building === null && f.walkable(t) && !f.isWater(t) && hexDistance(t.q, t.r, rear.q, rear.r) >= 2)
+      .sort((x, y) => (cd(y) >= cd(rear) ? 1 : 0) - (cd(x) >= cd(rear) ? 1 : 0) || hexDistance(x.q, x.r, rear.q, rear.r) - hexDistance(y.q, y.r, rear.q, rear.r));
+    const counts = {}; for (const t of Campaign.garrisonFor(b.node)) if (A.types.includes(t)) counts[t] = (counts[t] || 0) + 1;
+    const names = [];
+    for (const [type, n0] of Object.entries(counts)) {
+      const tile = spots.shift(); if (!tile) break;
+      const k = Math.max(1, Math.round(n0 * A.share));
+      const s = Battle.makeStack(type, 'enemy', b.node.faction, Array(k).fill(DATA.units[type].hp));
+      this.applyTo(s, D); Abilities.init(s); s.summoned = true; s.nextTick = (b.lastTick || 0) + turnTicks(s.def);
+      b.units.push(s); Battle.putUnit(s, tile); BattleView.createUnit(s); names.push(`${k}× ${s.def.name}`);
+    }
+    if (!names.length) return;
+    game.tokensShown = null;
+    Battle.log(`Hinterhalt! ${names.join(', ')} tauchen im Rücken der Toten auf.`, 'hit'); UI.toast('Hinterhalt – sie sind hinter euch!', 4, false);
+    Sfx.horn(); UI.updateBattle();
+  }
+};
 
 // Skill tree of the Lich (data: skills). Six paths, four steps each, learned in order.
 // Points: 1 at the start, more with every conquest (1 + floor(sqrt(2 x conquered places))).
@@ -3666,7 +3731,7 @@ const stackCount = u => u.hp > 0 ? Math.ceil(u.hp / u.def.hp - 1e-9) : 0;
 const topHp = u => u.hp - (stackCount(u) - 1) * u.def.hp;
 // Splits enemy groups into several stacks (rules in DATA.stacks): the type with the largest
 // stacks gets another one while the limits allow it and every part keeps minStackSize units.
-function splitStacks(groups) {
+function splitStacks(groups, whole = null) {      // whole(type): this type stays in one stack (swarms)
   const S = DATA.stacks, types = groups.length;
   const limit = types >= S.fullStacksFromTypes ? S.maxStacks : Math.min(S.maxStacks, types * S.stacksPerTypeFew);
   const parts = groups.map(() => 1);
@@ -3675,7 +3740,7 @@ function splitStacks(groups) {
     let best = -1, bestSize = 0;
     groups.forEach((g, i) => {
       const size = g.hps.length / parts[i];
-      if (parts[i] < S.maxPerType && g.hps.length / (parts[i] + 1) >= S.minStackSize && size > bestSize) { best = i; bestSize = size; }
+      if (parts[i] < S.maxPerType && g.hps.length / (parts[i] + 1) >= S.minStackSize && size > bestSize && !(whole && whole(g.type))) { best = i; bestSize = size; }
     });
     if (best < 0) break;
     parts[best]++; total++;
@@ -5157,7 +5222,7 @@ const Alarm = {
   },
   // People sleep through the night and the foggy early morning.
   sleepTime(b) { return ['NIGHT', 'MORNING'].includes(TIMES[b.time].key); },
-  sleeper(e) { return !SENSE_TYPES.has(e.type) && e.def.rank !== 'UNIQUE' && e.def.rank !== 'MACHINE'; },
+  sleeper(e) { return !e.wakeful && !SENSE_TYPES.has(e.type) && e.def.rank !== 'UNIQUE' && e.def.rank !== 'MACHINE'; },
   // Roles at the start of a surprise arrival: posts on the rim looking outward, a patrol or two,
   // everyone else rests (asleep at night). Called from deploy, before the undead are placed.
   assign(b) {
@@ -5167,8 +5232,9 @@ const Alarm = {
     const cd = t => hexDistance(t.q, t.r, f.cq, f.cr);
     const onWall = e => { const t = f.get(e.q, e.r); return !!(t && (t.walkway || t.tower || (t.building !== null && f.buildings[t.building] && ['tower', 'walltower'].includes(f.buildings[t.building].key)))); };
     const free = es.filter(e => e.def.rank !== 'UNIQUE' && e.def.rank !== 'MACHINE' && !onWall(e) && e.def.move >= 2);
-    const nPatrol = Math.min(free.length ? free.length - 1 : 0, night ? (es.length >= 3 ? 1 : 0) : Math.min(2, Math.floor(es.length / 3)));
-    const nPost = Math.max(0, Math.min(free.length - nPatrol, Math.max(1, Math.round(es.length * (night ? 0.3 : day ? 0.5 : 0.4)))));
+    const W = (b.doctrine && b.doctrine.watch) || {};          // the faction's way of keeping watch
+    const nPatrol = Math.min(free.length ? free.length - 1 : 0, (night ? (es.length >= 3 ? 1 : 0) : Math.min(2, Math.floor(es.length / 3))) + (es.length >= 2 ? W.patrols || 0 : 0));
+    const nPost = Math.max(0, Math.min(free.length - nPatrol, Math.max(1, Math.round(es.length * ((night ? 0.3 : day ? 0.5 : 0.4) + (W.posts || 0))))));
     const ring = Math.max(2, Math.min(f.cityWall ? 6 : 99, Math.max(...es.map(e => cd(e))) + 1));
     const order = free.slice().sort((x, y) => hash2(x.q, x.r, f.seed + 5) - hash2(y.q, y.r, f.seed + 5));
     const off = Math.floor(rng() * 6);
@@ -5181,7 +5247,7 @@ const Alarm = {
       return f.tilesWithin(q, r, 2).filter(land).sort((x, y) => hexDistance(x.q, x.r, q, r) - hexDistance(y.q, y.r, q, r))[0] || null;
     };
     const move = (e, t) => { if (!t) return; f.get(e.q, e.r).unit = null; e.q = t.q; e.r = t.r; t.unit = e; };
-    for (const e of es) { e.aw = 0; e.alert = 'unaware'; e.shouted = false; e.role = onWall(e) ? 'post' : 'rest'; e.away = false; e.stim = 0; }
+    for (const e of es) { e.aw = 0; e.alert = 'unaware'; e.shouted = false; e.role = onWall(e) ? 'post' : 'rest'; e.away = false; e.stim = 0; e.wakeful = !!(W.awake && hash2(e.q, e.r, f.seed + 9) < W.awake); }
     order.slice(0, nPost).forEach((e, i) => { e.role = 'post'; move(e, ringSpot((off + Math.round(i * 6 / nPost)) % 6, ring)); });
     order.slice(nPost, nPost + nPatrol).forEach((e, i) => {
       e.role = 'patrol';
@@ -5289,7 +5355,9 @@ const Battle = {
     this.applyArmyEffects(b);
     this.applyLichBonus(b); this.applyCommanderBonus(b);
     const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
-    for (const g of splitStacks(groupByType(garrison))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
+    const Dn = Doctrine.of(node.faction);      // swarms fight as one big heap
+    for (const g of splitStacks(groupByType(garrison), t => !!Dn && Doctrine.mods(Dn, t).traits.includes('SWARM'))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
+    Doctrine.apply(b);
     // Ley-Bund: a pantheon leader is shielded by every living member of its pantheon.
     const pidB = Pantheons.memberOf(node);
     if (pidB && DATA.pantheons[pidB].seat === node.id) {
@@ -5587,6 +5655,7 @@ const Battle = {
     b.round++;
     this.log(`— Runde ${b.round} —`);
     UI.roundBanner(b.round);
+    Doctrine.ambush(b);
     Alarm.roundEnd();
     Abilities.roundEnd();
     if ((b.round - 1) % ROUNDS_PER_TIME === 0) {
@@ -6262,8 +6331,11 @@ const Abilities = {
       else if (att.side === 'player' && fx.chargePct) m *= 1 + Math.min(TRAITS.skillChargeMax, fx.chargePct * (att.steps || 0));
       if (this.drummed(att)) m *= 1 + TRAITS.drumDamage;
     }
+    const efx = (b && b.efx) || {};
+    if (att && b && att.side === 'enemy' && efx.nightPct && TIMES[b.time].key === 'NIGHT') m *= 1 + efx.nightPct;
     if (tgt && b) {
       if (tgt.side === 'player' && fx.damageTakenPct) m *= Math.max(0.25, 1 + fx.damageTakenPct);
+      if (tgt.side === 'enemy' && efx.damageTakenPct) m *= Math.max(0.25, 1 + efx.damageTakenPct);
       if (b.units.some(o => o.alive && o !== tgt && o.side === tgt.side && hasTrait(o, 'GUARD') && hexDistance(o.q, o.r, tgt.q, tgt.r) === 1)) m *= 1 - TRAITS.guard;
       if (att && b.fog && b.fog.size && hexDistance(att.q, att.r, tgt.q, tgt.r) > 1 && b.fog.has(b.field.index(b.field.get(tgt.q, tgt.r)))) m *= TRAITS.fogRanged;
     }
@@ -6313,6 +6385,8 @@ const Abilities = {
     if (u.view && u.alive) BattleView.updateHp(u);
   },
   heal(u, amount, why) {
+    const efx = (game.battle && game.battle.efx) || {};
+    if (u.side === 'enemy' && efx.healPct) amount *= 1 + efx.healPct;
     const cap = stackCount(u) * u.def.hp;
     const h = Math.max(0, Math.min(Math.round(amount), cap - u.hp));
     if (!h) return 0;
@@ -6323,6 +6397,7 @@ const Abilities = {
   // After a hit: poison bites and treasure curses.
   afterHit(att, tgt, dmg) {
     if (!dmg) return;
+    if (tgt.alive && att.def.curseOnHit && Math.random() < att.def.curseOnHit) { this.addStatus(tgt, 'CURSED', 2); Battle.log(`${tgt.def.name} ist verflucht (${att.def.name}).`, 'hit'); }
     if (tgt.alive) for (const [, a] of this.list(att, 'ON_DAMAGE_DEALT'))
       if (a.effect === 'APPLY_STATUS') { this.addStatus(tgt, a.status, a.duration, Math.max(1, Math.round(a.value * stackCount(att) * 0.5))); Battle.log(`${tgt.def.name} ist ${STATUS_NAMES[a.status].toLowerCase()} (${a.name}).`); }
     if (att.alive) for (const [, a] of this.list(tgt, 'ON_DAMAGE_TAKEN'))
@@ -6537,6 +6612,9 @@ const EnemyAI = {
         if (!chk.ok) continue;
         const dmg = Combat.expected(f, u, t, p, chk.cover);
         let score = dmg + (dmg >= p.hp ? 30 : 0) + (p.type === 'lich' || p.def.rank === 'UNIQUE' ? 15 : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
+        const focus = u.side === 'enemy' && b.doctrine && b.doctrine.ai;
+        if (focus === 'leader' && isLeaderUnit(p)) score += 25;
+        if (focus === 'weak') score += (p.def.range > 1 ? 12 : 0) + 15 * (1 - p.hp / Math.max(1, p.maxHp));
         if (u.def.range > 1) {
           if (chk.dist >= chk.range) score += 3;                       // stay at maximum range
           if (Combat.lineOfSight(f, f.get(p.q, p.r), t).cover) score += 3;  // in cover against the target
@@ -6560,6 +6638,14 @@ const EnemyAI = {
       await wait(AI_PAUSE);
     }
     if (game.battle === b && !b.over) await Battle.performAttack(u, target);
+    // Hit and run: after striking, fall back half the movement, away from the nearest foe.
+    if (game.battle === b && !b.over && u.alive && hasTrait(u, 'HITRUN') && u.def.range <= 1) {
+      const foes = Battle.alive(u.side === 'player' ? 'enemy' : 'player'); if (!foes.length) return;
+      const near = t => Math.min(...foes.map(p => hexDistance(t.q, t.r, p.q, p.r)));
+      const back = Pathfinding.reachable(f, u, Math.ceil(moveOf(u) / 2)), now = f.get(u.q, u.r);
+      const dest = back.tiles.filter(t => !t.unit || t.unit === u).sort((x, y) => near(y) - near(x))[0];
+      if (dest && dest !== now && near(dest) > near(now)) { await wait(AI_PAUSE); if (game.battle === b && !b.over) await Battle.moveAlong(u, Pathfinding.path(f, back, dest)); }
+    }
   },
   // Furthest tile along the shortest path to the nearest undead that the unit can reach this turn.
   approach(u, reach) {
@@ -6770,7 +6856,8 @@ const UI = {
     const c = game.campaign, troops = {}, full = {};
     for (const n of DATA.nodes) {
       if (!n.faction || n.type === 'PHYLACTERY') continue;
-      const base = Object.values(n.garrison || {}).reduce((a, x) => a + x, 0);
+      // Full strength in the faction's own composition (doctrine).
+      const base = Doctrine.garrison(n.faction, Object.entries(n.garrison || {}).flatMap(([t, k]) => Array(k).fill(t))).length;
       full[n.faction] = (full[n.faction] || 0) + base;
       // Original strength only: threat reinforcements and pantheon bonuses do not count above it.
       const o = Campaign.owner(n);
@@ -6784,7 +6871,7 @@ const UI = {
         <span>${DATA.factions[f].name}</span><span style="text-align:right">${living ? v + ' %' : '†'}</span>
         <div class="bar" title="Bedrohung ${v} %${living ? (v >= 50 ? ' – gewarnt: Wachen sind sofort alarmiert' : ' – noch ahnungslos') : ''}"><div style="width:${v}%;background:${DATA.factions[f].color}"></div></div>
         <div class="bar troops" title="Truppen: ${t} von ursprünglich ${m} leben noch (Orte und Trupps)"><div style="width:${pct}%"></div></div>
-        <span class="small">Truppen ${t} / ${m}</span></div>`;
+        <span class="small">Truppen ${t} / ${m}${Doctrine.of(f) ? ` · <span title="${esc(Doctrine.of(f).text)}" style="cursor:help;border-bottom:1px dotted">⚔ ${esc(Doctrine.of(f).name)} (${esc(Doctrine.of(f).style)})</span>` : ''}</span></div>`;
     }).join('');
     // Hover: all places (and war parties) of the faction blink on the minimap.
     $('threats').querySelectorAll('[data-fac]').forEach(el => {
@@ -7045,7 +7132,7 @@ const UI = {
       const units = Object.entries(raid.garrison).map(([u, n]) => `${n}× ${DATA.units[u].name}`).join('<br>');
       html += `<h2>⚔ ${esc(Raids.name(raid))}</h2><table>
         <tr><td>Fraktion</td><td>${DATA.factions[raid.faction].name}</td></tr>
-        <tr><td>Ziel</td><td>${esc(t.name)} (${Math.ceil(hexDistance(Math.round(raid.q), Math.round(raid.r), t.q, t.r) / RAIDS.tilesPerDay)} Tage)</td></tr>
+        <tr><td>Ziel</td><td>${esc(t.name)} (${Math.ceil(hexDistance(Math.round(raid.q), Math.round(raid.r), t.q, t.r) / Raids.speed(raid))} Tage)</td></tr>
         <tr><td>Lage</td><td>${raid.holding ? 'Wartet – der Lich ist zu nah' : 'Auf dem Marsch'}</td></tr>
         <tr><td>Abfangen</td><td>${days} ${days === 1 ? 'Tag' : 'Tage'}, danach zurück nach ${esc(here.name)}</td></tr>
         <tr><td>Stärke</td><td>${units}</td></tr></table>
@@ -7067,6 +7154,7 @@ const UI = {
       const thr = Math.round(c.threat[owner] || 0);
       html += `<h2>${esc(node.name)}</h2>
         <div class="sub"><span class="dot" style="background:${DATA.factions[owner].color}"></span>${DATA.factions[owner].name}${owner !== node.faction ? ` (einst ${DATA.factions[node.faction].name})` : ''} · ${NODE_TYPE_NAMES[node.type]}${node.special ? ' · ★' : ''}</div>
+        ${enemy && Doctrine.of(node.faction) ? `<div class="doctrine" title="${esc(Doctrine.of(node.faction).text)}">⚔ ${esc(Doctrine.of(node.faction).name)} <span class="small">· ${esc(Doctrine.of(node.faction).style)}</span></div>` : ''}
         ${enemy && thr >= 50 && Campaign.isLiving(owner) ? `<div class="warnline">⚠ Gewarnt (Bedrohung ${thr} %): alle Wachen sind sofort alarmiert.</div>` : ''}
         <div class="buttons" id="nodeButtons"></div>
         <table class="facts">
@@ -7081,6 +7169,7 @@ const UI = {
           ${Stranded.of(node).length ? `<tr><td>Verwaist</td><td><b>${Stranded.of(node).length} Untote</b> warten hier auf den Lich</td></tr>` : ''}
         </table>
         <details ${this.infoDetails ? 'open' : ''}><summary>Mehr zum Ort</summary><table>
+          ${enemy && Doctrine.of(node.faction) ? `<tr><td>Doktrin</td><td><b>${esc(Doctrine.of(node.faction).name)}</b> (${esc(Doctrine.of(node.faction).style)})<br><span class="small">${esc(Doctrine.of(node.faction).text)}</span></td></tr>` : ''}
           <tr><td>Kampffeld</td><td>${node.size} × ${node.size} Felder</td></tr>
           ${enemy ? `<tr><td>Bedrohung</td><td>${thr} % <span class="small">(ab 50 % gewarnt)</span></td></tr>` : ''}
         </table>${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}</details>`;

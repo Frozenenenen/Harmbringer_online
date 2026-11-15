@@ -296,21 +296,55 @@ window.HARMBRINGER_DATA = {
   // ---------------------------------------------------------------------------
   // Factions (names match Enums.Faction; ASKANIER is an addition Kevin allowed)
   // ---------------------------------------------------------------------------
+  // Factions. doctrine = how a faction tends to fight (its identity), mirroring the player's playstyles:
+  //   name, style (short label), text (shown to the player),
+  //   all / units[type]: hpPct, damagePct (shares), ini, move, mr, range, shield, sight, hear, energy (flat), traits (TRAIT_INFO), curseOnHit (chance)
+  //   garrison: multipliers on the garrison per unit type ("*" = every type)
+  //   watch: posts (extra share of stacks on post), patrols (extra), awake (share of resting stacks that stay awake at night)
+  //   fx: damageTakenPct, healPct, nightPct (damage at night) for the faction's side in battle
+  //   raid: speed, strength, chance (multipliers for war parties)
+  //   ai: "leader" (hunts the Lich and commanders) | "weak" (hunts wounded stacks and archers)
+  //   ambush: { share, types } – extra stacks that appear behind the undead in round 2
   factions: {
     UNDEAD:   { name: "Untote",            color: "#5a2d82" },
-    HANSE:    { name: "Hanse",             color: "#8a2f2f" },
-    GUELPHS:  { name: "Welfen",            color: "#c9a227" },
-    ASKANIER: { name: "Askanier",          color: "#2f5f8a" },
-    CLERGY:   { name: "Klerus",            color: "#e6e0cc" },
-    WITCHES:  { name: "Hexen und Haine",   color: "#3e5a3a" },
-    GRAFEN:   { name: "Grafen",            color: "#c0603a" },   // Holstein, Oldenburg, Hoya, Mansfeld, Hessen …
-    MECKLENBURG: { name: "Mecklenburg",    color: "#3b8fb0" },
-    WETTINER: { name: "Wettiner",          color: "#9a7a2a" },
+    HANSE:    { name: "Hanse",             color: "#8a2f2f", doctrine: { name: "Nachtwache", style: "Wachsam, Fernkampf",
+      text: "Reiche Städte mit bezahlten Wächtern: mehr Posten und Streifen, viele bleiben nachts wach, alle sehen und hören 1 Feld weiter. Armbrüste schießen 1 Feld weiter, Ballisten treffen härter. Schleichen ist hier am schwersten.",
+      all: { sight: 1, hear: 1 }, units: { armbrust: { range: 1 }, balliste: { damagePct: 0.15 } },
+      watch: { posts: 0.2, patrols: 1, awake: 0.6 }, raid: { chance: 0.8 } } },
+    GUELPHS:  { name: "Welfen",            color: "#c9a227", doctrine: { name: "Ritterheer", style: "Sturmangriff",
+      text: "Wenige Bauern, viele Ritter. Ritter reiten an (+10 % Schaden je gelaufenem Feld), sind zäher und suchen den Lich und seine Kommandeure.",
+      units: { ritter: { traits: ["CHARGE"], hpPct: 0.15 } }, garrison: { ritter: 1.5, bauer: 0.8 }, raid: { strength: 1.2 }, ai: "leader" } },
+    ASKANIER: { name: "Askanier",          color: "#2f5f8a", doctrine: { name: "Landwehr", style: "Masse",
+      text: "Das ganze Land steht unter Waffen: fast doppelt so viele Bauern, die als ein großer Haufen kämpfen (Schwarm: +2 % Schaden je Kopf über 10). Ihre Trupps sind größer und ziehen öfter aus.",
+      units: { bauer: { traits: ["SWARM"] } }, garrison: { bauer: 1.8 }, raid: { strength: 1.3, chance: 1.2 } } },
+    CLERGY:   { name: "Klerus",            color: "#e6e0cc", doctrine: { name: "Segen", style: "Heilung und Schutz",
+      text: "Gebete halten die Reihen: Heilung wirkt 30 % stärker, alle haben +2 Magieresistenz, Geistliche +2 Energie. Priester und Mönche spüren die Toten ohnehin.",
+      all: { mr: 2, energy: 2 }, fx: { healPct: 0.3 } } },
+    WITCHES:  { name: "Hexen und Haine",   color: "#3e5a3a", doctrine: { name: "Flüche", style: "Schwächen",
+      text: "Wen eine Hexe trifft, der ist oft verflucht (−25 % Schaden, 2 Züge). Nachts sind sie 20 % stärker und schlafen nie.",
+      units: { hexe: { curseOnHit: 0.5 }, brockenhexe: { curseOnHit: 0.75 }, rattenfaenger: { curseOnHit: 0.5 } }, fx: { nightPct: 0.2 }, watch: { awake: 1 } } },
+    GRAFEN:   { name: "Grafen",            color: "#c0603a", doctrine: { name: "Burgmannen", style: "Bollwerk",   // Holstein, Oldenburg, Hoya, Mansfeld, Hessen …
+      text: "Kleine Herren hinter dicken Mauern: mehr Stadtwachen, die ihre Nachbarn decken (Schildwache), alle erleiden 15 % weniger Schaden. Dafür ziehen sie selten aus.",
+      units: { stadtwache: { traits: ["GUARD"], hpPct: 0.15 } }, garrison: { stadtwache: 1.4 }, fx: { damageTakenPct: -0.15 }, watch: { posts: 0.1 }, raid: { chance: 0.6 } } },
+    MECKLENBURG: { name: "Mecklenburg",    color: "#3b8fb0", doctrine: { name: "Schnelle Reiter", style: "Beweglich",
+      text: "Alle sind schneller (+1 Bewegung, +1 Initiative). Ritter schlagen zu und weichen aus, sie jagen Schützen und angeschlagene Haufen. Ihre Trupps reisen weit schneller und kommen öfter.",
+      all: { move: 1, ini: 1 }, units: { ritter: { traits: ["HITRUN"] } }, garrison: { ritter: 1.3 }, raid: { speed: 1.6, chance: 1.4 }, ai: "weak" } },
+    WETTINER: { name: "Wettiner",          color: "#9a7a2a", doctrine: { name: "Söldner", style: "Klasse",
+      text: "Silber aus dem Erzgebirge kauft die Besten: weniger Leute, aber jeder +20 % Lebenspunkte und +15 % Schaden.",
+      all: { hpPct: 0.2, damagePct: 0.15 }, garrison: { "*": 0.85 } } },
     // Mythic factions from the design palette (design_notes: Fraktions-Paletten)
-    WODAN:    { name: "Wodan-Kult",        color: "#6a6a72" },   // Wilde Jagd, Irminsul, Kyffhäuser
-    SPREEWALD: { name: "Spreewald",        color: "#3f8a7a" },   // Wendische Geister: Schlangenkönig, Svantevit
-    WATTENMEER: { name: "Wattenmeer",      color: "#4a6a8a" },   // Versunkene Städte, Nordsee- und Ostseespuk
-    HEATHSPIRITS: { name: "Heidegeister",  color: "#7a5a4a" }    // Moore, Hünengräber, Heidekönigin
+    WODAN:    { name: "Wodan-Kult",        color: "#6a6a72", doctrine: { name: "Wilde Jagd", style: "Sturm in der Nacht",   // Wilde Jagd, Irminsul, Kyffhäuser
+      text: "Alle reiten an (Sturmangriff) und sind schneller. Nachts sind sie 20 % stärker und schlafen nie. Ihre Trupps sind die schnellsten.",
+      all: { traits: ["CHARGE"], move: 1 }, fx: { nightPct: 0.2 }, watch: { awake: 1 }, raid: { speed: 1.8 } } },
+    SPREEWALD: { name: "Spreewald",        color: "#3f8a7a", doctrine: { name: "Gewimmel", style: "Schwarm",   // Wendische Geister: Schlangenkönig, Svantevit
+      text: "Lutki kommen als ein großer Schwarm (anderthalbmal so viele, +2 % Schaden je Kopf über 10). Wassermänner und Rusalken heilen jeden Zug.",
+      units: { lutki: { traits: ["SWARM"] }, wassermann: { traits: ["REGEN"] }, rusalka: { traits: ["REGEN"] } }, garrison: { lutki: 1.5 } } },
+    WATTENMEER: { name: "Wattenmeer",      color: "#4a6a8a", doctrine: { name: "Die Flut", style: "Zäh",   // Versunkene Städte, Nordsee- und Ostseespuk
+      text: "Langsam, aber kaum totzukriegen: alle +25 % Lebenspunkte, Ertrunkene heilen jeden Zug und kommen zahlreicher.",
+      all: { hpPct: 0.25 }, units: { ertrunkener: { traits: ["REGEN"] } }, garrison: { ertrunkener: 1.3 } } },
+    HEATHSPIRITS: { name: "Heidegeister",  color: "#7a5a4a", doctrine: { name: "Hinterhalt", style: "Trug",   // Moore, Hünengräber, Heidekönigin
+      text: "Was man sieht, ist nicht alles: Sobald sie euch bemerkt haben (frühestens in Runde 2), tauchen weitere Irrlichter und Schwarze Hunde im Rücken der Toten auf. Alle +1 Initiative.",
+      all: { ini: 1 }, ambush: { share: 0.35, types: ["irrlicht", "schwarzer_hund"] } } }
   },
 
   // ---------------------------------------------------------------------------

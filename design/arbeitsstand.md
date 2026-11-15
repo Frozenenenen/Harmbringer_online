@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 15.11.2026, ca. 10:30 Uhr · letzte veröffentlichte Version: 141 (Nebel des Krieges)
+Stand: 15.11.2026, ca. 11:15 Uhr · letzte veröffentlichte Version: 142 (Doktrinen der Fraktionen)
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -73,6 +73,12 @@ Beschrieben im Design-Dokument, Abschnitt „Aufforderungen, Spielstil-Filter, T
 Beschrieben im Design-Dokument, Abschnitt „Nebel des Krieges auf der Weltkarte“. Code: `FOW`, `Fow` (`sources`, `note`, `stamp`, `refresh`, `explored`, `visible`, `patch`), Geländeshader (`wTex`, `fowOn`), `Campaign.isRevealed` (= erkundet), `Campaign.inSight`/`revealedAt` (= in Sicht), `WorldView.refresh` (`nv.known`), Minimap-Overlay, `c.explored` im Spielstand, Debug-Schalter `c.debugNoFog`. Test in der Sitzung: `fow.js` (Reise deckt auf, Erinnerung, Speichern, Kosten: 23 ms je Neuberechnung im Spätspiel).
 
 Noch nicht gemacht: Expeditionen decken unterwegs nur an ihren Orten auf (nicht entlang des Wegs); kein eigener Späher-Befehl; Tooltips/Listen außerhalb der Karte (z. B. Pantheon-Mitglieder) nennen auch unbekannte Orte beim Namen.
+
+## Doktrinen der Fraktionen (fertig, Version 142)
+
+Beschrieben im Design-Dokument, Abschnitt „Doktrinen: Identität der Fraktionen“ (Tabelle aller 12). Daten `factions[*].doctrine`, Code `Doctrine`. Test in der Sitzung: `doct.js` (je Fraktion ein Kampf: Besatzung, Werte, Wache, Hinterhalt).
+
+Nicht gemacht / offen: Zahlen sind gesetzt, nicht ausbalanciert (Welfen-Städte mit 1,5-fach Rittern und Sturmangriff dürften spürbar härter sein; Hanse-Städte sind nachts kaum noch zu beschleichen – so gewollt, aber ungeprüft im Spiel). Beschworene Gegner bekommen die Doktrin nicht. Begegnungen unterwegs haben die Doktrin ihrer Fraktion, Wachen-Regeln greifen dort nicht (alle alarmiert). Die Prompts „Bauplatz frei“ stehen jetzt unten links (überdeckten rechts die Ortsinfo).
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 

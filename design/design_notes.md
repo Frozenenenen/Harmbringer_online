@@ -2410,6 +2410,27 @@ Jedes Feld der Weltkarte ist in einem von drei Zuständen:
 
 **Technik:** `Fow` in `index.html` (Werte `FOW`). Eine Datentextur in Viertelauflösung (505 × 396) mit weichen Rändern steuert den Geländeshader, Wasser, Vegetation, Siedlungen und Flaggen (`Fow.patch` hängt den Nebel an fertige three.js-Materialien) sowie die Minimap. Debug-Fenster (F3): „Nebel des Krieges an/aus“.
 
+### Doktrinen: Identität der Fraktionen (umgesetzt 15.11.2026)
+
+So wie der Lich sich für Masse, Tempo oder Schleichen entscheidet, neigt jede Fraktion in eine Richtung. Die Doktrin steht in der Ortsinfo (⚔ unter dem Fraktionsnamen, ausführlich unter „Mehr zum Ort“), in der Bedrohungsliste und zu Kampfbeginn im Protokoll. Sie wirkt auf Besatzung, Wache, Werte und Merkmale der Einheiten, Trupps und die Zielwahl der Gegner-KI.
+
+| Fraktion | Doktrin | Richtung | Wirkung | Was dagegen hilft |
+|-|-|-|-|-|
+| Welfen | Ritterheer | Sturmangriff | Ritter ×1,5, +15 % LP, Sturmangriff; Bauern ×0,8; Ritter suchen Lich und Kommandeure; Trupps +20 % | Bollwerk, Anführer hinten halten |
+| Askanier | Landwehr | Masse | Bauern ×1,8 als ein Haufen (Schwarm); Trupps +30 % größer, ziehen 20 % öfter aus | Flächenschaden, Klasse |
+| Grafen | Burgmannen | Bollwerk | Stadtwachen ×1,4, +15 % LP, Schildwache; alle −15 % erlittener Schaden; mehr Posten; Trupps selten (×0,6) | Belagerung, Magie, Geduld |
+| Mecklenburg | Schnelle Reiter | Beweglich | alle +1 Bewegung, +1 Initiative; Ritter ×1,3 mit „Zuschlagen und weg“, jagen Schützen und Angeschlagene; Trupps 60 % schneller, 40 % öfter | Schützen decken, Orte besetzen |
+| Wettiner | Söldner | Klasse | alle +20 % LP, +15 % Schaden; Besatzung ×0,85 | Masse, Überraschungsschläge |
+| Hanse | Nachtwache | Wachsam, Fernkampf | mehr Posten (+20 %-Punkte), eine Streife mehr, 60 % der Ruhenden bleiben nachts wach, Sicht und Gehör +1; Armbrust +1 Reichweite, Balliste +15 % Schaden | nicht schleichen: schnell heran oder Nebel |
+| Klerus | Segen | Heilung und Schutz | Heilung +30 %, alle +2 Magieresistenz, +2 Energie | Heiler zuerst, körperlicher Schaden |
+| Hexen und Haine | Flüche | Schwächen | Treffer von Hexen verfluchen (50 %, Brockenhexe 75 %); nachts +20 % Schaden; schlafen nie | am Tag angreifen, Fernkampf |
+| Wodan-Kult | Wilde Jagd | Sturm in der Nacht | alle Sturmangriff und +1 Bewegung; nachts +20 % Schaden; schlafen nie; Trupps 80 % schneller | am Tag angreifen, Engstellen |
+| Spreewald | Gewimmel | Schwarm | Lutki ×1,5 als ein Schwarm; Wassermann und Rusalka heilen jeden Zug | Schwarm früh ausdünnen |
+| Wattenmeer | Die Flut | Zäh | alle +25 % LP; Ertrunkene ×1,3 und heilen jeden Zug | hoher Einzelschaden |
+| Heidegeister | Hinterhalt | Trug | alle +1 Initiative; sobald sie die Toten bemerkt haben (frühestens Runde 2), tauchen weitere Irrlichter und Schwarze Hunde (35 % der Besatzung) im Rücken auf | Nachhut lassen, lautlos bleiben |
+
+Daten: `factions[*].doctrine` in `data/world_data.js` (Felder dort im Kommentar erklärt). Code: `Doctrine` (`garrison`, `apply`, `applyTo`, `ambush`, `raid`), dazu `Campaign.garrisonFor`, `Alarm.assign` (Wache), `Abilities.damageMul`/`heal`/`afterHit`, `Raids.speed`, `EnemyAI` (Zielwahl, Ausweichen nach dem Schlag). Schwärme der Gegner bleiben ein Stapel (`splitStacks(groups, whole)`).
+
 ---
 
 ## Mythologie-Wissen als Belohnung
