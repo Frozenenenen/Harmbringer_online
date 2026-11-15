@@ -2392,6 +2392,24 @@ Alte Spielstände behalten ihre gekauften Verbesserungen (das sind jeweils die A
 - **Ton** (`Sfx`, Werte in `SFX`): Der Wind besteht aus vier Schichten gefilterten Rauschens (Grollen, Körper links und rechts, wandernder Zug, dünnes Pfeifen bei starken Böen); Böen kommen und gehen zufällig. Die Rauschschleife ist 11 s lang und an der Naht überblendet (vorher 2 s, als Pulsieren hörbar). Dazu: Hall und Begrenzer auf allen Effekten, leichte Zufallsabweichung je Treffer, Schritte im Kampf (Knochen klacken, Fleisch tappt, Geister lautlos; laute Einheiten treten lauter), Glocke mit Obertönen, Horn beim Alarmruf, Trommel zum Rundenwechsel, Klang für Sieg und Niederlage, leiser Tick auf Knöpfen, Lautstärkeregler im Menü. Pegel sind gemessen (Wind im Mittel −35 dB, Böen −32 dB, Treffer −28 bis −33 dB, kein Übersteuern), aber nicht nach Gehör abgestimmt.
 - **Balance** (`tools/balance_styles.py`): vergleicht Kampfwert je Kommando-Punkt und je Kosten aller Untoten im Spielstand, Merkmale als Faktoren. Danach abgeschwächt: Nachzehrer (LP 14 → 12, Initiative 7 → 6, Schaden 9 → 7), Gruftwächter (LP 38 → 30, Seelenschild 4 → 2), Knochenreiter (LP 22 → 20, Schaden 8 → 7), Nachtvogt (Schaden 9 → 8). Die neuen Einheiten liegen jetzt bei 1,0–1,25 des Durchschnitts (vorher 1,4–1,6).
 
+### Nebel des Krieges auf der Weltkarte (umgesetzt 15.11.2026)
+
+Jedes Feld der Weltkarte ist in einem von drei Zuständen:
+
+| Zustand | Aussehen | Was man weiß |
+|-|-|-|
+| Nie gesehen | dunkler Schleier, auf der Minimap schwarz | nichts: kein Gelände, keine Orte, keine Bäume und Häuser |
+| Erkundet, außer Sicht | blass und abgedunkelt | Gelände und Orte (Name, Fraktion, Typ) bleiben bekannt; Besatzung und Gefahr nicht („Außer Sicht“), Trupps der Lebenden sind nicht zu sehen |
+| In Sicht | normal | alles |
+
+**Sicht** haben die Armee des Lichs (auch unterwegs auf der Straße), Expeditionen, das Hügelgrab und jeder eroberte Ort, jeweils 165 Felder weit (`REVEAL_DISTANCE`). Leichenhunde in der Armee sehen 40 Felder weiter, Geister und Totenlichter 60 – das gab es schon, jetzt sieht man es. Wird ein Ort zurückerobert, bleibt sein Umland erkundet, ist aber nicht mehr in Sicht.
+
+**Erkundetes bleibt:** Das gesehene Land wird als Liste von Kreisen im Spielstand gehalten (`c.explored`, Einträge `[q, r, Radius]`; ein neuer Eintrag etwa alle 24 Felder Weg). Alte Spielstände beginnen mit dem, was Hügelgrab, eroberte Orte und Armee jetzt sehen.
+
+**Folgen fürs Spiel:** Unbekannte Orte stehen nicht mehr als graue „?“ auf der Karte – man findet sie, indem man an den Rand des Bekannten zieht oder erobert. Reisen geht zu jedem bekannten Ort, auch außer Sicht. Der Kampf selbst hat keinen Nebel.
+
+**Technik:** `Fow` in `index.html` (Werte `FOW`). Eine Datentextur in Viertelauflösung (505 × 396) mit weichen Rändern steuert den Geländeshader, Wasser, Vegetation, Siedlungen und Flaggen (`Fow.patch` hängt den Nebel an fertige three.js-Materialien) sowie die Minimap. Debug-Fenster (F3): „Nebel des Krieges an/aus“.
+
 ---
 
 ## Mythologie-Wissen als Belohnung

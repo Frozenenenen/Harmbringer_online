@@ -266,6 +266,7 @@
     border: 1px solid var(--ink); padding: 0 6px; white-space: nowrap; transform: translateY(-14px); }
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
+  .nodeLabel.faded { opacity: .72; }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
   .nodeLabel[data-danger="low"] { border-left: 5px solid #4a9a3a; } .nodeLabel[data-danger="mid"] { border-left: 5px solid #d0a020; } .nodeLabel[data-danger="high"] { border-left: 5px solid #c0302a; }
   .recruitBtns { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-end; max-width: 210px; }
@@ -433,7 +434,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 140, "date": "2026-11-15", "changes": [{"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}, {"date": "09.11. 23:38", "text": "Koop Stufe 2: Heer, Vorräte und Befehle des Gasts"}]};
+const BUILD = {"version": 141, "date": "2026-11-15", "changes": [{"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}, {"date": "09.11. 23:44", "text": "Koop Stufe 3: eigene Uhren pro Spieler"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -845,6 +846,123 @@ const Blight = {
 };
 
 // =============================================================================
+// Fog of war (world map). Every tile is never seen (shroud), seen before (dim memory: the land
+// and its places are known, but nothing that moves and no garrisons) or in sight. Sight comes
+// from the Lich's army (scouts see further), expeditions, the barrow and conquered places,
+// REVEAL_DISTANCE tiles each. What was seen stays known: the explored land is the union of
+// "stamps" [q, r, R] kept in the save (c.explored). One data texture at 1/4 resolution drives
+// terrain, water, vegetation, settlements and the minimap.
+// =============================================================================
+const FOW = { K: 4, soft: 16, explored: 140, seen: 255, knownAt: 60, seenAt: 200, stampStep: 24, every: 0.15 };
+const Fow = {
+  data: null, ex: null, tex: null, overlay: null, sig: '', version: 0, forC: null, exN: 0, W: 0, H: 0,
+  // Shared by all patched materials and the terrain shader.
+  uniforms: { fowTex: { value: null }, fowOn: { value: 1 }, fowMap: { value: null }, fowSize: { value: null } },
+  init() {
+    if (this.data) return;
+    const K = FOW.K; this.W = Math.ceil(WIDTH / K); this.H = Math.ceil(HEIGHT / K);
+    this.data = new Uint8Array(this.W * this.H); this.ex = new Uint8Array(this.W * this.H);
+    this.tex = new THREE.DataTexture(this.data, this.W, this.H, THREE.RedFormat, THREE.UnsignedByteType);
+    this.tex.magFilter = this.tex.minFilter = THREE.LinearFilter; this.tex.needsUpdate = true;
+    this.overlay = document.createElement('canvas'); this.overlay.width = this.W; this.overlay.height = this.H;
+    this.uniforms.fowTex.value = this.tex;
+    this.uniforms.fowMap.value = new THREE.Vector4(1 / COL_SPACING, 1 / ROW_SPACING, INRADIUS / 2, 0);
+    this.uniforms.fowSize.value = new THREE.Vector2(this.W * K, this.H * K);
+  },
+  get off() { const c = game.campaign; return !!(c && c.debugNoFog); },
+  val(q, r) {
+    if (!this.data || this.off) return 255;
+    const x = Math.max(0, Math.min(this.W - 1, Math.floor(q / FOW.K))), y = Math.max(0, Math.min(this.H - 1, Math.floor(r / FOW.K)));
+    return this.data[y * this.W + x];
+  },
+  explored(q, r) { return this.val(q, r) >= FOW.knownAt; },
+  visible(q, r) { return this.val(q, r) >= FOW.seenAt; },
+  // Who sees right now: [{ q, r, R }].
+  sources() {
+    const c = game.campaign, out = [], lich = Campaign.armyNode();
+    let aq = lich.q, ar = lich.r;
+    if (game.mode === 'travel' && game.view && game.view.army) [aq, ar] = worldToHex(game.view.army.position.x, game.view.army.position.z);   // on the road
+    out.push({ q: aq, r: ar, R: REVEAL_DISTANCE + Campaign.scoutRange() });
+    for (const a of Expeditions.armyNodes()) if (a !== lich) out.push({ q: a.q, r: a.r, R: REVEAL_DISTANCE });
+    out.push({ q: PHYLACTERY.q, r: PHYLACTERY.r, R: REVEAL_DISTANCE });
+    for (const n of DATA.nodes) if (n !== PHYLACTERY && Campaign.isConquered(n)) out.push({ q: n.q, r: n.r, R: REVEAL_DISTANCE });
+    return out;
+  },
+  // Remember the land around (q, r). A stamp close to an existing one of the same reach is skipped.
+  note(q, r, R) {
+    const L = game.campaign.explored = game.campaign.explored || [];
+    for (const s of L) if (s[2] >= R && Math.abs(s[0] - q) <= FOW.stampStep && Math.abs(s[1] - r) <= FOW.stampStep) return false;
+    L.push([Math.round(q), Math.round(r), Math.round(R)]);
+    return true;
+  },
+  // Soft disc of `level` into `d` (kept if something brighter is there already).
+  stamp(d, q, r, R, level) {
+    const K = FOW.K, ry = ROW_SPACING / COL_SPACING, Rr = R / ry, W = this.W, H = this.H, soft = FOW.soft;
+    for (let y = Math.max(0, Math.floor((r - Rr) / K)); y <= Math.min(H - 1, Math.ceil((r + Rr) / K)); y++) {
+      const dy = ((y + 0.5) * K - r) * ry;
+      for (let x = Math.max(0, Math.floor((q - R) / K)); x <= Math.min(W - 1, Math.ceil((q + R) / K)); x++) {
+        const dist = Math.hypot((x + 0.5) * K - q, dy);
+        if (dist >= R) continue;
+        const v = Math.round(level * smoothstep01(Math.min(1, (R - dist) / soft))), i = y * W + x;
+        if (v > d[i]) d[i] = v;
+      }
+    }
+  },
+  // Recomputes when a source moved a few tiles or new land was seen. Returns true on change.
+  refresh() {
+    const c = game.campaign; if (!c) return false;
+    this.init();
+    const src = this.sources();
+    for (const s of src) this.note(s.q, s.r, s.R);
+    const L = c.explored, sig = (this.off ? 'off|' : '') + src.map(s => `${s.q >> 2},${s.r >> 2},${s.R}`).join(';') + '|' + L.length;
+    if (sig === this.sig && this.forC === c) return false;
+    // Explored layer: only new stamps are added (rebuilt for another campaign or a loaded game).
+    if (this.forC !== c || this.exN > L.length) { this.ex.fill(0); this.exN = 0; this.forC = c; }
+    for (; this.exN < L.length; this.exN++) this.stamp(this.ex, L[this.exN][0], L[this.exN][1], L[this.exN][2], FOW.explored);
+    this.sig = sig; this.version++;
+    const d = this.data;
+    if (this.off) d.fill(255);
+    else { d.set(this.ex); for (const s of src) this.stamp(d, s.q, s.r, s.R, FOW.seen); }
+    this.tex.needsUpdate = true;
+    // Minimap overlay: black where never seen, a dark veil over remembered land.
+    const ov = this.overlay, ctx = ov.getContext('2d'), img = ctx.createImageData(ov.width, ov.height), px = img.data;
+    for (let i = 0, o = 0; i < d.length; i++, o += 4) {
+      const f = d[i] / 255, exd = Math.min(1, Math.max(0, (f - 0.08) / 0.22)), vis = Math.min(1, Math.max(0, (f - 0.62) / 0.28));
+      px[o] = 10; px[o + 1] = 12; px[o + 2] = 16; px[o + 3] = Math.round(255 * (1 - exd * (0.55 + 0.45 * vis)));
+    }
+    ctx.putImageData(img, 0, 0);
+    return true;
+  },
+  // Adds the fog to a built-in three.js material (water, vegetation, settlements, flags).
+  // hide: objects on land never seen are not drawn at all.
+  patch(mat, hide) {
+    this.init();
+    mat.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, this.uniforms);
+      sh.vertexShader = 'varying vec3 vFowPos;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+        { vec4 fowP = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          fowP = instanceMatrix * fowP;
+        #endif
+        vFowPos = (modelMatrix * fowP).xyz; }`);
+      sh.fragmentShader = 'uniform sampler2D fowTex; uniform float fowOn; uniform vec4 fowMap; uniform vec2 fowSize; varying vec3 vFowPos;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
+        if (fowOn > 0.5) {
+          vec2 fowT = vec2(vFowPos.x * fowMap.x, (vFowPos.z - fowMap.z) * fowMap.y);
+          float fw = texture2D(fowTex, (fowT + 0.5) / fowSize).r;
+          float fex = smoothstep(0.08, 0.30, fw), fvis = smoothstep(0.62, 0.9, fw);
+          ${hide ? 'if (fex < 0.5) discard;' : ''}
+          vec3 fc = gl_FragColor.rgb; float fl = dot(fc, vec3(0.3, 0.55, 0.15));
+          fc = mix(mix(vec3(fl), fc, 0.35) * 0.45, fc, fvis);
+          gl_FragColor = vec4(mix(vec3(0.012, 0.014, 0.02), fc, fex), mix(1.0, gl_FragColor.a, fex));
+        }`);
+    };
+    mat.customProgramCacheKey = () => 'fow' + (hide ? 1 : 0);
+    mat.needsUpdate = true;
+    return mat;
+  }
+};
+
+// =============================================================================
 // TerrainRenderer (world map)
 // Continuous landscape instead of hex prisms: one vertex per heightmap point in a
 // window that follows the camera. Heights and floor types are read in the shaders
@@ -923,6 +1041,7 @@ class TerrainRenderer {
     geo.setIndex(new THREE.BufferAttribute(index, 1));
     this.uniforms = {
       hTex: { value: hTex }, fTex: { value: fTex }, groundTex: { value: ground.tex }, bTex: { value: (Blight.init(), Blight.tex) },
+      wTex: (Fow.init(), Fow.uniforms.fowTex), fowOn: Fow.uniforms.fowOn,
       deadLayer: { value: ['DryEarth', 'Swamp', 'Mud'].map(n => Math.max(0, ground.names.indexOf(n))) },
       layer: { value: layer }, tint: { value: tint },
       center: { value: new THREE.Vector2() }, mapSize: { value: new THREE.Vector2(WIDTH, HEIGHT) },
@@ -954,7 +1073,7 @@ class TerrainRenderer {
         // GLSL3 ShaderMaterial: three.js does not declare the output, so the colorspace chunk needs this alias.
         layout(location = 0) out vec4 pc_fragColor;
         #define gl_FragColor pc_fragColor
-        uniform sampler2D fTex, bTex; uniform sampler2DArray groundTex; uniform int deadLayer[3];
+        uniform sampler2D fTex, bTex, wTex; uniform float fowOn; uniform sampler2DArray groundTex; uniform int deadLayer[3];
         uniform int layer[${FLOOR_KEYS.length}]; uniform vec3 tint[${FLOOR_KEYS.length}];
         uniform vec2 mapSize; uniform float uvScale;
         uniform vec3 sunDir, sunColor, skyColor, groundColor, fogColor; uniform float fogDensity;
@@ -1002,6 +1121,16 @@ class TerrainRenderer {
           vec3 light = sunColor * max(dot(nrm, sunDir), 0.0) + mix(groundColor, skyColor, nrm.y * 0.5 + 0.5);
           col *= light;
           col += glow * vec3(0.05, 0.16, 0.04);
+          // Fog of war: remembered land is pale and dim, land never seen lies under a dark shroud.
+          if (fowOn > 0.5) {
+            float fw = texture(wTex, (vTile + 0.5) / mapSize).r;
+            fw += (vnoise(vTile * 0.11) - 0.5) * 0.9 * fw * (1.0 - fw);        // ragged, misty borders
+            float fex = smoothstep(0.08, 0.30, fw), fvis = smoothstep(0.62, 0.9, fw);
+            float fl = dot(col, vec3(0.3, 0.55, 0.15));
+            col = mix(mix(vec3(fl), col, 0.35) * 0.45, col, fvis);
+            vec3 shroud = vec3(0.012, 0.014, 0.02) * (0.6 + 0.9 * vnoise(vTile * 0.045 + 3.0));
+            col = mix(shroud, col, fex);
+          }
           // Outside the heightmap: fade to the background.
           vec2 out2 = max(-vTile, vTile - (mapSize - 1.0));
           col = mix(col, fogColor, clamp(max(out2.x, out2.y) / 8.0, 0.0, 1.0));
@@ -1123,7 +1252,7 @@ class VegetationRenderer {
     // Size factor per kind (world units are ~55 m; figures stay readable from the default zoom).
     this.size = { pine: 2.2, leaf: 2.2, birch: 2.0, juniper: 1.6, bush: 1.4, heath: 1.5, rock: 1.6, grass: 2.2, reed: 2.0,
                   snag: 2.0, log: 2.0, deadbush: 1.4, deadheath: 1.5, deadgrass: 2.2, gravestone: 1.6 };
-    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 });
+    const mat = Fow.patch(new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 }), true);
     this.capacity = 24000;
     this.meshes = {};
     for (const [k, geo] of Object.entries(kinds)) {
@@ -1328,8 +1457,8 @@ function initScene(ground) {
   v.waterNormal = makeWaterNormalMap();
   v.waterNormal.repeat.set(w / 40, h / 40);
   const water = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
-    new THREE.MeshStandardMaterial({ color: 0x1d4248, transparent: true, opacity: 0.7, roughness: 0.25, metalness: 0.15,
-      normalMap: v.waterNormal, normalScale: new THREE.Vector2(0.6, 0.6) }));
+    Fow.patch(new THREE.MeshStandardMaterial({ color: 0x1d4248, transparent: true, opacity: 0.7, roughness: 0.25, metalness: 0.15,
+      normalMap: v.waterNormal, normalScale: new THREE.Vector2(0.6, 0.6) }), false));
   water.rotation.x = -Math.PI / 2;
   water.position.set(w / 2 - COL_SPACING / 2, HEX.waterLevel, h / 2 - ROW_SPACING / 2);
   v.scene.add(water);
@@ -1500,7 +1629,9 @@ const Campaign = {
   // so they never push the load below zero (which drained the Lich's army bonus).
   commandUsed() { return game.campaign.army.reduce((s, u) => s + Math.max(0, DATA.units[u.type].commandPoints || 0), 0); },
   leaderCommand(army = game.campaign.army) { return army.reduce((s, u) => s + Math.max(0, -(DATA.units[u.type].commandPoints || 0)), 0); },
-  isRevealed(node) { return this.revealedAt(node.q, node.r); },
+  // A place is known once its land has been seen (fog of war); what happens there is only known while it is in sight.
+  isRevealed(node) { return Fow.explored(node.q, node.r); },
+  inSight(node) { return Fow.visible(node.q, node.r); },
   // The Lich's battle values (army bonus, conquests, artifacts) and his level (1 + conquered places).
   lichStats() {
     const B = ECON.lichArmyBonus, base = DATA.units.lich, cp = this.commandUsed(), fx = this.effects();
@@ -1515,19 +1646,13 @@ const Campaign = {
   // Rough strength for the danger color: HP plus weighted damage of every creature.
   strength(types) { return types.reduce((s, t) => { const u = DATA.units[t]; return s + u.hp + u.damage * 3 * Math.max(1, u.range > 1 ? 1.2 : 1); }, 0); },
   danger(node) {
-    if (!this.isEnemy(node)) return null;
+    if (!this.isEnemy(node) || !this.inSight(node)) return null;
     if (node.type === 'CHRISTIAN' && !this.seesThroughVeil() && this.armyNode() !== node) return null;
     const own = this.strength(game.campaign.army.map(u => u.type)), foe = this.strength(this.garrisonFor(node));
     const k = foe / Math.max(1, own);
     return k < 0.5 ? 'low' : k < 1 ? 'mid' : 'high';
   },
-  revealedAt(q, r) {
-    const lich = this.armyNode();
-    if (hexDistance(q, r, lich.q, lich.r) <= REVEAL_DISTANCE + this.scoutRange()) return true;
-    if (Expeditions.armyNodes().some(a => hexDistance(q, r, a.q, a.r) <= REVEAL_DISTANCE)) return true;
-    if (hexDistance(q, r, PHYLACTERY.q, PHYLACTERY.r) <= REVEAL_DISTANCE) return true;
-    return DATA.nodes.some(n => this.isConquered(n) && hexDistance(q, r, n.q, n.r) <= REVEAL_DISTANCE);
-  },
+  revealedAt(q, r) { return Fow.visible(q, r); },
   // Travel speed follows the slowest marching unit (the Lich and commanders ride ahead and do not count):
   // factor (2 + move) / 5, so move 3 = normal speed, a ballista (1) = 60 %, a raven host (6) = 160 %.
   slowestMove() {
@@ -2570,6 +2695,7 @@ const SaveGame = {
     if ('upgrades' in c) c.upgrades = (Array.isArray(c.upgrades) ? c.upgrades : []).filter(id => DATA.upgrades.some(u => u.id === id));
     if (c.research && !(DATA.upgrades.some(u => u.id === c.research.id))) c.research = null;
     if (c.research) c.research = { id: c.research.id, daysLeft: Math.max(1, Math.min(30, num(c.research.daysLeft, 1))) };
+    if ('explored' in c) c.explored = (Array.isArray(c.explored) ? c.explored : []).slice(0, 6000).map(e => Array.isArray(e) ? [Math.round(num(e[0], 0)), Math.round(num(e[1], 0)), Math.max(1, Math.min(600, Math.round(num(e[2], 1))))] : null).filter(Boolean);
     if ('skills' in c) c.skills = [...new Set((Array.isArray(c.skills) ? c.skills : []).filter(id => Skills.all().some(x => x.id === id)))];
     if (c.buildings && typeof c.buildings === 'object') for (const k of Object.keys(c.buildings)) { if (!DATA.baseBuildings[k]) delete c.buildings[k]; else c.buildings[k] = Math.min(num(c.buildings[k]), DATA.baseBuildings[k].levels.length); }
     if (Array.isArray(c.raids)) c.raids = c.raids.filter(r => r && DATA.factions[r.faction] && NODE_BY_ID[r.targetId] && r.garrison && typeof r.garrison === 'object')
@@ -2741,14 +2867,14 @@ const Settlements = {
     };
     const set = new Set(dead);
     if (!this.meshes) {
-      this.mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85 });
-      this.dmat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, color: 0x6a6268 });
+      this.mat = Fow.patch(new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.85 }), true);
+      this.dmat = Fow.patch(new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.95, color: 0x6a6268 }), true);
       this.meshes = [new THREE.Mesh(new THREE.BufferGeometry(), this.mat), new THREE.Mesh(new THREE.BufferGeometry(), this.dmat)];
       for (const m of this.meshes) { m.frustumCulled = false; v.worldRoot.add(m); }
       // Flags: poles and cloths as instanced meshes, one instance per place.
       const n = DATA.nodes.length;
-      this.poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 5).translate(0, 3.5, 0), new THREE.MeshStandardMaterial({ color: 0x3a2a1a }), n);
-      this.cloths = new THREE.InstancedMesh(new THREE.BoxGeometry(0.1, 1.6, 2.4).translate(0, 6.2, 1.2), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }), n);
+      this.poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 5).translate(0, 3.5, 0), Fow.patch(new THREE.MeshStandardMaterial({ color: 0x3a2a1a }), true), n);
+      this.cloths = new THREE.InstancedMesh(new THREE.BoxGeometry(0.1, 1.6, 2.4).translate(0, 6.2, 1.2), Fow.patch(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }), true), n);
       const m4 = new THREE.Matrix4(), w = game.world;
       DATA.nodes.forEach((node, i) => {
         const p = hexToWorld(node.q, node.r), fr = this.radius(node), x = p.x + fr * 0.55, z = p.z - fr * 0.55;
@@ -2834,7 +2960,9 @@ const WorldView = {
       nv.pillar.scale.set(fr * 0.8, 8, fr * 0.8);
       nv.el.classList.toggle('village', village);
       Settlements.setFlag(node, revealed ? DATA.factions[owner].color : '#8a8a8a');
-      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') + (Garrisons.of(node).length ? ` 🛡${Garrisons.of(node).length}` : '') : '?';
+      nv.known = revealed; nv.el.style.display = revealed ? '' : 'none';
+      nv.el.classList.toggle('faded', revealed && !Campaign.inSight(node));
+      nv.el.textContent = revealed ? node.name + (node.special ? ' ★' : '') + (node !== PHYLACTERY && Pantheons.isLeyNode(node) ? ' ✦' : '') + (Garrisons.of(node).length ? ` 🛡${Garrisons.of(node).length}` : '') : '';
       nv.el.classList.toggle('unknown', !revealed);
       const dg = revealed ? Campaign.danger(node) : null;
       nv.el.dataset.danger = dg || '';
@@ -2869,7 +2997,7 @@ const WorldView = {
     const v = game.view, maxDist = 1.73 / v.scene.fog.density;
     for (const node of DATA.nodes) {
       const nv = v.nodeViews[node.id];
-      const inFog = nv.pillar.position.distanceTo(v.camera.position) > maxDist;
+      const inFog = nv.known === false || nv.pillar.position.distanceTo(v.camera.position) > maxDist;
       nv.pillar.visible = !inFog;
       if (node.type !== 'VILLAGE') { nv.label.visible = !inFog; continue; }
       nv.label.visible = !inFog && (UI.selectedNode === node.id || hexDistance(node.q, node.r, pq, pr) <= VILLAGE_LABEL_DISTANCE);
@@ -2885,6 +3013,7 @@ async function startTravel(target, resume = null) {
   const c = game.campaign, from = Campaign.armyNode();
   if (target.id === from.id || (game.mode !== 'world' && !resume)) return;
   const days = Campaign.travelDays(from, target), hours = Campaign.travelHours(from, target);
+  Narrator.hint(`Nebel des Krieges: Land, das noch kein Toter gesehen hat, liegt im Dunkeln. Armee, Expeditionen, Hügelgrab und eroberte Orte sehen ${REVEAL_DISTANCE} Felder weit (Leichenhunde, Geister und Totenlichter weiter). Einmal Gesehenes bleibt auf der Karte – was dort geschieht, seht ihr nur in Sichtweite.`, 'fow');
   game.mode = 'travel';
   UI.renderInfo();
   const a = hexToWorld(...neighbor(from.q, from.r, 2)), b = hexToWorld(...neighbor(target.q, target.r, 2));
@@ -3399,6 +3528,7 @@ const Minimap = {
     ctx.imageSmoothingEnabled = !useFull;
     ctx.drawImage(src, 0, 0, src.width, src.height, sx(0), sy(0), src.width * k / v.scale, src.height * k / v.scale);
     if (Blight.sig) { ctx.imageSmoothingEnabled = true; const o = Blight.overlay; ctx.drawImage(o, 0, 0, o.width, o.height, sx(0), sy(0), o.width * 4 / v.scale, o.height * 4 / v.scale); }
+    if (Fow.sig && !Fow.off) { ctx.imageSmoothingEnabled = true; const o = Fow.overlay; ctx.drawImage(o, 0, 0, o.width, o.height, sx(0), sy(0), o.width * FOW.K / v.scale, o.height * FOW.K / v.scale); }
     // Ley lines between active ley nodes (barrow to every open seat).
     const ley = Pantheons.leyNodes();
     ctx.strokeStyle = 'rgba(170,110,230,0.85)'; ctx.lineWidth = 3;
@@ -3425,6 +3555,8 @@ const Minimap = {
       const x = sx(node.q), y = sy(node.r);
       if (x < -40 || y < -40 || x > cv.width + 40 || y > cv.height + 40) continue;
       const rev = Campaign.isRevealed(node), village = node.type === 'VILLAGE';
+      if (!rev) continue;                                   // fog of war: unknown places are not on the map
+      ctx.globalAlpha = Campaign.inSight(node) ? 1 : 0.6;
       const sym = this.symbols[node.id], rad = sym.size * (v.z >= 4 ? 1.4 : 1);
       ctx.fillStyle = rev ? DATA.factions[Campaign.owner(node)].color : '#888';
       ctx.strokeStyle = rev && node.special ? '#e0b830' : '#2b2116'; ctx.lineWidth = rev && node.special ? 3 : 2;
@@ -3438,6 +3570,7 @@ const Minimap = {
         ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(233,223,196,.9)'; ctx.fillStyle = '#2b2116';
         ctx.strokeText(node.name, x, y - rad - 6); ctx.fillText(node.name, x, y - rad - 6);
       }
+      ctx.globalAlpha = 1;
     }
     // Own armies, drawn last so they stay on top: the Lich as a crowned shield, expeditions as
     // shields with a skull, all in undead violet with a gold rim and a short name; garrisons as small shields.
@@ -6924,6 +7057,7 @@ const UI = {
       const enemy = Campaign.isEnemy(node);
       let garrison;
       if (!enemy) garrison = '—';
+      else if (!Campaign.inSight(node)) garrison = '<i>Außer Sicht – was dort steht, weiß niemand</i>';
       else if (node.type === 'CHRISTIAN' && !atNode && !Campaign.seesThroughVeil()) garrison = '<i>Verhüllt – nur Geister und Totenlichter sehen hindurch</i>';
       else {
         const counts = {};
@@ -6951,7 +7085,9 @@ const UI = {
           ${enemy ? `<tr><td>Bedrohung</td><td>${thr} % <span class="small">(ab 50 % gewarnt)</span></td></tr>` : ''}
         </table>${node.desc ? `<p class="small">${esc(node.desc)}</p>` : ''}</details>`;
     } else if (node) {
-      html += `<h2>Unbekannter Ort</h2><p class="small">Zu weit entfernt. Orte werden sichtbar, wenn die Armee, das Hügelgrab oder ein eroberter Ort höchstens ${REVEAL_DISTANCE} Felder entfernt ist.</p>`;
+      html += `<h2>Unbekanntes Land</h2><p class="small">Hier war noch kein Toter. Das Land wird erkundet, wenn die Armee, eine Expedition, das Hügelgrab oder ein eroberter Ort höchstens ${REVEAL_DISTANCE} Felder entfernt ist (Leichenhunde, Geister und Totenlichter sehen weiter).</p>`;
+    } else if (this.selectedTile && !Fow.explored(this.selectedTile[0], this.selectedTile[1])) {
+      html += `<h2>Unbekanntes Land</h2><p class="small">Hier war noch kein Toter. Das Land wird erkundet, wenn die Armee, eine Expedition, das Hügelgrab oder ein eroberter Ort höchstens ${REVEAL_DISTANCE} Felder entfernt ist.</p>`;
     } else if (this.selectedTile) {
       const [q, r] = this.selectedTile, w = game.world;
       html += `<h2>Gelände</h2><table>
@@ -7202,13 +7338,13 @@ function pickUnit() {
 function onLeftClick(ev) {
   setMouse(ev);
   if (game.mode === 'world') {
-    const pillars = Object.values(game.view.nodeViews).map(v => v.pillar);
+    const pillars = Object.values(game.view.nodeViews).filter(v => v.known !== false).map(v => v.pillar);
     const hit = game.view.raycaster.intersectObjects(pillars, false)[0];
     if (hit) { UI.selectNode(hit.object.userData.nodeId); return; }
     const t = game.view.terrain.pick(game.view.raycaster);
     if (t) {
       const near = DATA.nodes.find(n => n.q === t.q && n.r === t.r);
-      if (near) { UI.selectNode(near.id); return; }
+      if (near && Campaign.isRevealed(near)) { UI.selectNode(near.id); return; }
       UI.selectedNode = null; UI.selectedTile = [t.q, t.r]; WorldView.refresh(); UI.renderInfo();
     }
     return;
@@ -7488,7 +7624,7 @@ function toggleEdges() {
 const Debug = {
   // Place under the mouse: pillar hit first, otherwise the nearest place within 3 tiles of the ground point.
   nodeUnderMouse(p) {
-    const pillars = Object.values(game.view.nodeViews).map(v => v.pillar);
+    const pillars = Object.values(game.view.nodeViews).filter(v => v.known !== false).map(v => v.pillar);
     const hit = game.view.raycaster.intersectObjects(pillars, false)[0];
     if (hit) return hit.object.userData.nodeId;
     if (!p) return null;
@@ -7515,7 +7651,8 @@ const Debug = {
       <div style="flex-basis:100%"></div><b>Ressourcen</b>
       ${[['corpses', 100], ['bones', 1000], ['souls', 20], ['knowledge', 5]].map(([k, v]) => `<button data-dres="${k}" data-v="${v}" title="+${v} ${RESOURCE_NAMES[k]}">${resIcon(k)}+${v}</button>`).join('')}
       <button data-dres="all" title="Von allem viel">Alles ×10</button>
-      <div style="flex-basis:100%"></div><button id="dbgRecruit" title="Rekrutieren wie im Hügelgrab, egal wo die Armee steht">Rekrutieren aus der Ferne</button>`;
+      <div style="flex-basis:100%"></div><button id="dbgRecruit" title="Rekrutieren wie im Hügelgrab, egal wo die Armee steht">Rekrutieren aus der Ferne</button>
+      <button id="dbgFog" class="${c.debugNoFog ? 'primary' : ''}" title="Nebel des Krieges auf der Weltkarte an- oder ausschalten">Nebel des Krieges ${c.debugNoFog ? 'aus' : 'an'}</button>`;
     el.querySelectorAll('[data-dres]').forEach(b => b.onclick = () => {
       const r = c.resources;
       if (b.dataset.dres === 'all') { r.corpses += 1000; r.bones += 10000; r.souls += 200; r.knowledge += 50; Knowledge.discover(); }
@@ -7523,6 +7660,7 @@ const Debug = {
       SaveGame.save(); UI.updateHeader(); UI.renderInfo(); this.tools(true);
     });
     $('dbgRecruit').onclick = () => { if (game.mode !== 'world') return; Recruitment.remote = true; UI.openRecruit(); };
+    $('dbgFog').onclick = () => { c.debugNoFog = !c.debugNoFog; Fow.sig = ''; SaveGame.save(); this.tools(true); };
     const apply = v => { c.debugCommand = v; SaveGame.save(); UI.updateHeader(); UI.renderInfo(); this.tools(true); };
     el.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => {
       const k = b.dataset.dc;
@@ -7630,7 +7768,8 @@ function frame(now) {
     BattleView.ring.position.copy(game.battle.current.view.group.position).add(new THREE.Vector3(0, 0.45, 0));
   }
   miniAcc += dt;
-  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; Raids.syncView(); Expeditions.syncView(); Minimap.draw(); WorldView.updateLabels(); }
+  Fow.uniforms.fowOn.value = inBattle || Fow.off ? 0 : 1;
+  if (miniAcc > 0.1 && (game.mode === 'world' || game.mode === 'travel')) { miniAcc = 0; if (Fow.refresh()) WorldView.refresh(); Raids.syncView(); Expeditions.syncView(); Minimap.draw(); WorldView.updateLabels(); }
   Debug.update();
   v.renderer.render(v.scene, v.camera);
   v.labelRenderer.render(v.scene, v.camera);

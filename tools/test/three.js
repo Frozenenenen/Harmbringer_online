@@ -68,5 +68,6 @@ export const TorusGeometry = mk();
 export const RingGeometry = mk();
 export const UnsignedByteType = mk();
 export const Vector2 = mk();
+export const Vector4 = mk();
 export const Vector3 = mk();
 export const WebGLRenderer = mk();
