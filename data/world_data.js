@@ -296,6 +296,33 @@ window.HARMBRINGER_DATA = {
   // ---------------------------------------------------------------------------
   // Factions (names match Enums.Faction; ASKANIER is an addition Kevin allowed)
   // ---------------------------------------------------------------------------
+  // Difficulty: "normal" is the reference the game is balanced for. Not only values change – the
+  // level decides how well the living fight and which rules apply.
+  //   enemyHpPct / enemyDamagePct: all living units
+  //   doctrine: share of the factions' doctrine bonuses (traits and watch rules only at 1); doctrineGarrison: extra men by doctrine; ambush: heath spirits' ambush
+  //   ai: aim (weight of the expected damage; low = hits whoever is near), kill (bonus for a finishing blow), leader (bonus for Lich and leaders),
+  //       focus (bonus for wounded stacks), cover (archers use range and cover), kite (archers step away from blades), ability (chance to use an ability), doctrine (faction's choice of targets)
+  //   watch: gain (factor on all suspicion), decay (per quiet round), shoutNow ("none" | "watch" = posts and patrols | "all" = everyone awake),
+  //          bell, relief (rounds after the bell until relief arrives; 0 = none), reliefShare (of the largest troop), patrols / posts (extra), corpse (suspicion for a body found)
+  //   raid: chance, strength; threat (factor on threat gained); retreatLoss; loot (corpses and bones from kills); startRes (start stores)
+  difficulty: {
+    easy: { name: "Leicht", text: "Die Lebenden sind arglos und kämpfen ungeordnet: Sie schlagen auf den Nächstbesten, suchen weder den Lich noch Deckung und zaubern seltener. Wachen brauchen länger, bis sie sicher sind, und rufen erst in ihrem nächsten Zug. Keine Glocke, kein Hinterhalt; Doktrinen wirken halb und bringen keine Zusatztruppen. Weniger Trupps, die Bedrohung steigt langsamer, mehr Startvorräte und Beute, Rückzug kostet 15 %.",
+      enemyHpPct: -0.1, enemyDamagePct: -0.1, doctrine: 0.5, doctrineGarrison: false, ambush: false,
+      ai: { aim: 0.3, kill: 0, leader: 0, focus: 0, cover: false, kite: false, ability: 0.5, doctrine: false },
+      watch: { gain: 0.8, decay: 30, shoutNow: "none", bell: false, relief: 0, reliefShare: 0, patrols: 0, posts: -0.1, corpse: 40 },
+      raid: { chance: 0.6, strength: 0.85 }, threat: 0.75, retreatLoss: 0.15, loot: 1.15, startRes: 1.5 },
+    normal: { name: "Mittel", text: "Der Normalstand. Jede Fraktion kämpft nach ihrer Doktrin, Posten und Streifen rufen sofort, einer läuft zur Glocke, die Lebenden suchen den Todesstoß und den Lich. Rückzug kostet 25 %.",
+      enemyHpPct: 0, enemyDamagePct: 0, doctrine: 1, doctrineGarrison: true, ambush: true,
+      ai: { aim: 1, kill: 30, leader: 15, focus: 0, cover: true, kite: false, ability: 1, doctrine: true },
+      watch: { gain: 1, decay: 20, shoutNow: "watch", bell: true, relief: 0, reliefShare: 0, patrols: 0, posts: 0, corpse: 60 },
+      raid: { chance: 1, strength: 1 }, threat: 1, retreatLoss: 0.25, loot: 1, startRes: 1 },
+    hard: { name: "Schwer", text: "Die Lebenden kämpfen klug: Sie bündeln ihre Angriffe auf Angeschlagene und auf den Lich, Schützen weichen vor Klingen zurück. Jede wache Wache ruft sofort, gefundene Tote bedeuten Alarm, Argwohn legt sich nur langsam, eine Streife mehr. Läutet die Glocke, trifft zwei Runden später Entsatz ein. Mehr und stärkere Trupps, die Bedrohung steigt schneller, Rückzug kostet 35 %. Dazu +10 % Lebenspunkte und +5 % Schaden.",
+      enemyHpPct: 0.1, enemyDamagePct: 0.05, doctrine: 1, doctrineGarrison: true, ambush: true,
+      ai: { aim: 1, kill: 40, leader: 25, focus: 20, cover: true, kite: true, ability: 1, doctrine: true },
+      watch: { gain: 1.15, decay: 12, shoutNow: "all", bell: true, relief: 2, reliefShare: 0.4, patrols: 1, posts: 0.1, corpse: 100 },
+      raid: { chance: 1.3, strength: 1.15 }, threat: 1.25, retreatLoss: 0.35, loot: 1, startRes: 1 }
+  },
+
   // Factions. doctrine = how a faction tends to fight (its identity), mirroring the player's playstyles:
   //   name, style (short label), text (shown to the player),
   //   all / units[type]: hpPct, damagePct (shares), ini, move, mr, range, shield, sight, hear, energy (flat), traits (TRAIT_INFO), curseOnHit (chance)

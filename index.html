@@ -267,6 +267,8 @@
   .nodeLabel.village { font-size: 12px; padding: 0 4px; }
   .nodeLabel.unknown { color: #555; background: rgba(200,200,200,.7); }
   .nodeLabel.faded { opacity: .72; }
+  .diffCards { display: flex; gap: 10px; } .diffCard { flex: 1; text-align: left; padding: 10px 12px; margin: 0; white-space: normal; line-height: 1.35; } .diffCard b { display: block; font-size: 19px; margin-bottom: 4px; }
+  .diffCard span { font-size: 13px; } .diffCard.on { border: 2px solid #c9a227; background: rgba(201,162,39,.14); } @media (max-width: 760px) { .diffCards { flex-direction: column; } }
   .doctrine { font-size: 14px; margin: 2px 0 4px; cursor: help; } .doctrine .small { font-size: 12px; }
   .nodeLabel.selected { outline: 2px solid var(--gold); }
   .nodeLabel[data-danger="low"] { border-left: 5px solid #4a9a3a; } .nodeLabel[data-danger="mid"] { border-left: 5px solid #d0a020; } .nodeLabel[data-danger="high"] { border-left: 5px solid #c0302a; }
@@ -316,7 +318,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=39"></script>
+<script src="data/world_data.js?v=40"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=15"></script>
 <script type="importmap">
@@ -351,6 +353,7 @@
     <button id="btnHelp" title="Steuerung und Tastenkürzel">Tastenkürzel</button>
     <button id="btnCoop" title="Koop-Kampagne zu zweit: eröffnen oder beitreten">Koop-Spiel</button>
     <button id="btnDebugMenu" title="Debug-Fenster (F3)">Debug</button>
+    <button id="btnDifficulty" title="Schwierigkeit ändern (gilt ab dem nächsten Kampf)">Schwierigkeit: Mittel</button>
     <button id="btnNewGame" title="Spielstand löschen und neu beginnen">Neues Spiel</button>
   </div>
 </div>
@@ -435,7 +438,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 142, "date": "2026-11-15", "changes": [{"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}, {"date": "10.11. 00:13", "text": "Koop Stufe 4: Kämpfe des Gasts auf seinem Rechner"}]};
+const BUILD = {"version": 143, "date": "2026-11-16", "changes": [{"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}, {"date": "11.11. 00:29", "text": "Koop Stufe 5: Chat, Wiederverbinden, fester Raumcode"}, {"date": "11.11. 00:09", "text": "Koop: Beitritt und Trennung deutlich melden"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1725,7 +1728,7 @@ const Campaign = {
     const c = game.campaign;
     for (const f of ENEMY_FACTIONS) {
       if (!this.isLiving(f)) continue;
-      c.threat[f] = Math.min(100, c.threat[f] + (f !== node.faction ? THREAT.attackOtherFaction : node.type === 'VILLAGE' ? THREAT.attackOwnVillage : THREAT.attackOwnNode));
+      c.threat[f] = Math.min(100, c.threat[f] + (f !== node.faction ? THREAT.attackOtherFaction : node.type === 'VILLAGE' ? THREAT.attackOwnVillage : THREAT.attackOwnNode) * (DIFF().threat || 1));
     }
   },
   healAtPhylactery() {
@@ -2282,33 +2285,84 @@ const Base = {
 };
 const GROUP_NAMES = { bone: 'Knochen-Untote', flesh: 'Fleisch-Untote', spirit: 'Geister', leaders: 'Anführer und Elite', ranged: 'Fernkämpfer' };
 
+// Difficulty (data: difficulty). "normal" is the reference; "easy" switches mechanics off and lets
+// the living fight carelessly, "hard" adds mechanics (relief after the bell, focus fire, archers
+// who fall back, guards who all shout at once). Read through DIFF() everywhere.
+const DIFF = () => DATA.difficulty[(game.campaign && game.campaign.difficulty) || 'normal'] || DATA.difficulty.normal;
+const Difficulty = {
+  key() { return (game.campaign && DATA.difficulty[game.campaign.difficulty]) ? game.campaign.difficulty : 'normal'; },
+  // Choose for a campaign; fresh = a new game (start stores follow the level).
+  set(key, fresh) {
+    const c = game.campaign; if (!c || !DATA.difficulty[key]) return;
+    c.difficulty = key;
+    if (fresh) for (const k of Object.keys(c.resources)) c.resources[k] = Math.round((ECON.startResources[k] || 0) * (DATA.difficulty[key].startRes || 1));
+    SaveGame.save(); UI.updateHeader();
+  },
+  // The three levels as cards; onPick(key) after the choice.
+  choose(title, onPick, current) {
+    const cards = Object.entries(DATA.difficulty).map(([k, d]) => `<button class="diffCard ${k === current ? 'on' : ''}" data-diff="${k}"><b>${esc(d.name)}</b><span>${esc(d.text)}</span></button>`).join('');
+    UI.modal(`<h2>${title}</h2><p class="small">Die Stufe ändert nicht nur Werte: Sie bestimmt, wie klug die Lebenden kämpfen und welche Regeln gelten. Sie lässt sich später im Menü ändern (gilt ab dem nächsten Kampf).</p><div class="diffCards">${cards}</div>`,
+      current ? [{ label: 'Abbrechen' }] : []);
+    document.querySelectorAll('#modalBody [data-diff]').forEach(b => b.onclick = () => { UI.closeModal(); onPick(b.dataset.diff); });
+  },
+  // Hard: some rounds after the bell, relief from the next village arrives at the far edge of the field.
+  relief(b) {
+    const D = DIFF();
+    if (!D.watch.relief || !b.bell || b.relieved || b.node.encounter) return;
+    if (b.reliefAt === undefined) { b.reliefAt = b.round + D.watch.relief; Battle.log(`Die Glocke ruft Hilfe herbei: Entsatz trifft in ${D.watch.relief} Runden ein.`, 'hit'); return; }
+    if (b.round < b.reliefAt) return;
+    b.relieved = true;
+    const f = b.field, pl = Battle.alive('player'); if (!pl.length) return;
+    const counts = {}; for (const t of Campaign.garrisonFor(b.node)) if (DATA.units[t].rank !== 'UNIQUE' && DATA.units[t].rank !== 'MACHINE') counts[t] = (counts[t] || 0) + 1;
+    const top = Object.entries(counts).sort((x, y) => y[1] - x[1])[0]; if (!top) return;
+    // Far from the undead, at the rim of the field.
+    const near = t => Math.min(...pl.map(p => hexDistance(t.q, t.r, p.q, p.r)));
+    const tile = f.tiles.filter(t => t && !t.unit && t.building === null && f.walkable(t) && !f.isWater(t) && hexDistance(t.q, t.r, f.cq, f.cr) >= f.size / 2 - 3).sort((x, y) => near(y) - near(x))[0];
+    if (!tile) return;
+    const k = Math.max(2, Math.round(top[1] * D.watch.reliefShare));
+    const st = Battle.makeStack(top[0], 'enemy', b.node.faction, Array(k).fill(DATA.units[top[0]].hp));
+    if (b.doctrine) Doctrine.applyTo(st, b.doctrine, b.node.faction);
+    Abilities.init(st); st.summoned = true; st.nextTick = (b.lastTick || 0) + turnTicks(st.def);
+    b.units.push(st); Battle.putUnit(st, tile); BattleView.createUnit(st); game.tokensShown = null;
+    Battle.log(`Entsatz! ${k}× ${st.def.name} erreichen das Feld.`, 'hit'); UI.toast('Entsatz trifft ein!', 4, false); Sfx.horn(); UI.updateBattle();
+  }
+};
+
 // Doctrines: how a faction tends to fight (data: factions[*].doctrine). Garrisons, the watch,
 // unit values and traits, war parties and the choice of targets follow it, so every faction
 // asks for a different answer – as the undead choose between mass, speed or stealth.
 const Doctrine = {
   of(f) { return (DATA.factions[f] && DATA.factions[f].doctrine) || null; },
-  // Summed changes for one unit type.
+  // Summed changes for one unit type. The difficulty scales the bonuses (easy: half) and adds its own.
   mods(D, type) {
-    const m = { hpPct: 0, damagePct: 0, ini: 0, move: 0, mr: 0, range: 0, shield: 0, sight: 0, hear: 0, energy: 0, curseOnHit: 0, traits: [] };
-    for (const src of [D.all, (D.units || {})[type]]) if (src) for (const [k, v] of Object.entries(src)) { if (k === 'traits') m.traits.push(...v); else m[k] = (m[k] || 0) + v; }
+    const m = { hpPct: 0, damagePct: 0, ini: 0, move: 0, mr: 0, range: 0, shield: 0, sight: 0, hear: 0, energy: 0, curseOnHit: 0, traits: [] }, G = DIFF(), k = G.doctrine;
+    if (D) for (const src of [D.all, (D.units || {})[type]]) if (src) for (const [key, v] of Object.entries(src)) {
+      if (key === 'traits') { if (k >= 1) m.traits.push(...v); }
+      else if (key === 'hpPct' || key === 'damagePct' || key === 'curseOnHit') m[key] += v * k;
+      else m[key] = (m[key] || 0) + (k >= 1 ? v : Math.trunc(v * k));
+    }
+    m.hpPct += G.enemyHpPct || 0; m.damagePct += G.enemyDamagePct || 0;
     return m;
   },
   // Garrison (list of unit types) in the faction's composition; leaders are never multiplied.
+  // Easy: the faction keeps its shape, but nobody gets more men than the place has by itself.
   garrison(f, list) {
     const D = this.of(f); if (!D || !D.garrison) return list;
+    const cap = DIFF().doctrineGarrison ? Infinity : 1;
     const counts = {}; for (const t of list) counts[t] = (counts[t] || 0) + 1;
-    return Object.entries(counts).flatMap(([t, n]) => Array(Math.max(1, Math.round(n * (DATA.units[t].rank === 'UNIQUE' ? 1 : D.garrison[t] ?? D.garrison['*'] ?? 1)))).fill(t));
+    return Object.entries(counts).flatMap(([t, n]) => Array(Math.max(1, Math.round(n * Math.min(cap, DATA.units[t].rank === 'UNIQUE' ? 1 : D.garrison[t] ?? D.garrison['*'] ?? 1)))).fill(t));
   },
-  raid(f, key) { const D = this.of(f); return (D && D.raid && D.raid[key]) || 1; },
+  raid(f, key) { const D = this.of(f), G = DIFF().raid || {}; return ((D && D.raid && D.raid[key]) || 1) * (G[key] || 1); },
   // Battle start: the defenders get the values and traits of their doctrine.
   apply(b) {
-    const D = this.of(b.node.faction); b.doctrine = D; b.efx = (D && D.fx) || {};
-    if (!D) return;
+    const D = this.of(b.node.faction), k = DIFF().doctrine; b.doctrine = D;
+    b.efx = Object.fromEntries(Object.entries((D && D.fx) || {}).map(([key, v]) => [key, v * k]));
     for (const u of b.units) if (u.side === 'enemy') this.applyTo(u, D);
+    if (!D) return;
     Battle.log(`${DATA.factions[b.node.faction].name} – ${D.name} (${D.style}): ${D.text}`, 'hit');
   },
   applyTo(u, D) {
-    const m = this.mods(D, u.type), base = u.def, n = stackCount(u), tr = m.traits.filter(t => !(base.traits || []).includes(t));
+    const m = this.mods(D, u.type), base = u.def, n = stackCount(u), tr = m.traits.filter(t => !(base.traits || []).includes(t));   // D may be null (difficulty only)
     if (!tr.length && !Object.entries(m).some(([k, v]) => k !== 'traits' && v)) return;
     u.def = { ...base, hp: Math.round(base.hp * (1 + m.hpPct)), damage: Math.round(base.damage * (1 + m.damagePct)), initiative: base.initiative + m.ini, move: base.move + m.move,
       magicResist: base.magicResist + m.mr, range: base.range + (base.range > 1 ? m.range : 0), soulShield: (base.soulShield || 0) + m.shield, sight: base.sight + m.sight, hear: base.hear + m.hear,
@@ -2319,7 +2373,7 @@ const Doctrine = {
   // appear behind the undead army.
   ambush(b) {
     const D = b.doctrine, A = D && D.ambush;
-    if (!A || b.ambushed || b.round < 2 || (b.arrival === 'SURPRISE' && !b.firstAlarm)) return;
+    if (!A || !DIFF().ambush || b.ambushed || b.round < 2 || (b.arrival === 'SURPRISE' && !b.firstAlarm)) return;
     b.ambushed = true;
     const f = b.field, pl = Battle.alive('player'); if (!pl.length) return;
     const cd = t => hexDistance(t.q, t.r, f.cq, f.cr);
@@ -2761,6 +2815,7 @@ const SaveGame = {
     if (c.research && !(DATA.upgrades.some(u => u.id === c.research.id))) c.research = null;
     if (c.research) c.research = { id: c.research.id, daysLeft: Math.max(1, Math.min(30, num(c.research.daysLeft, 1))) };
     if ('explored' in c) c.explored = (Array.isArray(c.explored) ? c.explored : []).slice(0, 6000).map(e => Array.isArray(e) ? [Math.round(num(e[0], 0)), Math.round(num(e[1], 0)), Math.max(1, Math.min(600, Math.round(num(e[2], 1))))] : null).filter(Boolean);
+    if (!DATA.difficulty[c.difficulty]) c.difficulty = 'normal';
     if ('skills' in c) c.skills = [...new Set((Array.isArray(c.skills) ? c.skills : []).filter(id => Skills.all().some(x => x.id === id)))];
     if (c.buildings && typeof c.buildings === 'object') for (const k of Object.keys(c.buildings)) { if (!DATA.baseBuildings[k]) delete c.buildings[k]; else c.buildings[k] = Math.min(num(c.buildings[k]), DATA.baseBuildings[k].levels.length); }
     if (Array.isArray(c.raids)) c.raids = c.raids.filter(r => r && DATA.factions[r.faction] && NODE_BY_ID[r.targetId] && r.garrison && typeof r.garrison === 'object')
@@ -3704,7 +3759,8 @@ const SIEGE_EDGES = {
   palisade: { name: 'Palisade',   hp: 40,  other: 0.5 },
   house:    { name: 'Hauswand',   hp: 50,  other: 0 }
 };
-const RETREAT_LOSS = 0.25;
+const RETREAT_LOSS = 0.25;      // reference (normal); the difficulty sets the real share: retreatLoss()
+const retreatLoss = () => DIFF().retreatLoss ?? RETREAT_LOSS;
 // Servants who survived their fallen Lich (c.stranded: { nodeId: [{type, hp}] }); the Lich picks them up there.
 const Stranded = {
   all() { const c = game.campaign; return c ? (c.stranded = c.stranded || {}) : {}; },
@@ -5057,12 +5113,14 @@ const Alarm = {
     if (b.state === 'stealth' && !this.enemies().some(o => o.alert !== 'alarmed')) b.state = 'fight';
   },
   // Raise awareness by a stimulus at `at` (the guard will look and walk there).
-  raise(e, gain, sense, who, at) {
-    const b = game.battle; if (!e.alive || e.alert === 'alarmed' || !(gain > 0)) return;
+  raise(e, gain, sense, who, at, exact) {
+    const b = game.battle, G = DIFF().watch; if (!e.alive || e.alert === 'alarmed' || !(gain > 0)) return;
+    if (!exact) gain *= G.gain;                                   // the difficulty makes guards duller or sharper
     e.aw = Math.min(STEALTH.alarmed, (e.aw || 0) + gain); e.stim = b.round;
     if (at) e.lookAt = { q: at.q, r: at.r };
-    // Guards on watch (post, patrol) shout the moment they are sure; the others need their next turn.
-    const onWatch = !e.asleep && (e.role === 'post' || e.role === 'patrol');
+    // Who shouts the moment he is sure (the others need their next turn): nobody (easy), guards on
+    // watch – post and patrol (normal) – or everyone who is awake (hard).
+    const onWatch = !e.asleep && (G.shoutNow === 'all' || (G.shoutNow === 'watch' && (e.role === 'post' || e.role === 'patrol')));
     if (e.aw >= STEALTH.alarmed) { this.set(e, 'alarmed', `${e.def.name} ${who ? 'entdeckt ' + who : 'ist alarmiert'} (${sense})!`); if (onWatch && e.alive && !e.shouted) this.shout(e); }
     else if (e.aw >= STEALTH.suspicious && e.alert === 'unaware') this.set(e, 'suspicious', `${e.def.name} wird misstrauisch (${sense}).`);
     else BattleView.updateHp(e);
@@ -5096,7 +5154,7 @@ const Alarm = {
       const t = f.tiles[i];
       if (!t || (hexDistance(e.q, e.r, t.q, t.r) > 1 && !Stealth.sees(f, e, t.q, t.r))) continue;
       (e.found = e.found || new Set()).add(i);
-      this.raise(e, STEALTH.corpse, 'Tote gefunden', null, t);
+      this.raise(e, DIFF().watch.corpse, 'Tote gefunden', null, t, true);
       if (e.alert === 'alarmed') return;
     }
   },
@@ -5115,14 +5173,14 @@ const Alarm = {
       if (e.alert === 'alarmed' || e.asleep || hexDistance(e.q, e.r, at.q, at.r) > radius) continue;
       const gain = Math.min(STEALTH.lure, STEALTH.alarmed - 10 - (e.aw || 0));
       e.lookAt = { q: at.q, r: at.r }; n++;
-      if (gain > 0) this.raise(e, gain, why, null, at); else e.stim = game.battle.round;
+      if (gain > 0) this.raise(e, gain, why, null, at, true); else e.stim = game.battle.round;
     }
     Battle.refreshCones();
     return n;
   },
   // Loud crash (gate, wall, spell): everyone within `radius` is alarmed at once.
   crash(at, radius, why) {
-    for (const e of this.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, at.q, at.r) <= radius) this.raise(e, STEALTH.alarmed, why || 'Lärm', null, at);
+    for (const e of this.enemies()) if (e.alert !== 'alarmed' && hexDistance(e.q, e.r, at.q, at.r) <= radius) this.raise(e, STEALTH.alarmed, why || 'Lärm', null, at, true);
     Battle.refreshCones();
   },
   // Tiles from which the bell of a church, chapel or watch tower can be rung.
@@ -5143,7 +5201,7 @@ const Alarm = {
     for (const o of this.enemies()) if (o !== e && o.alert !== 'alarmed' && hexDistance(o.q, o.r, e.q, e.r) <= r) { o.lookAt = { q: e.q, r: e.r }; this.set(o, 'alarmed'); woke++; }
     Battle.log(`${e.def.name} schlägt Alarm${woke ? ` – ${woke} ${woke === 1 ? 'Gruppe wacht' : 'Gruppen wachen'} auf` : ' – niemand hört es'}.`, 'hit');
     Sfx.horn();
-    if (!b.bell && !b.bellRunner && e.def.rank !== 'MACHINE' && this.enemies().some(o => o.alert !== 'alarmed')) {
+    if (DIFF().watch.bell && !b.bell && !b.bellRunner && e.def.rank !== 'MACHINE' && this.enemies().some(o => o.alert !== 'alarmed')) {
       const spot = this.bellSpots(b.field).filter(t => hexDistance(t.q, t.r, e.q, e.r) <= STEALTH.bellReach).sort((x, y) => hexDistance(x.q, x.r, e.q, e.r) - hexDistance(y.q, y.r, e.q, e.r))[0];
       if (spot) {
         b.bellRunner = e; e.bellAt = spot; BattleView.updateHp(e);
@@ -5232,9 +5290,10 @@ const Alarm = {
     const cd = t => hexDistance(t.q, t.r, f.cq, f.cr);
     const onWall = e => { const t = f.get(e.q, e.r); return !!(t && (t.walkway || t.tower || (t.building !== null && f.buildings[t.building] && ['tower', 'walltower'].includes(f.buildings[t.building].key)))); };
     const free = es.filter(e => e.def.rank !== 'UNIQUE' && e.def.rank !== 'MACHINE' && !onWall(e) && e.def.move >= 2);
-    const W = (b.doctrine && b.doctrine.watch) || {};          // the faction's way of keeping watch
-    const nPatrol = Math.min(free.length ? free.length - 1 : 0, (night ? (es.length >= 3 ? 1 : 0) : Math.min(2, Math.floor(es.length / 3))) + (es.length >= 2 ? W.patrols || 0 : 0));
-    const nPost = Math.max(0, Math.min(free.length - nPatrol, Math.max(1, Math.round(es.length * ((night ? 0.3 : day ? 0.5 : 0.4) + (W.posts || 0))))));
+    const W0 = (DIFF().doctrine >= 1 && b.doctrine && b.doctrine.watch) || {}, G = DIFF().watch;          // the faction's way of keeping watch, sharpened or dulled by the difficulty
+    const W = { patrols: (W0.patrols || 0) + (G.patrols || 0), posts: (W0.posts || 0) + (G.posts || 0), awake: W0.awake || 0 };
+    const nPatrol = Math.min(free.length ? free.length - 1 : 0, Math.max(0, (night ? (es.length >= 3 ? 1 : 0) : Math.min(2, Math.floor(es.length / 3))) + (es.length >= 2 ? W.patrols : 0)));
+    const nPost = Math.max(0, Math.min(free.length - nPatrol, Math.max(1, Math.round(es.length * ((night ? 0.3 : day ? 0.5 : 0.4) + W.posts)))));
     const ring = Math.max(2, Math.min(f.cityWall ? 6 : 99, Math.max(...es.map(e => cd(e))) + 1));
     const order = free.slice().sort((x, y) => hash2(x.q, x.r, f.seed + 5) - hash2(y.q, y.r, f.seed + 5));
     const off = Math.floor(rng() * 6);
@@ -5288,7 +5347,7 @@ const Alarm = {
       if (e.alert === 'alarmed') continue;
       if ((e.aw || 0) > before) { e.stim = b.round - 1; continue; }      // counts for the round that just ended
       if (recent || !(e.aw > 0)) continue;
-      e.aw = Math.max(0, e.aw - STEALTH.decay);
+      e.aw = Math.max(0, e.aw - DIFF().watch.decay);
       if (e.alert === 'suspicious' && e.aw < STEALTH.suspicious) {
         e.alert = 'unaware'; e.lookAt = null;
         e.away = !!e.home && hexDistance(e.q, e.r, e.home.q, e.home.r) > 0;
@@ -5356,7 +5415,7 @@ const Battle = {
     this.applyLichBonus(b); this.applyCommanderBonus(b);
     const garrison = Campaign.garrisonFor(node).map(type => ({ type, hp: DATA.units[type].hp }));
     const Dn = Doctrine.of(node.faction);      // swarms fight as one big heap
-    for (const g of splitStacks(groupByType(garrison), t => !!Dn && Doctrine.mods(Dn, t).traits.includes('SWARM'))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
+    for (const g of splitStacks(groupByType(garrison), t => Doctrine.mods(Dn, t).traits.includes('SWARM'))) b.units.push(this.makeStack(g.type, 'enemy', node.faction, g.hps));
     Doctrine.apply(b);
     // Ley-Bund: a pantheon leader is shielded by every living member of its pantheon.
     const pidB = Pantheons.memberOf(node);
@@ -5655,7 +5714,7 @@ const Battle = {
     b.round++;
     this.log(`— Runde ${b.round} —`);
     UI.roundBanner(b.round);
-    Doctrine.ambush(b);
+    Doctrine.ambush(b); Difficulty.relief(b);
     Alarm.roundEnd();
     Abilities.roundEnd();
     if ((b.round - 1) % ROUNDS_PER_TIME === 0) {
@@ -6083,8 +6142,9 @@ const Battle = {
     const hours = b.round * BATTLE_HOURS_PER_ROUND, battleDays = Math.floor(hours / 24);
     if (result === 'victory') {
       const fx = Campaign.effects();
-      const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0) * (1 + (fx.lootCorpsesPct || 0)));
-      const bones = Math.floor(b.kills.length * ECON.bonesPerKill * (1 + (fx.lootBonesPct || 0)));
+      const lootK = DIFF().loot || 1;
+      const corpses = Math.floor(b.kills.reduce((s, k) => s + ECON.corpsesPerKill * k.quality, 0) * (1 + (fx.lootCorpsesPct || 0)) * lootK);
+      const bones = Math.floor(b.kills.length * ECON.bonesPerKill * (1 + (fx.lootBonesPct || 0)) * lootK);
       const souls = b.kills.filter(k => k.soul).length * ECON.soulsPerSoulKill + (fx.soulsPerVictory || 0);
       const knowledgeBonus = fx.knowledgePerVictory || 0;
       // Burnt earth: a place plundered before yields only half of its fixed reward each time.
@@ -6195,7 +6255,7 @@ const Battle = {
       if (node.finale && !c.won) { c.won = true; endNow = true; }
       if (b.leaderFallen) {
         // Survivors (a further quarter lost without their master) wait at the battlefield to be picked up.
-        const army = this.survivors(RETREAT_LOSS), at = node.encounter
+        const army = this.survivors(retreatLoss()), at = node.encounter
           ? DATA.nodes.slice().sort((x, y) => hexDistance(x.q, x.r, node.q, node.r) - hexDistance(y.q, y.r, node.q, node.r))[0] : node;
         if (army.length) Stranded.add(at, army);
         html += `<h3>Verwaist</h3><p>${b.expedition ? esc(DATA.units[b.leader].name) : 'Der Lich'} fiel im Kampf. ${army.length ? `${army.length} Untote haben überlebt (ein Viertel mehr zerfiel ohne ihren Herrn) und warten bei <b>${esc(at.name)}</b>, bis der Lich sie abholt.` : 'Keiner seiner Diener blieb übrig.'}</p>`;
@@ -6216,7 +6276,7 @@ const Battle = {
       c.army = [];
       html = `<h2>${esc(Expeditions.name(b.expedition))} vernichtet</h2><p>Der Kommandeur ist gefallen, sein Zug zerfällt. Der Lich verliert diese Diener.</p>`;
     } else if (b.expedition) {
-      c.army = this.survivors(RETREAT_LOSS);
+      c.army = this.survivors(retreatLoss());
       html = `<h2>Rückzug</h2><p>${esc(Expeditions.name(b.expedition))} zieht sich zurück und bleibt vor ${esc(node.name)} stehen. Ein Viertel der Truppen bleibt auf dem Feld (die Nachhut), der Kommandeur entkommt. Keine Beute.</p>`;
     } else if (result === 'defeat') {
       c.travel = null;
@@ -6228,7 +6288,7 @@ const Battle = {
     } else {
       // Retreat: the army gets away, a quarter of every stack stays behind as rearguard.
       c.travel = null;
-      c.army = this.survivors(RETREAT_LOSS);
+      c.army = this.survivors(retreatLoss());
       html = `<h2>Rückzug</h2><p>Die Armee löst sich vom Feind und bleibt ${node.encounter ? 'am Weg' : 'vor ' + esc(node.name)} stehen. Ein Viertel der Truppen fällt als Nachhut, Lich und Kommandeure entkommen. Keine Beute.</p>`;
     }
     if (c.march && result !== 'victory' && result !== 'withdraw') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
@@ -6590,8 +6650,10 @@ const EnemyAI = {
     if (u.alert === 'suspicious') { await Alarm.investigate(u); return; }
     if (u.alert === 'alarmed' && !u.shouted) Alarm.shout(u);
     if (b.bellRunner === u && !b.bell && await Alarm.runToBell(u)) return;
+    // How well this side fights: the living follow the difficulty, the undead automatic is always "normal".
+    const A = u.side === 'enemy' ? DIFF().ai : DATA.difficulty.normal.ai;
     // 0. Abilities (spells, buffs, summons) from where the unit stands.
-    if (await Abilities.aiUse(u)) return;
+    if (Math.random() < A.ability && await Abilities.aiUse(u)) return;
 
     // 1. Priests heal the wounded ally with the largest deficit.
     if (u.def.power === 'HEAL') {
@@ -6611,14 +6673,20 @@ const EnemyAI = {
         const chk = Combat.canAttack(f, u, t, p);
         if (!chk.ok) continue;
         const dmg = Combat.expected(f, u, t, p, chk.cover);
-        let score = dmg + (dmg >= p.hp ? 30 : 0) + (p.type === 'lich' || p.def.rank === 'UNIQUE' ? 15 : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
-        const focus = u.side === 'enemy' && b.doctrine && b.doctrine.ai;
+        // Easy: they hit whoever is near, without looking for the kill or the leader.
+        let score = dmg * A.aim + (dmg >= p.hp ? A.kill : 0) + (p.type === 'lich' || p.def.rank === 'UNIQUE' ? A.leader : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
+        const focus = u.side === 'enemy' && A.doctrine && b.doctrine && b.doctrine.ai;
         if (focus === 'leader' && isLeaderUnit(p)) score += 25;
         if (focus === 'weak') score += (p.def.range > 1 ? 12 : 0) + 15 * (1 - p.hp / Math.max(1, p.maxHp));
+        if (A.focus) score += A.focus * (1 - p.hp / Math.max(1, p.maxHp));                 // hard: finish what is already hurt
         if (u.def.range > 1) {
-          if (chk.dist >= chk.range) score += 3;                       // stay at maximum range
-          if (Combat.lineOfSight(f, f.get(p.q, p.r), t).cover) score += 3;  // in cover against the target
-          if (chk.dist === 1) score -= 4;
+          if (A.cover) {
+            if (chk.dist >= chk.range) score += 3;                       // stay at maximum range
+            if (Combat.lineOfSight(f, f.get(p.q, p.r), t).cover) score += 3;  // in cover against the target
+            if (chk.dist === 1) score -= 4;
+          }
+          // Hard: archers do not stand still next to a blade – they step away first, then shoot.
+          if (A.kite) score -= 6 * Battle.alive(u.side === 'player' ? 'enemy' : 'player').filter(x => hexDistance(x.q, x.r, t.q, t.r) === 1).length;
         }
         if (!best || score > best.score) best = { t, p, score };
       }
@@ -6842,7 +6910,7 @@ const UI = {
     const chip = (k, v, lbl, cls = '') => `<span class="chip ${cls}" title="${tip(k)}">${resIcon(k, 18)}<b>${v}</b> <span class="lbl">${lbl}</span></span>`;
     $('resources').innerHTML = chip('corpses', r.corpses, 'Leichen') + chip('bones', r.bones, 'Knochen') + chip('souls', r.souls, 'Seelen')
       + chip('knowledge', r.knowledge, 'Wissen') + chip('command', `${used}/${lim}`, 'Kommando', used >= lim ? 'full' : '');
-    this.buildBadge(); this.todo(); this.newsBadge(); if (Coop.role) Coop.clockText();
+    this.buildBadge(); this.todo(); this.newsBadge(); { const bd = $('btnDifficulty'); if (bd) bd.textContent = 'Schwierigkeit: ' + DIFF().name; } if (Coop.role) Coop.clockText();
     // Threat: one chip (mini bars + the highest faction), the full list on click.
     const list = ENEMY_FACTIONS.map(f => ({ f, v: Math.round(c.threat[f] || 0), living: Campaign.isLiving(f) })).sort((x, y) => (y.living - x.living) || (y.v - x.v));
     const top = list.find(x => x.living), warned = list.filter(x => x.living && x.v >= 50);
@@ -7699,7 +7767,8 @@ function initInput() {
   $('btnSound').textContent = Sfx.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
   $('btnSaves').onclick = () => { if (game.mode === 'world') SaveGame.open(); else UI.toast('Spielstände gibt es auf der Weltkarte.', 3.5, false); };
   $('btnNewGame').onclick = () => UI.modal('<h2>Neues Spiel?</h2><p>Der gespeicherte Stand wird gelöscht.</p>',
-    [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, action: () => newGame() }]);
+    [{ label: 'Abbrechen' }, { label: 'Neues Spiel', primary: true, keepOpen: true, action: () => Difficulty.choose('Neues Spiel: Wie schwer?', key => { newGame(); Difficulty.set(key, true); }, Difficulty.key()) }]);
+  $('btnDifficulty').onclick = () => { UI.show('menuPop', false); Difficulty.choose('Schwierigkeit ändern', key => { Difficulty.set(key, false); UI.toast(`Schwierigkeit: ${DIFF().name} (gilt ab dem nächsten Kampf).`, 4); }, Difficulty.key()); };
 }
 function toggleEdges() {
   game.showEdges = !game.showEdges;
@@ -7885,9 +7954,9 @@ function showIntro() {
   const buttons = [];
   if (saved) buttons.push({ label: 'Fortsetzen', action: () => startGame(saved) });
   buttons.push({ label: 'Spielstände …', action: () => setTimeout(() => SaveGame.open(true), 0) });
-  buttons.push({ label: 'Erwachen', primary: true, action: () => { SaveGame.clear(); startGame(Campaign.create()); setTimeout(() => { Narrator.speak('lich', LICH_LINES.awaken, 'awaken');
+  buttons.push({ label: 'Erwachen', primary: true, keepOpen: true, action: () => Difficulty.choose('Wie schwer soll es werden?', key => { SaveGame.clear(); startGame(Campaign.create()); Difficulty.set(key, true); setTimeout(() => { Narrator.speak('lich', LICH_LINES.awaken, 'awaken');
     Narrator.hint('Klicke auf der Karte ein nahes Dorf an, zum Beispiel Undeloh, und wähle „Hierher ziehen“. Die Farbe links am Ortsnamen zeigt die Gefahr: grün, gelb, rot.', 'start');
-    Narrator.hint('Kamera: W/A/S/D oder Maus an den Rand, rechte Maustaste drehen, Mausrad zoomen. H springt zum Hügelgrab, F3 zeigt das Debug-Fenster.', 'camera'); }, 1200); } });
+    Narrator.hint('Kamera: W/A/S/D oder Maus an den Rand, rechte Maustaste drehen, Mausrad zoomen. H springt zum Hügelgrab, F3 zeigt das Debug-Fenster.', 'camera'); }, 1200); }) });
   UI.modal(`<h2>Harmbringer</h2>
     <p>Mai 1371. Unter dem Wilseder Berg, in einem Hügelgrab aus der Bronzezeit, öffnet ein Toter die Augen.
     Jahrhunderte lang hat der Lich geschlafen, nun ruft ihn der Hunger der Ley-Linien.</p>

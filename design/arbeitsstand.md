@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 15.11.2026, ca. 11:15 Uhr · letzte veröffentlichte Version: 142 (Doktrinen der Fraktionen)
+Stand: 16.11.2026, ca. 12:00 Uhr · letzte veröffentlichte Version: 143 (Schwierigkeitsstufen, Balance-Werkzeuge) · **Balance-Test läuft noch**
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -79,6 +79,24 @@ Noch nicht gemacht: Expeditionen decken unterwegs nur an ihren Orten auf (nicht 
 Beschrieben im Design-Dokument, Abschnitt „Doktrinen: Identität der Fraktionen“ (Tabelle aller 12). Daten `factions[*].doctrine`, Code `Doctrine`. Test in der Sitzung: `doct.js` (je Fraktion ein Kampf: Besatzung, Werte, Wache, Hinterhalt).
 
 Nicht gemacht / offen: Zahlen sind gesetzt, nicht ausbalanciert (Welfen-Städte mit 1,5-fach Rittern und Sturmangriff dürften spürbar härter sein; Hanse-Städte sind nachts kaum noch zu beschleichen – so gewollt, aber ungeprüft im Spiel). Beschworene Gegner bekommen die Doktrin nicht. Begegnungen unterwegs haben die Doktrin ihrer Fraktion, Wachen-Regeln greifen dort nicht (alle alarmiert). Die Prompts „Bauplatz frei“ stehen jetzt unten links (überdeckten rechts die Ortsinfo).
+
+## IN ARBEIT: Balance testen und Schwierigkeitsstufen (Auftrag vom 16.11.)
+
+Kevin: „bitte teste du das Balancing so weit wie möglich“ und „richte 3 Schwierigkeitsstufen ein (Leicht, Mittel, Schwer). Nicht nur HP und Schaden – die KI soll anders reagieren, eventuell greifen mehr Mechaniken. Mittel = Normalstand, Leicht reduziert, Schwer erweitert.“
+
+**Fertig und veröffentlicht (Version 143):**
+
+- Schwierigkeit: Daten `difficulty` in `data/world_data.js` (alle Felder dort im Kommentar), Code `DIFF()`, `Difficulty` (`set`, `choose`, `relief`). Wahl bei „Erwachen“ und „Neues Spiel“, Änderung im Menü. Greift in `Doctrine.mods/garrison/apply`, `Alarm.raise/assign/shout/roundEnd`, `EnemyAI.takeTurn` (Zielwahl), `Campaign.registerAttack`, `retreatLoss()`, Beute, Trupps. Geprüft mit `difft.js` (nur in der Sitzung): alle drei Stufen greifen. **Noch nicht mit Kampagnen nachgemessen.**
+- Werkzeuge im Repo: `tools/test/matrix.js` (Reihenkämpfe je Fraktion × Armee-Typ, mit/ohne Doktrin, Automatik spielt beide Seiten) und `tools/test/campaign.js` (Kampagnen-Bot je Spielstil und Stufe). Beide in `tools/test/README.md` beschrieben.
+
+**Erste Messwerte (Reihenkämpfe, Armee 0,7-fach so stark wie die Besatzung, erst zur Hälfte durch):**
+
+- Askanier „Landwehr“ ist ein Ausreißer: Siegquote fällt durch die Doktrin von 100 % auf 19 %. → Bauern-Faktor 1,8 senken.
+- Hexen-Orte: 0 % Siege mit und ohne Doktrin – die Stärke-Schätzung (`Campaign.strength`, daraus die Gefahrenfarbe) unterschätzt Hexen deutlich.
+- Armee-Typen bei gleicher „Stärke“: Hexerei am besten, Start-Armee und Masse am schwächsten.
+- Kampagnen-Bot (gemischt, Mittel): 19 Orte in 41 Tagen, 100 % Siege, kaum Verluste → der Anfang ist für die Automatik sehr leicht.
+
+**Noch zu tun:** Reihenkämpfe fertig auswerten (auch Verhältnis 1,0), Kampagnen je Spielstil 150 Tage auf Mittel, dann Leicht/Schwer; Ausreißer korrigieren und nachmessen; Bericht `design/balance_bericht.md`; Design-Dokument (Abschnitt Schwierigkeit) ergänzen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
