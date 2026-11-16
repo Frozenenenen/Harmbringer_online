@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 16.11.2026, ca. 12:00 Uhr · letzte veröffentlichte Version: 143 (Schwierigkeitsstufen, Balance-Werkzeuge) · **Balance-Test läuft noch**
+Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 146 (Balance-Korrekturen: KI, Doktrinen, Stärke-Schätzung) · **Nachmessung läuft noch**
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -89,14 +89,19 @@ Kevin: „bitte teste du das Balancing so weit wie möglich“ und „richte 3 S
 - Schwierigkeit: Daten `difficulty` in `data/world_data.js` (alle Felder dort im Kommentar), Code `DIFF()`, `Difficulty` (`set`, `choose`, `relief`). Wahl bei „Erwachen“ und „Neues Spiel“, Änderung im Menü. Greift in `Doctrine.mods/garrison/apply`, `Alarm.raise/assign/shout/roundEnd`, `EnemyAI.takeTurn` (Zielwahl), `Campaign.registerAttack`, `retreatLoss()`, Beute, Trupps. Geprüft mit `difft.js` (nur in der Sitzung): alle drei Stufen greifen. **Noch nicht mit Kampagnen nachgemessen.**
 - Werkzeuge im Repo: `tools/test/matrix.js` (Reihenkämpfe je Fraktion × Armee-Typ, mit/ohne Doktrin, Automatik spielt beide Seiten) und `tools/test/campaign.js` (Kampagnen-Bot je Spielstil und Stufe). Beide in `tools/test/README.md` beschrieben.
 
-**Erste Messwerte (Reihenkämpfe, Armee 0,7-fach so stark wie die Besatzung, erst zur Hälfte durch):**
+**Messwerte vor den Korrekturen (Mittel, Automatik spielt beide Seiten):**
 
-- Askanier „Landwehr“ ist ein Ausreißer: Siegquote fällt durch die Doktrin von 100 % auf 19 %. → Bauern-Faktor 1,8 senken.
-- Hexen-Orte: 0 % Siege mit und ohne Doktrin – die Stärke-Schätzung (`Campaign.strength`, daraus die Gefahrenfarbe) unterschätzt Hexen deutlich.
-- Armee-Typen bei gleicher „Stärke“: Hexerei am besten, Start-Armee und Masse am schwächsten.
-- Kampagnen-Bot (gemischt, Mittel): 19 Orte in 41 Tagen, 100 % Siege, kaum Verluste → der Anfang ist für die Automatik sehr leicht.
+- Reihenkämpfe, 420 Kämpfe, Armee 0,7-fach so stark wie die Besatzung nach alter Schätzung. Siegquote mit/ohne Doktrin: Hanse 62/57, Welfen 100/100, **Askanier 19/100**, Klerus 86/90, Hexen 29/38, Grafen 71/81, **Mecklenburg 48/71**, Wettiner 67/71, **Wodan 14/71**, **Spreewald 57/100**, Wattenmeer 14/29, **Heidegeister 29/52**. Armee-Typen: Start 40, Masse 43, Klasse 47, Bollwerk 57, Eile 57, Schatten 63, Hexerei 70.
+- Die alte Stärke-Schätzung (HP + Schaden × 3) unterschätzte Geisterwesen und schnelle Einheiten (Irrlicht, Schwarzer Hund, Hexen) – Trennschärfe 0,69, neue Formel 0,84.
+- Kampagnen-Bot (gemischt, 150 Tage): 27–33 Orte, 93–96 % Siege, nach Siegen 99 % der Armee übrig, der Lich fiel nie. Ursache: Der Lich wächst mit jeder Eroberung (HP 60 + 6 je Kommando-Punkt + 6 je Eroberung) und die Gegner-KI stürzte sich mit festem Bonus auf ihn – die Armee verlor fast nichts. Nicht gewonnen wurden nur Städte mit Mauern (die Automatik baut kein Belagerungsgerät).
 
-**Noch zu tun:** Reihenkämpfe fertig auswerten (auch Verhältnis 1,0), Kampagnen je Spielstil 150 Tage auf Mittel, dann Leicht/Schwer; Ausreißer korrigieren und nachmessen; Bericht `design/balance_bericht.md`; Design-Dokument (Abschnitt Schwierigkeit) ergänzen.
+**Korrekturen (eingebaut, Nachmessung läuft):**
+
+1. Gegner-KI: Der Bonus fürs Anführer-Jagen zählt nur noch voll, wenn der Schlag mindestens ein Zehntel von dem wegnimmt, was der Anführer noch hat (`hurt` in `EnemyAI`), sonst anteilig. Gilt auch für die Doktrin „Ritterheer“.
+2. Doktrinen entschärft: Askanier Bauern ×1,3 (statt 1,8), Mecklenburg +1 Initiative nur noch für Ritter, Wodan Sturmangriff nur Sachsenkrieger und Wilde Jäger, Spreewald Lutki ×1,25 (statt 1,5), Heidegeister Hinterhalt 25 % (statt 35 %).
+3. Stärke-Schätzung neu: `Campaign.unitStrength` (Zähigkeit = (HP + Seelenschild) × Rüstung, Geisterwesen × 3; Schlagkraft = Schaden × 3 × Initiative / 5, Fernkampf × 1,2; Heiler eigene Formel), `Campaign.ownStrength()` zählt den Lich mit seinen echten Werten. Gefahrenfarbe: eigene Stärke ÷ Besatzung ≥ 1,3 grün, ≥ 1 gelb, darunter rot. Trupps (`Raids`) und beide Test-Werkzeuge benutzen dieselbe Schätzung.
+
+**Noch zu tun:** Reihenkämpfe mit neuer Schätzung (Verhältnis 1,0) auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 

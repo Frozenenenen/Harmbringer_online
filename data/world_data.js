@@ -342,8 +342,8 @@ window.HARMBRINGER_DATA = {
       text: "Wenige Bauern, viele Ritter. Ritter reiten an (+10 % Schaden je gelaufenem Feld), sind zäher und suchen den Lich und seine Kommandeure.",
       units: { ritter: { traits: ["CHARGE"], hpPct: 0.15 } }, garrison: { ritter: 1.5, bauer: 0.8 }, raid: { strength: 1.2 }, ai: "leader" } },
     ASKANIER: { name: "Askanier",          color: "#2f5f8a", doctrine: { name: "Landwehr", style: "Masse",
-      text: "Das ganze Land steht unter Waffen: fast doppelt so viele Bauern, die als ein großer Haufen kämpfen (Schwarm: +2 % Schaden je Kopf über 10). Ihre Trupps sind größer und ziehen öfter aus.",
-      units: { bauer: { traits: ["SWARM"] } }, garrison: { bauer: 1.8 }, raid: { strength: 1.3, chance: 1.2 } } },
+      text: "Das ganze Land steht unter Waffen: ein Drittel mehr Bauern, die als ein großer Haufen kämpfen (Schwarm: +2 % Schaden je Kopf über 10). Ihre Trupps sind größer und ziehen öfter aus.",
+      units: { bauer: { traits: ["SWARM"] } }, garrison: { bauer: 1.3 }, raid: { strength: 1.3, chance: 1.2 } } },
     CLERGY:   { name: "Klerus",            color: "#e6e0cc", doctrine: { name: "Segen", style: "Heilung und Schutz",
       text: "Gebete halten die Reihen: Heilung wirkt 30 % stärker, alle haben +2 Magieresistenz, Geistliche +2 Energie. Priester und Mönche spüren die Toten ohnehin.",
       all: { mr: 2, energy: 2 }, fx: { healPct: 0.3 } } },
@@ -354,24 +354,24 @@ window.HARMBRINGER_DATA = {
       text: "Kleine Herren hinter dicken Mauern: mehr Stadtwachen, die ihre Nachbarn decken (Schildwache), alle erleiden 15 % weniger Schaden. Dafür ziehen sie selten aus.",
       units: { stadtwache: { traits: ["GUARD"], hpPct: 0.15 } }, garrison: { stadtwache: 1.4 }, fx: { damageTakenPct: -0.15 }, watch: { posts: 0.1 }, raid: { chance: 0.6 } } },
     MECKLENBURG: { name: "Mecklenburg",    color: "#3b8fb0", doctrine: { name: "Schnelle Reiter", style: "Beweglich",
-      text: "Alle sind schneller (+1 Bewegung, +1 Initiative). Ritter schlagen zu und weichen aus, sie jagen Schützen und angeschlagene Haufen. Ihre Trupps reisen weit schneller und kommen öfter.",
-      all: { move: 1, ini: 1 }, units: { ritter: { traits: ["HITRUN"] } }, garrison: { ritter: 1.3 }, raid: { speed: 1.6, chance: 1.4 }, ai: "weak" } },
+      text: "Alle sind schneller (+1 Bewegung), Ritter auch im Zugriff (+1 Initiative). Ritter schlagen zu und weichen aus, sie jagen Schützen und angeschlagene Haufen. Ihre Trupps reisen weit schneller und kommen öfter.",
+      all: { move: 1 }, units: { ritter: { traits: ["HITRUN"], ini: 1 } }, garrison: { ritter: 1.3 }, raid: { speed: 1.6, chance: 1.4 }, ai: "weak" } },
     WETTINER: { name: "Wettiner",          color: "#9a7a2a", doctrine: { name: "Söldner", style: "Klasse",
       text: "Silber aus dem Erzgebirge kauft die Besten: weniger Leute, aber jeder +20 % Lebenspunkte und +15 % Schaden.",
       all: { hpPct: 0.2, damagePct: 0.15 }, garrison: { "*": 0.85 } } },
     // Mythic factions from the design palette (design_notes: Fraktions-Paletten)
     WODAN:    { name: "Wodan-Kult",        color: "#6a6a72", doctrine: { name: "Wilde Jagd", style: "Sturm in der Nacht",   // Wilde Jagd, Irminsul, Kyffhäuser
-      text: "Alle reiten an (Sturmangriff) und sind schneller. Nachts sind sie 20 % stärker und schlafen nie. Ihre Trupps sind die schnellsten.",
-      all: { traits: ["CHARGE"], move: 1 }, fx: { nightPct: 0.2 }, watch: { awake: 1 }, raid: { speed: 1.8 } } },
+      text: "Sachsenkrieger und Wilde Jäger stürmen an (Sturmangriff), alle sind schneller (+1 Bewegung). Nachts sind sie 20 % stärker und schlafen nie. Ihre Trupps sind die schnellsten.",
+      all: { move: 1 }, units: { sachsenkrieger: { traits: ["CHARGE"] }, wilder_jaeger: { traits: ["CHARGE"] } }, fx: { nightPct: 0.2 }, watch: { awake: 1 }, raid: { speed: 1.8 } } },
     SPREEWALD: { name: "Spreewald",        color: "#3f8a7a", doctrine: { name: "Gewimmel", style: "Schwarm",   // Wendische Geister: Schlangenkönig, Svantevit
-      text: "Lutki kommen als ein großer Schwarm (anderthalbmal so viele, +2 % Schaden je Kopf über 10). Wassermänner und Rusalken heilen jeden Zug.",
-      units: { lutki: { traits: ["SWARM"] }, wassermann: { traits: ["REGEN"] }, rusalka: { traits: ["REGEN"] } }, garrison: { lutki: 1.5 } } },
+      text: "Lutki kommen als ein großer Schwarm (ein Viertel mehr, +2 % Schaden je Kopf über 10). Wassermänner und Rusalken heilen jeden Zug.",
+      units: { lutki: { traits: ["SWARM"] }, wassermann: { traits: ["REGEN"] }, rusalka: { traits: ["REGEN"] } }, garrison: { lutki: 1.25 } } },
     WATTENMEER: { name: "Wattenmeer",      color: "#4a6a8a", doctrine: { name: "Die Flut", style: "Zäh",   // Versunkene Städte, Nordsee- und Ostseespuk
       text: "Langsam, aber kaum totzukriegen: alle +25 % Lebenspunkte, Ertrunkene heilen jeden Zug und kommen zahlreicher.",
       all: { hpPct: 0.25 }, units: { ertrunkener: { traits: ["REGEN"] } }, garrison: { ertrunkener: 1.3 } } },
     HEATHSPIRITS: { name: "Heidegeister",  color: "#7a5a4a", doctrine: { name: "Hinterhalt", style: "Trug",   // Moore, Hünengräber, Heidekönigin
       text: "Was man sieht, ist nicht alles: Sobald sie euch bemerkt haben (frühestens in Runde 2), tauchen weitere Irrlichter und Schwarze Hunde im Rücken der Toten auf. Alle +1 Initiative.",
-      all: { ini: 1 }, ambush: { share: 0.35, types: ["irrlicht", "schwarzer_hund"] } } }
+      all: { ini: 1 }, ambush: { share: 0.25, types: ["irrlicht", "schwarzer_hund"] } } }
   },
 
   // ---------------------------------------------------------------------------

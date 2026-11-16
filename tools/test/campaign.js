@@ -39,7 +39,7 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
     const ST = STYLES[STYLE]; if (!ST) return { err: 'unbekannter Stil ' + STYLE };
     Difficulty.set(LEVEL, true);
     const c = game.campaign, wait = ms => new Promise(r => setTimeout(r, ms));
-    const S = types => Campaign.strength(types), own = () => S(c.army.map(u => u.type));
+    const S = types => Campaign.strength(types), own = () => Campaign.ownStrength();
     const out = { battles: [], days: [], lost: 0, lichDeaths: 0, stall: 0 };
     const conquered = () => DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && Campaign.isConquered(n)).length;
     const row = o => console.log('ROW ' + JSON.stringify(o));

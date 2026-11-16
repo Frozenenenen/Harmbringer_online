@@ -318,7 +318,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=40"></script>
+<script src="data/world_data.js?v=41"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=15"></script>
 <script type="importmap">
@@ -438,7 +438,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 145, "date": "2026-11-16", "changes": [{"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}, {"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}, {"date": "11.11. 00:35", "text": "Koop: Vorsprung-Anzeige"}]};
+const BUILD = {"version": 146, "date": "2026-11-16", "changes": [{"date": "16.11. 11:21", "text": "Balance: Gegner-KI jagt keinen unverwundbaren Anführer mehr, fünf Doktrinen entschärft, Gefahrenfarbe nach gemessener Stärke"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}, {"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1647,14 +1647,27 @@ const Campaign = {
   // Scouts in the army: hounds smell further, ghosts and death lights see through monastery veils.
   scoutRange() { const t = new Set(game.campaign.army.map(u => u.type)); return (t.has('leichenhund') ? 40 : 0) + (t.has('geist') || t.has('totenlicht') ? 60 : 0); },
   seesThroughVeil() { const t = new Set(game.campaign.army.map(u => u.type)); return t.has('geist') || t.has('totenlicht'); },
-  // Rough strength for the danger color: HP plus weighted damage of every creature.
-  strength(types) { return types.reduce((s, t) => { const u = DATA.units[t]; return s + u.hp + u.damage * 3 * Math.max(1, u.range > 1 ? 1.2 : 1); }, 0); },
+  // Strength of one creature for the danger color, raids and the test tools. Fitted to 420 automatic
+  // battles (16.11.2026): toughness = (HP + soul shield) x armour, tripled for spectral beings;
+  // punch = damage x 3 (ranged x 1.2) x initiative / 5. Healers count for what they keep alive.
+  STRENGTH_ARMOUR: { UNARMORED: 1, LIGHT: 1.05, MEDIUM: 1.15, HEAVY: 1.3, FORTIFIED: 1.5 },
+  unitStrength(u) {
+    if (u.power === 'HEAL') return (u.hp + (u.soulShield || 0)) * 1.5 + 20;
+    return (u.hp + (u.soulShield || 0)) * (u.spectral ? 3 : 1) * (this.STRENGTH_ARMOUR[u.defense] || 1) + u.damage * 3 * (u.range > 1 ? 1.2 : 1) * (u.initiative || 5) / 5;
+  },
+  strength(types) { return types.reduce((s, t) => s + this.unitStrength(DATA.units[t]), 0); },
+  // The army of the Lich as it fights: the Lich with all he has grown by.
+  ownStrength() {
+    const L = this.lichStats(), base = DATA.units.lich;
+    return game.campaign.army.reduce((s, a) => s + this.unitStrength(a.type === 'lich' ? { ...base, hp: L.hp, damage: L.damage, soulShield: L.shield } : DATA.units[a.type]), 0);
+  },
+  // Danger of a place: measured, an army 1.3 times as strong wins nearly always, at equal strength
+  // about five times in six, below that every second time.
   danger(node) {
     if (!this.isEnemy(node) || !this.inSight(node)) return null;
     if (node.type === 'CHRISTIAN' && !this.seesThroughVeil() && this.armyNode() !== node) return null;
-    const own = this.strength(game.campaign.army.map(u => u.type)), foe = this.strength(this.garrisonFor(node));
-    const k = foe / Math.max(1, own);
-    return k < 0.5 ? 'low' : k < 1 ? 'mid' : 'high';
+    const k = this.ownStrength() / Math.max(1, this.strength(this.garrisonFor(node)));
+    return k >= 1.3 ? 'low' : k >= 1 ? 'mid' : 'high';
   },
   revealedAt(q, r) { return Fow.visible(q, r); },
   // Travel speed follows the slowest marching unit (the Lich and commanders ride ahead and do not count):
@@ -6674,9 +6687,12 @@ const EnemyAI = {
         if (!chk.ok) continue;
         const dmg = Combat.expected(f, u, t, p, chk.cover);
         // Easy: they hit whoever is near, without looking for the kill or the leader.
-        let score = dmg * A.aim + (dmg >= p.hp ? A.kill : 0) + (p.type === 'lich' || p.def.rank === 'UNIQUE' ? A.leader : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
+        // A leader is worth hunting only if the blow means something to him: full bonus from a tenth of
+        // what he has left, less below (an unkillable Lich must not soak up the whole battle).
+        const hurt = Math.min(1, dmg * 10 / Math.max(1, p.hp + (p.shield || 0)));
+        let score = dmg * A.aim + (dmg >= p.hp ? A.kill : 0) + (p.type === 'lich' || p.def.rank === 'UNIQUE' ? A.leader * hurt : 0) - 0.5 * hexDistance(t.q, t.r, here.q, here.r);
         const focus = u.side === 'enemy' && A.doctrine && b.doctrine && b.doctrine.ai;
-        if (focus === 'leader' && isLeaderUnit(p)) score += 25;
+        if (focus === 'leader' && isLeaderUnit(p)) score += 25 * hurt;
         if (focus === 'weak') score += (p.def.range > 1 ? 12 : 0) + 15 * (1 - p.hp / Math.max(1, p.maxHp));
         if (A.focus) score += A.focus * (1 - p.hp / Math.max(1, p.maxHp));                 // hard: finish what is already hurt
         if (u.def.range > 1) {
