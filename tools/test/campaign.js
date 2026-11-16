@@ -109,7 +109,7 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
       return Campaign.armyNode().id === target.id;
     };
     // ---- main loop ---------------------------------------------------------------------------------
-    let idle = 0, peak = own(), lastDay = -1;
+    let idle = 0, peak = own(), lastDay = -1; const avoid = {};      // places that beat the army are left alone for a month
     for (let step = 0; step < 4000 && c.dayCount <= DAYS && !c.won; step++) {
       Fow.refresh(); snapshot(); manage();
       if (c.dayCount >= lastDay + 5 || lastDay < 0) {
@@ -124,7 +124,7 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
       const mine = own();
       const targets = DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && Campaign.isEnemy(n) && Campaign.isRevealed(n) && Object.keys(n.garrison || {}).length)
         .map(n => ({ n, ratio: mine / Math.max(1, S(Campaign.garrisonFor(n))), d: hexDistance(here.q, here.r, n.q, n.r) }))
-        .filter(x => x.ratio >= MINRATIO).sort((a, b) => a.d - b.d);
+        .filter(x => x.ratio >= MINRATIO && !(avoid[x.n.id] > c.dayCount)).sort((a, b) => a.d - b.d);
       // Worth a trip to a recruiting place? (free command and enough stores for a handful of the style's units)
       const freeCmd = Campaign.commandLimit() - Campaign.commandUsed();
       const canPay = t => { const u = DATA.units[t]; if (!u || !Knowledge.known(t)) return 0; const pr = Base.producer(t); if (pr && Base.level(pr.k) < pr.level) return 0;
@@ -141,7 +141,8 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
         if (ST.night) { const h = Campaign.hour(); if (h >= 6 && h < 22) Campaign.advanceHours(22 - h); }
         game.mode = 'world';
         await Battle.start(target);
-        await fight(target, 'ort');
+        const r = await fight(target, 'ort');
+        if (!r || r.result !== 'victory') avoid[target.id] = c.dayCount + 30;
         continue;
       }
       // Nothing to attack: go home (heal, recruit), otherwise wait a day for income, buildings and research.
