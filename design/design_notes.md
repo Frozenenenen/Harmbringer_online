@@ -2431,6 +2431,29 @@ So wie der Lich sich für Masse, Tempo oder Schleichen entscheidet, neigt jede F
 
 Daten: `factions[*].doctrine` in `data/world_data.js` (Felder dort im Kommentar erklärt). Code: `Doctrine` (`garrison`, `apply`, `applyTo`, `ambush`, `raid`), dazu `Campaign.garrisonFor`, `Alarm.assign` (Wache), `Abilities.damageMul`/`heal`/`afterHit`, `Raids.speed`, `EnemyAI` (Zielwahl, Ausweichen nach dem Schlag). Schwärme der Gegner bleiben ein Stapel (`splitStacks(groups, whole)`).
 
+### Schwierigkeitsstufen (umgesetzt 16.11.2026)
+
+Drei Stufen, wählbar bei „Erwachen“ und „Neues Spiel“, änderbar im Menü (gilt ab dem nächsten Kampf). **Mittel ist der Normalstand**, auf den das Spiel abgestimmt wird. Die Stufe ändert vor allem, wie klug die Lebenden kämpfen und welche Regeln gelten; Werte ändern sich nur wenig.
+
+| | Leicht | Mittel | Schwer |
+|-|-|-|-|
+| Zielwahl der Gegner | schlagen auf den Nächstbesten; kein Todesstoß-Suchen, kein Jagen des Lichs | suchen den Todesstoß und den Lich; Doktrin-Ziele | bündeln zusätzlich Angriffe auf Angeschlagene, jagen den Lich stärker |
+| Schützen | nutzen weder Reichweite noch Deckung | nutzen Reichweite und Deckung | weichen außerdem vor Nahkämpfern zurück |
+| Fähigkeiten | jede zweite Gelegenheit | immer | immer |
+| Argwohn der Wachen | ×0,8; sinkt um 30 je ruhiger Runde | ×1; sinkt um 20 | ×1,15; sinkt um 12 |
+| Wer ruft sofort | niemand (alle erst im nächsten Zug) | Posten und Streifen | jeder, der wach ist |
+| Tote gefunden | +40 Argwohn | +60 | Alarm |
+| Posten / Streifen | 10 %-Punkte weniger Posten | Normal | 10 %-Punkte mehr Posten, eine Streife mehr |
+| Glocke | gibt es nicht | einer läuft zur Glocke | dazu **Entsatz**: 2 Runden nach dem Läuten kommt Verstärkung (40 % der größten Truppe) am Feldrand an |
+| Doktrinen | halbe Boni, keine Merkmale, keine Zusatztruppen, kein Hinterhalt | voll | voll |
+| Werte der Lebenden | −10 % LP, −10 % Schaden | – | +10 % LP, +5 % Schaden |
+| Trupps | 40 % seltener, 15 % kleiner | Normal | 30 % häufiger, 15 % größer |
+| Bedrohung steigt | ×0,75 | ×1 | ×1,25 |
+| Rückzug kostet | 15 % | 25 % | 35 % |
+| Wirtschaft | Startvorräte ×1,5, Beute aus Kämpfen +15 % | Normal | Normal |
+
+Daten: `difficulty` in `data/world_data.js`. Code: `DIFF()`, `Difficulty`. Die Automatik der eigenen Untoten (nach dem Tod des Lichs) spielt immer wie „Mittel“.
+
 ---
 
 ## Mythologie-Wissen als Belohnung
