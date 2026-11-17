@@ -112,7 +112,17 @@ Kevin (17.11.): „Du musst im Balance-Test natürlich auch verschiedene Spielst
 - **Fehler gefunden und behoben (Version 150):** Fiel der Lich und endete der Kampf mit Rückzug, verschwand er für immer aus der Armee (Klasse-Lauf kämpfte ab Tag 42 ohne Lich). Jetzt: Verwaiste warten, Lich erwacht im Hügelgrab. Bot sammelt Verwaiste ein.
 - Läuft: Klasse neu (Mittel), dann alle 7 Stile auf Leicht und Schwer (`levels.sh`).
 
-**Noch zu tun:** Leicht/Schwer auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
+**Kampagnen je Stil und Stufe (100 Tage, eroberte Orte):**
+
+| Stufe | Ø | gemischt | Masse | Klasse | Schatten | Eile | Bollwerk | Hexerei |
+|-|-|-|-|-|-|-|-|-|
+| Leicht | 35 | 28 | 29 | 38 | 52 | 35 | 24 | 42 |
+| Mittel | 29 | 24 | 26 | 23 | 33 | 35 | 29 | 33 |
+| Schwer | 30 | 23 | 26 | 33 | 34 | 32 | 27 | 37 |
+
+Siege überall 93–100 % (der Bot greift nur an, wenn er laut `foeStrength` mindestens gleich stark ist). Leicht ist klar leichter, Schwer im Tempo kaum von Mittel zu unterscheiden: Der Bot weicht auf schwächere Ziele aus und schleicht nicht (Wachen-Verschärfungen greifen nicht). Einzelner Lauf je Stil, Streuung groß (Klasse 23–38). Läuft: Reihenkämpfe auf allen drei Stufen mit gleichen Armeen (`e10`, `nn10`, `h10`).
+
+**Noch zu tun:** Stufen-Matrix auswerten, Schwer ggf. im offenen Kampf verschärfen, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
