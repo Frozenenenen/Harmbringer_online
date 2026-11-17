@@ -438,7 +438,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 149, "date": "2026-11-18", "changes": [{"date": "18.11. 00:10", "text": "Kampagnen-Bot: Lückenfüller begrenzt, Armee-Zusammensetzung im Protokoll"}, {"date": "17.11. 23:59", "text": "Übergabe-Notiz: Nachmessung Reihenkämpfe, Kampagnen je Spielstil laufen"}, {"date": "17.11. 23:59", "text": "Gefahrenfarbe: Besatzung mit Doktrin und Schwierigkeit (Campaign.foeStrength)"}, {"date": "16.11. 11:21", "text": "Balance: KI, Doktrinen, Stärke-Schätzung nach Messung"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}, {"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}]};
+const BUILD = {"version": 150, "date": "2026-11-18", "changes": [{"date": "18.11. 00:19", "text": "Fehler behoben: Lich ging nach Rückzug verloren, wenn er vorher gefallen war"}, {"date": "18.11. 00:10", "text": "Kampagnen-Bot: Lückenfüller nur bis 60 % Kommando, Armee-Mix im Protokoll"}, {"date": "17.11. 23:59", "text": "Übergabe-Notiz: Nachmessung Reihenkämpfe, Kampagnen je Spielstil laufen"}, {"date": "17.11. 23:59", "text": "Gefahrenfarbe: Besatzung mit Doktrin und Schwierigkeit (Campaign.foeStrength)"}, {"date": "16.11. 11:21", "text": "Balance: KI, Doktrinen, Stärke-Schätzung nach Messung"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}, {"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -6315,6 +6315,18 @@ const Battle = {
       c.travel = null;
       c.army = this.survivors(retreatLoss());
       html = `<h2>Rückzug</h2><p>Die Armee löst sich vom Feind und bleibt ${node.encounter ? 'am Weg' : 'vor ' + esc(node.name)} stehen. Ein Viertel der Truppen fällt als Nachhut, Lich und Kommandeure entkommen. Keine Beute.</p>`;
+      if (b.leaderFallen) {
+        // The Lich fell before the retreat: the survivors wait as orphans, he wakes in the barrow
+        // (without this he was lost from the army for good).
+        const army = c.army.filter(u => u.type !== 'lich'), at = node.encounter
+          ? DATA.nodes.slice().sort((x, y) => hexDistance(x.q, x.r, node.q, node.r) - hexDistance(y.q, y.r, node.q, node.r))[0] : node;
+        if (army.length) Stranded.add(at, army);
+        const deathDays = Base.lichDeathDays();
+        c.army = [{ type: 'lich', hp: DATA.units.lich.hp }]; c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
+        Campaign.advanceDays(deathDays);
+        html = `<h2>Rückzug ohne den Lich</h2><p>Der Lich fiel im Kampf, seine Diener lösten sich vom Feind.${army.length ? ` ${army.length} Untote warten bei <b>${esc(at.name)}</b>, bis der Lich sie holt.` : ''} ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
+        UI.news(`Verwaiste Untote (${army.length}) warten bei ${at.name}.`, 'world');
+      }
     }
     if (c.march && result !== 'victory' && result !== 'withdraw') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
     if (b.expedition) {

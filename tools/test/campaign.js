@@ -127,6 +127,10 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
       const targets = DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && Campaign.isEnemy(n) && Campaign.isRevealed(n) && Object.keys(n.garrison || {}).length)
         .map(n => ({ n, ratio: mine / Math.max(1, Campaign.foeStrength(n)), d: hexDistance(here.q, here.r, n.q, n.r) }))
         .filter(x => x.ratio >= MINRATIO && !(avoid[x.n.id] > c.dayCount)).sort((a, b) => a.d - b.d);
+      // Orphans (survivors of a battle in which the Lich fell) are picked up first.
+      if (Stranded.of(here).length) { Stranded.pickUp(here); out.pickups = (out.pickups || 0) + 1; }
+      const orphans = DATA.nodes.filter(n => Stranded.of(n).length >= 5).sort((a, b) => hexDistance(here.q, here.r, a.q, a.r) - hexDistance(here.q, here.r, b.q, b.r))[0];
+      if (orphans && orphans.id !== here.id && Campaign.commandUsed() < Campaign.commandLimit()) { await travel(orphans); continue; }
       // Worth a trip to a recruiting place? (free command and enough stores for a handful of the style's units)
       const freeCmd = Campaign.commandLimit() - Campaign.commandUsed();
       const canPay = t => { const u = DATA.units[t]; if (!u || !Knowledge.known(t)) return 0; const pr = Base.producer(t); if (pr && Base.level(pr.k) < pr.level) return 0;
