@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 146 (Balance-Korrekturen: KI, Doktrinen, Stärke-Schätzung) · **Nachmessung läuft noch**
+Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 147 (Balance-Korrekturen: KI, Doktrinen, Stärke-Schätzung mit Doktrin) · **Nachmessung läuft noch**
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -101,7 +101,11 @@ Kevin: „bitte teste du das Balancing so weit wie möglich“ und „richte 3 S
 2. Doktrinen entschärft: Askanier Bauern ×1,3 (statt 1,8), Mecklenburg +1 Initiative nur noch für Ritter, Wodan Sturmangriff nur Sachsenkrieger und Wilde Jäger, Spreewald Lutki ×1,25 (statt 1,5), Heidegeister Hinterhalt 25 % (statt 35 %).
 3. Stärke-Schätzung neu: `Campaign.unitStrength` (Zähigkeit = (HP + Seelenschild) × Rüstung, Geisterwesen × 3; Schlagkraft = Schaden × 3 × Initiative / 5, Fernkampf × 1,2; Heiler eigene Formel), `Campaign.ownStrength()` zählt den Lich mit seinen echten Werten. Gefahrenfarbe: eigene Stärke ÷ Besatzung ≥ 1,3 grün, ≥ 1 gelb, darunter rot. Trupps (`Raids`) und beide Test-Werkzeuge benutzen dieselbe Schätzung.
 
-**Noch zu tun:** Reihenkämpfe mit neuer Schätzung (Verhältnis 1,0) auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
+**Nachmessung Reihenkämpfe (Version 147, Modus `fair`: Armee so stark wie die Besatzung mit Doktrin, `Campaign.foeStrength`):** 210 Kämpfe, 98 % Siege, alle Fraktionen 81–100 % – keine Doktrin fällt mehr heraus. Spielstile in offener Feldschlacht (Rest der Armee nach Sieg): Hexerei 0,95, Klasse 0,90, Bollwerk 0,86, Start 0,74, Masse 0,69, Eile 0,59, Schatten 0,39. Schatten ist im offenen Kampf schwach – gewollt, seine Stärke ist Schleichen (die Automatik schleicht nicht).
+
+Kevin (17.11.): „Du musst im Balance-Test natürlich auch verschiedene Spielstile austesten.“ → Kampagnen je Spielstil laufen (`camp_all.sh`: alle 7 Stile, 100 Tage, Mittel, dann Leicht/Schwer).
+
+**Noch zu tun:** Kampagnen je Spielstil auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
