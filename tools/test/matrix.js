@@ -5,7 +5,7 @@
 // Besatzung ohne Doktrin (Campaign.strength), alle Verteidiger sind gewarnt (kein Schleichen).
 const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
 const REPO = path.join(__dirname, '..', '..'), SP = __dirname;
-const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = +(process.argv[4] || 3), PART = (process.argv[5] || '1/1').split('/').map(Number), ONLY = process.argv[6] && process.argv[6] !== '-' ? process.argv[6].split(',') : null, LEVEL = process.argv[7] || 'normal';
+const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = +(process.argv[4] || 3), PART = (process.argv[5] || '1/1').split('/').map(Number), ONLY = process.argv[6] && process.argv[6] !== '-' ? process.argv[6].split(',') : null, LEVEL = process.argv[7] || 'normal', FAIR = process.argv[8] === 'fair';   // fair: army sized against the garrison with its doctrine (Campaign.foeStrength), only fights with doctrine
 (async () => {
   const br = await chromium.launch(); const pg = await br.newPage(); const errs = [];
   pg.on('pageerror', e => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' | ')));
@@ -18,7 +18,7 @@ const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = 
     if (!h.includes('!window.__auto')) throw new Error('auto hook not found');
     r.fulfill({ contentType: 'text/html', body: h }); });
   await pg.goto('file://' + REPO + '/index.html'); await pg.waitForTimeout(6000);
-  const res = await pg.evaluate(async ([RATIO, HOUR, PER, PART, ONLY, LEVEL]) => {
+  const res = await pg.evaluate(async ([RATIO, HOUR, PER, PART, ONLY, LEVEL, FAIR]) => {
     const { Battle, Campaign, game, newGame, DATA, Figures, Narrator, UI, Sfx, stackCount, SaveGame } = window.__T; newGame();
     for (const t of Object.keys(DATA.units)) Figures.templates[t] = null;
     Narrator.hint = () => {}; Narrator.speak = () => {}; Narrator.say = () => {}; UI.toast = () => {}; UI.news = () => {}; SaveGame.save = () => {}; Sfx.muted = true;
@@ -49,7 +49,7 @@ const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = 
       const places = DATA.nodes.filter(n => n.faction === f && (n.size || 16) <= 32 && Object.keys(n.garrison || {}).length && !Object.keys(n.garrison).some(t => DATA.units[t].rank === 'UNIQUE'))
         .sort((a, b) => Object.values(a.garrison).reduce((x, y) => x + y, 0) - Object.values(b.garrison).reduce((x, y) => x + y, 0));
       const pick = []; for (let i = 0; i < PER; i++) { const p = places[Math.floor((i + 0.5) * places.length / PER)]; if (p && !pick.includes(p)) pick.push(p); }
-      for (const node of pick) for (const a of Object.keys(ARMIES)) for (const doc of [true, false]) jobs.push({ f, node, a, doc });
+      for (const node of pick) for (const a of Object.keys(ARMIES)) for (const doc of FAIR ? [true] : [true, false]) jobs.push({ f, node, a, doc });
     }
     const out = [];
     for (let j = 0; j < jobs.length; j++) {
@@ -58,7 +58,7 @@ const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = 
       newGame(); const c = game.campaign; c.hour = HOUR; c.nodeId = node.id; c.debugNoFog = true; c.difficulty = LEVEL;
       setDoctrine(false); const raw = Campaign.strength(Campaign.garrisonFor(node)); setDoctrine(doc);
       c.threat[f] = 60;                                                    // warned: a plain fight
-      c.army = build(ARMIES[a], raw * RATIO);
+      c.army = build(ARMIES[a], (FAIR ? Campaign.foeStrength(node) : raw) * RATIO);
       const rec = { f, node: node.id, army: a, doc, n: c.army.length, foe: Campaign.garrisonFor(node).length };
       const t0 = performance.now();
       try {
@@ -75,7 +75,7 @@ const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = 
       console.log('ROW ' + JSON.stringify(rec)); out.push(rec);
     }
     setDoctrine(true);
-    return out; }, [RATIO, HOUR, PER, PART, ONLY, LEVEL]);
+    return out; }, [RATIO, HOUR, PER, PART, ONLY, LEVEL, FAIR]);
   // Summary: per faction win rate and army left, with and without doctrine.
   const F = {}; for (const r of res) { const k = r.f; F[k] = F[k] || { on: [], off: [] }; F[k][r.doc ? 'on' : 'off'].push(r); }
   const avg = (l, f) => l.length ? l.reduce((s, r) => s + f(r), 0) / l.length : 0;

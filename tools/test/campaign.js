@@ -123,7 +123,7 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
       // Targets: known enemy places the army is strong enough for, nearest first.
       const mine = own();
       const targets = DATA.nodes.filter(n => n.type !== 'PHYLACTERY' && Campaign.isEnemy(n) && Campaign.isRevealed(n) && Object.keys(n.garrison || {}).length)
-        .map(n => ({ n, ratio: mine / Math.max(1, S(Campaign.garrisonFor(n))), d: hexDistance(here.q, here.r, n.q, n.r) }))
+        .map(n => ({ n, ratio: mine / Math.max(1, Campaign.foeStrength(n)), d: hexDistance(here.q, here.r, n.q, n.r) }))
         .filter(x => x.ratio >= MINRATIO && !(avoid[x.n.id] > c.dayCount)).sort((a, b) => a.d - b.d);
       // Worth a trip to a recruiting place? (free command and enough stores for a handful of the style's units)
       const freeCmd = Campaign.commandLimit() - Campaign.commandUsed();

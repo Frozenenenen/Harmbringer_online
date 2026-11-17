@@ -438,7 +438,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 146, "date": "2026-11-16", "changes": [{"date": "16.11. 11:21", "text": "Balance: Gegner-KI jagt keinen unverwundbaren Anführer mehr, fünf Doktrinen entschärft, Gefahrenfarbe nach gemessener Stärke"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}, {"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}, {"date": "11.11. 00:57", "text": "Koop: Kommandeurswahl; Anführer zäher"}]};
+const BUILD = {"version": 147, "date": "2026-11-17", "changes": [{"date": "17.11. 23:59", "text": "Gefahrenfarbe rechnet Doktrin und Schwierigkeit der Besatzung mit"}, {"date": "16.11. 11:21", "text": "Balance: KI, Doktrinen, Stärke-Schätzung nach Messung"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}, {"date": "16.11. 11:05", "text": "Drei Schwierigkeitsstufen (Leicht, Mittel, Schwer) mit eigener Gegner-KI und Regeln; Balance-Werkzeuge"}, {"date": "15.11. 10:37", "text": "Doktrinen: jede Fraktion kämpft in ihrer Richtung (Besatzung, Wache, Merkmale, Trupps, Zielwahl)"}, {"date": "15.11. 10:14", "text": "Nebel des Krieges auf der Weltkarte: nie gesehen / erkundet / in Sicht, Erkundetes bleibt im Spielstand"}, {"date": "15.11. 01:14", "text": "Wind und Ton neu, Windlesen freischaltbar, Aufforderungen bei freiem Bau-/Forschungsplatz, Spielstil-Filter, Balance der neuen Einheiten"}, {"date": "15.11. 00:07", "text": "Hügelgrab-Fenster mit Reitern: Gebäude-Karten, Forschung als Entweder-oder-Fragen (dauert Tage), Pfade des Lichs"}, {"date": "14.11. 23:52", "text": "Spielstile: Merkmale, 5 neue Einheiten, 3 Kommandeure mit Auren, Locken und Nebel, Skillbaum (Regeln)"}, {"date": "14.11. 23:38", "text": "Schleichen 2.0: Anmarschzone, Posten/Streifen/Schlafende, Argwohn, leise Gangart, Angriffsplan, lautlose Siege"}, {"date": "14.11. 23:14", "text": "Arbeitsstand als Übergabe-Notiz (Schleichen 2.0, Spielstile, Hügelgrab)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1661,12 +1661,24 @@ const Campaign = {
     const L = this.lichStats(), base = DATA.units.lich;
     return game.campaign.army.reduce((s, a) => s + this.unitStrength(a.type === 'lich' ? { ...base, hp: L.hp, damage: L.damage, soulShield: L.shield } : DATA.units[a.type]), 0);
   },
+  // The garrison of a place as it fights: with the values of its doctrine and of the difficulty.
+  // A swarm fights as one stack and hits harder the bigger it is.
+  foeStrength(node) {
+    const list = this.garrisonFor(node), D = Doctrine.of(node.faction), counts = {}; for (const t of list) counts[t] = (counts[t] || 0) + 1;
+    const taken = 1 + (((D && D.fx) || {}).damageTakenPct || 0) * DIFF().doctrine;
+    return Object.entries(counts).reduce((sum, [t, n]) => {
+      const u = DATA.units[t], m = Doctrine.mods(D, t), swarm = m.traits.includes('SWARM') || (u.traits || []).includes('SWARM');
+      const mod = { ...u, hp: u.hp * (1 + m.hpPct) / Math.max(0.5, taken), damage: u.damage * (1 + m.damagePct) * (swarm ? 1 + Math.min(TRAITS.swarmMax, TRAITS.swarmPer * Math.max(0, n - TRAITS.swarmFrom)) : 1),
+        initiative: u.initiative + m.ini, soulShield: (u.soulShield || 0) + m.shield };
+      return sum + n * this.unitStrength(mod);
+    }, 0);
+  },
   // Danger of a place: measured, an army 1.3 times as strong wins nearly always, at equal strength
   // about five times in six, below that every second time.
   danger(node) {
     if (!this.isEnemy(node) || !this.inSight(node)) return null;
     if (node.type === 'CHRISTIAN' && !this.seesThroughVeil() && this.armyNode() !== node) return null;
-    const k = this.ownStrength() / Math.max(1, this.strength(this.garrisonFor(node)));
+    const k = this.ownStrength() / Math.max(1, this.foeStrength(node));
     return k >= 1.3 ? 'low' : k >= 1 ? 'mid' : 'high';
   },
   revealedAt(q, r) { return Fow.visible(q, r); },
