@@ -72,10 +72,11 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
       for (let guard = 0; guard < 400; guard++) {
         const have = {}; for (const u of c.army) have[u.type] = (have[u.type] || 0) + S([u.type]);
         let opts = Object.keys(ST.units).filter(t => DATA.units[t] && !Recruitment.blocker(t) && !(ST.units[t] < 1 && have[t]));
-        if (!opts.length) opts = ['ghul', 'skelett', 'zombie', 'bogner'].filter(t => !Recruitment.blocker(t) && !Object.keys(ST.units).some(k => ST.units[k] >= 1 && Knowledge.known(k) && !/Benötigt|Unbekannt|Nicht an diesem Ort/.test(Recruitment.blocker(k) || '')));
+        // Fillers only up to 60 % of the command limit: room is kept for the style's own units once they unlock.
+        if (!opts.length && Campaign.commandUsed() < 0.6 * Campaign.commandLimit()) opts = ['ghul', 'skelett', 'zombie', 'bogner'].filter(t => !Recruitment.blocker(t) && !Object.keys(ST.units).some(k => ST.units[k] >= 1 && Knowledge.known(k) && !/Benötigt|Unbekannt|Nicht an diesem Ort/.test(Recruitment.blocker(k) || '')));
         if (!opts.length) break;
         const t = opts.sort((a, b) => (have[a] || 0) / (ST.units[a] || 1) - (have[b] || 0) / (ST.units[b] || 1))[0];
-        if (!Recruitment.recruit(t)) break; n++;
+        if (!Recruitment.recruit(t)) break; n++; out.recruited = out.recruited || {}; out.recruited[t] = (out.recruited[t] || 0) + 1;
       }
       return n;
     };
@@ -115,7 +116,8 @@ const STYLE = process.argv[2] || 'gemischt', DAYS = +(process.argv[3] || 150), M
       if (c.dayCount >= lastDay + 5 || lastDay < 0) {
         lastDay = c.dayCount - c.dayCount % 5;
         const d = { t: 'day', day: c.dayCount, owned: conquered(), army: c.army.length, strength: Math.round(own()), cmd: Campaign.commandUsed() + '/' + Campaign.commandLimit(), res: { ...c.resources },
-          skills: Skills.owned().length + '/' + Skills.points(), research: Upgrades.owned().length, buildings: Object.values(Base.levels()).reduce((a, x) => a + x, 0), threat: Math.round(Math.max(...Object.values(c.threat))) };
+          skills: Skills.owned().length + '/' + Skills.points(), research: Upgrades.owned().length, buildings: Object.values(Base.levels()).reduce((a, x) => a + x, 0), threat: Math.round(Math.max(...Object.values(c.threat))),
+          mix: c.army.reduce((m, u) => (m[u.type] = (m[u.type] || 0) + 1, m), {}), recruited: { ...(out.recruited || {}) } };
         out.days.push(d); row(d);
       }
       const here = Campaign.armyNode();

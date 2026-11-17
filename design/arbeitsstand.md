@@ -105,7 +105,9 @@ Kevin: „bitte teste du das Balancing so weit wie möglich“ und „richte 3 S
 
 Kevin (17.11.): „Du musst im Balance-Test natürlich auch verschiedene Spielstile austesten.“ → Kampagnen je Spielstil laufen (`camp_all.sh`: alle 7 Stile, 100 Tage, Mittel, dann Leicht/Schwer).
 
-**Noch zu tun:** Kampagnen je Spielstil auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
+**Kampagnen je Spielstil, 1. Lauf (Mittel, 100 Tage):** gemischt 24 Orte, Masse 26, Klasse 29, Eile 32, Bollwerk 33, Hexerei 33, Schatten 36; Siege 93–100 %, Lich nur einmal gefallen (Klasse). **Wenig aussagekräftig:** Am Ende bestanden alle Armeen großteils aus Zombies/Ghulen. Ursache: Leichen sind der Engpass (jede Einheit 3 Leichen), der Bot füllte vor dem Freischalten der Stil-Einheiten das Kommando mit Lückenfüllern, danach war kein Platz mehr. Bot-Korrektur: Lückenfüller nur bis 60 % des Kommandos (`tools/test/campaign.js`, Tageszeilen haben jetzt `mix` und `recruited`). 2. Lauf läuft.
+
+**Noch zu tun:** Kampagnen je Spielstil (2. Lauf) auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
