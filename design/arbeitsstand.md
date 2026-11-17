@@ -105,9 +105,14 @@ Kevin: „bitte teste du das Balancing so weit wie möglich“ und „richte 3 S
 
 Kevin (17.11.): „Du musst im Balance-Test natürlich auch verschiedene Spielstile austesten.“ → Kampagnen je Spielstil laufen (`camp_all.sh`: alle 7 Stile, 100 Tage, Mittel, dann Leicht/Schwer).
 
-**Kampagnen je Spielstil, 1. Lauf (Mittel, 100 Tage):** gemischt 24 Orte, Masse 26, Klasse 29, Eile 32, Bollwerk 33, Hexerei 33, Schatten 36; Siege 93–100 %, Lich nur einmal gefallen (Klasse). **Wenig aussagekräftig:** Am Ende bestanden alle Armeen großteils aus Zombies/Ghulen. Ursache: Leichen sind der Engpass (jede Einheit 3 Leichen), der Bot füllte vor dem Freischalten der Stil-Einheiten das Kommando mit Lückenfüllern, danach war kein Platz mehr. Bot-Korrektur: Lückenfüller nur bis 60 % des Kommandos (`tools/test/campaign.js`, Tageszeilen haben jetzt `mix` und `recruited`). 2. Lauf läuft.
+**Kampagnen je Spielstil, 1. Lauf (Mittel, 100 Tage):** gemischt 24 Orte, Masse 26, Klasse 29, Eile 32, Bollwerk 33, Hexerei 33, Schatten 36; Siege 93–100 %, Lich nur einmal gefallen (Klasse). **Wenig aussagekräftig:** Am Ende bestanden alle Armeen großteils aus Zombies/Ghulen. Ursache: Leichen sind der Engpass (jede Einheit 3 Leichen), der Bot füllte vor dem Freischalten der Stil-Einheiten das Kommando mit Lückenfüllern, danach war kein Platz mehr. Bot-Korrektur: Lückenfüller nur bis 60 % des Kommandos (`tools/test/campaign.js`, Tageszeilen haben jetzt `mix` und `recruited`). 
 
-**Noch zu tun:** Kampagnen je Spielstil (2. Lauf) auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
+**2. Lauf (Mittel, 100 Tage):** gemischt 24, Masse 26, Klasse 29, Bollwerk 29, Schatten 33, Hexerei 33, Eile 35 Orte; Siege 93–97 %. Jetzt mit Stil-Einheiten (Eile 36 Leichenhunde + 4 Knochenreiter, Schatten 29 Geister + 5 Nachzehrer, Hexerei 9 Knochenhexer + 6 Gefallene Schwestern, Bollwerk 5 Gruftwächter + 2 Todesritter). Befunde:
+- **Leichen sind überall der Engpass** (fast immer 0–40 auf Lager); teure Elite (Knochenreiter 750 Knochen, Todesritter) kommt nur tröpfchenweise.
+- **Fehler gefunden und behoben (Version 150):** Fiel der Lich und endete der Kampf mit Rückzug, verschwand er für immer aus der Armee (Klasse-Lauf kämpfte ab Tag 42 ohne Lich). Jetzt: Verwaiste warten, Lich erwacht im Hügelgrab. Bot sammelt Verwaiste ein.
+- Läuft: Klasse neu (Mittel), dann alle 7 Stile auf Leicht und Schwer (`levels.sh`).
+
+**Noch zu tun:** Leicht/Schwer auswerten, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
