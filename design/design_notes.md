@@ -3151,10 +3151,10 @@ Jedes New Game+ springt **100 Jahre in die Zukunft**. Der Lich ist unsterblich, 
 | Epoche | Zeitbild Norddeutschland | Die Lebenden gegen die Untoten | Mythen | Bildstil |
 |-|-|-|-|-|
 | **1371** Spätmittelalter (Grundspiel) | Hanse wächst, Lüneburger Erbfolgekrieg, Klöster überall | Ritter, Armbrust, Glocken, Weihwasser | voll lebendig, alle Pantheons | Holzschnitt (Dürer) |
-| **1471** Hanse auf dem Höhepunkt | reiche Hansestädte, Buchdruck, Landsknechte | erste Handbüchsen und Feldschlangen, Landsknecht-Haufen mit Pike; **Flugblätter** tragen den Alarm schneller (Bedrohungswellen schneller) | etwas schwächer, Wilde Jagd noch stark | Holzschnitt und Kupferstich |
-| **1571** Reformation und Hexenverfolgung | Klöster aufgelöst (werden Güter, Schulen, Spitäler), Hexenprozesse auf dem Höhepunkt | **Hexenjäger** als eigentliche Untoten-Jäger, Pike und Muskete, Brandmunition; Hexen sind jetzt Verfolgte – möglicher Bündnispartner? | geschwächt, manche Mitglieder verschwunden | Kupferstich |
-| **1671** nach dem Dreißigjährigen Krieg | entvölkertes Land, stehende Heere, Festungen mit Bastionen, Moorkolonisierung beginnt | Musketiere in Linie, Festungsartillerie, Kartätschen; Garnisonen statt Bürgerwehr | fast verblasst; Moore schrumpfen, Moorgeister verlieren Land | Radierung (Barock) |
-| *1771* (Idee) | Aufklärung, Universitäten, Trockenlegung der Moore | Kanonen, Feuerwehr, Pockenimpfung, erste Gedanken an Feuerbestattung | Mythen gelten als Aberglaube | Radierung, Rokoko-Kupferstich |
+| **1471** Hanse auf dem Höhepunkt | reiche Hansestädte, Buchdruck, Landsknechte | erste Handbüchsen und Feldschlangen, Landsknecht-Haufen mit Pike; **Flugblätter** tragen den Alarm schneller (Bedrohungswellen schneller) | etwas schwächer, Wilde Jagd noch stark | handkolorierter Holzschnitt (Schedelsche Weltchronik, Schongauer) |
+| **1571** Reformation und Hexenverfolgung | Klöster aufgelöst (werden Güter, Schulen, Spitäler), Hexenprozesse auf dem Höhepunkt | **Hexenjäger** als eigentliche Untoten-Jäger, Pike und Muskete, Brandmunition; Hexen sind jetzt Verfolgte – möglicher Bündnispartner? | geschwächt, manche Mitglieder verschwunden | handkolorierter Kupferstich (Bruegel, Braun & Hogenberg) |
+| **1671** nach dem Dreißigjährigen Krieg | entvölkertes Land, stehende Heere, Festungen mit Bastionen, Moorkolonisierung beginnt | Musketiere in Linie, Festungsartillerie, Kartätschen; Garnisonen statt Bürgerwehr | fast verblasst; Moore schrumpfen, Moorgeister verlieren Land | Radierung (Merian, Callot) |
+| *1771* (Idee) | Aufklärung, Universitäten, Trockenlegung der Moore | Kanonen, Feuerwehr, Pockenimpfung, erste Gedanken an Feuerbestattung | Mythen gelten als Aberglaube | Radierung mit Aquatinta (Chodowiecki, Goya) |
 
 **Was sich je Epoche ändert (alles als Daten):**
 
@@ -3172,7 +3172,7 @@ Jedes New Game+ springt **100 Jahre in die Zukunft**. Der Lich ist unsterblich, 
 
 - Eine **Datenschicht pro Epoche** über der unveränderten Karte: `eras` in `world_data.js` mit Einheiten-Ersatz, Doktrinen, Ortsänderungen, Schadensregeln, Erzähltexten. `c.era` im Spielstand.
 - **Figuren-Baukasten** (`tools/build_units.py`) um Ausrüstung erweitern: Muskete, Pike, Bandelier, breitkrempige Hüte, Morion-Helm, Kürass. So entstehen neue Figuren aus vorhandenen Teilen.
-- **Bild-Prompts** je Epoche mit eigenem Stil-Teil (Holzschnitt → Kupferstich → Radierung) und neuen Story-Bildern für Erwachen und Ende jeder Epoche.
+- **Bildstil je Epoche festgelegt** (18.11.2026, Stilteile der Prompts in `design/ui_bilder.md`, „Stil je Epoche“): 1371 Dürer-Holzschnitt; 1471 handkolorierter Holzschnitt nach der Schedelschen Weltchronik und Schongauer; 1571 handkolorierter Kupferstich nach Bruegel und Braun & Hogenberg; 1671 Barock-Radierung nach Merian und Callot; 1771 Radierung mit Aquatinta nach Chodowiecki und Goya; 1871 Holzstich nach Doré und Menzel. Dazu neue Story-Bilder für Erwachen und Ende jeder Epoche, Papier und Rahmen des UI je Epoche.
 - **Reihenfolge beim Bauen:** erst 1471 vollständig (wenige Feuerwaffen, viel vom Bestehenden nutzbar), daran die Balance mit dem Kampagnen-Bot messen, dann die nächste Epoche.
 
 ### Offene Fragen an Kevin

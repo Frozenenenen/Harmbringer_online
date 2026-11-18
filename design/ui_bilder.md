@@ -22,6 +22,35 @@ Vorbild Albrecht Dürer: Holzschnitt und Kupferstich um 1500, feine Kreuzschraff
 color, colorful, photo, 3d render, glossy, modern, anime, cartoon, text, letters, numbers, watermark, signature, monogram, logo, blurry
 ```
 
+### Stil je Epoche (New Game+, festgelegt 18.11.2026)
+
+Jede Epoche des New Game+ (Design-Dokument „New Game+“, Abschnitt 7) bekommt den Bildstil ihrer Zeit, damit man schon an den Bildern sieht, in welchem Jahrhundert man spielt. Vorbilder sind Druckgrafiken aus Norddeutschland und Mitteleuropa, die es in dieser Zeit wirklich gab. Gleich bleibt in allen Epochen: Druckgrafik auf altem Papier, düster, Totentanz, Standpunkt und Blickwinkel im Prompt. Der Stilteil ersetzt im Prompt den Dürer-Teil, alles andere bleibt.
+
+| Epoche | Vorbild | Technik und Wirkung | Farbe |
+|-|-|-|-|
+| **1371** (Grundspiel) | Albrecht Dürer, um 1500 | Holzschnitt und Kupferstich, feine Kreuzschraffur, hoher Kontrast | schwarz auf vergilbtem Papier |
+| **1471** | Schedelsche Weltchronik (Michael Wolgemut, 1493), Martin Schongauer; Lübecker Totentanz (Bernt Notke, 1463) | kräftiger, etwas derber Holzschnitt mit dicken Konturen, einfache Schraffur, Städte als Stadtansicht | sparsam handkoloriert: Rot, Ocker, Grün in dünnen Wasserfarben, Linien bleiben schwarz |
+| **1571** | Pieter Bruegel d. Ä. (Stiche bei Hieronymus Cock, 1550er–60er), Braun & Hogenberg, „Civitates Orbis Terrarum“ (1572); Holbeins Totentanz (1538) | feiner Kupferstich, Wimmelszenen mit vielen kleinen Figuren, Städte in Vogelschau | handkoloriert in gedeckten Wasserfarben: Ziegelrot, Ocker, Grün, Blaugrau |
+| **1671** | Matthäus Merian, „Topographia Germaniae“ (1640er–50er); Jacques Callot, „Die großen Schrecken des Krieges“ (1633) | barocke Radierung, feine geätzte Linien, weite Landschaften, dramatischer Himmel, Grauen des Krieges | Sepia und Schwarz auf cremefarbenem Papier, keine Farbe |
+| **1771** (Idee) | Daniel Chodowiecki (Berlin); Francisco de Goya, „Los Caprichos“ (1799) | Radierung mit Aquatinta: weiche Grauflächen, Nacht und Schatten als Flächen, unheimliche Figuren | Grau- und Brauntöne, keine Farbe |
+| *1871* (falls es so weit kommt) | Gustave Doré, Adolph Menzel | Holzstich (Xylografie) des 19. Jahrhunderts, feinste Linien, Licht und Nebel sehr plastisch | schwarz-weiß |
+
+**Stilteil der Prompts (Englisch, ans Ende jedes Prompts):**
+
+- **1371:** `in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371`
+- **1471:** `in the style of the woodcuts of the Nuremberg Chronicle (1493) and the prints of Martin Schongauer, late 15th-century German woodcut with bold black outlines and simple parallel hatching, sparsely hand-coloured with thin washes of red, ochre and green, aged rag paper, grim, macabre, Danse Macabre mood, northern Germany around 1471`
+- **1571:** `in the style of 16th-century Netherlandish and German copper engravings after Pieter Bruegel the Elder and the city views of Braun and Hogenberg's Civitates Orbis Terrarum, fine engraved lines, many small figures, hand-coloured with muted watercolour in brick red, ochre, green and blue-grey, aged paper, grim, macabre, northern Germany around 1571`
+- **1671:** `in the style of 17th-century Baroque etchings by Matthäus Merian and Jacques Callot's Miseries of War, fine etched lines, wide landscape, dramatic sky, sepia and black ink on cream paper, no colour, grim, macabre, the horrors of war, northern Germany around 1671`
+- **1771:** `in the style of late 18th-century etching and aquatint after Daniel Chodowiecki and Francisco de Goya's Los Caprichos, soft tonal grey aquatint areas, deep shadows, uncanny figures, brown-grey ink on cream paper, no colour, grim, macabre, northern Germany around 1771`
+
+**Negativ-Prompt je Epoche:** 1371, 1671, 1771 wie oben (ohne Farbe). Für 1471 und 1571 `color, colorful` weglassen, dafür `saturated colors, bright colors` nehmen:
+
+```
+saturated colors, bright colors, photo, 3d render, glossy, modern, anime, cartoon, text, letters, numbers, watermark, signature, monogram, logo, blurry
+```
+
+**Oberfläche:** Papier und Rahmen des UI folgen der Epoche (1471/1571 wärmeres Papier mit Farbspuren, 1671 cremefarben mit Sepia, 1771 kühleres Grau). Eigene Papier- und Rahmenbilder je Epoche kommen in die Liste, wenn die Epoche gebaut wird.
+
 ## Offen
 
 393 Bilder. Reihenfolge = Priorität (Abschnitt 1–4 machen das UI schon spürbar schöner). Abschnitt 0 sind die neuesten.
