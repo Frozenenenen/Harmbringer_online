@@ -2249,13 +2249,13 @@ Stufen:
 - Bedienung: angreifbare Kanten leuchten rot; Klick greift an (auch hinlaufen und angreifen); Tooltip zeigt LP und Schaden.
 - Flieger fliegen über Stadtmauer, Tor und Palisade (nicht über Häuser), Geister gehen hindurch.
 - **Neue Gebäude:** Scheune, Schmiede, Krug, Kornspeicher, Kreuzgang; geschlossene Blöcke ohne Tür (Bergfried, Steinturm) als Hindernisse, die Umwege erzwingen. Mehr Gebäude je Ort.
-- **Kommandeure** (Nekromant, Todesritter, Ahnen) im Kampf: LP ×4 + 4 je erobertem Ort, +20 Seelenschild (11.11.2026, vorher ×3, +2, +10).
-- **Leibwache:** Lich und Kommandeure nehmen 35 % weniger Schaden. Lich-Bonus erhöht: je belegtem Kommando-Punkt und je erobertem Ort +6 LP (vorher 4) und +2 Seelenschild (vorher 1).
+- **Kommandeure** (Nekromant, Todesritter, Ahnen) im Kampf: LP ×3 + 2 je erobertem Ort, +10 Seelenschild (18.11.2026 wieder abgeschwächt; vom 11.11. an waren es ×4, +4, +20).
+- **Leibwache:** Lich und Kommandeure nehmen 15 % weniger Schaden (bis 18.11.2026: 35 %). Lich-Bonus (18.11.2026 wieder abgeschwächt, vorher je 6 LP, 0,5 Schaden, 2 Seelenschild): je belegtem Kommando-Punkt +3 LP, +0,25 Schaden, +1 Seelenschild; je erobertem Ort +2 LP, +0,25 Schaden, +0,5 Seelenschild. Grund: Der Balance-Test zeigte einen fast unverwundbaren Lich.
 - **Flieger** sind von Bodenwirkungen (geweihter Boden, Gelände-Fähigkeiten) nicht betroffen.
 - **Geschlossene Gebäude** (Bergfried, Steinturm) sind massive Steinblöcke: unbegehbar für alle (auch Geister und Flieger), sie nehmen die Sicht; niemand wird darin aufgestellt.
 - **Ballisten** (Stadtballiste, Balliste): Initiative 2 → 5, damit sie gegen schnelle Geister zum Zug kommen.
 - **Rückzug** kostet 25 % jeder Truppe (Lich und Kommandeure entkommen), die Armee bleibt vor dem Ort.
-- **Lich (oder Kommandeur) fällt im Kampf:** Der Kampf läuft automatisch weiter, die Diener sind führerlos (KI steuert). Siegen sie, verlieren sie ein weiteres Viertel und warten als **Verwaiste** am Ort (bei Hinterhalten am nächsten Ort); Minimap: grauer Schild mit „?“, Ortsinfo: „Verwaiste aufnehmen“, wenn der Lich dort steht. Der Lich erwacht wie bisher nach seiner Todesfrist im Hügelgrab. Verlieren sie, ist alles verloren.
+- **Lich oder Kommandeur fällt im Kampf** (neu 18.11.2026, ersetzt die Verwaisten): Der Spieler behält die übrigen Einheiten, die Aura des Gefallenen erlischt. Überlebt auch nur ein Untoter – nach Sieg, Rückzug oder Abzug –, steht der Lich bzw. jeder gefallene Kommandeur und Ahne nach dem Kampf mit halben Lebenspunkten wieder auf. Todesritter-Stapel stehen nicht wieder auf. Fallen alle, erwacht der Lich nach seiner Todesfrist im Hügelgrab. Ein Rückzug gelingt ohne Lich zu Beginn des nächsten eigenen Zugs.
 
 ### Abziehen, unerreichbare Gegner, Wasser (umgesetzt 04.11.2026)
 
@@ -2337,7 +2337,7 @@ Ziel: Die Armee soll ausdrücken, **wie** man spielen will. Fünf Richtungen, je
 
 **Neue Einheiten:** Nachzehrer (Wissen 2, Leichengrube 1), Knochentrommler (Wissen 2, Knochenwerkstatt 1), Knochenhexer (Wissen 3, Knochenwerkstatt 1; Grabesnebel, Markbolzen), Gruftwächter (Wissen 3, Leichengrube 2), Knochenreiter (Wissen 4, Knochenwerkstatt 2). **Neue Kommandeure** (Totenhalle; erhöhen das Kommandolimit, können Expeditionen führen, stehen dem Koop-Gast zur Wahl): Nachtvogt (Wissen 3), Seuchenvogt (Wissen 4), Gruftfürst (Wissen 6, Totenhalle 2).
 
-**Auren** (`aura` der Einheit, `AURAS`): gelten den ganzen Kampf, wenn der Kommandeur dabei ist; jede Aura zählt einmal.
+**Auren** (`aura` der Einheit, `AURAS`): gelten, solange der Kommandeur im Kampf steht; jede Aura zählt einmal. Fällt er, erlischt sie (außer ein anderer lebender Anführer trägt dieselbe) – was sie zu Kampfbeginn an Lebenspunkten oder Bewegung gegeben hat, bleibt bis Kampfende. Seit 18.11.2026 hat jeder Anführer eine Aura, auch der Lich (Herrschaft) und der Todesritter (Eiserne Zucht).
 
 | Aura | Wirkung |
 |-|-|
@@ -2346,6 +2346,8 @@ Ziel: Die Armee soll ausdrücken, **wie** man spielen will. Fünf Richtungen, je
 | Bollwerk | alle Untoten −15 % erlittener Schaden |
 | Ritt | alle Untoten +1 Bewegung, +5 % Schaden je gelaufenem Feld (höchstens +25 %) |
 | Hexerei | Fähigkeiten +25 % Wirkung, +1 Energie je Zug |
+| Herrschaft (Lich) | alle Untoten +10 % Schaden |
+| Eiserne Zucht (Todesritter) | Krieger und Maschinen +15 % Schaden |
 
 **Werkzeuge zum Schleichen:** Der Lich hat „Totenflüstern“ (2 Energie): Wachen im Umkreis 3 des Zielfelds gehen nachsehen, schlagen aber dafür keinen Alarm. Das Totenlicht kann dasselbe („Irrlichtern“, Umkreis 4, ohne Energie). Der Knochenhexer legt „Grabesnebel“: Wer darin steht, wird nur aus 1 Feld gesehen; Fernangriffe in den Nebel −50 %.
 

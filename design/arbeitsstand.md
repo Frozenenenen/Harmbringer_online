@@ -101,6 +101,16 @@ Kevin (18.11.): Bestätigung ja (mit Namen), längere Raumcodes nein, Plausibili
 - **Prüfsummen:** PeerJS (`integrity`, sha256) und Three.js (Importmap `"integrity"`, sha384 für three.module.js, CSS2DRenderer, GLTFLoader, BufferGeometryUtils). Werte am 18.11. gegen die Dateiliste von jsDelivr geprüft (sha256 identisch mit Git-Tag r160). Neue Three-Version = neue Prüfsummen, sonst startet das Spiel nicht. Die Test-Werkzeuge in `tools/test/` entfernen den Block (sie liefern Attrappen statt three.js).
 - Google Fonts (CSS) lässt sich nicht per Prüfsumme sichern (Inhalt je Browser verschieden); CSS führt keinen Code aus.
 
+## Anführer schwächer, stehen wieder auf (18.11.2026)
+
+Kevin: „Mach den Lich und Kommandeure wieder schwächer. Wenn aber mindestens eine Einheit überlebt, steht er am Ende des Kampfes wieder auf. Alle Kommandeure und der Lich sollten dann aber gewisse Buffs bringen.“
+
+- Schwächer: `lichArmyBonus` (3/0,25/1 je Kommando-Punkt, 2/0,25/0,5 je Eroberung), `COMMANDER_BONUS` ×3 / +2 / +10, `LEADER_GUARD` 0,15.
+- Wieder aufstehen: `Battle.leaderDown(u)` merkt gefallene Anführer (`b.fallenLeaders`, Regel `risesAgain`: Lich, Rang COMMANDER oder UNIQUE), `Battle.risen()` / `risenText()` beim Sieg, Rückzug, Abzug; halbe LP. Kein Automatik-Kampf mehr nach dem Tod des Lichs (`b.auto` bleibt aus), Rückzug am nächsten eigenen Zug. Die Verwaisten (`Stranded`) entstehen dadurch nicht mehr, der Code bleibt für alte Spielstände.
+- Buffs: neue Auren `DOMINION` (Lich, +10 % Schaden aller Untoten) und `DRILL` (Todesritter, Krieger und Maschinen +15 %), wirken über `auraDamagePct`/`auraEliteDamagePct` in `Abilities.damageMul`; fällt der Träger, zieht `leaderDown` die Aura aus `b.fx` ab.
+- Test in der Sitzung: `rise.js` (Sieg, Rückzug, Niederlage, Aura erlischt).
+- **Nicht nachgemessen:** Balance-Matrix und Kampagnen mit den neuen Werten.
+
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
 - **Kevins Rückmeldung abwarten:** Spielgefühl beim Schleichen (Kegelgröße am Tag, Tempo der Streifen, ob „Posten rufen sofort“ zu hart ist) – alle Stellschrauben stehen in `STEALTH`.

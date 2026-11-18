@@ -474,7 +474,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 171, "date": "2026-11-18", "changes": [{"date": "18.11. 18:37", "text": "Arbeitsstand: Story-Bilder eingebaut"}, {"date": "18.11. 18:37", "text": "Story-Bilder eingebaut (19 Bilder)"}, {"date": "18.11. 18:31", "text": "Bilderordner angelegt (assets/story, assets/ui/...)"}, {"date": "18.11. 12:55", "text": "Three.js mit Prüfsummen in der Importmap"}, {"date": "18.11. 12:12", "text": "Version 161: Koop-Beitritt mit Zustimmung"}, {"date": "18.11. 12:12", "text": "Koop: Beitritt nur mit Zustimmung, Spielernamen, PeerJS-Prüfsumme"}, {"date": "18.11. 11:54", "text": "Arbeitsstand: Version 164"}, {"date": "18.11. 11:53", "text": "Version: Story-Bilder im 21:9-Kinoformat, Prompts ohne Seitenverhaeltnis"}, {"date": "18.11. 11:53", "text": "Story pictures in 21:9 cinema format; no aspect ratios in prompts"}, {"date": "18.11. 11:33", "text": "Story-Bilder: Vollbild-Szenen mit Erzähltext"}, {"date": "18.11. 02:20", "text": "Balance-Bericht fertig (design/balance_bericht.md)"}, {"date": "18.11. 02:14", "text": "Balance-Bericht (Entwurf); sneak.js: Schatten-Armee und Schwierigkeitsstufe"}]};
+const BUILD = {"version": 166, "date": "2026-11-18", "changes": [{"date": "18.11. 18:53", "text": "Lich und Kommandeure schwächer; stehen nach dem Kampf wieder auf, wenn ein Untoter überlebt; jeder Anführer bringt eine Aura"}, {"date": "18.11. 18:37", "text": "Arbeitsstand: Story-Bilder eingebaut"}, {"date": "18.11. 18:37", "text": "Story-Bilder eingebaut (19 Bilder)"}, {"date": "18.11. 18:31", "text": "Bilderordner angelegt (assets/story, assets/ui/...)"}, {"date": "18.11. 12:55", "text": "Three.js mit Prüfsummen in der Importmap"}, {"date": "18.11. 12:12", "text": "Version 161: Koop-Beitritt mit Zustimmung"}, {"date": "18.11. 12:12", "text": "Koop: Beitritt nur mit Zustimmung, Spielernamen, PeerJS-Prüfsumme"}, {"date": "18.11. 11:54", "text": "Arbeitsstand: Version 164"}, {"date": "18.11. 11:53", "text": "Version: Story-Bilder im 21:9-Kinoformat, Prompts ohne Seitenverhaeltnis"}, {"date": "18.11. 11:53", "text": "Story pictures in 21:9 cinema format; no aspect ratios in prompts"}, {"date": "18.11. 11:33", "text": "Story-Bilder: Vollbild-Szenen mit Erzähltext"}, {"date": "18.11. 02:20", "text": "Balance-Bericht fertig (design/balance_bericht.md)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -3319,10 +3319,13 @@ async function startTravel(target, resume = null) {
 // c.expeditions = [{ id, leader, army: [{type, hp}], nodeId, prevNodeId, order }].
 // =============================================================================
 const COMMANDER_TYPES = ['nekromant', 'todesritter', ...Object.keys(DATA.units).filter(k => DATA.units[k].ancestor || DATA.units[k].commander)];
-// Commanders in battle: HP x4 plus 4 per conquered place, +20 soul shield.
-const COMMANDER_BONUS = { hpFactor: 4, hpPerConquest: 4, shield: 20 };
+// Commanders in battle: HP x3 plus 2 per conquered place, +10 soul shield (18.11.2026: weaker
+// again – a fallen leader now rises after the battle if any of his undead survive).
+const COMMANDER_BONUS = { hpFactor: 3, hpPerConquest: 2, shield: 10 };
 // Leader guard: the Lich and commanders take this much less damage (bodyguards, wards).
-const LEADER_GUARD = 0.35;
+const LEADER_GUARD = 0.15;
+// Leaders who rise again after the battle: the Lich, commanders and ancestors (not death knight stacks).
+const risesAgain = u => u.type === 'lich' || u.def.rank === 'COMMANDER' || u.def.rank === 'UNIQUE';
 const isLeaderUnit = u => u.side === 'player' && (u.type === 'lich' || COMMANDER_TYPES.includes(u.type));
 const commanderHp = (type, won, baseHp = DATA.units[type].hp) => Math.round(baseHp * COMMANDER_BONUS.hpFactor + won * COMMANDER_BONUS.hpPerConquest);
 const EXPEDITION = { commandLimit: 30, requiresBuilding: 'deadHall' };
@@ -5275,7 +5278,9 @@ const AURAS = {
   RIDE: { name: 'Ritt', text: 'Alle Untoten +1 Bewegung und +5 % Schaden je gelaufenem Feld (höchstens +25 %).', fx: { move: 1, chargePct: 0.05 } },
   BULWARK: { name: 'Bollwerk', text: 'Alle Untoten erleiden 15 % weniger Schaden.', fx: { damageTakenPct: -0.15 } },
   HORDE: { name: 'Horde', text: 'Billige Untote +20 % Schaden und +20 % Lebenspunkte.', fx: { fodderDamagePct: 0.2, fodderHpPct: 0.2 } },
-  SHADOW: { name: 'Schatten', text: 'Das Heer ist leiser (Lautstärke −1), riecht halb so weit; Überraschungsschläge +25 %.', fx: { noise: -1, scentPct: -0.5, surprisePct: 0.25 } }
+  SHADOW: { name: 'Schatten', text: 'Das Heer ist leiser (Lautstärke −1), riecht halb so weit; Überraschungsschläge +25 %.', fx: { noise: -1, scentPct: -0.5, surprisePct: 0.25 } },
+  DOMINION: { name: 'Herrschaft', text: 'Alle Untoten +10 % Schaden.', fx: { auraDamagePct: 0.1 } },
+  DRILL: { name: 'Eiserne Zucht', text: 'Krieger und Maschinen +15 % Schaden.', fx: { auraEliteDamagePct: 0.15 } }
 };
 const hasTrait = (u, t) => !!(u && u.def && u.def.traits && u.def.traits.includes(t));
 const isFodder = d => d.rank === 'CANNON_FODDER';
@@ -5888,7 +5893,7 @@ const Battle = {
     b.selected = u;
     u.hasMoved = false; u.hasAttacked = false; u.movedThisTurn = false; u.steps = 0; u.hitrun = false;
     b.abilityMode = null;
-    if (u.side === 'player' && u.type === b.leader && b.retreatPending) { this.finish('retreat'); return; }
+    if (u.side === 'player' && (u.type === b.leader || b.leaderFallen) && b.retreatPending) { this.finish('retreat'); return; }
     if (Abilities.turnStart(u)) { if (b.over) return; UI.updateBattle(); await wait(0.5); if (game.battle === b && !b.over) this.endTurn(); return; }
     UI.updateBattle();
     if (u.side === 'player' && !b.auto) {
@@ -6209,13 +6214,14 @@ const Battle = {
     BattleView.removeUnit(u);
     this.log(u.startCount > 1 ? `Die letzten ${u.def.name} fallen.` : `${u.def.name} fällt.`, u.side === 'player' ? 'hit' : 'good');
     if (u.side === 'player' && !this.alive('player').length) { this.finish('defeat'); return; }
+    if (u.side === 'player' && isLeaderUnit(u)) this.leaderDown(u);
     if (u.side === 'player' && u.type === b.leader) {
-      // The leader is gone: his servants fight on by themselves (leaderless); survivors wait on the spot.
-      b.leaderFallen = true; b.auto = true; b.retreatPending = false;
-      for (const x of this.alive('player')) { x.status = x.status || {}; x.status.LEADERLESS = { turns: 999, value: 2 }; BattleView.updateHp(x); }
+      // The leader is gone; the player keeps command of the rest. If any of them survive, he rises
+      // again when the battle is over (Battle.risen).
+      b.leaderFallen = true;
       const who = u.type === 'lich' ? 'Der Lich' : u.def.name;
-      this.log(`${who} ist gefallen! Die Diener kämpfen führerlos allein weiter. Überleben sie, warten sie hier auf ${u.type === 'lich' ? 'den Lich' : 'Abholung'}.`, 'hit');
-      UI.toast(`${who} ist gefallen – die Untoten kämpfen allein weiter.`, 5, false);
+      this.log(`${who} ist gefallen! Überlebt auch nur ein Untoter den Kampf, steht ${u.type === 'lich' ? 'er' : 'er'} danach wieder auf.`, 'hit');
+      UI.toast(`${who} ist gefallen – überlebt ein Untoter, steht er nach dem Kampf wieder auf.`, 5, false);
       this.clearOptions(); UI.updateBattle();
       // Fell while it was his own turn and nothing else is running: hand on to the next unit.
       if (b.current === u && !b.busy) setTimeout(() => { if (game.battle === b && !b.over && b.current === u) this.endTurn(); }, 300);
@@ -6266,6 +6272,30 @@ const Battle = {
   },
   // Living player stacks back to campaign units; `loss` share of each stack (not Lich or commanders)
   // stays behind. Remembers how many of each stack got away (b.kept, for the losses list).
+  // A leader of the undead fell: remember him (he rises after the battle if any undead survive) and
+  // put out his aura unless another living leader carries the same one.
+  leaderDown(u) {
+    const b = game.battle;
+    if (risesAgain(u)) (b.fallenLeaders = b.fallenLeaders || []).push({ type: u.type, n: Math.max(1, u.startCount || 1) });
+    const key = u.def.aura;
+    if (!key || !AURAS[key] || !(b.auras || []).includes(key)) return;
+    if (this.alive('player').some(x => x !== u && x.def.aura === key)) return;
+    for (const [k, v] of Object.entries(AURAS[key].fx)) b.fx[k] = (b.fx[k] || 0) - v;
+    b.auras = b.auras.filter(a => a !== key);
+    this.log(`Die Aura ${AURAS[key].name} erlischt mit ${u.type === 'lich' ? 'dem Lich' : u.def.name}.`, 'hit');
+  },
+  // Fallen leaders stand up again with half of their life when the battle is over and at least one
+  // of their undead is left (victory or retreat). Returns campaign entries for the army.
+  risen(left) {
+    const b = game.battle, list = b.fallenLeaders || [];
+    if (!list.length || !left.length) return [];
+    return list.flatMap(f => Array.from({ length: f.n }, () => ({ type: f.type, hp: Math.max(1, Math.round(DATA.units[f.type].hp * 0.5)) })));
+  },
+  risenText(list) {
+    if (!list.length) return '';
+    const names = [...new Set(list.map(x => x.type === 'lich' ? 'der Lich' : DATA.units[x.type].name))];
+    return `<p class="good"><b>Wieder auferstanden:</b> ${esc(names.join(', '))} ${list.length > 1 ? 'erheben' : 'erhebt'} sich nach dem Kampf mit halben Lebenspunkten.</p>`;
+  },
   survivors(loss) {
     const b = game.battle; b.kept = new Map();
     return this.alive('player').flatMap(u => {
@@ -6314,8 +6344,8 @@ const Battle = {
       return;
     }
     b.retreatPending = true;
-    this.log('Rückzug befohlen. Er gelingt zu Beginn des nächsten Zugs des Lichs.', 'hit');
-    UI.toast('Rückzug befohlen – zu Beginn des nächsten Lich-Zugs.');
+    this.log(b.leaderFallen ? 'Rückzug befohlen. Er gelingt zu Beginn des nächsten eigenen Zugs.' : 'Rückzug befohlen. Er gelingt zu Beginn des nächsten Zugs des Lichs.', 'hit');
+    UI.toast(b.leaderFallen ? 'Rückzug befohlen – zu Beginn des nächsten eigenen Zugs.' : 'Rückzug befohlen – zu Beginn des nächsten Lich-Zugs.');
   },
   // Battle ends: victory, defeat or retreat. Updates the campaign and shows a summary.
   finish(result) {
@@ -6448,30 +6478,20 @@ const Battle = {
         <p class="small">Die Überlebenden sammeln neue Kraft: +${Math.round(healShare * 100)} % ihrer Lebenspunkte (${healed} LP insgesamt).</p>${found}${ancestorText}${pantheonText}`;
       // Show the end screen only once (the campaign may go on afterwards).
       if (node.finale && !c.won) { c.won = true; endNow = true; }
-      if (b.leaderFallen) {
-        // Survivors (a further quarter lost without their master) wait at the battlefield to be picked up.
-        const army = this.survivors(retreatLoss()), at = node.encounter
-          ? DATA.nodes.slice().sort((x, y) => hexDistance(x.q, x.r, node.q, node.r) - hexDistance(y.q, y.r, node.q, node.r))[0] : node;
-        if (army.length) Stranded.add(at, army);
-        html += `<h3>Verwaist</h3><p>${b.expedition ? esc(DATA.units[b.leader].name) : 'Der Lich'} fiel im Kampf. ${army.length ? `${army.length} Untote haben überlebt (ein Viertel mehr zerfiel ohne ihren Herrn) und warten bei <b>${esc(at.name)}</b>, bis der Lich sie abholt.` : 'Keiner seiner Diener blieb übrig.'}</p>`;
-        if (b.expedition) c.army = [];
-        else {
-          const deathDays = Base.lichDeathDays(); Story.on('lichDeath');
-          c.travel = null; c.army = [{ type: 'lich', hp: DATA.units.lich.hp }]; c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
-          Campaign.advanceDays(deathDays);
-          html += `<p class="small">${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
-        }
-        UI.news(`Verwaiste Untote (${army.length}) warten bei ${at.name}.`, 'world');
-      }
+      // Fallen leaders stand up again (at least one undead is left after a victory).
+      const risen = this.risen(c.army);
+      if (risen.length) { c.army = [...risen, ...c.army]; html += this.risenText(risen); }
     } else if (result === 'withdraw') {
       // Everybody leaves the field as they are (no healing, no loot); the army stays at the place.
       c.army = this.survivors(0);
+      { const r = this.risen(c.army); c.army = [...r, ...c.army]; }
       html = `<h2>Abzug</h2><p>Die Armee zieht geordnet von ${esc(node.name)} ab. Der Ort bleibt in Feindeshand.</p>`;
     } else if (result === 'defeat' && b.expedition) {
       c.army = [];
       html = `<h2>${esc(Expeditions.name(b.expedition))} vernichtet</h2><p>Der Kommandeur ist gefallen, sein Zug zerfällt. Der Lich verliert diese Diener.</p>`;
     } else if (b.expedition) {
       c.army = this.survivors(retreatLoss());
+      { const r = this.risen(c.army); c.army = [...r, ...c.army]; }
       html = `<h2>Rückzug</h2><p>${esc(Expeditions.name(b.expedition))} zieht sich zurück und bleibt vor ${esc(node.name)} stehen. Ein Viertel der Truppen bleibt auf dem Feld (die Nachhut), der Kommandeur entkommt. Keine Beute.</p>`;
     } else if (result === 'defeat') {
       c.travel = null;
@@ -6485,17 +6505,14 @@ const Battle = {
       c.travel = null;
       c.army = this.survivors(retreatLoss());
       html = `<h2>Rückzug</h2><p>Die Armee löst sich vom Feind und bleibt ${node.encounter ? 'am Weg' : 'vor ' + esc(node.name)} stehen. Ein Viertel der Truppen fällt als Nachhut, Lich und Kommandeure entkommen. Keine Beute.</p>`;
-      if (b.leaderFallen) {
-        // The Lich fell before the retreat: the survivors wait as orphans, he wakes in the barrow
-        // (without this he was lost from the army for good).
-        const army = c.army.filter(u => u.type !== 'lich'), at = node.encounter
-          ? DATA.nodes.slice().sort((x, y) => hexDistance(x.q, x.r, node.q, node.r) - hexDistance(y.q, y.r, node.q, node.r))[0] : node;
-        if (army.length) Stranded.add(at, army);
+      // The Lich fell before the retreat: if any undead got away, he rises among them.
+      const risen = this.risen(c.army);
+      if (risen.length) { c.army = [...risen, ...c.army]; html += this.risenText(risen); }
+      else if (!c.army.some(u => u.type === 'lich')) {
         const deathDays = Base.lichDeathDays(); Story.on('lichDeath');
         c.army = [{ type: 'lich', hp: DATA.units.lich.hp }]; c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
         Campaign.advanceDays(deathDays);
-        html = `<h2>Rückzug ohne den Lich</h2><p>Der Lich fiel im Kampf, seine Diener lösten sich vom Feind.${army.length ? ` ${army.length} Untote warten bei <b>${esc(at.name)}</b>, bis der Lich sie holt.` : ''} ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
-        UI.news(`Verwaiste Untote (${army.length}) warten bei ${at.name}.`, 'world');
+        html += `<p class="small">Niemand ist entkommen. ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
       }
     }
     if (c.march && result !== 'victory' && result !== 'withdraw') c.march.legs = c.march.legs.filter(l => l.id !== (b.expedition ? b.expedition.id : 'lich'));
@@ -6600,6 +6617,11 @@ const Abilities = {
     }
     const efx = (b && b.efx) || {};
     if (att && b && att.side === 'enemy' && efx.nightPct && TIMES[b.time].key === 'NIGHT') m *= 1 + efx.nightPct;
+    // Leader auras that work only while their leader stands (removed again when he falls).
+    if (att && b && att.side === 'player') {
+      if (fx.auraDamagePct) m *= 1 + fx.auraDamagePct;
+      if (fx.auraEliteDamagePct && isElite(att.def)) m *= 1 + fx.auraEliteDamagePct;
+    }
     if (tgt && b) {
       if (tgt.side === 'player' && fx.damageTakenPct) m *= Math.max(0.25, 1 + fx.damageTakenPct);
       if (tgt.side === 'enemy' && efx.damageTakenPct) m *= Math.max(0.25, 1 + efx.damageTakenPct);

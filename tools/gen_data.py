@@ -188,7 +188,7 @@ BONE_SCALE = 60
 COST_SCALE = {"corpses": 3, "bones": 2.5, "souls": 1}
 GAME_UNITS = [
  # Spiel-ID, Design-Zeile, Extras
- ("lich", "Lich", dict(shape="octahedron", color="#5a2d82", desc="Untoter Herrscher. Fällt er, ist der Kampf verloren und er kehrt ins Hügelgrab zurück.")),
+ ("lich", "Lich", dict(aura="DOMINION", shape="octahedron", color="#5a2d82", desc="Untoter Herrscher. Fällt er im Kampf, steht er danach wieder auf, wenn auch nur einer seiner Untoten überlebt – sonst kehrt er ins Hügelgrab zurück.")),
  ("ghul", "Ghoul", dict(shape="capsule", color="#6b7d4a", desc="Billig, zäh, zerfleischt seine Opfer (schlechte Leichen).")),
  ("skelett", "Skeleton", dict(traits=["SWARM"], shape="cone", color="#d8d0b8", desc="Sauberer Stich, gute Leichen.")),
  ("bogner", "SkeletonArcher", dict(shape="cylinder", color="#ece4cc", cost=dict(bones=150))),
@@ -211,7 +211,7 @@ GAME_UNITS = [
  # Advanced undead from the design data (unlocked by knowledge; where to recruit: RECRUIT_AT in index.html)
  ("knochenschuetze", "BoneArcher", dict(shape="cylinder", color="#e0d8c0", requiresKnowledge=4)),
  ("moorleiche", "BogCorpse", dict(shape="capsule", color="#4a4030", requiresKnowledge=3, requiresPantheon="heide")),
- ("todesritter", "DeathKnight", dict(traits=["GUARD"], shape="box", color="#3a3a44", requiresKnowledge=7)),
+ ("todesritter", "DeathKnight", dict(aura="DRILL", traits=["GUARD"], shape="box", color="#3a3a44", requiresKnowledge=7)),
  ("totenlicht", "DeathLight", dict(shape="sphere", color="#9be05a", requiresKnowledge=5, requiresPantheon="heide")),
  ("gefallene_schwester", "FallenSister", dict(shape="cone", color="#6a4a5a", requiresKnowledge=6)),
  ("grabdruidin", "GraveDruidess", dict(shape="cone", color="#4a5a3a", requiresKnowledge=8, requiresPantheon="heide")),
