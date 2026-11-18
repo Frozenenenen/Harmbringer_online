@@ -1,18 +1,18 @@
-// Plays whole battles with a simple bot. Usage: node sneak.js <sneak|rush> [hour] [N] [types e.g. VILLAGE,CHRISTIAN] [army]
+// Plays whole battles with a simple bot. Usage: node sneak.js <sneak|rush> [hour] [N] [types e.g. VILLAGE,CHRISTIAN] [army start|big|schatten] [easy|normal|hard]
 const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
 const REPO = path.join(__dirname, '..', '..'), SP = __dirname;
-const POLICY = process.argv[2] || 'sneak', HOUR = +(process.argv[3] || 0), N = +(process.argv[4] || 12), TYPES = (process.argv[5] || 'VILLAGE').split(','), ARMY = process.argv[6] || 'start';
+const POLICY = process.argv[2] || 'sneak', HOUR = +(process.argv[3] || 0), N = +(process.argv[4] || 12), TYPES = (process.argv[5] || 'VILLAGE').split(','), ARMY = process.argv[6] || 'start', LEVEL = process.argv[7] || 'normal';
 (async () => {
   const br = await chromium.launch(); const pg = await br.newPage(); const errs = [];
   pg.on('pageerror', e => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' | ')));
   await pg.route('https://cdn.jsdelivr.net/**', r => { const u = r.request().url(); r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(SP, u.includes('CSS2D') ? 'css2d.js' : u.includes('GLTFLoader') ? 'gltf.js' : 'three.js')) }); });
   await pg.route('**/index.html', r => { let h = fs.readFileSync(path.join(REPO, 'index.html'), 'utf8'); const i = h.lastIndexOf('</script>');
-    h = h.slice(0, i) + '\nwindow.__T = { Battle, Stealth, Alarm, Pathfinding, Combat, Abilities, game, newGame, DATA, Figures, NODE_BY_ID, Narrator, UI, hexDistance, stackCount };\n' + h.slice(i);
+    h = h.slice(0, i) + '\nwindow.__T = { Difficulty, Skills, Battle, Stealth, Alarm, Pathfinding, Combat, Abilities, game, newGame, DATA, Figures, NODE_BY_ID, Narrator, UI, hexDistance, stackCount };\n' + h.slice(i);
     h = h.replace('tw.t += dt * (tw.fast && game.hurry ? 4 : 1);', 'tw.t += 99;');
     r.fulfill({ contentType: 'text/html', body: h }); });
   await pg.goto('file://' + REPO + '/index.html'); await pg.waitForTimeout(6000);
-  const res = await pg.evaluate(async ([POLICY, HOUR, N, TYPES, ARMY]) => {
-    const { Battle, Stealth, Alarm, Pathfinding, Combat, Abilities, game, newGame, DATA, Figures, Narrator, UI, hexDistance, stackCount } = window.__T; newGame();
+  const res = await pg.evaluate(async ([POLICY, HOUR, N, TYPES, ARMY, LEVEL]) => {
+    const { Difficulty, Skills, Battle, Stealth, Alarm, Pathfinding, Combat, Abilities, game, newGame, DATA, Figures, Narrator, UI, hexDistance, stackCount } = window.__T; newGame();
     for (const t of Object.keys(DATA.units)) Figures.templates[t] = null;
     Narrator.hint = () => {}; Narrator.speak = () => {}; Narrator.say = () => {}; UI.toast = () => {};
     const H = (a, b) => hexDistance(a.q, a.r, b.q, b.r);
@@ -21,6 +21,13 @@ const POLICY = process.argv[2] || 'sneak', HOUR = +(process.argv[3] || 0), N = +
     for (let i = 0; i < nodes.length && out.length < N; i += step) {
       const node = nodes[i]; newGame(); const c = game.campaign; c.hour = HOUR; c.threat[node.faction] = 0;
       if (ARMY === 'big') c.army = [{ type: 'lich', hp: DATA.units.lich.hp }, ...Array(24).fill(0).map(() => ({ type: 'ghul', hp: DATA.units.ghul.hp })), ...Array(24).fill(0).map(() => ({ type: 'skelett', hp: DATA.units.skelett.hp })), ...Array(8).fill(0).map(() => ({ type: 'leichenhund', hp: DATA.units.leichenhund.hp }))];
+      if (ARMY === 'schatten') {
+        // Shadow style: night stalkers, ghosts, a night reeve, the shadow path learned.
+        const add = (t, n) => Array(n).fill(0).map(() => ({ type: t, hp: DATA.units[t].hp }));
+        c.army = [{ type: 'lich', hp: DATA.units.lich.hp }, ...add('nachzehrer', 10), ...add('geist', 8), ...add('leichenhund', 4), ...add('nachtvogt', 1)];
+        c.skills = DATA.skills.schatten.steps.map(st => st.id);
+      }
+      Difficulty.set(LEVEL, true);
       c.nodeId = node.id;
       try { await Battle.start(node); } catch (e) { out.push({ node: node.id, err: e.message }); continue; }
       const b = game.battle; if (!b) { out.push({ node: node.id, err: 'no battle' }); continue; }
@@ -67,7 +74,7 @@ const POLICY = process.argv[2] || 'sneak', HOUR = +(process.argv[3] || 0), N = +
       try { Battle.exit(); } catch (e) {}
       UI.closeModal && UI.closeModal();
     }
-    return out; }, [POLICY, HOUR, N, TYPES, ARMY]);
+    return out; }, [POLICY, HOUR, N, TYPES, ARMY, LEVEL]);
   for (const r of res) console.log(JSON.stringify(r));
   const ok = res.filter(r => r.result);
   console.log(POLICY, 'hour', HOUR, 'n', ok.length, 'victory', ok.filter(r => r.result === 'victory').length, 'silent', ok.filter(r => r.silent).length, 'bell', ok.filter(r => r.bell).length,
