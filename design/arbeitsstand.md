@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 147 (Balance-Korrekturen: KI, Doktrinen, Stärke-Schätzung mit Doktrin) · **Nachmessung läuft noch**
+Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 155 (Balance-Test fertig, Bericht `design/balance_bericht.md`) · Balance-Test fertig
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -80,51 +80,14 @@ Beschrieben im Design-Dokument, Abschnitt „Doktrinen: Identität der Fraktione
 
 Nicht gemacht / offen: Zahlen sind gesetzt, nicht ausbalanciert (Welfen-Städte mit 1,5-fach Rittern und Sturmangriff dürften spürbar härter sein; Hanse-Städte sind nachts kaum noch zu beschleichen – so gewollt, aber ungeprüft im Spiel). Beschworene Gegner bekommen die Doktrin nicht. Begegnungen unterwegs haben die Doktrin ihrer Fraktion, Wachen-Regeln greifen dort nicht (alle alarmiert). Die Prompts „Bauplatz frei“ stehen jetzt unten links (überdeckten rechts die Ortsinfo).
 
-## IN ARBEIT: Balance testen und Schwierigkeitsstufen (Auftrag vom 16.11.)
+## Balance-Test und Schwierigkeitsstufen (fertig, Version 155)
 
-Kevin: „bitte teste du das Balancing so weit wie möglich“ und „richte 3 Schwierigkeitsstufen ein (Leicht, Mittel, Schwer). Nicht nur HP und Schaden – die KI soll anders reagieren, eventuell greifen mehr Mechaniken. Mittel = Normalstand, Leicht reduziert, Schwer erweitert.“
+Kevins Auftrag vom 16./17.11.: Balance testen (auch je Spielstil), drei Schwierigkeitsstufen. Ergebnisse, Korrekturen und offene Punkte stehen in **`design/balance_bericht.md`**. Kurz:
 
-**Fertig und veröffentlicht (Version 143):**
-
-- Schwierigkeit: Daten `difficulty` in `data/world_data.js` (alle Felder dort im Kommentar), Code `DIFF()`, `Difficulty` (`set`, `choose`, `relief`). Wahl bei „Erwachen“ und „Neues Spiel“, Änderung im Menü. Greift in `Doctrine.mods/garrison/apply`, `Alarm.raise/assign/shout/roundEnd`, `EnemyAI.takeTurn` (Zielwahl), `Campaign.registerAttack`, `retreatLoss()`, Beute, Trupps. Geprüft mit `difft.js` (nur in der Sitzung): alle drei Stufen greifen. **Noch nicht mit Kampagnen nachgemessen.**
-- Werkzeuge im Repo: `tools/test/matrix.js` (Reihenkämpfe je Fraktion × Armee-Typ, mit/ohne Doktrin, Automatik spielt beide Seiten) und `tools/test/campaign.js` (Kampagnen-Bot je Spielstil und Stufe). Beide in `tools/test/README.md` beschrieben.
-
-**Messwerte vor den Korrekturen (Mittel, Automatik spielt beide Seiten):**
-
-- Reihenkämpfe, 420 Kämpfe, Armee 0,7-fach so stark wie die Besatzung nach alter Schätzung. Siegquote mit/ohne Doktrin: Hanse 62/57, Welfen 100/100, **Askanier 19/100**, Klerus 86/90, Hexen 29/38, Grafen 71/81, **Mecklenburg 48/71**, Wettiner 67/71, **Wodan 14/71**, **Spreewald 57/100**, Wattenmeer 14/29, **Heidegeister 29/52**. Armee-Typen: Start 40, Masse 43, Klasse 47, Bollwerk 57, Eile 57, Schatten 63, Hexerei 70.
-- Die alte Stärke-Schätzung (HP + Schaden × 3) unterschätzte Geisterwesen und schnelle Einheiten (Irrlicht, Schwarzer Hund, Hexen) – Trennschärfe 0,69, neue Formel 0,84.
-- Kampagnen-Bot (gemischt, 150 Tage): 27–33 Orte, 93–96 % Siege, nach Siegen 99 % der Armee übrig, der Lich fiel nie. Ursache: Der Lich wächst mit jeder Eroberung (HP 60 + 6 je Kommando-Punkt + 6 je Eroberung) und die Gegner-KI stürzte sich mit festem Bonus auf ihn – die Armee verlor fast nichts. Nicht gewonnen wurden nur Städte mit Mauern (die Automatik baut kein Belagerungsgerät).
-
-**Korrekturen (eingebaut, Nachmessung läuft):**
-
-1. Gegner-KI: Der Bonus fürs Anführer-Jagen zählt nur noch voll, wenn der Schlag mindestens ein Zehntel von dem wegnimmt, was der Anführer noch hat (`hurt` in `EnemyAI`), sonst anteilig. Gilt auch für die Doktrin „Ritterheer“.
-2. Doktrinen entschärft: Askanier Bauern ×1,3 (statt 1,8), Mecklenburg +1 Initiative nur noch für Ritter, Wodan Sturmangriff nur Sachsenkrieger und Wilde Jäger, Spreewald Lutki ×1,25 (statt 1,5), Heidegeister Hinterhalt 25 % (statt 35 %).
-3. Stärke-Schätzung neu: `Campaign.unitStrength` (Zähigkeit = (HP + Seelenschild) × Rüstung, Geisterwesen × 3; Schlagkraft = Schaden × 3 × Initiative / 5, Fernkampf × 1,2; Heiler eigene Formel), `Campaign.ownStrength()` zählt den Lich mit seinen echten Werten. Gefahrenfarbe: eigene Stärke ÷ Besatzung ≥ 1,3 grün, ≥ 1 gelb, darunter rot. Trupps (`Raids`) und beide Test-Werkzeuge benutzen dieselbe Schätzung.
-
-**Nachmessung Reihenkämpfe (Version 147, Modus `fair`: Armee so stark wie die Besatzung mit Doktrin, `Campaign.foeStrength`):** 210 Kämpfe, 98 % Siege, alle Fraktionen 81–100 % – keine Doktrin fällt mehr heraus. Spielstile in offener Feldschlacht (Rest der Armee nach Sieg): Hexerei 0,95, Klasse 0,90, Bollwerk 0,86, Start 0,74, Masse 0,69, Eile 0,59, Schatten 0,39. Schatten ist im offenen Kampf schwach – gewollt, seine Stärke ist Schleichen (die Automatik schleicht nicht).
-
-Kevin (17.11.): „Du musst im Balance-Test natürlich auch verschiedene Spielstile austesten.“ → Kampagnen je Spielstil laufen (`camp_all.sh`: alle 7 Stile, 100 Tage, Mittel, dann Leicht/Schwer).
-
-**Kampagnen je Spielstil, 1. Lauf (Mittel, 100 Tage):** gemischt 24 Orte, Masse 26, Klasse 29, Eile 32, Bollwerk 33, Hexerei 33, Schatten 36; Siege 93–100 %, Lich nur einmal gefallen (Klasse). **Wenig aussagekräftig:** Am Ende bestanden alle Armeen großteils aus Zombies/Ghulen. Ursache: Leichen sind der Engpass (jede Einheit 3 Leichen), der Bot füllte vor dem Freischalten der Stil-Einheiten das Kommando mit Lückenfüllern, danach war kein Platz mehr. Bot-Korrektur: Lückenfüller nur bis 60 % des Kommandos (`tools/test/campaign.js`, Tageszeilen haben jetzt `mix` und `recruited`). 
-
-**2. Lauf (Mittel, 100 Tage):** gemischt 24, Masse 26, Klasse 29, Bollwerk 29, Schatten 33, Hexerei 33, Eile 35 Orte; Siege 93–97 %. Jetzt mit Stil-Einheiten (Eile 36 Leichenhunde + 4 Knochenreiter, Schatten 29 Geister + 5 Nachzehrer, Hexerei 9 Knochenhexer + 6 Gefallene Schwestern, Bollwerk 5 Gruftwächter + 2 Todesritter). Befunde:
-- **Leichen sind überall der Engpass** (fast immer 0–40 auf Lager); teure Elite (Knochenreiter 750 Knochen, Todesritter) kommt nur tröpfchenweise.
-- **Fehler gefunden und behoben (Version 150):** Fiel der Lich und endete der Kampf mit Rückzug, verschwand er für immer aus der Armee (Klasse-Lauf kämpfte ab Tag 42 ohne Lich). Jetzt: Verwaiste warten, Lich erwacht im Hügelgrab. Bot sammelt Verwaiste ein.
-- Läuft: Klasse neu (Mittel), dann alle 7 Stile auf Leicht und Schwer (`levels.sh`).
-
-**Kampagnen je Stil und Stufe (100 Tage, eroberte Orte):**
-
-| Stufe | Ø | gemischt | Masse | Klasse | Schatten | Eile | Bollwerk | Hexerei |
-|-|-|-|-|-|-|-|-|-|
-| Leicht | 35 | 28 | 29 | 38 | 52 | 35 | 24 | 42 |
-| Mittel | 29 | 24 | 26 | 23 | 33 | 35 | 29 | 33 |
-| Schwer | 30 | 23 | 26 | 33 | 34 | 32 | 27 | 37 |
-
-Siege überall 93–100 % (der Bot greift nur an, wenn er laut `foeStrength` mindestens gleich stark ist). Leicht ist klar leichter, Schwer im Tempo kaum von Mittel zu unterscheiden: Der Bot weicht auf schwächere Ziele aus und schleicht nicht (Wachen-Verschärfungen greifen nicht). Einzelner Lauf je Stil, Streuung groß (Klasse 23–38). Läuft: Reihenkämpfe auf allen drei Stufen mit gleichen Armeen (`e10`, `nn10`, `h10`).
-
-**Stufen-Matrix (gleiche Armeen, Verhältnis 1,0, 420 Kämpfe je Stufe):** Siege Leicht 98 %, Mittel 92 %, Schwer 90 % – Schwer im offenen Kampf zu nah an Mittel. Geändert (Version 153): Schwer +20 % LP, +15 % Schaden (vorher +10/+5). Nachmessung `h10b` läuft.
-
-**Noch zu tun:** `h10b` auswerten, Bericht `design/balance_bericht.md`, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
+- Korrigiert: Gegner-KI jagt keinen unverwundbaren Lich mehr, fünf Doktrinen entschärft, neue Stärke-Schätzung für die Gefahrenfarbe (`Campaign.unitStrength/ownStrength/foeStrength`), Fehler „Lich verschwindet nach Rückzug“ behoben, Schwer +20 % LP / +15 % Schaden.
+- Stufen im offenen Kampf: Siege Leicht 98 %, Mittel 92 %, Schwer 80 %.
+- Offen: Hexerei womöglich zu stark; Schleichen bringt dem Test-Bot keinen Vorteil (Kevin selbst testen lassen); Leichen sind überall der Engpass; Kampagnen auf Schwer mit neuen Werten nicht nachgemessen.
+- Werkzeuge: `tools/test/matrix.js`, `campaign.js`, `sneak.js` (Aufrufe in den Dateiköpfen).
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 

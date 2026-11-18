@@ -69,7 +69,19 @@ Bewertung:
 
 ## 5. Schleichen mit dem Schatten-Stil
 
-SCHLEICH_ERGEBNIS
+Schatten-Armee (Lich, 10 Nachzehrer, 8 Geister, 4 Leichenhunde, Nachtvogt, ganzer Schatten-Pfad), nachts, je 10 Städte und Klöster, `sneak.js`:
+
+| Stufe | Bot | Siege | lautlose Siege | Verluste (Einheiten) |
+|-|-|-|-|-|
+| Leicht | schleicht | 8 | 4 | 6,3 |
+| Leicht | stürmt | 9 | 4 | 4,5 |
+| Mittel | schleicht | 7 | 0 | 9,0 |
+| Mittel | stürmt | 7 | 0 | 9,4 |
+| Schwer | schleicht | 4 | 0 | 10,2 |
+| Schwer | stürmt | 4 | 0 | 10,6 |
+
+- Die Stufen greifen deutlich (Siege 8 / 7 / 4, lautlos nur auf Leicht).
+- **Schleichen bringt dem einfachen Bot keinen Vorteil gegenüber Stürmen.** Ob das am Bot liegt (er nutzt weder Locken noch Nebel noch die Seitenwahl) oder ob Städte und Klöster auf Mittel zu wachsam sind, lässt sich so nicht entscheiden. **Wichtigste offene Frage für Kevins eigenen Test.** Stellschrauben: `STEALTH` in `index.html`, `difficulty.normal.watch` in `world_data.js`.
 
 ## 6. Wirtschaft
 
