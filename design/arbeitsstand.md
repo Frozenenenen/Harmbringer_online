@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 155 (Balance-Test fertig, Bericht `design/balance_bericht.md`) · Balance-Test fertig
+Stand: 16.11.2026, nachmittags · letzte veröffentlichte Version: 156 (Story-Bilder) · Stand 18.11.2026
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -88,6 +88,10 @@ Kevins Auftrag vom 16./17.11.: Balance testen (auch je Spielstil), drei Schwieri
 - Stufen im offenen Kampf: Siege Leicht 98 %, Mittel 92 %, Schwer 80 %.
 - Offen: Hexerei womöglich zu stark; Schleichen bringt dem Test-Bot keinen Vorteil (Kevin selbst testen lassen); Leichen sind überall der Engpass; Kampagnen auf Schwer mit neuen Werten nicht nachgemessen.
 - Werkzeuge: `tools/test/matrix.js`, `campaign.js`, `sneak.js` (Aufrufe in den Dateiköpfen).
+
+## Story-Bilder (fertig, Version 156)
+
+Kevin (18.11.): Spielintro und Story als große Bilder mit Erzähltext; Wahrzeichen (Hamburger Hafen), Belagerung, Klerus mit Engel gegen Zombie. Dazu: Bildkomposition muss stimmen (Standpunkt/Blickwinkel). Eingebaut: 16 Szenen, 19 Bilder (Design-Dokument „Story-Bilder“), Prompts in `design/ui_bilder.md` Abschnitt 0 (18.11.). **Bilder fehlen noch** – Kevin erzeugt sie, Claude legt sie unter `assets/story/` ab (16:9 JPG, auf ~1920 px Breite verkleinern). Test in der Sitzung: `story.js` (Intro, Wahrzeichen vor Kampf, einmalig, Galerie). Kevins „Nephilim“: im Spiel gibt es Ophan, Cherub und Seraph – das Bild zeigt einen Seraph.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 

@@ -288,6 +288,29 @@
     display: flex; gap: 12px; align-items: center; background: rgba(30,24,20,.92); color: #efe4c8; border: 1px solid #7a6a4a;
     opacity: 0; pointer-events: none; transition: opacity .6s; } #narrator.on { opacity: 1; pointer-events: auto; cursor: pointer; }
   #narrator .nn { font: 600 12px/1.2 Georgia, serif; font-variant: small-caps; letter-spacing: .08em; opacity: .8; margin-bottom: 3px; }
+  #story { position: fixed; inset: 0; z-index: 200; background: #0b0907; opacity: 0; transition: opacity .6s; cursor: pointer; user-select: none; }
+  #story.on { opacity: 1; } #story.out { opacity: 0; pointer-events: none; }
+  #story .stImg { position: absolute; inset: 0; overflow: hidden; }
+  #story .stImg img { width: 100%; height: 100%; object-fit: cover; animation: stZoom 26s ease-out forwards; }
+  @keyframes stZoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+  #story .stFall { display: none; position: absolute; inset: 0; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #2a2118; text-align: center;
+    background: repeating-linear-gradient(45deg, rgba(40,28,16,.07) 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, rgba(40,28,16,.06) 0 1px, transparent 1px 7px),
+      radial-gradient(ellipse at 50% 40%, #d9caa4 0%, #b09c72 60%, #4a3c28 100%); }
+  #story .stImg.missing img { display: none; } #story .stImg.missing .stFall { display: flex; }
+  #story .stImg.missing ~ .stText .stTitle { display: none; }
+  #story .stFallT { font: italic clamp(32px, 6vw, 72px)/1.1 "IM Fell English", Georgia, serif; padding: 0 16px; margin-top: -18vh; }
+  #story .stShade { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: linear-gradient(transparent, rgba(8,6,4,.55) 35%, rgba(8,6,4,.94) 80%); pointer-events: none; }
+  #story .stText { position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%); width: min(920px, calc(100vw - 32px)); color: #efe6d2; }
+  #story .stTitle { font: 600 14px/1.2 Georgia, serif; font-variant: small-caps; letter-spacing: .12em; opacity: .85; margin-bottom: 10px; border-left: 4px solid #7a1e2a; padding-left: 10px; }
+  #story .stBody { font: italic clamp(18px, 2.1vw, 27px)/1.45 "IM Fell English", Georgia, serif; text-shadow: 0 1px 3px #000; animation: stIn 1.4s ease-out; }
+  @keyframes stIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  #story .stNav { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+  #story .stDots { margin-right: auto; } #story .stDots i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: rgba(239,230,210,.3); margin-right: 6px; }
+  #story .stDots i.on { background: #efe6d2; }
+  .storyList { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .storyList button { display: flex; flex-direction: column; gap: 4px; padding: 6px; text-align: left; }
+  .storyList .th { width: 100%; aspect-ratio: 16/9; background: #b09c72 center/cover; border: 1px solid rgba(0,0,0,.3); }
+  .storyList button[disabled] { opacity: .45; }
   #narrator.chron { border-left: 5px solid #7a1e2a; } #narrator.chron .nt { font: italic 17px/1.4 "IM Fell English", Georgia, serif; }
   #narrator.hint { border-left: 5px solid #c9a227; } #narrator.hint .nt { font: 14px/1.45 "Segoe UI", Helvetica, Arial, sans-serif; } #narrator.hint a { color: #e8d08a; }
   #narrator.char .nt { font: 15px/1.4 "Segoe UI", Helvetica, Arial, sans-serif; }
@@ -318,7 +341,7 @@
 <!-- ?v=… forces browsers (GitHub Pages caches 10 min) to load data that matches this index.html.
      Bump it whenever a data format changes. -->
 <script src="data/heightmap.js?v=7"></script>
-<script src="data/world_data.js?v=42"></script>
+<script src="data/world_data.js?v=43"></script>
 <script src="data/ground_textures.js?v=7"></script>
 <script src="data/portraits.js?v=15"></script>
 <script type="importmap">
@@ -350,6 +373,7 @@
     <button id="btnSound" title="Ton an/aus (Taste M)">Ton: aus</button>
     <label id="volRow" title="Lautstärke"><span class="small">Lautstärke</span> <input id="volume" type="range" min="0" max="150" step="5" value="100"></label>
     <button id="btnSaves" title="Spielstände: Plätze, Datei sichern und laden">Spielstände</button>
+    <button id="btnStory" title="Bilder der Chronik: gesehene Zwischenbilder noch einmal ansehen, Zwischenbilder an/aus">Bilder der Chronik</button>
     <button id="btnHelp" title="Steuerung und Tastenkürzel">Tastenkürzel</button>
     <button id="btnCoop" title="Koop-Kampagne zu zweit: eröffnen oder beitreten">Koop-Spiel</button>
     <button id="btnDebugMenu" title="Debug-Fenster (F3)">Debug</button>
@@ -438,7 +462,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 155, "date": "2026-11-18", "changes": [{"date": "18.11. 02:20", "text": "Balance-Bericht fertig: Fraktionen, Stufen, Spielstile, Schleichen"}, {"date": "18.11. 02:14", "text": "Balance-Bericht (Entwurf); sneak.js: Schatten-Armee und Schwierigkeitsstufe"}, {"date": "18.11. 01:55", "text": "Schwer: Lebende +20 % LP, +15 % Schaden"}, {"date": "18.11. 00:41", "text": "Übergabe-Notiz: Kampagnen je Stil und Schwierigkeitsstufe"}, {"date": "18.11. 00:20", "text": "Übergabe-Notiz: Ergebnisse Kampagnen je Spielstil (Mittel)"}, {"date": "18.11. 00:19", "text": "Fix: Lich verschwand nach Rückzug, wenn er im Kampf gefallen war"}, {"date": "18.11. 00:10", "text": "Kampagnen-Bot: Lückenfüller nur bis 60 % Kommando, Armee-Mix im Protokoll"}, {"date": "17.11. 23:59", "text": "Übergabe-Notiz: Nachmessung Reihenkämpfe, Kampagnen je Spielstil laufen"}, {"date": "17.11. 23:59", "text": "Gefahrenfarbe: Besatzung mit Doktrin und Schwierigkeit (Campaign.foeStrength)"}, {"date": "16.11. 11:21", "text": "Balance: KI, Doktrinen, Stärke-Schätzung nach Messung"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}, {"date": "16.11. 11:06", "text": "Design-Dokument: Abschnitt Schwierigkeitsstufen"}]};
+const BUILD = {"version": 156, "date": "2026-11-18", "changes": [{"date": "18.11. 11:33", "text": "Story-Bilder: Vollbild-Szenen mit Erzähltext (Intro, Wahrzeichen, erste Ereignisse, Ende), Prompts in ui_bilder.md"}, {"date": "18.11. 02:20", "text": "Balance-Bericht fertig (design/balance_bericht.md)"}, {"date": "18.11. 02:14", "text": "Balance-Bericht (Entwurf); sneak.js: Schatten-Armee und Schwierigkeitsstufe"}, {"date": "18.11. 01:55", "text": "Schwer: Lebende +20 % LP, +15 % Schaden"}, {"date": "18.11. 00:41", "text": "Übergabe-Notiz: Kampagnen je Stil und Schwierigkeitsstufe"}, {"date": "18.11. 00:20", "text": "Übergabe-Notiz: Ergebnisse Kampagnen je Spielstil (Mittel)"}, {"date": "18.11. 00:19", "text": "Fix: Lich verschwand nach Rückzug, wenn er im Kampf gefallen war"}, {"date": "18.11. 00:10", "text": "Kampagnen-Bot: Lückenfüller nur bis 60 % Kommando, Armee-Mix im Protokoll"}, {"date": "17.11. 23:59", "text": "Übergabe-Notiz: Nachmessung Reihenkämpfe, Kampagnen je Spielstil laufen"}, {"date": "17.11. 23:59", "text": "Gefahrenfarbe: Besatzung mit Doktrin und Schwierigkeit (Campaign.foeStrength)"}, {"date": "16.11. 11:21", "text": "Balance: KI, Doktrinen, Stärke-Schätzung nach Messung"}, {"date": "16.11. 11:11", "text": "Kampagnen-Bot: Orte meiden, an denen die Armee gescheitert ist"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -1492,6 +1516,7 @@ function tween(duration, fn, fast = false) {
   return new Promise(resolve => tweens.push({ t: 0, duration, fn, resolve, fast }));
 }
 function updateTweens(dt) {
+  if (Story.active) return;   // a story picture holds the clock
   for (let i = tweens.length - 1; i >= 0; i--) {
     const tw = tweens[i];
     tw.t += dt * (tw.fast && game.hurry ? 4 : 1);
@@ -1894,6 +1919,7 @@ const Raids = {
     const alliance = ENEMY_FACTIONS.some(f => c.threat[f] >= 90 && Campaign.isLiving(f));
     if (alliance && !c.alliance) UI.news('Bündnis: Hanse, Welfen und Kirche schließen sich gegen den Lich zusammen. Mehr Trupps ziehen aus.', 'world');
     if (!alliance && c.alliance) UI.news('Das Bündnis gegen den Lich zerfällt.', 'world');
+    if (alliance && !c.alliance) Story.on('alliance');
     if (alliance && !c.alliance) Narrator.say('Die Glocken läuten von Lübeck bis Magdeburg. Hanse, Welfen und Kirche schließen ein Bündnis gegen den Lich: Mehr Trupps ziehen aus.');
     c.alliance = alliance;
     if (list.length >= RAIDS.maxParties + (alliance ? 2 : 0)) return;
@@ -1933,6 +1959,7 @@ const Raids = {
     if (!Object.keys(garrison).length) garrison.bauer = RAIDS.minUnits;
     const c = game.campaign; c.raidCounter = (c.raidCounter || 0) + 1;
     UI.toast(`${DATA.factions[o.faction].name}: Ein Trupp zieht aus ${o.name} gegen ${t.name}.`, 5, 'world');
+    Story.on('firstRaid');
     Narrator.say('Die Lebenden wehren sich. Wo der Lich nicht ist, ziehen ihre Trupps aus und holen sich zurück, was er nahm.', 'firstRaid');
     return { id: 'raid' + c.raidCounter, faction: o.faction, originId: o.id, targetId: t.id, q: o.q, r: o.r, garrison };
   },
@@ -3491,6 +3518,71 @@ const Narrator = {
     }
     clearTimeout(this.timer);
     this.timer = setTimeout(() => this.next(), Math.max(6000, m.text.length * 75));
+  }
+};
+// Full-screen story pictures with narrated text (data: story). Each scene plays once per campaign;
+// switch off and replay in the menu ("Bilder der Chronik"). Images: assets/story/, a missing image
+// shows a drawn placeholder with the title. Tweens (and so journeys) pause while a scene is shown.
+const Story = {
+  active: false, chain: Promise.resolve(),
+  off() { try { return localStorage.getItem('hb_storyOff') === '1'; } catch (e) { return false; } },
+  setOff(v) { try { localStorage.setItem('hb_storyOff', v ? '1' : '0'); } catch (e) { /* storage blocked */ } },
+  // Automated tests (Playwright sets navigator.webdriver) skip the pictures unless they ask for them.
+  skipped() { return this.off() || (navigator.webdriver && !window.__storyTest); },
+  seen(id) { const c = game.campaign; return !!(c && (c.told || []).includes('story_' + id)); },
+  mark(id) { const c = game.campaign; if (!c) return; c.told = c.told || []; if (!c.told.includes('story_' + id)) c.told.push('story_' + id); },
+  // Plays a scene (once per campaign); resolves when it is closed. replay: from the menu.
+  play(id, replay = false) {
+    const S = DATA.story && DATA.story[id];
+    if (!S || (!replay && (this.seen(id) || this.skipped()))) return Promise.resolve();
+    if (!replay) this.mark(id);
+    this.chain = this.chain.then(() => new Promise(done => this.show(S, done)));
+    return this.chain;
+  },
+  // First scene for a campaign event (start, firstConquest, lichDeath, firstRaid, alliance, pantheonFall, finale).
+  on(event) { const hit = Object.entries(DATA.story || {}).find(([, S]) => S.on === event); return hit ? this.play(hit[0]) : Promise.resolve(); },
+  // Scene before a fight: the landmark of this place first, else the first rule that fits.
+  beforeBattle(node) {
+    if (!node || node.encounter || node.raidId) return Promise.resolve();
+    const open = Object.entries(DATA.story || {}).filter(([id, S]) => S.on === 'battle' && !this.seen(id));
+    const hit = open.find(([, S]) => S.at === node.id)
+      || open.find(([, S]) => !S.at && (!S.type || S.type === node.type) && (!S.minSize || (node.size || 16) >= S.minSize) && (!S.faction || S.faction === node.faction));
+    return hit ? this.play(hit[0]) : Promise.resolve();
+  },
+  show(S, done) {
+    this.active = true; let i = 0;
+    const el = document.createElement('div'); el.id = 'story'; document.body.appendChild(el);
+    const close = () => { window.removeEventListener('keydown', keys, true); el.classList.add('out'); setTimeout(() => el.remove(), 650); this.active = false; done(); };
+    const step = d => { const n = i + d; if (n < 0) return; if (n >= S.slides.length) return close(); i = n; render(); };
+    const keys = e => {
+      if (e.target && e.target.tagName === 'INPUT') return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      if (e.code === 'Escape') close(); else if (e.code === 'ArrowLeft') step(-1); else if (['Space', 'Enter', 'NumpadEnter', 'ArrowRight'].includes(e.code)) step(1);
+    };
+    const render = () => {
+      const s = S.slides[i], last = i === S.slides.length - 1, title = s.title || S.title;
+      el.innerHTML = `<div class="stImg"><img src="assets/story/${s.img}" alt=""><div class="stFall"><div class="stFallT">${esc(title)}</div><div class="small">Bild folgt</div></div></div>
+        <div class="stShade"></div>
+        <div class="stText"><div class="stTitle">${esc(title)}</div><div class="stBody">${esc(s.text)}</div>
+          <div class="stNav"><span class="stDots">${S.slides.length > 1 ? S.slides.map((x, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('') : ''}</span>
+          ${last ? '' : '<button data-skip>Überspringen (Esc)</button>'}<button data-next class="primary">${last ? 'Weiter' : 'Weiter ▸'}</button></div></div>`;
+      el.querySelector('img').onerror = () => el.querySelector('.stImg').classList.add('missing');
+      el.querySelector('[data-next]').onclick = e => { e.stopPropagation(); step(1); };
+      const sk = el.querySelector('[data-skip]'); if (sk) sk.onclick = e => { e.stopPropagation(); close(); };
+    };
+    el.onclick = () => step(1);
+    window.addEventListener('keydown', keys, true);
+    render(); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+  },
+  // Menu: scenes already seen in this campaign, to watch again; switch for the pictures.
+  gallery() {
+    const list = Object.entries(DATA.story || {});
+    UI.modal(`<h2>Bilder der Chronik</h2><p class="small">Bilder, die in diesem Feldzug schon erschienen sind, lassen sich hier noch einmal ansehen. Unbekannte bleiben verborgen.</p>
+      <div class="storyList">${list.map(([id, S]) => this.seen(id)
+        ? `<button data-story="${id}"><div class="th" style="background-image:url(assets/story/${S.slides[0].img})"></div><span>${esc(S.title)}</span></button>`
+        : `<button disabled><div class="th"></div><span>???</span></button>`).join('')}</div>`,
+      [{ label: this.off() ? 'Zwischenbilder: aus' : 'Zwischenbilder: an', keepOpen: true, action: () => { this.setOff(!this.off()); this.gallery(); } }, { label: 'Schließen', primary: true }]);
+    $('modalBody').querySelectorAll('[data-story]').forEach(b => b.onclick = () => { UI.closeModal(); this.play(b.dataset.story, true); });
   }
 };
 // Big date in the middle of the screen while the army marches.
@@ -5394,6 +5486,7 @@ const Battle = {
   // Safety net: if setting up a battle fails, go back to the world map instead of a half-built field.
   async start(node, exp = null, plan = null) {
     if (Coop.role === 'guest' && !(exp && exp.coopSelf)) return Coop.guestBattle(node, plan);
+    await Story.beforeBattle(node);
     try { return await this.startBattle(node, exp, plan); }
     catch (e) {
       console.error(e);
@@ -6203,6 +6296,7 @@ const Battle = {
       const factionWasLiving = !node.encounter && Campaign.isLiving(Campaign.owner(node)) ? Campaign.owner(node) : null;
       if (!node.encounter) { c.owners[node.id] = 'UNDEAD'; (c.conqueredDay = c.conqueredDay || {})[node.id] = c.dayCount; }
       setTimeout(() => Narrator.hint('Nach dem Sieg: Im Hügelgrab (Taste H) kannst du neue Untote rekrutieren und Gebäude bauen. Eroberte Orte wie Städte und Klöster sind auch Rekrutierungsorte.', 'victory'), 3200);
+      if (!node.encounter) Story.on('firstConquest');
       if (!node.encounter) setTimeout(() => Narrator.say(`Wo die Toten gehen, welkt die Heide. Um ${node.name} wird das Land grau, und es wird nicht wieder grün.`, 'firstConquest'), 2500);
       let pantheonText = '';
       // A faction that just lost its last place is wiped out: chronicle line and a reward (once).
@@ -6223,6 +6317,7 @@ const Battle = {
         pantheonText += `<p><b>${esc(P.name)} ist gefallen.</b> Die Region ist assimiliert: Trupps erobern hier nichts mehr zurück, in ${esc(NODE_BY_ID[P.seat].name)} kann der Lich ein Portal errichten (danach Ley-Sprung), die Orte von ${P.factions.map(f => DATA.factions[f].name).join(', ')} sind geschwächt.</p>`;
         c.raids = Raids.list().filter(r => !P.factions.includes(r.faction));
         setTimeout(() => Knowledge.discover(), 1500);
+        Story.on('pantheonFall');
         setTimeout(() => Narrator.say(`${P.name} ist gefallen. Die alten Mächte dieser Gegend schweigen, und die Ley-Linien singen nun für den Lich.`), 2500);
       } else if (pidWon) {
         const live = Pantheons.living(pidWon).length;
@@ -6286,7 +6381,7 @@ const Battle = {
         html += `<h3>Verwaist</h3><p>${b.expedition ? esc(DATA.units[b.leader].name) : 'Der Lich'} fiel im Kampf. ${army.length ? `${army.length} Untote haben überlebt (ein Viertel mehr zerfiel ohne ihren Herrn) und warten bei <b>${esc(at.name)}</b>, bis der Lich sie abholt.` : 'Keiner seiner Diener blieb übrig.'}</p>`;
         if (b.expedition) c.army = [];
         else {
-          const deathDays = Base.lichDeathDays();
+          const deathDays = Base.lichDeathDays(); Story.on('lichDeath');
           c.travel = null; c.army = [{ type: 'lich', hp: DATA.units.lich.hp }]; c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
           Campaign.advanceDays(deathDays);
           html += `<p class="small">${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
@@ -6307,7 +6402,7 @@ const Battle = {
       c.travel = null;
       c.army = [{ type: 'lich', hp: DATA.units.lich.hp }];
       c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
-      const deathDays = Base.lichDeathDays();
+      const deathDays = Base.lichDeathDays(); Story.on('lichDeath');
       Campaign.advanceDays(deathDays);
       html = `<h2>Der Lich fällt</h2><p>Die Armee zerfällt zu Staub. ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich erneut im Hügelgrab am Wilseder Berg.</p>`;
     } else {
@@ -6321,7 +6416,7 @@ const Battle = {
         const army = c.army.filter(u => u.type !== 'lich'), at = node.encounter
           ? DATA.nodes.slice().sort((x, y) => hexDistance(x.q, x.r, node.q, node.r) - hexDistance(y.q, y.r, node.q, node.r))[0] : node;
         if (army.length) Stranded.add(at, army);
-        const deathDays = Base.lichDeathDays();
+        const deathDays = Base.lichDeathDays(); Story.on('lichDeath');
         c.army = [{ type: 'lich', hp: DATA.units.lich.hp }]; c.nodeId = PHYLACTERY.id; c.prevNodeId = null;
         Campaign.advanceDays(deathDays);
         html = `<h2>Rückzug ohne den Lich</h2><p>Der Lich fiel im Kampf, seine Diener lösten sich vom Feind.${army.length ? ` ${army.length} Untote warten bei <b>${esc(at.name)}</b>, bis der Lich sie holt.` : ''} ${deathDays} ${deathDays === 1 ? 'Tag' : 'Tage'} später erwacht der Lich im Hügelgrab.</p>`;
@@ -7404,7 +7499,8 @@ const UI = {
     });
     $('modalBody').querySelectorAll('input[data-count]').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') $('modalBody').querySelector(`button[data-n="input"][data-type="${i.dataset.count}"]`).click(); });
   },
-  showEnd() {
+  showEnd() { Story.on('finale').then(() => this.showEndModal()); },
+  showEndModal() {
     const c = game.campaign;
     const conquered = DATA.nodes.filter(n => Campaign.isConquered(n)).length;
     game.mode = 'end';
@@ -7802,6 +7898,7 @@ function initInput() {
   $('btnBuild').onclick = () => { if (game.mode === 'world') Base.open(); };
   $('btnInventory').onclick = () => { if (game.mode === 'world') UI.openInventory(); };
   $('btnSound').onclick = () => Sfx.toggle();
+  $('btnStory').onclick = () => { UI.show('menuPop', false); Story.gallery(); };
   $('volume').value = Math.round(Sfx.volume * 100); $('volume').oninput = e => Sfx.setVolume(+e.target.value / 100);
   $('volume').onchange = () => Sfx.drum();
   $('btnSound').textContent = Sfx.muted ? 'Ton: aus (M)' : 'Ton: an (M)';
@@ -7994,9 +8091,9 @@ function showIntro() {
   const buttons = [];
   if (saved) buttons.push({ label: 'Fortsetzen', action: () => startGame(saved) });
   buttons.push({ label: 'Spielstände …', action: () => setTimeout(() => SaveGame.open(true), 0) });
-  buttons.push({ label: 'Erwachen', primary: true, keepOpen: true, action: () => Difficulty.choose('Wie schwer soll es werden?', key => { SaveGame.clear(); startGame(Campaign.create()); Difficulty.set(key, true); setTimeout(() => { Narrator.speak('lich', LICH_LINES.awaken, 'awaken');
+  buttons.push({ label: 'Erwachen', primary: true, keepOpen: true, action: () => Difficulty.choose('Wie schwer soll es werden?', key => { SaveGame.clear(); startGame(Campaign.create()); Difficulty.set(key, true); Story.on('start').then(() => setTimeout(() => { Narrator.speak('lich', LICH_LINES.awaken, 'awaken');
     Narrator.hint('Klicke auf der Karte ein nahes Dorf an, zum Beispiel Undeloh, und wähle „Hierher ziehen“. Die Farbe links am Ortsnamen zeigt die Gefahr: grün, gelb, rot.', 'start');
-    Narrator.hint('Kamera: W/A/S/D oder Maus an den Rand, rechte Maustaste drehen, Mausrad zoomen. H springt zum Hügelgrab, F3 zeigt das Debug-Fenster.', 'camera'); }, 1200); }) });
+    Narrator.hint('Kamera: W/A/S/D oder Maus an den Rand, rechte Maustaste drehen, Mausrad zoomen. H springt zum Hügelgrab, F3 zeigt das Debug-Fenster.', 'camera'); }, 1200)); }) });
   UI.modal(`<h2>Harmbringer</h2>
     <p>Mai 1371. Unter dem Wilseder Berg, in einem Hügelgrab aus der Bronzezeit, öffnet ein Toter die Augen.
     Jahrhunderte lang hat der Lich geschlafen, nun ruft ihn der Hunger der Ley-Linien.</p>

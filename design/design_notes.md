@@ -2454,6 +2454,25 @@ Drei Stufen, wählbar bei „Erwachen“ und „Neues Spiel“, änderbar im Men
 
 Daten: `difficulty` in `data/world_data.js`. Code: `DIFF()`, `Difficulty`. Die Automatik der eigenen Untoten (nach dem Tod des Lichs) spielt immer wie „Mittel“.
 
+### Story-Bilder (umgesetzt 18.11.2026)
+
+Was die Spielgrafik nicht zeigen kann, erzählen **Vollbild-Bilder mit Erzähltext** (Dürer-Stil, Chronisten-Ton). Das Bild zoomt langsam, der Text steht unten; Klick, Leertaste oder Enter blättert, Esc überspringt. Die Zeit (Reisen, Trupps) steht still, solange ein Bild offen ist. Jede Szene erscheint einmal pro Feldzug; Menü → „Bilder der Chronik“ zeigt die gesehenen noch einmal und schaltet die Bilder ab. Fehlt eine Bilddatei, zeigt das Spiel einen gezeichneten Platzhalter mit dem Titel.
+
+| Szene | Wann | Bilder |
+|-|-|-|
+| Das Erwachen | Spielstart („Erwachen“) | Kalkberg 1371, Hügelgrab bricht auf, der Lich steigt heraus |
+| Die erste Ernte | erste Eroberung | 1 |
+| Heiliger Boden | erster Angriff auf ein Kloster oder eine Kirche | Seraph schmettert Licht auf einen Zombie |
+| Vor den Mauern | erster Angriff auf eine Stadt ab Größe 32 | Sturmleitern aus Gebein |
+| Hamburg, Lüneburg, Magdeburg, Rungholt, Kyffhäuser, Spreewald, Brocken | erster Angriff auf diesen Ort | je ein Wahrzeichen-Bild |
+| Das Phylakterium | der Lich fällt zum ersten Mal | 1 |
+| Die Lebenden | erster Trupp der Lebenden | 1 |
+| Das Bündnis | Bündnis der Lebenden | 1 |
+| Die alten Mächte | erstes Pantheon fällt | 1 |
+| Der lange Schatten | Brocken erobert (Ende) | 2 |
+
+Daten: `story` in `data/world_data.js` (Auslöser `on`, bei Kämpfen `at` = Ort oder Regel `type`/`minSize`/`faction`). Code: `Story` in `index.html` (`play`, `on`, `beforeBattle`, `gallery`). Bilder: `assets/story/`, Prompts in `design/ui_bilder.md` Abschnitt 0.
+
 ---
 
 ## Mythologie-Wissen als Belohnung

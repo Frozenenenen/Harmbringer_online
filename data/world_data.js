@@ -305,6 +305,66 @@ window.HARMBRINGER_DATA = {
   //   watch: gain (factor on all suspicion), decay (per quiet round), shoutNow ("none" | "watch" = posts and patrols | "all" = everyone awake),
   //          bell, relief (rounds after the bell until relief arrives; 0 = none), reliefShare (of the largest troop), patrols / posts (extra), corpse (suspicion for a body found)
   //   raid: chance, strength; threat (factor on threat gained); retreatLoss; loot (corpses and bones from kills); startRes (start stores)
+  // Story pictures: full-screen images with narrated text (Story in index.html). Each scene plays once
+  // per campaign. on: start | firstConquest | lichDeath | firstRaid | alliance | pantheonFall | finale |
+  // battle (before a fight; at: node id, or type/minSize/faction as a rule). Images: assets/story/<img>,
+  // prompts in design/ui_bilder.md. A missing image shows a drawn placeholder with the title.
+  story: {
+    intro: { on: "start", title: "Das Erwachen", slides: [
+      { img: "intro_kalkberg.jpg", title: "Lüneburg, im Jahr 1371",
+        text: "Im Jahr des Herrn 1371 stürmten die Bürger von Lüneburg die Burg ihres Herzogs auf dem Kalkberg und rissen sie Stein um Stein nieder. Sie gruben tiefer, als je ein Mensch gegraben hatte." },
+      { img: "intro_huegelgrab.jpg", title: "Der Wilseder Berg",
+        text: "Unter dem Kalkberg lief eine Ader alter Kraft, und sie zitterte bis weit in die Heide. Im Hügelgrab am Wilseder Berg, wo seit zweitausend Jahren niemand mehr geopfert hatte, sprang der Deckstein." },
+      { img: "intro_erwachen.jpg", title: "Der Lich",
+        text: "Eine Hand aus Knochen und Bronze schob die Erde beiseite. Was dort lag, war nie ganz gestorben. Es erinnerte sich an nichts als an den Hunger – und an den Hass auf alles, was atmet." } ] },
+    firstConquest: { on: "firstConquest", title: "Die erste Ernte", slides: [
+      { img: "erste_ernte.jpg", title: "Die erste Ernte",
+        text: "Am Morgen danach zogen die Toten die Toten aus den Häusern. Kein Glockenschlag, kein Gebet. Nur das Schleifen der Leiber über die Heide, zum Hügelgrab hin." } ] },
+    clergy: { on: "battle", type: "CHRISTIAN", title: "Heiliger Boden", slides: [
+      { img: "heiliges_licht.jpg", title: "Heiliger Boden",
+        text: "Hinter Klostermauern beten sie nicht nur. Wo die Kirche steht, steigt Licht vom Himmel, und unter dem Licht zerfällt das tote Fleisch zu Staub. Der Lich hat das nicht vergessen." } ] },
+    walls: { on: "battle", type: "WORLDLY", minSize: 32, title: "Vor den Mauern", slides: [
+      { img: "sturmleitern.jpg", title: "Vor den Mauern",
+        text: "Die Städte haben Mauern, Tore und Türme, und auf den Wehrgängen stehen Armbrüste. Leitern aus Gebein, Ballisten aus Knochen, Riesen aus Fleisch: Der Lich wird lernen müssen, Stein zu brechen." } ] },
+    hamburg: { on: "battle", at: "hamburg", title: "Hamburg", slides: [
+      { img: "hamburg_hafen.jpg", title: "Der Hafen von Hamburg",
+        text: "Nebel lag über der Elbe, als die Toten aus dem Wasser stiegen. Zwischen den Koggen am Nikolaifleet krochen sie an Land, und die Türme von Sankt Petri und Sankt Nikolai läuteten zu spät." } ] },
+    lueneburg: { on: "battle", at: "lueneburg", title: "Lüneburg", slides: [
+      { img: "lueneburg_saline.jpg", title: "Die Salzstadt",
+        text: "Lüneburg lebt vom Salz, und das Salz bewahrt das Fleisch. Unter den Trümmern auf dem Kalkberg schlug einst das Herz, das den Lich weckte. Nun kehrt er zurück, um es sich zu holen." } ] },
+    magdeburg: { on: "battle", at: "magdeburg", title: "Magdeburg", slides: [
+      { img: "magdeburg_dom.jpg", title: "Der Dom zu Magdeburg",
+        text: "Über dem Dom des Erzbischofs öffnet sich der Himmel. Sechs Flügel aus Feuer, ein Gesang, der Knochen splittern lässt: Hier wacht ein Seraph, und er hat auf den Lich gewartet." } ] },
+    rungholt: { on: "battle", at: "rungholt", title: "Rungholt", slides: [
+      { img: "rungholt_ebbe.jpg", title: "Rungholt bei Ebbe",
+        text: "Seit der großen Mandränke liegt Rungholt im Watt. Bei Ebbe ragen die Kirchenmauern aus dem Schlick, und in den Prielen läuten die versunkenen Glocken. Die Ertrunkenen sind nicht tot genug, um zu ruhen." } ] },
+    kyffhaeuser: { on: "battle", at: "kyffhaeuser", title: "Kyffhäuser", slides: [
+      { img: "kyffhaeuser.jpg", title: "Im Berg",
+        text: "Im Kyffhäuser schläft ein Kaiser am steinernen Tisch, und sein Bart ist durch den Tisch gewachsen. Um den Berg kreisen die Raben. Wenn sie aufhören zu fliegen, erwacht er – oder der Lich nimmt sich, was er bewacht." } ] },
+    spreewald: { on: "battle", at: "spreewald", title: "Spreewald", slides: [
+      { img: "spreewald.jpg", title: "Der Schlangenkönig",
+        text: "In den Fließen des Spreewalds glänzt eine goldene Krone im Schilf. Der Schlangenkönig herrscht über Wassermänner, Lutki und Rusalken, und keine Leiche, die dort versinkt, gehört dem Lich." } ] },
+    brocken: { on: "battle", at: "brocken", title: "Der Brocken", slides: [
+      { img: "brocken_sabbat.jpg", title: "Walpurgisnacht",
+        text: "Auf dem Brocken brennen die Feuer der Walpurgisnacht. Hexen tanzen auf dem kahlen Gipfel, der Wind trägt ihren Gesang bis ins Tal. Hier endet der Weg des Lichs – so oder so." } ] },
+    lichDeath: { on: "lichDeath", title: "Das Phylakterium", slides: [
+      { img: "phylakterium.jpg", title: "Das Phylakterium",
+        text: "Der Lich fiel, doch was nie gelebt hat, kann nicht sterben. Im Hügelgrab glomm das Phylakterium auf, und Staub fand zu Knochen, Knochen zu Gestalt. Die Toten warten. Sie haben Zeit." } ] },
+    firstRaid: { on: "firstRaid", title: "Die Lebenden", slides: [
+      { img: "fackeln.jpg", title: "Feuer und Eisen",
+        text: "Die Lebenden lernen schnell. Wo der Lich nicht ist, ziehen Bauern mit Fackeln und Ritter mit Eisen aus, verbrennen die Toten auf Scheiterhaufen und hängen neue Glocken in die Türme." } ] },
+    alliance: { on: "alliance", title: "Das Bündnis", slides: [
+      { img: "buendnis.jpg", title: "Das Bündnis",
+        text: "Hanse, Herzöge und Bischöfe, die sich gestern noch um Zölle und Erbe stritten, schwören einander auf die Reliquien. Von Lübeck bis Magdeburg läuten die Glocken. Gegen den Lich sind die Lebenden eins." } ] },
+    pantheonFall: { on: "pantheonFall", title: "Die alten Mächte", slides: [
+      { img: "ley_knoten.jpg", title: "Die Ley-Linien",
+        text: "Als die alten Mächte fielen, glühten die Steinkreise auf. Wie Adern zogen die Ley-Linien durch das Land, und eine nach der anderen begann für den Lich zu singen." } ] },
+    finale: { on: "finale", title: "Der lange Schatten", slides: [
+      { img: "finale_brocken.jpg", title: "Der Gipfel",
+        text: "Die Feuer auf dem Brocken sind erloschen. Der Lich steht auf dem Gipfel, und unter ihm liegt das Land von der Nordsee bis zum Harz." },
+      { img: "finale_schatten.jpg", title: "Der lange Schatten",
+        text: "Die Heide ist grau, die Glocken schweigen. Über Norddeutschland legt sich ein langer Schatten. Und weiter im Süden, hinter dem Harz, regen sich andere Gräber." } ] }
+  },
   difficulty: {
     easy: { name: "Leicht", text: "Die Lebenden sind arglos und kämpfen ungeordnet: Sie schlagen auf den Nächstbesten, suchen weder den Lich noch Deckung und zaubern seltener. Wachen brauchen länger, bis sie sicher sind, und rufen erst in ihrem nächsten Zug. Keine Glocke, kein Hinterhalt; Doktrinen wirken halb und bringen keine Zusatztruppen. Weniger Trupps, die Bedrohung steigt langsamer, mehr Startvorräte und Beute, Rückzug kostet 15 %.",
       enemyHpPct: -0.1, enemyDamagePct: -0.1, doctrine: 0.5, doctrineGarrison: false, ambush: false,
