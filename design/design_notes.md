@@ -3071,11 +3071,11 @@ Nixen und verwandte Wassergeister können an allen größeren Flüssen vorkommen
 
 *Entwurf vom 18.11.2026 auf Kevins Wunsch. Noch nichts davon ist eingebaut.*
 
-**Idee in einem Satz:** Nach dem Sieg am Brocken beginnt ein neuer Feldzug auf derselben Karte. Der Lich verliert fast alles, nimmt aber ein **Vermächtnis** mit. Die Lebenden **erinnern sich** und sind besser vorbereitet. Wer will, legt sich freiwillig **Heimsuchungen** auf, für mehr Ruhm.
+**Idee in einem Satz:** Nach dem Sieg am Brocken beginnt ein neuer Feldzug auf derselben Karte, **hundert Jahre später** (Abschnitt 7). Der Lich verliert fast alles, nimmt aber ein **Vermächtnis** mit. Die Lebenden **erinnern sich** und sind besser vorbereitet. Wer will, legt sich freiwillig **Heimsuchungen** auf, für mehr Ruhm.
 
 ### Erzählung
 
-Das Ende des ersten Feldzugs deutet es schon an: „hinter dem Harz regen sich andere Gräber“. Im New Game+ ist es das Jahr 1372 oder später. Der Lich hat zu viel Kraft in den Brocken gegossen und erwacht geschwächt im Hügelgrab. Die Lebenden haben aus dem ersten Zug gelernt: Kirche, Hanse und Fürsten halten zusammen, und ein neuer Gegenspieler ist unterwegs. Neue Story-Bilder für Erwachen und Ende, der Chronist zitiert aus „dem ersten Buch“.
+Das Ende des ersten Feldzugs deutet es schon an: „hinter dem Harz regen sich andere Gräber“. Im New Game+ ist es 100 Jahre später (1471, 1571, 1671). Der Lich hat zu viel Kraft in den Brocken gegossen und erwacht geschwächt im Hügelgrab. Die Lebenden haben aus dem ersten Zug gelernt: Kirche, Hanse und Fürsten halten zusammen, und ein neuer Gegenspieler ist unterwegs. Neue Story-Bilder für Erwachen und Ende, der Chronist zitiert aus „dem ersten Buch“.
 
 ### 1. Vermächtnis: was der Lich mitnimmt
 
@@ -3138,9 +3138,42 @@ Damit der zweite Zug nicht nur den ersten wiederholt, ändert sich das Ziel. Zur
 - Der Endbildschirm (`UI.showEndModal`) bekommt „Neuer Feldzug+“ mit der Vermächtnis-Wahl.
 - Testen: Der Kampagnen-Bot (`tools/test/campaign.js`) bekommt einen Parameter `ngplus`, damit sich Stufe 1–3 messen lassen.
 
+### 7. Epochen: jedes New Game+ hundert Jahre später (Kevin, 18.11.2026: „finde das super“)
+
+Jedes New Game+ springt **100 Jahre in die Zukunft**. Der Lich ist unsterblich, die Lebenden nicht: Sie kennen ihn nur noch als Legende, haben sich aber mit den Mitteln ihrer Zeit auf seine Rückkehr vorbereitet. Die Karte bleibt, die Welt darauf verändert sich.
+
+**Vier Epochen, dann Schluss.** Ein Sprung nach 1771 höchstens als allerletzte Stufe. Danach (Eisenbahn, Telegraf, Maschinengewehr) passt die Welt nicht mehr zum Dürer-Totentanz.
+
+| Epoche | Zeitbild Norddeutschland | Die Lebenden gegen die Untoten | Mythen | Bildstil |
+|-|-|-|-|-|
+| **1371** Spätmittelalter (Grundspiel) | Hanse wächst, Lüneburger Erbfolgekrieg, Klöster überall | Ritter, Armbrust, Glocken, Weihwasser | voll lebendig, alle Pantheons | Holzschnitt (Dürer) |
+| **1471** Hanse auf dem Höhepunkt | reiche Hansestädte, Buchdruck, Landsknechte | erste Handbüchsen und Feldschlangen, Landsknecht-Haufen mit Pike; **Flugblätter** tragen den Alarm schneller (Bedrohungswellen schneller) | etwas schwächer, Wilde Jagd noch stark | Holzschnitt und Kupferstich |
+| **1571** Reformation und Hexenverfolgung | Klöster aufgelöst (werden Güter, Schulen, Spitäler), Hexenprozesse auf dem Höhepunkt | **Hexenjäger** als eigentliche Untoten-Jäger, Pike und Muskete, Brandmunition; Hexen sind jetzt Verfolgte – möglicher Bündnispartner? | geschwächt, manche Mitglieder verschwunden | Kupferstich |
+| **1671** nach dem Dreißigjährigen Krieg | entvölkertes Land, stehende Heere, Festungen mit Bastionen, Moorkolonisierung beginnt | Musketiere in Linie, Festungsartillerie, Kartätschen; Garnisonen statt Bürgerwehr | fast verblasst; Moore schrumpfen, Moorgeister verlieren Land | Radierung (Barock) |
+| *1771* (optional, letzte Stufe) | Aufklärung, Universitäten, Trockenlegung der Moore | Kanonen, Feuerwehr, Pockenimpfung, erste Gedanken an Feuerbestattung | Mythen gelten als Aberglaube | Radierung, Rokoko-Kupferstich |
+
+**Was sich je Epoche ändert (alles als Daten):**
+
+- **Einheiten der Lebenden:** pro Epoche und Fraktion eine Ersatz-Tabelle (`eras[era].units`), z. B. `armbrust` → `handbuechse` (1471) → `musketier` (1571/1671), `ritter` → `landsknecht` → `kuerassier`. Grob 10–15 neue gegnerische Einheiten pro Epoche.
+- **Doktrinen:** Jede Fraktion bekommt eine Epochen-Doktrin (ersetzt „Doktrin Stufe 2“ aus Abschnitt 2). Der **Orden vom Grabe** wechselt die Gestalt: 1471 Bruderschaft mit Reliquien, 1571 Hexenjäger, 1671 Festungskommandant mit Garnison.
+- **Orte:** wachsen oder ändern ihre Art. Hamburg und Lübeck werden größer und bekommen Bastionen, Klöster werden 1571 weltliche Orte (keine Engel mehr, aber Spitäler mit Heilern), Moore schrumpfen ab 1671 und werden Dörfer. Rungholt bleibt versunken, Vineta auch.
+- **Schadens-Tabelle:** neuer Schadenstyp **Schießpulver** (Kugel). Gegen Knochen schwach, gegen Fleisch stark, ignoriert schwere Rüstung teilweise. Schwere Rüstung verliert mit den Epochen an Wert.
+- **Schleichen:** Laternen an den Toren, später Nachtwächter mit festen Runden. Die Nacht schützt weniger. Dafür hören Musketiere schlechter (Lärm der eigenen Waffen).
+- **Leichen-Wirtschaft:** Ab 1671 verbrennen die Lebenden ihre Toten in befallenen Gegenden – solche Orte geben kaum Leichen. Das greift den Engpass des Spiels direkt an und zwingt zu neuen Wegen (Seelen, Knochen, Schlachtfelder des Dreißigjährigen Kriegs als große Leichenfelder).
+- **Wissen:** Mit verblassenden Mythen gibt es weniger Wissen aus mythischen Orten, dafür mehr aus **Bibliotheken und Universitäten** (Rostock 1419, Helmstedt 1576, Kiel 1665 …).
+
+**Auch die Meute modernisiert sich unfreiwillig:** Gefallene Musketiere werden untote Musketiere, gefallene Landsknechte untote Pikeniere. Der Lich lernt die Waffen seiner Feinde, indem er ihre Toten erhebt – wie heute die untoten Fassungen besiegter Gegner über Wissen.
+
+**Umsetzung (Skizze):**
+
+- Eine **Datenschicht pro Epoche** über der unveränderten Karte: `eras` in `world_data.js` mit Einheiten-Ersatz, Doktrinen, Ortsänderungen, Schadensregeln, Erzähltexten. `c.era` im Spielstand.
+- **Figuren-Baukasten** (`tools/build_units.py`) um Ausrüstung erweitern: Muskete, Pike, Bandelier, breitkrempige Hüte, Morion-Helm, Kürass. So entstehen neue Figuren aus vorhandenen Teilen.
+- **Bild-Prompts** je Epoche mit eigenem Stil-Teil (Holzschnitt → Kupferstich → Radierung) und neuen Story-Bildern für Erwachen und Ende jeder Epoche.
+- **Reihenfolge beim Bauen:** erst 1471 vollständig (wenige Feuerwaffen, viel vom Bestehenden nutzbar), daran die Balance mit dem Kampagnen-Bot messen, dann die nächste Epoche.
+
 ### Offene Fragen an Kevin
 
-1. Gleiche Karte oder später eine **neue Region** (Rheinland, Bayern …)? Der Entwurf geht von derselben Karte aus, weil sie fertig ist.
+1. ~~Gleiche Karte oder neue Region?~~ Entschieden (18.11.2026): gleiche Karte, jedes New Game+ 100 Jahre später (Abschnitt 7). Eine neue Region bleibt für eine spätere zweite Kampagne denkbar.
 2. Soll das Vermächtnis eine **Auswahl** sein oder fest (alles ein bisschen)?
 3. Gefällt der **Orden vom Grabe** als Gegenspieler, oder lieber eine bekannte Gestalt (z. B. ein Inquisitor mit Namen)?
 4. Ruhm und Freischaltungen über mehrere Feldzüge hinweg – oder jedes New Game+ für sich?

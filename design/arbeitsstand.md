@@ -113,7 +113,7 @@ Kevin: „Mach den Lich und Kommandeure wieder schwächer. Wenn aber mindestens 
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
-- **New Game+:** Entwurf im Design-Dokument („New Game+“, 18.11.2026) – Vermächtnis, die Lebenden erinnern sich (Doktrinen Stufe 2, Orden vom Grabe als Jäger), Heimsuchungen, Freischaltungen, neue Ziele. Nicht umgesetzt; vier offene Fragen an Kevin stehen dort.
+- **New Game+:** Entwurf im Design-Dokument („New Game+“, 18.11.2026) – Vermächtnis, die Lebenden erinnern sich (Doktrinen Stufe 2, Orden vom Grabe als Jäger), Heimsuchungen, Freischaltungen, neue Ziele. Dazu Abschnitt 7 „Epochen“ (Kevin: „finde das super“): jedes New Game+ 100 Jahre später, 1471 → 1571 → 1671 (1771 optional), Lebende mit Feuerwaffen, Hexenjägern, Festungen, verblassende Mythen, Schadenstyp Schießpulver, Feuerbestattung gegen die Leichen-Wirtschaft. Nicht umgesetzt; drei offene Fragen an Kevin stehen dort.
 
 - **Kevins Rückmeldung abwarten:** Spielgefühl beim Schleichen (Kegelgröße am Tag, Tempo der Streifen, ob „Posten rufen sofort“ zu hart ist) – alle Stellschrauben stehen in `STEALTH`.
 - **Balance:** Faustregel-Vergleich ist gemacht (`tools/balance_styles.py`); ganze Schlachten mit Merkmalen und Auren sind nicht simuliert. Auffällig stark im Vergleich: Balliste, Knochendrache, Todesritter (alt), Geist.
