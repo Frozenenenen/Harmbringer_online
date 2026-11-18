@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 18.11.2026 · letzte veröffentlichte Version: 161 (Koop-Beitritt mit Zustimmung; Versionsnummer zählt Commits)
+Stand: 18.11.2026 · letzte veröffentlichte Version: 171 (Story-Bilder eingebaut; Versionsnummer zählt Commits)
 
 ## Auftrag (Kevin, 14.11.2026)
 
