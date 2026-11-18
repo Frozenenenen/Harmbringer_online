@@ -354,7 +354,12 @@
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" },
+  "integrity": {
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js": "sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/renderers/CSS2DRenderer.js": "sha384-oxPlnJSeUCYU9W3RMQswb4S/vFd4Bhxuy1Ffx0V2KJakWeb6n1gaqUtSE9Ic/F72",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js": "sha384-oxY9vSeh7Mrt5WmhN8xfWoDRnmoW9krEiRBY7vJKaK90jMUidM0fhbUwcblpBgTu",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js": "sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf" } }
 </script>
 </head>
 <body>
@@ -469,7 +474,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 161, "date": "2026-11-18", "changes": [{"date": "18.11. 12:12", "text": "Koop: Beitritt nur mit Zustimmung des Gastgebers (mit Namen), PeerJS mit Prüfsumme"}, {"date": "18.11. 12:12", "text": "Koop: Beitritt nur mit Zustimmung, Spielernamen, PeerJS-Prüfsumme"}, {"date": "18.11. 11:54", "text": "Arbeitsstand: Version 164"}, {"date": "18.11. 11:53", "text": "Version: Story-Bilder im 21:9-Kinoformat, Prompts ohne Seitenverhaeltnis"}, {"date": "18.11. 11:53", "text": "Story pictures in 21:9 cinema format; no aspect ratios in prompts"}, {"date": "18.11. 11:33", "text": "Story-Bilder: Vollbild-Szenen mit Erzähltext"}, {"date": "18.11. 02:20", "text": "Balance-Bericht fertig (design/balance_bericht.md)"}, {"date": "18.11. 02:14", "text": "Balance-Bericht (Entwurf); sneak.js: Schatten-Armee und Schwierigkeitsstufe"}, {"date": "18.11. 01:55", "text": "Schwer: Lebende +20 % LP, +15 % Schaden"}, {"date": "18.11. 00:41", "text": "Übergabe-Notiz: Kampagnen je Stil und Schwierigkeitsstufe"}, {"date": "18.11. 00:20", "text": "Übergabe-Notiz: Ergebnisse Kampagnen je Spielstil (Mittel)"}, {"date": "18.11. 00:19", "text": "Fix: Lich verschwand nach Rückzug, wenn er im Kampf gefallen war"}]};
+const BUILD = {"version": 162, "date": "2026-11-18", "changes": [{"date": "18.11. 12:55", "text": "Three.js mit Prüfsummen (gegen jsDelivr geprüft)"}, {"date": "18.11. 12:12", "text": "Version 161: Koop-Beitritt mit Zustimmung"}, {"date": "18.11. 12:12", "text": "Koop: Beitritt nur mit Zustimmung, Spielernamen, PeerJS-Prüfsumme"}, {"date": "18.11. 11:54", "text": "Arbeitsstand: Version 164"}, {"date": "18.11. 11:53", "text": "Version: Story-Bilder im 21:9-Kinoformat, Prompts ohne Seitenverhaeltnis"}, {"date": "18.11. 11:53", "text": "Story pictures in 21:9 cinema format; no aspect ratios in prompts"}, {"date": "18.11. 11:33", "text": "Story-Bilder: Vollbild-Szenen mit Erzähltext"}, {"date": "18.11. 02:20", "text": "Balance-Bericht fertig (design/balance_bericht.md)"}, {"date": "18.11. 02:14", "text": "Balance-Bericht (Entwurf); sneak.js: Schatten-Armee und Schwierigkeitsstufe"}, {"date": "18.11. 01:55", "text": "Schwer: Lebende +20 % LP, +15 % Schaden"}, {"date": "18.11. 00:41", "text": "Übergabe-Notiz: Kampagnen je Stil und Schwierigkeitsstufe"}, {"date": "18.11. 00:20", "text": "Übergabe-Notiz: Ergebnisse Kampagnen je Spielstil (Mittel)"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
