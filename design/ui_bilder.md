@@ -5,6 +5,7 @@ Stand und Prompts für alle Bilder der Oberfläche. Kevin erzeugt die Bilder, Cl
 - **Offene Bilder stehen oben**, erledigte unten. Neue Bilder kommen in die offene Liste.
 - **Ablage:** Kevin gibt die Bilder an Claude; Claude legt sie unter `assets/ui/<Dateiname>` ab, verkleinert sie und baut sie ein.
 - **Format:** PNG oder JPG, so groß wie möglich. Auflösung egal, das Verhältnis zählt. Claude verkleinert.
+- **Seitenverhältnis nie im Prompt** (Kevin, 18.11.2026): Das Verhältnis wird im Bildprogramm vor dem Erzeugen eingestellt, der Prompt kann es nicht mehr ändern. Es steht deshalb nur in der Überschrift hinter dem Dateinamen (z. B. „· 21:9“) – dort ablesen und im Programm einstellen. Prompts beschreiben nur Motiv, Standpunkt und Stil.
 - **Symbole:** schwarze Linien auf hellem Papier. Claude legt sie im Spiel per „Multiplizieren“ über den Papiergrund, ein freigestellter Hintergrund ist nicht nötig.
 - **Texturen** (Papier): sollten sich kacheln lassen. Wenn nicht ganz, macht Claude sie nahtlos.
 - **Prompts auf Englisch**, weil die meisten Bildmodelle damit am besten arbeiten. Der Stilteil ist in jedem Prompt gleich, damit alles zusammenpasst.
@@ -27,158 +28,158 @@ color, colorful, photo, 3d render, glossy, modern, anime, cartoon, text, letters
 
 ### 0 Neu am 18.11.2026: Story-Bilder (Vollbild mit Erzähltext)
 
-Ablage: `assets/story/<Dateiname>` (JPG, 16:9, gern 1920 × 1080 oder größer). Der Text liegt unten im Bild – das untere Drittel soll ruhig und dunkel sein. Fehlt ein Bild, zeigt das Spiel einen gezeichneten Platzhalter mit dem Titel. Texte und Auslöser: `story` in `data/world_data.js`. Jede Szene nennt Standpunkt und Blickwinkel; zu sehen ist nur, was von dort aus sichtbar wäre.
+Ablage: `assets/story/<Dateiname>` (JPG, **21:9 Kinoformat** (Kevin, 18.11.2026), gern 2520 × 1080 oder größer). Das Spiel zeigt die Bilder wie im Kino mit schwarzen Balken oben und unten; der Text liegt unten über dem Bildrand und dem Balken – das untere Drittel soll ruhig und dunkel sein. Fehlt ein Bild, zeigt das Spiel einen gezeichneten Platzhalter mit dem Titel. Texte und Auslöser: `story` in `data/world_data.js`. Jede Szene nennt Standpunkt und Blickwinkel; zu sehen ist nur, was von dort aus sichtbar wäre.
 
-#### `story/intro_kalkberg.jpg` · 16:9
+#### `story/intro_kalkberg.jpg` · 21:9
 Verwendung: Spielstart, Bild 1: Die Lüneburger reißen 1371 die Burg auf dem Kalkberg ab  
 Bildaufbau: Standpunkt: auf einem Feld vor der Stadt, Augenhöhe, Blick zum Kalkberg
 
 ```
-viewpoint: standing in a field outside the town at eye level, looking toward a low white chalk hill. On top of the hill, in the middle ground, townsfolk with picks, crowbars and ropes tear down the walls and the round keep of a castle; one tower collapses in a cloud of dust. Behind the hill the roofs and brick church towers of a medieval salt town. In the shadowed foreground a deep crack runs through the white chalk ground toward the viewer, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: standing in a field outside the town at eye level, looking toward a low white chalk hill. On top of the hill, in the middle ground, townsfolk with picks, crowbars and ropes tear down the walls and the round keep of a castle; one tower collapses in a cloud of dust. Behind the hill the roofs and brick church towers of a medieval salt town. In the shadowed foreground a deep crack runs through the white chalk ground toward the viewer, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/intro_huegelgrab.jpg` · 16:9
+#### `story/intro_huegelgrab.jpg` · 21:9
 Verwendung: Spielstart, Bild 2: Das Hügelgrab am Wilseder Berg bricht auf  
 Bildaufbau: Standpunkt: in der Heide, Bodenhöhe, Blick über die Heide zum Grabhügel
 
 ```
-night, viewpoint: crouching in the heather at ground level, looking across an open heath. In the middle distance a round bronze-age burial mound overgrown with heather, ringed by standing stones; the large capstone on top has split, and light seeps from the crack as fine radiating engraved lines. A full moon low behind the mound, wind-bent birches, a single crow on a stone. Foreground: dark heather in shadow, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+night, viewpoint: crouching in the heather at ground level, looking across an open heath. In the middle distance a round bronze-age burial mound overgrown with heather, ringed by standing stones; the large capstone on top has split, and light seeps from the crack as fine radiating engraved lines. A full moon low behind the mound, wind-bent birches, a single crow on a stone. Foreground: dark heather in shadow, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/intro_erwachen.jpg` · 16:9
+#### `story/intro_erwachen.jpg` · 21:9
 Verwendung: Spielstart, Bild 3: Der Lich steigt aus dem Grab  
 Bildaufbau: Standpunkt: sehr tief, am Rand des Grablochs, Blick schräg nach oben
 
 ```
-night, viewpoint: very low at the edge of a broken grave chamber, looking slightly upward. A skeletal hand with bronze rings and a corroded bronze arm ring pushes up through earth and split stone slabs; behind it rises the skull of a crowned lich, its empty eye sockets radiating faint engraved light. Soil, roots and stones fall away. Moon and night sky above the opening, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+night, viewpoint: very low at the edge of a broken grave chamber, looking slightly upward. A skeletal hand with bronze rings and a corroded bronze arm ring pushes up through earth and split stone slabs; behind it rises the skull of a crowned lich, its empty eye sockets radiating faint engraved light. Soil, roots and stones fall away. Moon and night sky above the opening, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/erste_ernte.jpg` · 16:9
+#### `story/erste_ernte.jpg` · 21:9
 Verwendung: Nach der ersten Eroberung  
 Bildaufbau: Standpunkt: auf einer leichten Anhöhe am Dorfrand, Blick auf den Weg und die Höfe
 
 ```
-dawn, viewpoint: on a slight rise at the edge of a heath village, looking down a sandy track toward thatched farmhouses. Skeletons and ghouls drag lifeless villagers by the feet along the track, out of the village and past the viewer to the left. Thin smoke rises from two roofs in the background. Withered dry heather and a dead birch in the foreground, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+dawn, viewpoint: on a slight rise at the edge of a heath village, looking down a sandy track toward thatched farmhouses. Skeletons and ghouls drag lifeless villagers by the feet along the track, out of the village and past the viewer to the left. Thin smoke rises from two roofs in the background. Withered dry heather and a dead birch in the foreground, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/heiliges_licht.jpg` · 16:9
+#### `story/heiliges_licht.jpg` · 21:9
 Verwendung: Erster Angriff auf ein Kloster oder eine Kirche  
 Bildaufbau: Standpunkt: im Kreuzganghof, Augenhöhe, Blick zur Kirchenfassade
 
 ```
-viewpoint: inside a monastery courtyard (cloister garth) at eye level, looking toward the church facade. A six-winged seraph hovers above the church portal; from its raised hands a beam of holy light, drawn as dense radiating engraved rays, strikes a staggering zombie in the middle of the courtyard, whose flesh crumbles into dust. Other undead recoil and shield their eyes; monks pray under the arcade on the right, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: inside a monastery courtyard (cloister garth) at eye level, looking toward the church facade. A six-winged seraph hovers above the church portal; from its raised hands a beam of holy light, drawn as dense radiating engraved rays, strikes a staggering zombie in the middle of the courtyard, whose flesh crumbles into dust. Other undead recoil and shield their eyes; monks pray under the arcade on the right, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/sturmleitern.jpg` · 16:9
+#### `story/sturmleitern.jpg` · 21:9
 Verwendung: Erster Angriff auf eine Stadt mit Mauern  
 Bildaufbau: Standpunkt: außerhalb der Stadt, hinter den Angreifern am Boden, Blick die Mauer hinauf – vom Stadtinneren ist nur sichtbar, was über die Mauer ragt
 
 ```
-viewpoint: outside the town on the ground, behind the attacking undead, looking up at a tall stone town wall with crenellations and a gate tower. Skeletons climb crude ladders made of bones; one ladder topples backward. In the left foreground skeletons crank a ballista made of bones. Crossbowmen lean out between the merlons and shoot down. Of the town itself only the roofs and a church spire rising above the wall are visible, nothing of the streets behind it, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: outside the town on the ground, behind the attacking undead, looking up at a tall stone town wall with crenellations and a gate tower. Skeletons climb crude ladders made of bones; one ladder topples backward. In the left foreground skeletons crank a ballista made of bones. Crossbowmen lean out between the merlons and shoot down. Of the town itself only the roofs and a church spire rising above the wall are visible, nothing of the streets behind it, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/hamburg_hafen.jpg` · 16:9
+#### `story/hamburg_hafen.jpg` · 21:9
 Verwendung: Angriff auf Hamburg  
 Bildaufbau: Standpunkt: vom Wasser aus, wie aus einem kleinen Boot auf der Elbe, Blick auf Kais und Stadt
 
 ```
-foggy dawn, viewpoint: at water level, as if from a small boat on the river Elbe, looking toward the quays of the medieval Hanseatic town of Hamburg. Moored cogs with high sterns along wooden quays, a wooden treadwheel harbour crane, gabled brick warehouses, and behind them the tall spires of two Gothic brick churches. Undead dripping with river weed climb out of the water onto the quays and up the hulls of the cogs; a watchman with a lantern on the quay raises the alarm, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+foggy dawn, viewpoint: at water level, as if from a small boat on the river Elbe, looking toward the quays of the medieval Hanseatic town of Hamburg. Moored cogs with high sterns along wooden quays, a wooden treadwheel harbour crane, gabled brick warehouses, and behind them the tall spires of two Gothic brick churches. Undead dripping with river weed climb out of the water onto the quays and up the hulls of the cogs; a watchman with a lantern on the quay raises the alarm, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/lueneburg_saline.jpg` · 16:9
+#### `story/lueneburg_saline.jpg` · 21:9
 Verwendung: Angriff auf Lüneburg  
 Bildaufbau: Standpunkt: auf dem Kalkberg zwischen den Burgruinen, Blick hinunter auf Saline und Stadt
 
 ```
-dusk, viewpoint: on top of a white chalk hill among the ruined, half-demolished walls of a castle, looking down onto a medieval town. Below lie the salt works: boiling houses with steam and smoke rising from many chimneys, brick gables and a tall Gothic church tower behind. In the foreground a column of undead winds through the ruins and down the path toward the town, seen from behind, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+dusk, viewpoint: on top of a white chalk hill among the ruined, half-demolished walls of a castle, looking down onto a medieval town. Below lie the salt works: boiling houses with steam and smoke rising from many chimneys, brick gables and a tall Gothic church tower behind. In the foreground a column of undead winds through the ruins and down the path toward the town, seen from behind, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/magdeburg_dom.jpg` · 16:9
+#### `story/magdeburg_dom.jpg` · 21:9
 Verwendung: Angriff auf Magdeburg  
 Bildaufbau: Standpunkt: auf dem Domplatz, Bodenhöhe, Blick nach oben zur Westfassade
 
 ```
-viewpoint: on the cathedral square at ground level, looking up at the west front of a Gothic cathedral whose two towers are unfinished and surrounded by wooden scaffolding. Above the towers the sky opens in a ring of engraved rays and a six-winged seraph of fire descends. On the square a crowd of undead halts; the front ranks crumble. Clerics with raised crosses stand on the cathedral steps, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: on the cathedral square at ground level, looking up at the west front of a Gothic cathedral whose two towers are unfinished and surrounded by wooden scaffolding. Above the towers the sky opens in a ring of engraved rays and a six-winged seraph of fire descends. On the square a crowd of undead halts; the front ranks crumble. Clerics with raised crosses stand on the cathedral steps, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/rungholt_ebbe.jpg` · 16:9
+#### `story/rungholt_ebbe.jpg` · 21:9
 Verwendung: Angriff auf Rungholt  
 Bildaufbau: Standpunkt: am Rand des Watts, Augenhöhe, flacher Horizont
 
 ```
-low tide, viewpoint: at the edge of wide mudflats at eye level, with a very low horizon. In the middle distance the broken walls and arched windows of a sunken church rise from the mud, with rows of old wooden piles and a fallen bell half buried in the silt. Tidal creeks wind toward the viewer; drowned dead in rags rise out of the creeks. Low stormy sky, gulls, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+low tide, viewpoint: at the edge of wide mudflats at eye level, with a very low horizon. In the middle distance the broken walls and arched windows of a sunken church rise from the mud, with rows of old wooden piles and a fallen bell half buried in the silt. Tidal creeks wind toward the viewer; drowned dead in rags rise out of the creeks. Low stormy sky, gulls, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/kyffhaeuser.jpg` · 16:9
+#### `story/kyffhaeuser.jpg` · 21:9
 Verwendung: Angriff auf den Kyffhäuser  
 Bildaufbau: Bildaufbau: Schnitt durch den Berg wie in alten Stichen – oben außen, unten innen
 
 ```
-the picture shows the mountain cut open like in an old engraving: in the upper part, outside, a forested mountain summit with a castle ruin and ravens circling it; in the lower part, a cut-away hall inside the mountain where an old emperor sleeps at a stone table, his long beard grown through the table, lit by a single torch. On the right, at the cave mouth, the crowned lich and his undead enter, seen in profile, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+the picture shows the mountain cut open like in an old engraving: in the upper part, outside, a forested mountain summit with a castle ruin and ravens circling it; in the lower part, a cut-away hall inside the mountain where an old emperor sleeps at a stone table, his long beard grown through the table, lit by a single torch. On the right, at the cave mouth, the crowned lich and his undead enter, seen in profile, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/spreewald.jpg` · 16:9
+#### `story/spreewald.jpg` · 21:9
 Verwendung: Angriff auf den Spreewald  
 Bildaufbau: Standpunkt: in einem flachen Kahn auf einem schmalen Fließ, Blick nach vorn
 
 ```
-viewpoint: sitting in a flat-bottomed punt on a narrow channel in a swampy alder forest, looking ahead along the water. Alder trees and reeds on both banks, mist on the water. Ahead, on a tree root, a giant serpent with a small golden crown raises its head; to the left a water man with green skin rises from the water to the waist; pale water maidens half hidden in the reeds, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: sitting in a flat-bottomed punt on a narrow channel in a swampy alder forest, looking ahead along the water. Alder trees and reeds on both banks, mist on the water. Ahead, on a tree root, a giant serpent with a small golden crown raises its head; to the left a water man with green skin rises from the water to the waist; pale water maidens half hidden in the reeds, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/brocken_sabbat.jpg` · 16:9
+#### `story/brocken_sabbat.jpg` · 21:9
 Verwendung: Angriff auf den Brocken  
 Bildaufbau: Standpunkt: am Hang unter dem Gipfel, Blick hinauf; die Untoten im Vordergrund von hinten
 
 ```
-night, viewpoint: on the slope just below a bare granite summit, looking up. On the summit witches dance around a great fire among granite boulders; others ride brooms and goats across the sky; sparks and smoke. In the foreground, climbing between the rocks toward the summit with their backs to the viewer, a column of undead led by the crowned lich, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+night, viewpoint: on the slope just below a bare granite summit, looking up. On the summit witches dance around a great fire among granite boulders; others ride brooms and goats across the sky; sparks and smoke. In the foreground, climbing between the rocks toward the summit with their backs to the viewer, a column of undead led by the crowned lich, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/phylakterium.jpg` · 16:9
+#### `story/phylakterium.jpg` · 21:9
 Verwendung: Der Lich fällt zum ersten Mal  
 Bildaufbau: Standpunkt: im Eingang der Grabkammer, Blick in die Kammer
 
 ```
-viewpoint: standing in the low entrance of a burial chamber built of stone slabs, looking inside. On a stone altar in the centre a small reliquary-like phylactery radiates engraved rays; above it dust and bones swirl together and form the half-finished figure of the lich. Bronze vessels, urns and grave goods along the walls, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: standing in the low entrance of a burial chamber built of stone slabs, looking inside. On a stone altar in the centre a small reliquary-like phylactery radiates engraved rays; above it dust and bones swirl together and form the half-finished figure of the lich. Bronze vessels, urns and grave goods along the walls, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/fackeln.jpg` · 16:9
+#### `story/fackeln.jpg` · 21:9
 Verwendung: Der erste Trupp der Lebenden zieht aus  
 Bildaufbau: Standpunkt: auf dem Dorfanger, Augenhöhe
 
 ```
-evening, viewpoint: on a village green at eye level. Peasants with torches, pitchforks and flails and a knight on horseback drive undead out of the village; in the middle a pyre burns skeletons. In the background a church tower where men haul a new bell up on a rope. Strong contrast of torchlight against the dark, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+evening, viewpoint: on a village green at eye level. Peasants with torches, pitchforks and flails and a knight on horseback drive undead out of the village; in the middle a pyre burns skeletons. In the background a church tower where men haul a new bell up on a rope. Strong contrast of torchlight against the dark, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/buendnis.jpg` · 16:9
+#### `story/buendnis.jpg` · 21:9
 Verwendung: Die Lebenden schließen ein Bündnis  
 Bildaufbau: Standpunkt: im Kirchenschiff, Augenhöhe, Blick zum Altar
 
 ```
-viewpoint: in the nave of a Gothic church at eye level, looking toward the choir. Before the altar a bishop holds up a reliquary; in front of him a duke in armour with a lion banner and a Hanseatic merchant-mayor in a fur-trimmed robe swear an oath with raised fingers. Knights and councillors stand around them; bell ropes hang in the tower arch, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+viewpoint: in the nave of a Gothic church at eye level, looking toward the choir. Before the altar a bishop holds up a reliquary; in front of him a duke in armour with a lion banner and a Hanseatic merchant-mayor in a fur-trimmed robe swear an oath with raised fingers. Knights and councillors stand around them; bell ropes hang in the tower arch, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/ley_knoten.jpg` · 16:9
+#### `story/ley_knoten.jpg` · 21:9
 Verwendung: Das erste Pantheon fällt  
 Bildaufbau: Standpunkt: hinter dem Lich auf einem Hügel, Blick über das Land
 
 ```
-night, viewpoint: on a hill behind the lich, who stands in a stone circle with arms raised, seen from behind. Below, a wide landscape; from the stone circle bright lines, drawn as engraved light, run like veins across the land to distant hills, other stone circles and far church towers, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+night, viewpoint: on a hill behind the lich, who stands in a stone circle with arms raised, seen from behind. Below, a wide landscape; from the stone circle bright lines, drawn as engraved light, run like veins across the land to distant hills, other stone circles and far church towers, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/finale_brocken.jpg` · 16:9
+#### `story/finale_brocken.jpg` · 21:9
 Verwendung: Ende, Bild 1: Der Lich auf dem Brocken  
 Bildaufbau: Standpunkt: hinter dem Lich auf dem Gipfel, Blick über das Tiefland
 
 ```
-dawn, viewpoint: on the bare granite summit just behind the lich, who is seen from behind: crown, cloak and staff. Around him extinguished fires and scattered brooms among the rocks. Below, the endless lowland spreads to a far horizon with rivers, towns and forests under a low sky, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+dawn, viewpoint: on the bare granite summit just behind the lich, who is seen from behind: crown, cloak and staff. Around him extinguished fires and scattered brooms among the rocks. Below, the endless lowland spreads to a far horizon with rivers, towns and forests under a low sky, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
-#### `story/finale_schatten.jpg` · 16:9
+#### `story/finale_schatten.jpg` · 21:9
 Verwendung: Ende, Bild 2: Der lange Schatten  
 Bildaufbau: Standpunkt: Vogelschau über das Tiefland
 
 ```
-dusk, viewpoint: high bird's-eye view over the north German plain. A huge shadow in the shape of a crowned head and an outstretched hand falls across the land: grey withered heath, silent towns, church towers without bells. Far in the south, beyond dark mountains on the horizon, a few graves open and a pale glow rises, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, wide cinematic 16:9 composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
+dusk, viewpoint: high bird's-eye view over the north German plain. A huge shadow in the shape of a crowned head and an outstretched hand falls across the land: grey withered heath, silent towns, church towers without bells. Far in the south, beyond dark mountains on the horizon, a few graves open and a pale glow rises, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
 ### 0 Neu am 15.11.2026: Spielstile, Skillbaum, Schleichen
@@ -355,7 +356,7 @@ a swinging church bell with its rope, single isolated motif centered with a wide
 Verwendung: Kopfbild des Fensters „Angriff auf …“ (Seite wählen)
 
 ```
-wide scene of a small medieval village at night seen from a dark heath hill, a few watch fires, skeletal figures crouching in the tall grass in the foreground, wind bending the grass, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+a small medieval village at night seen from a dark heath hill, a few watch fires, skeletal figures crouching in the tall grass in the foreground, wind bending the grass, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 ### 1 Grundlagen (Rahmen, Papier, Titel)
@@ -392,7 +393,7 @@ corner ornament: a small skull with crossed bones entwined by a dry thorn vine, 
 Verwendung: Trennlinie zwischen Abschnitten
 
 ```
-long thin horizontal ornament: a femur bone with a thorn vine wound around it, ending in tiny skulls at both ends, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+horizontal ornament: a femur bone with a thorn vine wound around it, ending in tiny skulls at both ends, single isolated motif centered with a wide empty margin, plain off-white paper background, no frame, no text, no letters, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `titel.jpg` · 16:9
@@ -745,77 +746,77 @@ round medallion: a setting sun behind a gallows on a hill, single isolated motif
 Verwendung: Fenster Rekrutieren
 
 ```
-wide panoramic scene: necromancer raising skeletons and corpses from open graves in a churchyard, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+necromancer raising skeletons and corpses from open graves in a churchyard, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/bauen.jpg` · 21:9
 Verwendung: Fenster Bauen
 
 ```
-wide panoramic scene: skeleton workers building a bone-and-stone hall inside a huge burial mound, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+skeleton workers building a bone-and-stone hall inside a huge burial mound, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/chronik.jpg` · 21:9
 Verwendung: Fenster Chronik
 
 ```
-wide panoramic scene: an old monk-chronicler writing by candlelight, a skeleton dictating over his shoulder, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+an old monk-chronicler writing by candlelight, a skeleton dictating over his shoulder, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/inventar.jpg` · 21:9
 Verwendung: Fenster Inventar
 
 ```
-wide panoramic scene: a treasure vault with a crown, a sword, a horn and relics among bones, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+a treasure vault with a crown, a sword, a horn and relics among bones, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/rasten.jpg` · 21:9
 Verwendung: Fenster Rasten
 
 ```
-wide panoramic scene: an undead army camped around fires under a crescent moon on a heath, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+an undead army camped around fires under a crescent moon on a heath, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/ley.jpg` · 21:9
 Verwendung: Fenster Ley-Sprung
 
 ```
-wide panoramic scene: standing stones linked by glowing lines across a dark landscape, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+standing stones linked by glowing lines across a dark landscape, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/spielstaende.jpg` · 21:9
 Verwendung: Fenster Spielstände
 
 ```
-wide panoramic scene: a monk's desk with stacked books and an hourglass, a skull as bookend, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+a monk's desk with stacked books and an hourglass, a skull as bookend, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/sieg.jpg` · 21:9
 Verwendung: Fenster Kampf gewonnen
 
 ```
-wide panoramic scene: skeletons raising tattered banners over a burning village, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+skeletons raising tattered banners over a burning village, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/niederlage.jpg` · 21:9
 Verwendung: Fenster Kampf verloren
 
 ```
-wide panoramic scene: a field of shattered skeletons, crows feeding, a priest blessing the ground, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+a field of shattered skeletons, crows feeding, a priest blessing the ground, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/rueckzug.jpg` · 21:9
 Verwendung: Fenster Rückzug
 
 ```
-wide panoramic scene: an undead column retreating through a forest in the rain, stragglers falling behind, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+an undead column retreating through a forest in the rain, stragglers falling behind, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 #### `banner/belagerung.jpg` · 21:9
 Verwendung: Fenster Ummauerte Stadt / Abziehen
 
 ```
-wide panoramic scene: a fortified Hanseatic town wall with towers and a gate under siege by giants and a bone ballista, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+a fortified Hanseatic town wall with towers and a gate under siege by giants and a bone ballista, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
 ```
 
 ### 7 Erzähler

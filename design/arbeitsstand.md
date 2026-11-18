@@ -91,7 +91,7 @@ Kevins Auftrag vom 16./17.11.: Balance testen (auch je Spielstil), drei Schwieri
 
 ## Story-Bilder (fertig, Version 156)
 
-Kevin (18.11.): Spielintro und Story als große Bilder mit Erzähltext; Wahrzeichen (Hamburger Hafen), Belagerung, Klerus mit Engel gegen Zombie. Dazu: Bildkomposition muss stimmen (Standpunkt/Blickwinkel). Eingebaut: 16 Szenen, 19 Bilder (Design-Dokument „Story-Bilder“), Prompts in `design/ui_bilder.md` Abschnitt 0 (18.11.). **Bilder fehlen noch** – Kevin erzeugt sie, Claude legt sie unter `assets/story/` ab (16:9 JPG, auf ~1920 px Breite verkleinern). Test in der Sitzung: `story.js` (Intro, Wahrzeichen vor Kampf, einmalig, Galerie). Kevins „Nephilim“: im Spiel gibt es Ophan, Cherub und Seraph – das Bild zeigt einen Seraph.
+Kevin (18.11.): Spielintro und Story als große Bilder mit Erzähltext; Wahrzeichen (Hamburger Hafen), Belagerung, Klerus mit Engel gegen Zombie. Dazu: Bildkomposition muss stimmen (Standpunkt/Blickwinkel). Eingebaut: 16 Szenen, 19 Bilder (Design-Dokument „Story-Bilder“), Prompts in `design/ui_bilder.md` Abschnitt 0 (18.11.). **Bilder fehlen noch** – Kevin erzeugt sie, Claude legt sie unter `assets/story/` ab (21:9 JPG im Kinoformat, auf ~2520 px Breite verkleinern; Anzeige mit schwarzen Balken). Seitenverhältnisse stehen nie im Prompt, nur in der Überschrift – Kevin stellt sie im Bildprogramm ein (18.11.). Test in der Sitzung: `story.js` (Intro, Wahrzeichen vor Kampf, einmalig, Galerie). Kevins „Nephilim“: im Spiel gibt es Ophan, Cherub und Seraph – das Bild zeigt einen Seraph.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
