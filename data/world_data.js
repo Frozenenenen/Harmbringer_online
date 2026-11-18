@@ -316,8 +316,8 @@ window.HARMBRINGER_DATA = {
       ai: { aim: 1, kill: 30, leader: 15, focus: 0, cover: true, kite: false, ability: 1, doctrine: true },
       watch: { gain: 1, decay: 20, shoutNow: "watch", bell: true, relief: 0, reliefShare: 0, patrols: 0, posts: 0, corpse: 60 },
       raid: { chance: 1, strength: 1 }, threat: 1, retreatLoss: 0.25, loot: 1, startRes: 1 },
-    hard: { name: "Schwer", text: "Die Lebenden kämpfen klug: Sie bündeln ihre Angriffe auf Angeschlagene und auf den Lich, Schützen weichen vor Klingen zurück. Jede wache Wache ruft sofort, gefundene Tote bedeuten Alarm, Argwohn legt sich nur langsam, eine Streife mehr. Läutet die Glocke, trifft zwei Runden später Entsatz ein. Mehr und stärkere Trupps, die Bedrohung steigt schneller, Rückzug kostet 35 %. Dazu +10 % Lebenspunkte und +5 % Schaden.",
-      enemyHpPct: 0.1, enemyDamagePct: 0.05, doctrine: 1, doctrineGarrison: true, ambush: true,
+    hard: { name: "Schwer", text: "Die Lebenden kämpfen klug: Sie bündeln ihre Angriffe auf Angeschlagene und auf den Lich, Schützen weichen vor Klingen zurück. Jede wache Wache ruft sofort, gefundene Tote bedeuten Alarm, Argwohn legt sich nur langsam, eine Streife mehr. Läutet die Glocke, trifft zwei Runden später Entsatz ein. Mehr und stärkere Trupps, die Bedrohung steigt schneller, Rückzug kostet 35 %. Dazu +20 % Lebenspunkte und +15 % Schaden.",
+      enemyHpPct: 0.2, enemyDamagePct: 0.15, doctrine: 1, doctrineGarrison: true, ambush: true,
       ai: { aim: 1, kill: 40, leader: 25, focus: 20, cover: true, kite: true, ability: 1, doctrine: true },
       watch: { gain: 1.15, decay: 12, shoutNow: "all", bell: true, relief: 2, reliefShare: 0.4, patrols: 1, posts: 0.1, corpse: 100 },
       raid: { chance: 1.3, strength: 1.15 }, threat: 1.25, retreatLoss: 0.35, loot: 1, startRes: 1 }

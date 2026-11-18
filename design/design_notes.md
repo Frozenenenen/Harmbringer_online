@@ -2446,7 +2446,7 @@ Drei Stufen, wählbar bei „Erwachen“ und „Neues Spiel“, änderbar im Men
 | Posten / Streifen | 10 %-Punkte weniger Posten | Normal | 10 %-Punkte mehr Posten, eine Streife mehr |
 | Glocke | gibt es nicht | einer läuft zur Glocke | dazu **Entsatz**: 2 Runden nach dem Läuten kommt Verstärkung (40 % der größten Truppe) am Feldrand an |
 | Doktrinen | halbe Boni, keine Merkmale, keine Zusatztruppen, kein Hinterhalt | voll | voll |
-| Werte der Lebenden | −10 % LP, −10 % Schaden | – | +10 % LP, +5 % Schaden |
+| Werte der Lebenden | −10 % LP, −10 % Schaden | – | +20 % LP, +15 % Schaden |
 | Trupps | 40 % seltener, 15 % kleiner | Normal | 30 % häufiger, 15 % größer |
 | Bedrohung steigt | ×0,75 | ×1 | ×1,25 |
 | Rückzug kostet | 15 % | 25 % | 35 % |

@@ -122,7 +122,9 @@ Kevin (17.11.): „Du musst im Balance-Test natürlich auch verschiedene Spielst
 
 Siege überall 93–100 % (der Bot greift nur an, wenn er laut `foeStrength` mindestens gleich stark ist). Leicht ist klar leichter, Schwer im Tempo kaum von Mittel zu unterscheiden: Der Bot weicht auf schwächere Ziele aus und schleicht nicht (Wachen-Verschärfungen greifen nicht). Einzelner Lauf je Stil, Streuung groß (Klasse 23–38). Läuft: Reihenkämpfe auf allen drei Stufen mit gleichen Armeen (`e10`, `nn10`, `h10`).
 
-**Noch zu tun:** Stufen-Matrix auswerten, Schwer ggf. im offenen Kampf verschärfen, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
+**Stufen-Matrix (gleiche Armeen, Verhältnis 1,0, 420 Kämpfe je Stufe):** Siege Leicht 98 %, Mittel 92 %, Schwer 90 % – Schwer im offenen Kampf zu nah an Mittel. Geändert (Version 153): Schwer +20 % LP, +15 % Schaden (vorher +10/+5). Nachmessung `h10b` läuft.
+
+**Noch zu tun:** `h10b` auswerten, Bericht `design/balance_bericht.md`, Kampagnen je Spielstil auf Mittel, dann Leicht/Schwer; Werte der Stufen nachziehen; Bericht `design/balance_bericht.md`; Design-Dokument (Doktrin-Tabelle, Gefahrenfarbe, Schwierigkeit) nachziehen.
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
