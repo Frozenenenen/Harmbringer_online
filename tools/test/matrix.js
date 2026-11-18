@@ -11,7 +11,7 @@ const RATIO = +(process.argv[2] || 1.3), HOUR = +(process.argv[3] || 12), PER = 
   pg.on('pageerror', e => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' | ')));
   pg.on('console', m => { if (m.text().startsWith('ROW ')) console.log(m.text().slice(4)); });
   await pg.route('https://cdn.jsdelivr.net/**', r => { const u = r.request().url(); r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(SP, u.includes('CSS2D') ? 'css2d.js' : u.includes('GLTFLoader') ? 'gltf.js' : 'three.js')) }); });
-  await pg.route('**/index.html', r => { let h = fs.readFileSync(path.join(REPO, 'index.html'), 'utf8'); const i = h.lastIndexOf('</script>');
+  await pg.route('**/index.html', r => { let h = fs.readFileSync(path.join(REPO, 'index.html'), 'utf8').replace(/,\s*"integrity": \{[^}]*\}/, ''); const i = h.lastIndexOf('</script>');
     h = h.slice(0, i) + '\nwindow.__T = { Battle, Campaign, Doctrine, game, newGame, DATA, Figures, NODE_BY_ID, Narrator, UI, Sfx, stackCount, SaveGame };\n' + h.slice(i);
     h = h.replace('tw.t += dt * (tw.fast && game.hurry ? 4 : 1);', 'tw.t += 99;').replace(/const AI_PAUSE = [\d.]+/, 'const AI_PAUSE = 0')
       .replace("if (u.side === 'player' && !b.auto) {", "if (u.side === 'player' && !b.auto && !window.__auto) {");

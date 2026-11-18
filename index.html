@@ -316,6 +316,8 @@
   .storyList button { display: flex; flex-direction: column; gap: 4px; padding: 6px; text-align: left; }
   .storyList .th { width: 100%; aspect-ratio: 21/9; background: #b09c72 center/cover; border: 1px solid rgba(0,0,0,.3); }
   .storyList button[disabled] { opacity: .45; }
+  #coopAsk { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 210; width: min(420px, calc(100vw - 32px)); padding: 12px 16px; }
+  #coopAsk.hidden { display: none; } #coopAsk .buttons { display: flex; gap: 8px; justify-content: flex-end; }
   #narrator.chron { border-left: 5px solid #7a1e2a; } #narrator.chron .nt { font: italic 17px/1.4 "IM Fell English", Georgia, serif; }
   #narrator.hint { border-left: 5px solid #c9a227; } #narrator.hint .nt { font: 14px/1.45 "Segoe UI", Helvetica, Arial, sans-serif; } #narrator.hint a { color: #e8d08a; }
   #narrator.char .nt { font: 15px/1.4 "Segoe UI", Helvetica, Arial, sans-serif; }
@@ -2538,9 +2540,10 @@ const SAVE_KEY = 'harmbringer_save_v1';
 const Coop = {
   role: null, code: null, link: null, peer: null, timer: 0, connected: false,
   PEERJS: 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js',
+  PEERJS_SRI: 'sha256-rV2IcNHjiZFPnLqNNb4xPEMnxp7goiHkgum/diETb+U=',   // checksum: a changed file is refused
   async loadPeer() {
     if (window.Peer) return;
-    await new Promise((ok, fail) => { const s = document.createElement('script'); s.src = this.PEERJS; s.onload = ok; s.onerror = () => fail(new Error('PeerJS konnte nicht geladen werden')); document.head.appendChild(s); });
+    await new Promise((ok, fail) => { const s = document.createElement('script'); s.src = this.PEERJS; s.integrity = this.PEERJS_SRI; s.crossOrigin = 'anonymous'; s.onload = ok; s.onerror = () => fail(new Error('PeerJS konnte nicht geladen werden')); document.head.appendChild(s); });
   },
   newCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({ length: 5 }, () => A[Math.floor(Math.random() * A.length)]).join(''); },
   // Transport wrapper: { send(obj), close() } plus onData/onOpen/onClose callbacks.
@@ -2551,23 +2554,68 @@ const Coop = {
   },
   peerLink(conn) {
     const link = { send: m => { try { conn.send(m); } catch (e) {} }, close: () => conn.close() };
-    conn.on('data', m => this.receive(m));
-    conn.on('open', () => this.opened());
-    conn.on('close', () => this.closed());
-    conn.on('error', () => this.closed());
+    conn.on('data', m => this.receive(m, link));
+    conn.on('open', () => { if (link === this.link) this.opened(); });
+    // Only the current link counts: a newcomer who is turned away does not cut the game.
+    conn.on('close', () => { if (link === this.link) this.closed(); });
+    conn.on('error', () => { if (link === this.link) this.closed(); });
     return link;
+  },
+  // Player name, shown to the other side when joining and in the chat.
+  myName() { try { return (localStorage.getItem('harmbringer_playerName') || '').trim(); } catch (e) { return ''; } },
+  setName(n) { try { localStorage.setItem('harmbringer_playerName', String(n || '').replace(/[<>"&`]/g, '').trim().slice(0, 24)); } catch (e) { /* storage blocked */ } },
+  cleanName(n) { return String(n || '').replace(/[<>"&`]/g, '').trim().slice(0, 24) || 'Unbekannt'; },
+  newToken() { const b = new Uint8Array(16); crypto.getRandomValues(b); return Array.from(b, x => x.toString(16).padStart(2, '0')).join(''); },
+  tokenKey() { return 'harmbringer_coopToken_' + this.code; },
+  hello() {
+    let token = ''; try { token = localStorage.getItem(this.tokenKey()) || ''; } catch (e) { /* storage blocked */ }
+    return { t: 'hello', name: this.myName(), token };
+  },
+  // Host: someone wants to join. A guest the host once let in comes back by himself (token); anyone
+  // else needs the host's yes. Until then nothing he sends reaches the game.
+  ask(link, m) {
+    const c = game.campaign, name = this.cleanName(m.name), g = c.coopGuest;
+    if (g && typeof m.token === 'string' && m.token && m.token === g.token) return this.accept(link, g.name || name, true);
+    if (this.asking) this.deny(this.asking.link, true);
+    this.asking = { link, name };
+    let el = document.getElementById('coopAsk');
+    if (!el) { el = document.createElement('div'); el.id = 'coopAsk'; el.className = 'panel'; document.body.appendChild(el); }
+    el.innerHTML = `<h3>⚭ Beitritt</h3><p><b>${esc(name)}</b> möchte deinem Koop-Spiel beitreten.</p>
+      ${this.connected ? `<p class="small">Verbunden ist gerade <b>${esc(this.otherName || 'dein Mitspieler')}</b>. Lässt du ${esc(name)} zu, wird diese Verbindung getrennt.</p>` : ''}
+      <p class="small">Lass nur zu, wen du kennst: Der Mitspieler führt ein eigenes Heer in deinem Feldzug.</p>
+      <div class="buttons"><button data-no>Ablehnen</button><button data-yes class="primary">Zulassen</button></div>`;
+    el.classList.remove('hidden');
+    el.querySelector('[data-yes]').onclick = () => { el.classList.add('hidden'); const a = this.asking; this.asking = null; if (a) this.accept(a.link, a.name, false); };
+    el.querySelector('[data-no]').onclick = () => { el.classList.add('hidden'); const a = this.asking; this.asking = null; if (a) this.deny(a.link); };
+    if (Sfx.ping) Sfx.ping();
+    UI.news(`Koop: ${name} möchte beitreten.`, 'world');
+  },
+  accept(link, name, back) {
+    const c = game.campaign, old = this.link !== link ? this.link : null;
+    if (old) { try { old.send({ t: 'bye' }); } catch (e) { /* gone already */ } }
+    this.link = link; if (old) try { old.close(); } catch (e) { /* gone already */ }
+    const g = c.coopGuest, token = back && g ? g.token : this.newToken();
+    c.coopGuest = { name, token }; this.otherName = name;
+    link.send({ t: 'welcome', token, name: this.myName() || 'Gastgeber' });
+    this.receive({ t: 'hello', ok: true });
+  },
+  deny(link, quiet) {
+    try { link.send({ t: 'denied' }); } catch (e) { /* gone already */ }
+    setTimeout(() => { try { link.close(); } catch (e) { /* gone already */ } }, 400);
+    if (!quiet) UI.toast('Koop: Beitritt abgelehnt.', 4, false);
   },
   async host(local = false) {
     this.leave(); this.role = 'host';
     // A coop campaign keeps its room code, so the guest can come back with the same one.
     const c = game.campaign; this.code = (c.coop && c.coop.code) || c.coopCode || this.newCode();
     c.coopCode = this.code; if (c.coop) c.coop.code = this.code;
+    this.isLocalHost = local;
     if (local) { this.link = this.local(this.code); this.status('wartet (lokal)'); return this.code; }
     await this.loadPeer();
     await new Promise((ok, fail) => {
       this.peer = new Peer('harmbringer-' + this.code);
       this.peer.on('open', ok); this.peer.on('error', e => fail(new Error(e.type || 'Verbindungsfehler')));
-      this.peer.on('connection', conn => { if (this.link) this.link.close(); this.link = this.peerLink(conn); });
+      this.peer.on('connection', conn => { this.peerLink(conn); });   // a newcomer: his hello goes to ask()
     });
     this.status('wartet');
     return this.code;
@@ -2576,13 +2624,13 @@ const Coop = {
     this.leave(); this.role = 'guest'; this.code = code.trim().toUpperCase(); this.isLocal = local;
     try { localStorage.setItem('harmbringer_coopCode', this.code); } catch (e) {}
     document.body.classList.add('coopGuest');
-    if (local) { this.link = this.local(this.code); this.link.send({ t: 'hello' }); this.status('verbindet (lokal)'); return; }
+    if (local) { this.link = this.local(this.code); this.link.send(this.hello()); this.status('verbindet (lokal)'); return; }
     await this.loadPeer();
     await new Promise((ok, fail) => { this.peer = new Peer(); this.peer.on('open', ok); this.peer.on('error', e => fail(new Error(e.type || 'Verbindungsfehler'))); });
     this.link = this.peerLink(this.peer.connect('harmbringer-' + this.code, { reliable: true }));
-    this.status('verbindet');
+    this.status('wartet auf Zustimmung');
   },
-  opened() { if (this.role === 'guest') this.link.send({ t: 'hello' }); },
+  opened() { if (this.role === 'guest') this.link.send(this.hello()); },
   // The guest's army: an expedition 'coop' led by a necromancer, with its own stores (c.coop.res).
   // The guest's army: his chosen commander with the same start as the Lich (army and stores).
   hasGuestArmy() { const c = game.campaign; return !!(c.coop && Expeditions.get('coop')); },
@@ -2732,7 +2780,7 @@ const Coop = {
   },
   hear(text) {
     (this.log = this.log || []).push({ me: false, text });
-    UI.toast(`💬 Mitspieler: ${text}`, 8, false); if (Sfx.click) Sfx.click();
+    UI.toast(`💬 ${this.otherName || 'Mitspieler'}: ${text}`, 8, false); if (Sfx.click) Sfx.click();
     const chip = $('coopChip'); chip.classList.remove('flash'); void chip.offsetWidth; chip.classList.add('flash');
   },
   openChat() {
@@ -2755,14 +2803,27 @@ const Coop = {
     document.body.classList.remove('coopGuest'); $('coopChip').classList.add('hidden');
   },
   send(m) { if (this.link) this.link.send(m); },
-  receive(m) {
+  receive(m, link) {
     if (!m || typeof m !== 'object') return;
+    // Host: a connection that is not (yet) the guest's may only knock.
+    if (this.role === 'host' && link && link !== this.link) { if (m.t === 'hello') this.ask(link, m); return; }
+    // A hello counts only after the host's yes (accept) – or in the local test mode (same browser).
+    if (m.t === 'hello' && this.role === 'host' && !m.ok) { if (!this.isLocalHost) return; this.otherName = this.cleanName(m.name); }
+    if (m.t === 'welcome' && this.role === 'guest') {
+      this.otherName = this.cleanName(m.name);
+      try { localStorage.setItem(this.tokenKey(), String(m.token || '').replace(/[^0-9a-f]/g, '').slice(0, 64)); } catch (e) { /* storage blocked */ }
+      this.status('verbunden – Welt wird geladen'); return;
+    }
+    if (m.t === 'denied' && this.role === 'guest') {
+      this.leaving = true; this.leave(); this.leaving = false;
+      this.announce('Beitritt abgelehnt', 'Der Gastgeber hat dich nicht zugelassen.'); return;
+    }
     if (m.t === 'hello' && this.role === 'host') {
       this.connected = true; this.status('verbunden');
-      if (!this.hasGuestArmy()) { this.send({ t: 'pick' }); this.push(); this.announce('Dein Mitspieler ist beigetreten', 'Er wählt gerade seinen Kommandeur.'); return; }
+      if (!this.hasGuestArmy()) { this.send({ t: 'pick' }); this.push(); this.announce(`${this.otherName || 'Dein Mitspieler'} ist beigetreten`, 'Er wählt gerade seinen Kommandeur.'); return; }
       if (game.campaign.coop.clock) game.campaign.coop.clock.host = Math.max(game.campaign.coop.clock.host, this.now());
       SaveGame.save(); this.push(); UI.renderArmies(); WorldView.placeArmy(); WorldView.refresh();
-      this.announce('Dein Mitspieler ist zurück', `Er führt ${DATA.units[Expeditions.get('coop').leader].name} und sein Heer. Unten siehst du, wer wie weit vorn liegt.`);
+      this.announce(`${this.otherName || 'Dein Mitspieler'} ist zurück`, `Er führt ${DATA.units[Expeditions.get('coop').leader].name} und sein Heer. Unten siehst du, wer wie weit vorn liegt.`);
     }
     else if (m.t === 'pick' && this.role === 'guest') this.pick();
     else if (m.t === 'cmd' && this.role === 'host') this.exec(m);
@@ -2815,18 +2876,22 @@ const Coop = {
   open() {
     const row = (label, html) => `<tr><td>${label}</td><td>${html}</td></tr>`;
     UI.modal(`<h2>Koop-Spiel</h2><p class="small">Kampagne zu zweit. Stufe 1: Verbindung und gemeinsame Welt – der Gast sieht die Welt des Gastgebers live. Eigene Armee, Vorräte und Zeitleiste für den Gast folgen.</p>
-      ${this.role ? `<p><b>${this.role === 'host' ? 'Du eröffnest' : 'Du bist Gast'}</b>, Raumcode <b style="font-size:20px;letter-spacing:2px">${esc(this.code)}</b> – ${this.connected ? 'verbunden' : 'noch nicht verbunden'}.</p>` : ''}
-      <table>${row('Eröffnen', '<button id="coopHost">Spiel eröffnen</button> <button id="coopHostLocal" title="Zweites Fenster im selben Browser">lokal</button>')}
+      ${this.role ? `<p><b>${this.role === 'host' ? 'Du eröffnest' : 'Du bist Gast'}</b>, Raumcode <b style="font-size:20px;letter-spacing:2px">${esc(this.code)}</b> – ${this.connected ? `verbunden${this.otherName ? ' mit <b>' + esc(this.otherName) + '</b>' : ''}` : 'noch nicht verbunden'}.</p>
+      ${this.role === 'host' ? '<p class="small">Wer beitreten will, nennt seinen Namen; du lässt ihn zu oder lehnst ab. Wen du einmal zugelassen hast, kommt nach einem Abbruch ohne neue Frage zurück.</p>' : ''}` : ''}
+      <table>${row('Dein Name', '<input id="coopName" maxlength="24" placeholder="so sieht dich dein Mitspieler" style="width:220px">')}
+      ${row('Eröffnen', '<button id="coopHost">Spiel eröffnen</button> <button id="coopHostLocal" title="Zweites Fenster im selben Browser">lokal</button>')}
       ${row('Beitreten', '<input id="coopCode" maxlength="5" placeholder="Code" style="width:90px;text-transform:uppercase"> <button id="coopJoin">Beitreten</button> <button id="coopJoinLocal">lokal</button>')}
       ${this.role ? row('', '<button id="coopLeave">Verbindung trennen</button>') : ''}</table>
-      ${this.connected ? `<h3>Chat</h3><div class="coopLog">${(this.log || []).slice(-12).map(l => `<div class="${l.me ? 'me' : ''}"><b>${l.me ? 'Du' : 'Mitspieler'}:</b> ${esc(l.text)}</div>`).join('') || '<span class="small">Noch nichts geschrieben. Im Spiel öffnet Enter das Chatfeld.</span>'}</div>
+      ${this.connected ? `<h3>Chat</h3><div class="coopLog">${(this.log || []).slice(-12).map(l => `<div class="${l.me ? 'me' : ''}"><b>${l.me ? 'Du' : esc(this.otherName || 'Mitspieler')}:</b> ${esc(l.text)}</div>`).join('') || '<span class="small">Noch nichts geschrieben. Im Spiel öffnet Enter das Chatfeld.</span>'}</div>
         <input id="coopChatIn" maxlength="300" placeholder="Nachricht, Enter sendet" style="width:100%">` : ''}
       <p class="small">Verbindung direkt zwischen den Browsern (WebRTC). Der Raumcode wird über den öffentlichen PeerJS-Dienst vermittelt.</p>`,
       [{ label: 'Schließen', primary: true, action: () => {} }]);
     const run = async (f, label) => { try { await f(); this.open(); } catch (e) { this.leave(); UI.toast(`Koop: ${label} fehlgeschlagen (${e.message}).`, 6, false); } };
     $('coopHost').onclick = () => run(() => this.host(false), 'Eröffnen');
     $('coopHostLocal').onclick = () => run(() => this.host(true), 'Eröffnen');
-    $('coopJoin').onclick = () => run(() => this.join($('coopCode').value, false), 'Beitreten');
+    $('coopName').value = this.myName();
+    $('coopName').oninput = () => this.setName($('coopName').value);
+    $('coopJoin').onclick = () => { if (!this.myName()) { UI.toast('Koop: Bitte zuerst deinen Namen eingeben – der Gastgeber sieht ihn, wenn du beitreten willst.', 5, false); $('coopName').focus(); return; } run(() => this.join($('coopCode').value, false), 'Beitreten'); };
     $('coopJoinLocal').onclick = () => run(() => this.join($('coopCode').value, true), 'Beitreten');
     if ($('coopLeave')) $('coopLeave').onclick = () => { this.leaving = true; this.send({ t: 'bye' }); this.leave(); this.leaving = false; this.open(); };
     try { const last = localStorage.getItem('harmbringer_coopCode'); if (last && !$('coopCode').value) $('coopCode').value = last; } catch (e) {}

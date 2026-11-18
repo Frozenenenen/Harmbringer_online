@@ -93,6 +93,19 @@ Kevins Auftrag vom 16./17.11.: Balance testen (auch je Spielstil), drei Schwieri
 
 Kevin (18.11.): Spielintro und Story als große Bilder mit Erzähltext; Wahrzeichen (Hamburger Hafen), Belagerung, Klerus mit Engel gegen Zombie. Dazu: Bildkomposition muss stimmen (Standpunkt/Blickwinkel). Eingebaut: 16 Szenen, 19 Bilder (Design-Dokument „Story-Bilder“), Prompts in `design/ui_bilder.md` Abschnitt 0 (18.11.). **Bilder fehlen noch** – Kevin erzeugt sie, Claude legt sie unter `assets/story/` ab (21:9 JPG im Kinoformat, auf ~2520 px Breite verkleinern; Anzeige mit schwarzen Balken). Seitenverhältnisse stehen nie im Prompt, nur in der Überschrift – Kevin stellt sie im Bildprogramm ein (18.11.). Test in der Sitzung: `story.js` (Intro, Wahrzeichen vor Kampf, einmalig, Galerie). Kevins „Nephilim“: im Spiel gibt es Ophan, Cherub und Seraph – das Bild zeigt einen Seraph.
 
+## Koop: Beitritt nur mit Zustimmung, Prüfsummen (Version 157)
+
+Kevin (18.11.): Bestätigung ja (mit Namen), längere Raumcodes nein, Plausibilitätsprüfung der Gast-Ergebnisse nein („Man spielt nur, mit wem man spielen will“), Prüfsummen ja.
+
+- **Beitritt:** Jeder Spieler gibt sich im Koop-Fenster einen Namen (`harmbringer_playerName`). Der Gast schickt ihn mit `hello`; beim Gastgeber erscheint `#coopAsk` („X möchte beitreten – Zulassen/Ablehnen“). Bis zur Zustimmung erreicht nichts vom Neuen das Spiel (`Coop.receive(m, link)`: fremde Verbindungen dürfen nur anklopfen). Zugelassene bekommen ein Token (`c.coopGuest = {name, token}`, beim Gast `harmbringer_coopToken_<Code>`) und kommen nach Abbruch ohne neue Frage zurück. Ein verbundener Gast wird nur nach Zustimmung ersetzt. Lokaler Testmodus (zwei Fenster) fragt nicht. Namen erscheinen im Chat und in den Meldungen. Test: `coopask.js` in der Sitzung.
+- **Prüfsummen:** PeerJS mit `integrity` (sha256 aus der Dateiliste von jsDelivr). **Three.js noch ohne:** Die sha384-Werte der r160-Dateien sind aus dem Git-Tag r160 berechnet, aber nicht gegen jsDelivr geprüft (Netz gesperrt). Eine falsche Prüfsumme würde das Spiel nicht starten lassen. Werte zum Einfügen in die Importmap (`"integrity": {…}` nach `"imports"`):
+  - `build/three.module.js`: `sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ`
+  - `examples/jsm/renderers/CSS2DRenderer.js`: `sha384-oxPlnJSeUCYU9W3RMQswb4S/vFd4Bhxuy1Ffx0V2KJakWeb6n1gaqUtSE9Ic/F72`
+  - `examples/jsm/loaders/GLTFLoader.js`: `sha384-oxY9vSeh7Mrt5WmhN8xfWoDRnmoW9krEiRBY7vJKaK90jMUidM0fhbUwcblpBgTu`
+  - `examples/jsm/utils/BufferGeometryUtils.js`: `sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf`
+  Prüfen: https://data.jsdelivr.com/v1/package/npm/three@0.160.0/flat liefert sha256 (base64); r160-Git-Werte: three.module.js `dt6oFRvJNSrvNSi0Ji4kmyYE9iVDgoMo25eNBg1hpJU=`, CSS2DRenderer `pPD3kYTAQ/a50mVNi6BR5Jp9Yx006PQ3wYBHmKaMN58=`, GLTFLoader `0HO0OOagfhNZdB3V1sdslTQgzA1P2E6xvd6UMVVA5qM=`, BufferGeometryUtils `m+BB6WMId10A4mlcxgdkW5qbZP18DnWd2PfACo2Svss=`. Stimmen sie, Block einfügen. Die Test-Werkzeuge in `tools/test/` entfernen den Block schon (sie liefern Attrappen statt three.js).
+- Google Fonts (CSS) lässt sich nicht per Prüfsumme sichern (Inhalt je Browser verschieden); CSS führt keinen Code aus.
+
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
 - **Kevins Rückmeldung abwarten:** Spielgefühl beim Schleichen (Kegelgröße am Tag, Tempo der Streifen, ob „Posten rufen sofort“ zu hart ist) – alle Stellschrauben stehen in `STEALTH`.

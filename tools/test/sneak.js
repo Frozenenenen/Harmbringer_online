@@ -6,7 +6,7 @@ const POLICY = process.argv[2] || 'sneak', HOUR = +(process.argv[3] || 0), N = +
   const br = await chromium.launch(); const pg = await br.newPage(); const errs = [];
   pg.on('pageerror', e => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' | ')));
   await pg.route('https://cdn.jsdelivr.net/**', r => { const u = r.request().url(); r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(SP, u.includes('CSS2D') ? 'css2d.js' : u.includes('GLTFLoader') ? 'gltf.js' : 'three.js')) }); });
-  await pg.route('**/index.html', r => { let h = fs.readFileSync(path.join(REPO, 'index.html'), 'utf8'); const i = h.lastIndexOf('</script>');
+  await pg.route('**/index.html', r => { let h = fs.readFileSync(path.join(REPO, 'index.html'), 'utf8').replace(/,\s*"integrity": \{[^}]*\}/, ''); const i = h.lastIndexOf('</script>');
     h = h.slice(0, i) + '\nwindow.__T = { Difficulty, Skills, Battle, Stealth, Alarm, Pathfinding, Combat, Abilities, game, newGame, DATA, Figures, NODE_BY_ID, Narrator, UI, hexDistance, stackCount };\n' + h.slice(i);
     h = h.replace('tw.t += dt * (tw.fast && game.hurry ? 4 : 1);', 'tw.t += 99;');
     r.fulfill({ contentType: 'text/html', body: h }); });

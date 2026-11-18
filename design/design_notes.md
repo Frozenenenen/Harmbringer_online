@@ -2229,6 +2229,8 @@ Stufen:
 5. **Chat, Wiederverbinden, Speichern** (umgesetzt): Enter öffnet im Spiel ein Chatfeld (auch im Kampf); Nachrichten erscheinen beim anderen 8 s mit Blinken der Koop-Anzeige, die letzten stehen im Koop-Fenster. Die Kampagne behält ihren Raumcode (`coopCode`), der Gast merkt sich den letzten Code; bricht die Verbindung ab, versucht der Gast 5-mal im Abstand von 6 s, wieder beizutreten. Heer, Vorräte und Uhr des Gasts stecken im Spielstand des Gastgebers; ist der Gast nicht da, bleibt sein Heer stehen (der Gastgeber kann es nicht führen).
 6. Gemeinsame Kämpfe am selben Ort (jeder steuert seine Einheiten).
 
+**Beitritt nur mit Zustimmung (18.11.2026):** Jeder Spieler gibt sich im Koop-Fenster einen Namen. Will jemand beitreten, fragt das Spiel den Gastgeber („Anna möchte deinem Koop-Spiel beitreten – Zulassen / Ablehnen“); bis dahin erreicht nichts vom Neuen das Spiel. Wer einmal zugelassen wurde, kommt nach einem Verbindungsabbruch ohne neue Frage zurück (Merkmal im Spielstand des Gastgebers und im Browser des Gasts). Ein verbundener Gast wird nur ersetzt, wenn der Gastgeber zustimmt. Namen stehen im Chat und in den Meldungen. Bewusst nicht: längere Raumcodes, Prüfung der Kampfergebnisse des Gasts (man spielt nur mit Leuten, denen man vertraut). Fremde Bibliotheken: PeerJS wird mit Prüfsumme geladen.
+
 ### Mauern, Belagerung, Gebäude (umgesetzt 04.11.2026)
 
 - **Stadtmauer** (Felder ab 32): Ring aus Stein mit **Wehrgang** (+2 Stufen) dahinter, **Mauertürmen** (+3, jedes 6. Feld und neben jedem Tor), **Treppen** von innen und **geschlossenen Toren**. Schützen und Ballisten stehen auf Wehrgang und Türmen. Wer auf dem Wehrgang direkt hinter der Mauer steht, sieht und schießt darüber (und hat Deckung); sonst nimmt die Mauer die Sicht.
