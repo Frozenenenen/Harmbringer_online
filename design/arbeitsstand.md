@@ -113,6 +113,8 @@ Kevin: „Mach den Lich und Kommandeure wieder schwächer. Wenn aber mindestens 
 
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
+- **New Game+:** Entwurf im Design-Dokument („New Game+“, 18.11.2026) – Vermächtnis, die Lebenden erinnern sich (Doktrinen Stufe 2, Orden vom Grabe als Jäger), Heimsuchungen, Freischaltungen, neue Ziele. Nicht umgesetzt; vier offene Fragen an Kevin stehen dort.
+
 - **Kevins Rückmeldung abwarten:** Spielgefühl beim Schleichen (Kegelgröße am Tag, Tempo der Streifen, ob „Posten rufen sofort“ zu hart ist) – alle Stellschrauben stehen in `STEALTH`.
 - **Balance:** Faustregel-Vergleich ist gemacht (`tools/balance_styles.py`); ganze Schlachten mit Merkmalen und Auren sind nicht simuliert. Auffällig stark im Vergleich: Balliste, Knochendrache, Todesritter (alt), Geist.
 - **Koop:** Forschung und Skillbaum gehören dem Gastgeber (`c.research`, `c.skills`); der Gast sieht sie, lernt aber nicht. Eigene Pfade für den Gast-Kommandeur wären ein eigener Schritt.

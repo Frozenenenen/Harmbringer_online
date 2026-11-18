@@ -36,13 +36,14 @@
 28. [Kampagnen-Struktur (Idee)](#kampagnen-struktur-idee)
 29. [Heide-Kampagne: Basis, Wissen, Begegnungen](#heide-kampagne-basis-wissen-begegnungen)
 30. [Startort der ersten Kampagne](#startort-der-ersten-kampagne)
-31. [Offene Fragen / Später entscheiden](#offene-fragen--später-entscheiden)
-32. [TODO (Implementierung)](#todo-implementierung)
-33. [Sicht- und Sinne-System](#sicht--und-sinne-system)
-34. [Technik (Browser)](#technik-browser)
-35. [Story- und UI-Konzept](#story--und-ui-konzept)
-36. [Schnittstellen zwischen Systemen](#schnittstellen-zwischen-systemen)
-37. [Entwicklungs-Roadmap](#entwicklungs-roadmap)
+31. [New Game+ (Entwurf, nicht umgesetzt)](#new-game-entwurf-nicht-umgesetzt)
+32. [Offene Fragen / Später entscheiden](#offene-fragen--später-entscheiden)
+33. [TODO (Implementierung)](#todo-implementierung)
+34. [Sicht- und Sinne-System](#sicht--und-sinne-system)
+35. [Technik (Browser)](#technik-browser)
+36. [Story- und UI-Konzept](#story--und-ui-konzept)
+37. [Schnittstellen zwischen Systemen](#schnittstellen-zwischen-systemen)
+38. [Entwicklungs-Roadmap](#entwicklungs-roadmap)
 
 ---
 
@@ -3065,6 +3066,84 @@ Nixen und verwandte Wassergeister können an allen größeren Flüssen vorkommen
 - Mechanisch könnten sie als Knoten-Wesen oder als Gefahrenfeld an Flussüberquerungen funktionieren
 
 ---
+
+## New Game+ (Entwurf, nicht umgesetzt)
+
+*Entwurf vom 18.11.2026 auf Kevins Wunsch. Noch nichts davon ist eingebaut.*
+
+**Idee in einem Satz:** Nach dem Sieg am Brocken beginnt ein neuer Feldzug auf derselben Karte. Der Lich verliert fast alles, nimmt aber ein **Vermächtnis** mit. Die Lebenden **erinnern sich** und sind besser vorbereitet. Wer will, legt sich freiwillig **Heimsuchungen** auf, für mehr Ruhm.
+
+### Erzählung
+
+Das Ende des ersten Feldzugs deutet es schon an: „hinter dem Harz regen sich andere Gräber“. Im New Game+ ist es das Jahr 1372 oder später. Der Lich hat zu viel Kraft in den Brocken gegossen und erwacht geschwächt im Hügelgrab. Die Lebenden haben aus dem ersten Zug gelernt: Kirche, Hanse und Fürsten halten zusammen, und ein neuer Gegenspieler ist unterwegs. Neue Story-Bilder für Erwachen und Ende, der Chronist zitiert aus „dem ersten Buch“.
+
+### 1. Vermächtnis: was der Lich mitnimmt
+
+Am Endbildschirm wählt der Spieler eine kleine Auswahl, zum Beispiel **3 aus 6**. Alles andere beginnt neu: Armee, Vorräte, Gebäude, Orte.
+
+| Vermächtnis | Wirkung im neuen Feldzug |
+|-|-|
+| Ein Artefakt | Ein gewähltes Artefakt liegt von Beginn an im Inventar |
+| Ein Ahne | Ein erweckter Ahne (Reiterfürst, Hünenkönig, Widukind, Ratsherr) steht von Beginn an bereit |
+| Erinnerung der Pfade | +2 Skillpunkte zu Beginn; ein gelernter Pfad bleibt bis Stufe 1 bestehen |
+| Altes Wissen | Die Hälfte des Wissens; bekannte Einheiten bleiben bekannt, ihre Gebäude müssen neu gebaut werden |
+| Die Karte | Das erkundete Land bleibt aufgedeckt (`c.explored`), die Orte aber nicht erobert |
+| Ein Ley-Knoten | Ein assimilierter Pantheon-Sitz bleibt Ley-Knoten (Sprungziel), das Pantheon selbst steht wieder |
+
+### 2. Die Lebenden erinnern sich
+
+Das ist der Kern: Nicht nur mehr Lebenspunkte, die Welt reagiert anders.
+
+- **Bedrohung startet nicht bei 0:** Jede Fraktion beginnt bei 20 % („Latente Erinnerung“). Fraktionen, die im ersten Zug ausgelöscht wurden, beginnen bei 40 %.
+- **Doktrinen Stufe 2:** Jede Fraktion verschärft ihre Richtung. Welfen-Ritter zusätzlich mit „Zuschlagen und weg“, die Hanse mit Glocken in jedem Ort ab Größe 16, der Klerus weiht Boden um jede Kirche schon vor dem Kampf. Daten wie heute in `factions[*].doctrine`, dazu ein Block `ngPlus`.
+- **Der Gegenspieler – „Orden vom Grabe“:** Ein neuer, wandernder Trupp aus Hexenjägern, Priestern und Rittern, der die Armee des Lichs **sucht**, statt Orte zurückzuerobern. Er folgt Spuren (totes Land, Kämpfe) und wird mit jeder Begegnung stärker, wenn er entkommt. Besiegt man seinen Großmeister, bringt das ein eigenes Artefakt. Er macht die Weltkarte gefährlich, ohne dass es nur um Zahlen geht.
+- **Neue Pantheon-Mitglieder:** Jedes Pantheon bekommt ein viertes Mitglied (z. B. Frau Holle im Harz, Fru Gode in Mecklenburg, der Blanke Hans selbst als wandernder Sturm im Wattenmeer). Der Ley-Bund wird stärker.
+- **Bündnis früher:** Die Lebenden schließen sich schon ab 75 % Bedrohung zusammen statt ab 90 %.
+
+### 3. Heimsuchungen: freiwillige Erschwernisse
+
+Vor dem Start schaltet der Spieler Heimsuchungen ein, wie die „Hitze“ in Hades oder die „Aufstiege“ in Slay the Spire. Jede bringt **Ruhm** (Punkte am Ende, Freischaltungen). Sie gelten zusätzlich zur Schwierigkeitsstufe.
+
+| Heimsuchung | Wirkung | Ruhm |
+|-|-|-|
+| Wache Glocken | Jede Wache ruft sofort, Glöckner laufen doppelt so schnell | 2 |
+| Geweihte Erde | Um jede Kirche und jedes Kloster liegt heiliger Boden | 2 |
+| Magere Ernte | −25 % Leichen aus Kämpfen | 3 |
+| Kurze Nächte | Die Nacht dauert nur noch 4 statt 6 Stunden | 1 |
+| Rachsüchtige Trupps | Trupps ziehen auch los, wenn die Armee in der Nähe ist | 3 |
+| Eiliger Orden | Der Gegenspieler ist von Tag 1 an unterwegs | 2 |
+| Brüchiges Phylakterium | Der Lich steht nach dem Kampf nicht mehr wieder auf | 4 |
+| Kein Hügelgrab-Heilen | Heilung nur noch nach Siegen | 2 |
+
+### 4. Was man freischalten kann (Ruhm)
+
+- **Andere Startgräber:** Externsteine (Westen, Wodan-Kult als Nachbar), Rungholt (Küste, Start bei Ebbe), Kyffhäuser (Süden, nah am Harz – schwer). Jedes Grab mit eigenem Start-Ahnen und eigener Startarmee.
+- **Lich-Ursprünge:** Der Lich kann ein anderer sein, z. B. ein ertrunkener Ratsherr (Wasser-Untote billiger, Feuer schadet doppelt) oder ein Bronzezeitkönig (Reiter und Ahnen stärker, keine Geister). Jeder Ursprung mit einer eigenen Aura statt „Herrschaft“.
+- **Einheiten-Varianten** in den Gebäuden, z. B. „Brandgerippe“ als Knochenwerkstatt Stufe 4.
+- **Chronik-Seiten:** Kurze Texte und Story-Bilder, die im ersten Zug nicht vorkommen.
+
+### 5. Ziel des neuen Feldzugs
+
+Damit der zweite Zug nicht nur den ersten wiederholt, ändert sich das Ziel. Zur Wahl beim Start:
+
+- **Die Krone der Heide:** alle fünf Pantheons assimilieren (kein Brocken nötig).
+- **Der Großmeister:** den Orden vom Grabe vernichten, bevor er das Hügelgrab erreicht. Der Orden greift dann das Hügelgrab an, siehe offene Frage „Hügelgrab angreifbar“.
+- **Der Brocken, aber anders:** Die Hexenkönigin ist wiedergeboren und verbündet mit dem Orden. Der Endkampf hat mehrere Phasen.
+
+### 6. Technik (Skizze)
+
+- **Meta-Profil getrennt vom Spielstand:** `localStorage` `harmbringer_meta` mit Ruhm, Freischaltungen und gespeichertem Vermächtnis. Spielstände bleiben, wie sie sind. Beim Sichern als Datei wird das Profil mitgegeben.
+- Im Spielstand: `c.ngPlus = { level, legacy: [...], afflictions: [...], goal }`. Stufe 2, 3 … verschärfen die Werte weiter (wie `DIFF()`, nur aufsteigend).
+- Daten in `world_data.js`: `newGamePlus: { legacies, afflictions, doctrines2, order, goals }`. Die Werte wirken über die bestehenden Wege: `Doctrine.mods`, `DIFF()`, `Raids`, `Story`.
+- Der Endbildschirm (`UI.showEndModal`) bekommt „Neuer Feldzug+“ mit der Vermächtnis-Wahl.
+- Testen: Der Kampagnen-Bot (`tools/test/campaign.js`) bekommt einen Parameter `ngplus`, damit sich Stufe 1–3 messen lassen.
+
+### Offene Fragen an Kevin
+
+1. Gleiche Karte oder später eine **neue Region** (Rheinland, Bayern …)? Der Entwurf geht von derselben Karte aus, weil sie fertig ist.
+2. Soll das Vermächtnis eine **Auswahl** sein oder fest (alles ein bisschen)?
+3. Gefällt der **Orden vom Grabe** als Gegenspieler, oder lieber eine bekannte Gestalt (z. B. ein Inquisitor mit Namen)?
+4. Ruhm und Freischaltungen über mehrere Feldzüge hinweg – oder jedes New Game+ für sich?
 
 ## Offene Fragen / Später entscheiden
 
