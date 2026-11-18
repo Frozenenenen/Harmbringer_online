@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 18.11.2026 · letzte veröffentlichte Version: 164 (Story-Bilder im 21:9-Kinoformat)
+Stand: 18.11.2026 · letzte veröffentlichte Version: 161 (Koop-Beitritt mit Zustimmung; Versionsnummer zählt Commits)
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -93,7 +93,7 @@ Kevins Auftrag vom 16./17.11.: Balance testen (auch je Spielstil), drei Schwieri
 
 Kevin (18.11.): Spielintro und Story als große Bilder mit Erzähltext; Wahrzeichen (Hamburger Hafen), Belagerung, Klerus mit Engel gegen Zombie. Dazu: Bildkomposition muss stimmen (Standpunkt/Blickwinkel). Eingebaut: 16 Szenen, 19 Bilder (Design-Dokument „Story-Bilder“), Prompts in `design/ui_bilder.md` Abschnitt 0 (18.11.). **Bilder fehlen noch** – Kevin erzeugt sie, Claude legt sie unter `assets/story/` ab (21:9 JPG im Kinoformat, auf ~2520 px Breite verkleinern; Anzeige mit schwarzen Balken). Seitenverhältnisse stehen nie im Prompt, nur in der Überschrift – Kevin stellt sie im Bildprogramm ein (18.11.). Test in der Sitzung: `story.js` (Intro, Wahrzeichen vor Kampf, einmalig, Galerie). Kevins „Nephilim“: im Spiel gibt es Ophan, Cherub und Seraph – das Bild zeigt einen Seraph.
 
-## Koop: Beitritt nur mit Zustimmung, Prüfsummen (Version 157)
+## Koop: Beitritt nur mit Zustimmung, Prüfsummen (Version 161)
 
 Kevin (18.11.): Bestätigung ja (mit Namen), längere Raumcodes nein, Plausibilitätsprüfung der Gast-Ergebnisse nein („Man spielt nur, mit wem man spielen will“), Prüfsummen ja.
 
