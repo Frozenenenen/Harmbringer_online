@@ -3142,7 +3142,7 @@ Damit der zweite Zug nicht nur den ersten wiederholt, ändert sich das Ziel. Zur
 
 Jedes New Game+ springt **100 Jahre in die Zukunft**. Der Lich ist unsterblich, die Lebenden nicht: Sie kennen ihn nur noch als Legende, haben sich aber mit den Mitteln ihrer Zeit auf seine Rückkehr vorbereitet. Die Karte bleibt, die Welt darauf verändert sich.
 
-**Vier Epochen, dann Schluss.** Ein Sprung nach 1771 höchstens als allerletzte Stufe. Danach (Eisenbahn, Telegraf, Maschinengewehr) passt die Welt nicht mehr zum Dürer-Totentanz.
+**Keine feste Zahl an Epochen** (Kevin, 18.11.2026): Sie kommen nach und nach dazu, vielleicht werden es mehr, vielleicht nicht. Jede Epoche ist für sich spielbar, sobald sie fertig ist; das New Game+ endet bei der jüngsten vorhandenen (danach Durchgänge in derselben Epoche mit höherer Stufe). Hinweis für spätere Epochen: Ab etwa 1800 (Eisenbahn, Telegraf, Maschinengewehr) ändert sich der Ton stark – dann bewusst entscheiden, wie weit die Dürer-Totentanz-Welt tragen soll.
 
 | Epoche | Zeitbild Norddeutschland | Die Lebenden gegen die Untoten | Mythen | Bildstil |
 |-|-|-|-|-|
@@ -3150,7 +3150,7 @@ Jedes New Game+ springt **100 Jahre in die Zukunft**. Der Lich ist unsterblich, 
 | **1471** Hanse auf dem Höhepunkt | reiche Hansestädte, Buchdruck, Landsknechte | erste Handbüchsen und Feldschlangen, Landsknecht-Haufen mit Pike; **Flugblätter** tragen den Alarm schneller (Bedrohungswellen schneller) | etwas schwächer, Wilde Jagd noch stark | Holzschnitt und Kupferstich |
 | **1571** Reformation und Hexenverfolgung | Klöster aufgelöst (werden Güter, Schulen, Spitäler), Hexenprozesse auf dem Höhepunkt | **Hexenjäger** als eigentliche Untoten-Jäger, Pike und Muskete, Brandmunition; Hexen sind jetzt Verfolgte – möglicher Bündnispartner? | geschwächt, manche Mitglieder verschwunden | Kupferstich |
 | **1671** nach dem Dreißigjährigen Krieg | entvölkertes Land, stehende Heere, Festungen mit Bastionen, Moorkolonisierung beginnt | Musketiere in Linie, Festungsartillerie, Kartätschen; Garnisonen statt Bürgerwehr | fast verblasst; Moore schrumpfen, Moorgeister verlieren Land | Radierung (Barock) |
-| *1771* (optional, letzte Stufe) | Aufklärung, Universitäten, Trockenlegung der Moore | Kanonen, Feuerwehr, Pockenimpfung, erste Gedanken an Feuerbestattung | Mythen gelten als Aberglaube | Radierung, Rokoko-Kupferstich |
+| *1771* (Idee) | Aufklärung, Universitäten, Trockenlegung der Moore | Kanonen, Feuerwehr, Pockenimpfung, erste Gedanken an Feuerbestattung | Mythen gelten als Aberglaube | Radierung, Rokoko-Kupferstich |
 
 **Was sich je Epoche ändert (alles als Daten):**
 
