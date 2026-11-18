@@ -474,7 +474,7 @@ const MAP = DATA.map;
 const HEX = DATA.hex;
 const CAM = DATA.camera;
 // <GEN:VERSION> written by tools/make_version.py - do not edit by hand
-const BUILD = {"version": 176, "date": "2026-11-18", "changes": [{"date": "18.11. 19:17", "text": "Design: Epochen ohne feste Obergrenze"}, {"date": "18.11. 19:16", "text": "Design-Dokument: New Game+ mit Epochen (1471, 1571, 1671)"}, {"date": "18.11. 19:08", "text": "Design-Dokument: Entwurf New Game+ (nicht umgesetzt)"}, {"date": "18.11. 18:54", "text": "Versionsnummer korrigiert (Arbeitskopie war unvollständig geklont)"}, {"date": "18.11. 18:53", "text": "Anführer schwächer, stehen nach dem Kampf wieder auf, Auren für alle"}, {"date": "18.11. 18:37", "text": "Arbeitsstand: Story-Bilder eingebaut"}, {"date": "18.11. 18:37", "text": "Story-Bilder eingebaut (19 Bilder)"}, {"date": "18.11. 18:31", "text": "Bilderordner angelegt (assets/story, assets/ui/...)"}, {"date": "18.11. 12:55", "text": "Three.js mit Prüfsummen in der Importmap"}, {"date": "18.11. 12:12", "text": "Version 161: Koop-Beitritt mit Zustimmung"}, {"date": "18.11. 12:12", "text": "Koop: Beitritt nur mit Zustimmung, Spielernamen, PeerJS-Prüfsumme"}, {"date": "18.11. 11:54", "text": "Arbeitsstand: Version 164"}]};
+const BUILD = {"version": 178, "date": "2026-11-18", "changes": [{"date": "18.11. 19:17", "text": "Story-Bilder für jeden Ort, jedes Artefakt und jeden Kommandeur (Texte, Auslöser, Prompts)"}, {"date": "18.11. 19:17", "text": "Story-Bilder für jeden Ort, jedes Artefakt und jeden Kommandeur (Texte, Auslöser, Prompts)"}, {"date": "18.11. 19:17", "text": "Design-Dokument: Epochen ohne feste Obergrenze"}, {"date": "18.11. 19:16", "text": "Design-Dokument: New Game+ mit Epochen (1471, 1571, 1671)"}, {"date": "18.11. 19:08", "text": "Design-Dokument: Entwurf New Game+ (nicht umgesetzt)"}, {"date": "18.11. 18:54", "text": "Versionsnummer korrigiert (Arbeitskopie war unvollständig geklont)"}, {"date": "18.11. 18:53", "text": "Anführer schwächer, stehen nach dem Kampf wieder auf, Auren für alle"}, {"date": "18.11. 18:37", "text": "Arbeitsstand: Story-Bilder eingebaut"}, {"date": "18.11. 18:37", "text": "Story-Bilder eingebaut (19 Bilder)"}, {"date": "18.11. 18:31", "text": "Bilderordner angelegt (assets/story, assets/ui/...)"}, {"date": "18.11. 12:55", "text": "Three.js mit Prüfsummen in der Importmap"}, {"date": "18.11. 12:12", "text": "Version 161: Koop-Beitritt mit Zustimmung"}]};
 // </GEN:VERSION>
 const ECON = DATA.economy;
 const THREAT = DATA.threat;
@@ -2528,6 +2528,7 @@ const Recruitment = {
     const u = DATA.units[type], c = game.campaign;
     for (const [k, v] of Object.entries(u.cost || {})) c.resources[k] -= v;
     c.army.push({ type, hp: u.hp });
+    if (u.commander) Story.gain('commander', type);
     SaveGame.save();
     return true;
   }
@@ -3619,12 +3620,19 @@ const Story = {
   },
   // First scene for a campaign event (start, firstConquest, lichDeath, firstRaid, alliance, pantheonFall, finale).
   on(event) { const hit = Object.entries(DATA.story || {}).find(([, S]) => S.on === event); return hit ? this.play(hit[0]) : Promise.resolve(); },
-  // Scene before a fight: the landmark of this place first, else the first rule that fits.
+  // Scenes before a fight: the picture of this place, then the first open rule that fits
+  // (first monastery, first walled town). Both play once per campaign.
   beforeBattle(node) {
     if (!node || node.encounter || node.raidId) return Promise.resolve();
     const open = Object.entries(DATA.story || {}).filter(([id, S]) => S.on === 'battle' && !this.seen(id));
-    const hit = open.find(([, S]) => S.at === node.id)
-      || open.find(([, S]) => !S.at && (!S.type || S.type === node.type) && (!S.minSize || (node.size || 16) >= S.minSize) && (!S.faction || S.faction === node.faction));
+    const place = open.find(([, S]) => S.at === node.id);
+    const rule = open.find(([, S]) => !S.at && (!S.type || S.type === node.type) && (!S.minSize || (node.size || 16) >= S.minSize) && (!S.faction || S.faction === node.faction));
+    if (place) this.play(place[0]);
+    return rule ? this.play(rule[0]) : this.chain;
+  },
+  // Scene for something gained: an artifact (event 'artifact') or a commander (event 'commander').
+  gain(event, key) {
+    const hit = Object.entries(DATA.story || {}).find(([, S]) => S.on === event && S.at === key);
     return hit ? this.play(hit[0]) : Promise.resolve();
   },
   show(S, done) {
@@ -3654,11 +3662,10 @@ const Story = {
   },
   // Menu: scenes already seen in this campaign, to watch again; switch for the pictures.
   gallery() {
-    const list = Object.entries(DATA.story || {});
-    UI.modal(`<h2>Bilder der Chronik</h2><p class="small">Bilder, die in diesem Feldzug schon erschienen sind, lassen sich hier noch einmal ansehen. Unbekannte bleiben verborgen.</p>
-      <div class="storyList">${list.map(([id, S]) => this.seen(id)
-        ? `<button data-story="${id}"><div class="th" style="background-image:url(assets/story/${S.slides[0].img})"></div><span>${esc(S.title)}</span></button>`
-        : `<button disabled><div class="th"></div><span>???</span></button>`).join('')}</div>`,
+    const list = Object.entries(DATA.story || {}), seen = list.filter(([id]) => this.seen(id));
+    UI.modal(`<h2>Bilder der Chronik</h2><p class="small">Bilder, die in diesem Feldzug schon erschienen sind, lassen sich hier noch einmal ansehen: ${seen.length} von ${list.length}. Die übrigen zeigen sich an ihren Orten, bei Funden und neuen Kommandeuren.</p>
+      <div class="storyList">${seen.map(([id, S]) =>
+        `<button data-story="${id}"><div class="th" style="background-image:url(assets/story/${S.slides[0].img})"></div><span>${esc(S.title)}</span></button>`).join('')}</div>`,
       [{ label: this.off() ? 'Zwischenbilder: aus' : 'Zwischenbilder: an', keepOpen: true, action: () => { this.setOff(!this.off()); this.gallery(); } }, { label: 'Schließen', primary: true }]);
     $('modalBody').querySelectorAll('[data-story]').forEach(b => b.onclick = () => { UI.closeModal(); this.play(b.dataset.story, true); });
   }
@@ -6434,6 +6441,7 @@ const Battle = {
       if (anc && !(c.ancestorsRaised = c.ancestorsRaised || []).includes(anc)) {
         c.ancestorsRaised.push(anc);
         b.ancestorJoin = anc;
+        Story.gain('commander', anc);
         const A = DATA.units[anc];
         ancestorText = `<h3>Ahnengrab</h3><p><b>${esc(A.name)}</b> erhebt sich und schließt sich an. <span class="small">${esc(A.desc || '')} Kann einen eigenen Zug führen (Expedition).</span></p>`;
         setTimeout(() => Narrator.say(`Unter ${node.name} regt sich etwas, das älter ist als jede Kirche: ${A.name} folgt nun dem Lich.`), 3000);
@@ -6445,6 +6453,7 @@ const Battle = {
         c.inventory.push(sp.artifact);
         if (c.equipped.length < DATA.artifactSlots) c.equipped.push(sp.artifact);
         const a = DATA.artifacts[sp.artifact];
+        Story.gain('artifact', sp.artifact);
         found = `<h3>Artefakt gefunden</h3><p><b>${a.name}</b> – ${a.text}${c.equipped.includes(sp.artifact) ? ' <span class="small">(angelegt)</span>' : ' <span class="small">(im Inventar)</span>'}</p>`;
       } else if (sp) found = `<h3>${sp.name}</h3><p>${sp.text}</p>`;
       // Survivors recover part of their strength after a won battle.

@@ -2461,7 +2461,7 @@ Daten: `difficulty` in `data/world_data.js`. Code: `DIFF()`, `Difficulty`. Die A
 
 ### Story-Bilder (umgesetzt 18.11.2026)
 
-Was die Spielgrafik nicht zeigen kann, erzählen **Vollbild-Bilder mit Erzähltext** (Dürer-Stil, Chronisten-Ton). Das Bild zoomt langsam, der Text steht unten; Klick, Leertaste oder Enter blättert, Esc überspringt. Die Zeit (Reisen, Trupps) steht still, solange ein Bild offen ist. Jede Szene erscheint einmal pro Feldzug; Menü → „Bilder der Chronik“ zeigt die gesehenen noch einmal und schaltet die Bilder ab. Fehlt eine Bilddatei, zeigt das Spiel einen gezeichneten Platzhalter mit dem Titel.
+Was die Spielgrafik nicht zeigen kann, erzählen **Vollbild-Bilder mit Erzähltext** (Dürer-Stil, Chronisten-Ton). Die Bilder sind 21:9 und erscheinen wie im Kino mit schwarzen Balken; das Bild zoomt langsam, der Text steht unten; Klick, Leertaste oder Enter blättert, Esc überspringt. Die Zeit (Reisen, Trupps) steht still, solange ein Bild offen ist. Jede Szene erscheint einmal pro Feldzug; Menü → „Bilder der Chronik“ zeigt die gesehenen noch einmal und schaltet die Bilder ab. Fehlt eine Bilddatei, zeigt das Spiel einen gezeichneten Platzhalter mit dem Titel.
 
 | Szene | Wann | Bilder |
 |-|-|-|
@@ -2469,14 +2469,18 @@ Was die Spielgrafik nicht zeigen kann, erzählen **Vollbild-Bilder mit Erzählte
 | Die erste Ernte | erste Eroberung | 1 |
 | Heiliger Boden | erster Angriff auf ein Kloster oder eine Kirche | Seraph schmettert Licht auf einen Zombie |
 | Vor den Mauern | erster Angriff auf eine Stadt ab Größe 32 | Sturmleitern aus Gebein |
-| Hamburg, Lüneburg, Magdeburg, Rungholt, Kyffhäuser, Spreewald, Brocken | erster Angriff auf diesen Ort | je ein Wahrzeichen-Bild |
+| Jeder Ort (192, Kevins Wunsch 18.11.) | erster Angriff auf diesen Ort | je ein Bild; Hamburg, Lüneburg, Magdeburg, Rungholt, Kyffhäuser, Spreewald, Brocken mit Wahrzeichen-Bild, die übrigen 185 (`ort_<id>`) folgen |
+| Jedes Artefakt (12) | beim Fund | `artefakt_<id>` |
+| Jeder Kommandeur (7) | 4 Ahnen beim Erwecken, Nachtvogt/Seuchenvogt/Gruftfürst beim ersten Rekrutieren | `kommandeur_<id>` |
 | Das Phylakterium | der Lich fällt zum ersten Mal | 1 |
 | Die Lebenden | erster Trupp der Lebenden | 1 |
 | Das Bündnis | Bündnis der Lebenden | 1 |
 | Die alten Mächte | erstes Pantheon fällt | 1 |
 | Der lange Schatten | Brocken erobert (Ende) | 2 |
 
-Daten: `story` in `data/world_data.js` (Auslöser `on`, bei Kämpfen `at` = Ort oder Regel `type`/`minSize`/`faction`). Code: `Story` in `index.html` (`play`, `on`, `beforeBattle`, `gallery`). Bilder: `assets/story/`, Prompts in `design/ui_bilder.md` Abschnitt 0.
+Vor einem Kampf spielt erst das Bild des Orts, danach – falls noch nicht gesehen – die passende Regel-Szene (Heiliger Boden, Vor den Mauern). Die Galerie zeigt nur gesehene Bilder und zählt mit („7 von 220“).
+
+Daten: `story` in `data/world_data.js` (Auslöser `on`: Ereignis, `battle` mit `at` = Ort oder Regel `type`/`minSize`/`faction`, `artifact`/`commander` mit `at` = Schlüssel). Code: `Story` in `index.html` (`play`, `on`, `beforeBattle`, `gain`, `gallery`). Bilder: `assets/story/`, Prompts in `design/ui_bilder.md` Abschnitt 0.
 
 ---
 

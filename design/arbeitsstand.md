@@ -111,6 +111,10 @@ Kevin: „Mach den Lich und Kommandeure wieder schwächer. Wenn aber mindestens 
 - Test in der Sitzung: `rise.js` (Sieg, Rückzug, Niederlage, Aura erlischt).
 - **Nicht nachgemessen:** Balance-Matrix und Kampagnen mit den neuen Werten.
 
+## Story-Bilder für jeden Ort, jedes Artefakt, jeden Kommandeur (Texte fertig, Bilder offen)
+
+Kevin (18.11. abends): mindestens ein Story-Bild je Ort, je Artefakt und je Kommandeur, den man findet (geklärt: alle 192 Orte inkl. Dörfer, alle 7 Kommandeure = 4 Ahnen + 3 rekrutierbare). Eingebaut: 204 neue Szenen in `story` (`ort_<id>` mit `on: "battle"`, `art_<id>` mit `on: "artifact"`, `cmd_<id>` mit `on: "commander"`), Code `Story.gain` (Aufrufe beim Artefaktfund, beim Erheben eines Ahnen, in `Recruitment.recruit` für `commander`), `Story.beforeBattle` spielt Ort + Regel-Szene nacheinander, Galerie zeigt nur Gesehenes. Prompts in `design/ui_bilder.md` Abschnitt 0 (Orte nach Entfernung vom Hügelgrab sortiert). **Bilder fehlen** – bis dahin Platzhalter mit Titel. Texte geschätzt nach Ortsgeschichte um 1371; Fakten bewusst vorsichtig (keine späteren Ereignisse wie Luther, Universitäten, Vitalienbrüder).
+
 ## Was als Nächstes sinnvoll wäre (nichts davon begonnen)
 
 - **New Game+:** Entwurf im Design-Dokument („New Game+“, 18.11.2026) – Vermächtnis, die Lebenden erinnern sich (Doktrinen Stufe 2, Orden vom Grabe als Jäger), Heimsuchungen, Freischaltungen, neue Ziele. Dazu Abschnitt 7 „Epochen“ (Kevin: „finde das super“): jedes New Game+ 100 Jahre später, 1471 → 1571 → 1671 → … (keine feste Zahl, Epochen kommen nach und nach), Lebende mit Feuerwaffen, Hexenjägern, Festungen, verblassende Mythen, Schadenstyp Schießpulver, Feuerbestattung gegen die Leichen-Wirtschaft. Nicht umgesetzt; drei offene Fragen an Kevin stehen dort.

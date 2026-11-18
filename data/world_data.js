@@ -363,7 +363,621 @@ window.HARMBRINGER_DATA = {
       { img: "finale_brocken.jpg", title: "Der Gipfel",
         text: "Die Feuer auf dem Brocken sind erloschen. Der Lich steht auf dem Gipfel, und unter ihm liegt das Land von der Nordsee bis zum Harz." },
       { img: "finale_schatten.jpg", title: "Der lange Schatten",
-        text: "Die Heide ist grau, die Glocken schweigen. Über Norddeutschland legt sich ein langer Schatten. Und weiter im Süden, hinter dem Harz, regen sich andere Gräber." } ] }
+        text: "Die Heide ist grau, die Glocken schweigen. Über Norddeutschland legt sich ein langer Schatten. Und weiter im Süden, hinter dem Harz, regen sich andere Gräber." } ] },
+    // --- One scene per place (before the first attack), per artifact (when found) and per commander
+    //     (when raised or first recruited). Added 18.11.2026; prompts in design/ui_bilder.md section 0.
+    cmd_reiterfuerst: { on: "commander", at: "reiterfuerst", title: "Der Reiterfürst", slides: [
+      { img: "kommandeur_reiterfuerst.jpg", title: "Der Reiterfürst",
+        text: "Unter dem größten Hügel des Pestruper Gräberfelds lag ein Fürst mit Pferd, Bronzeschwert und goldenem Armring. Dreitausend Jahre ist er mit der Wilden Jagd geritten. Nun hält sein Gerippe vor dem Lich und senkt das Schwert." } ] },
+    cmd_huenenkoenig: { on: "commander", at: "huenenkoenig", title: "Der Hünenkönig", slides: [
+      { img: "kommandeur_huenenkoenig.jpg", title: "Der Hünenkönig",
+        text: "Die Bauern sagen, Riesen hätten die Steine der Sieben Steinhäuser getragen. Sie hatten recht. Unter dem größten Deckstein liegt ein König der Hünen, doppelt so groß wie ein Mann. Der Lich ruft, und der Stein hebt sich." } ] },
+    cmd_widukind: { on: "commander", at: "widukind", title: "Widukinds Schatten", slides: [
+      { img: "kommandeur_widukind.jpg", title: "Widukinds Schatten",
+        text: "Widukind trotzte Karl dem Großen dreißig Jahre lang, bevor er sich taufen ließ. Die Mönche haben das alte Heiligtum an den Externsteinen übermalt, aber nicht vergessen. Aus dem Felsen tritt der Schatten des Sachsenherzogs, und er hat seine Taufe bereut." } ] },
+    cmd_ratsherr: { on: "commander", at: "ratsherr", title: "Der Ratsherr von Rungholt", slides: [
+      { img: "kommandeur_ratsherr.jpg", title: "Der Ratsherr von Rungholt",
+        text: "Die Ratsherren von Rungholt sollen einem Priester das Abendmahl in einen Bierkrug gegossen haben. In derselben Nacht kam die Mandränke. Nun steigt der reichste von ihnen aus dem Schlick, Seetang im Pelzkragen, und verneigt sich vor einem Herrn, der keine Gnade kennt." } ] },
+    cmd_nachtvogt: { on: "commander", at: "nachtvogt", title: "Der Nachtvogt", slides: [
+      { img: "kommandeur_nachtvogt.jpg", title: "Der Nachtvogt",
+        text: "Er richtete nur bei Nacht, damit niemand sein Gesicht sah. Als man ihn selbst unter dem Galgen verscharrte, blieb das Schwert bei ihm. Der Lich hat ihn ausgegraben. Wo der Nachtvogt geht, verlöschen die Laternen." } ] },
+    cmd_seuchenvogt: { on: "commander", at: "seuchenvogt", title: "Der Seuchenvogt", slides: [
+      { img: "kommandeur_seuchenvogt.jpg", title: "Der Seuchenvogt",
+        text: "Im großen Sterben vor zwanzig Jahren hat er die Toten zu Hunderten in die Gruben gefahren, bis er selbst hineinfiel. Er kennt jede Pestgrube im Land. Der Lich gibt ihm, was er am besten kann: Er führt die Masse." } ] },
+    cmd_gruftfuerst: { on: "commander", at: "gruftfuerst", title: "Der Gruftfürst", slides: [
+      { img: "kommandeur_gruftfuerst.jpg", title: "Der Gruftfürst",
+        text: "In der tiefsten Steinkammer unter dem Hügelgrab lag ein Fürst, dessen Namen nicht einmal der Lich kennt. Er trägt einen Panzer, den kein Schmied gemacht hat, und einen Schild aus einem Sargdeckel. Wo er steht, weicht niemand mehr." } ] },
+    art_reichsschwert: { on: "artifact", at: "reichsschwert", title: "Das Reichsschwert", slides: [
+      { img: "artefakt_reichsschwert.jpg", title: "Das Reichsschwert",
+        text: "Kaiser Friedrich schläft weiter, den Kopf auf dem Steintisch. Das Schwert an seiner Seite hat er nicht vermisst. Der Lich hebt die Klinge, die einst Kreuzfahrer anführte, und sie ist kalt wie er selbst." } ] },
+    art_glocken_rungholt: { on: "artifact", at: "glocken_rungholt", title: "Die Glocke von Rungholt", slides: [
+      { img: "artefakt_glocken_rungholt.jpg", title: "Die Glocke von Rungholt",
+        text: "Sie hing im Turm, als die Flut kam, und läutete weiter unter Wasser. Seitdem fängt ihr Klang Seelen wie ein Netz Fische. Die Toten ziehen sie aus dem Schlick, und sie läutet zum ersten Mal wieder in der Luft." } ] },
+    art_svantevit_horn: { on: "artifact", at: "svantevit_horn", title: "Das Horn des Svantevit", slides: [
+      { img: "artefakt_svantevit_horn.jpg", title: "Das Horn des Svantevit",
+        text: "Die Dänen haben Svantevits Tempel auf Arkona vor zweihundert Jahren niedergebrannt. Das Trinkhorn, aus dem der Priester jedes Jahr die Ernte las, fanden sie nicht. Es lag unter der Kreide. Wer aus ihm trinkt, sieht in alle vier Richtungen." } ] },
+    art_schlangenkrone: { on: "artifact", at: "schlangenkrone", title: "Die Krone des Schlangenkönigs", slides: [
+      { img: "artefakt_schlangenkrone.jpg", title: "Die Krone des Schlangenkönigs",
+        text: "Wer die Krone des Schlangenkönigs stiehlt, wird reich, sagen die Wenden, und die Schlangen folgen ihm bis ins Grab. Der Lich ist schon im Grab gewesen. Die goldene Krone ist nicht größer als ein Fingerring." } ] },
+    art_lehniner_weissagung: { on: "artifact", at: "lehniner_weissagung", title: "Die Lehniner Weissagung", slides: [
+      { img: "artefakt_lehniner_weissagung.jpg", title: "Die Lehniner Weissagung",
+        text: "Im Kloster Lehnin schrieb ein Mönch auf, wie jedes Fürstenhaus der Mark enden wird. Die Brüder haben die Schrift eingemauert, damit niemand sie liest. Der Lich liest sie, und er findet seinen eigenen Namen nicht darin." } ] },
+    art_merseburger_sprueche: { on: "artifact", at: "merseburger_sprueche", title: "Die Merseburger Zaubersprüche", slides: [
+      { img: "artefakt_merseburger_sprueche.jpg", title: "Die Merseburger Zaubersprüche",
+        text: "Ein Mönch hat zwei heidnische Sprüche auf ein leeres Blatt eines frommen Buches geschrieben: einen, der Gefangene löst, und einen, der Knochen heilt. Bein zu Bein, Blut zu Blut. Der Lich braucht vor allem den zweiten." } ] },
+    art_reliquienkasten: { on: "artifact", at: "reliquienkasten", title: "Der Reliquienkasten", slides: [
+      { img: "artefakt_reliquienkasten.jpg", title: "Der Reliquienkasten",
+        text: "Die Ottonen sammelten Heilige in Gold und Edelsteinen: einen Zahn hier, einen Finger dort. Im Domschatz von Quedlinburg lagen sie sicher, bis der Lich kam. Heilige Knochen sind auch nur Knochen." } ] },
+    art_zwergenhammer: { on: "artifact", at: "zwergenhammer", title: "Der Zwergenhammer", slides: [
+      { img: "artefakt_zwergenhammer.jpg", title: "Der Zwergenhammer",
+        text: "Die Bergleute am Iberg hören nachts Hämmern im Fels und meiden diese Stollen. Tief unten fand der Lich eine Schmiede, kalt seit tausend Jahren, und auf dem Amboss lag noch der Hammer." } ] },
+    art_jagdhorn: { on: "artifact", at: "jagdhorn", title: "Das Horn der Wilden Jagd", slides: [
+      { img: "artefakt_jagdhorn.jpg", title: "Das Horn der Wilden Jagd",
+        text: "Hackelberg wollte lieber jagen als in den Himmel kommen, und so jagt er bis zum Jüngsten Tag. Sein Horn liegt bei seinem Grab im Wald. Wer hineinbläst, hört die Hunde antworten, und der Weg wird kurz." } ] },
+    art_codex_corvey: { on: "artifact", at: "codex_corvey", title: "Der Codex von Corvey", slides: [
+      { img: "artefakt_codex_corvey.jpg", title: "Der Codex von Corvey",
+        text: "In der Bibliothek von Corvey liegen Bücher aus der Zeit Karls des Großen. Eines davon lehrt, wie man ein Heer führt, das nicht schläft und nicht murrt. Die Mönche hielten es für eine Abschrift aus Rom. Es ist älter." } ] },
+    art_huenenknochen: { on: "artifact", at: "huenenknochen", title: "Der Hünenknochen", slides: [
+      { img: "artefakt_huenenknochen.jpg", title: "Der Hünenknochen",
+        text: "Ein Oberschenkelknochen, so lang wie ein Mann groß ist, lag unter dem Deckstein des größten Steinhauses. Die Untoten mahlen ihn zu Pulver und streuen es in jede Grube. Was daraus aufsteht, ist zäher als zuvor." } ] },
+    art_herz_der_heide: { on: "artifact", at: "herz_der_heide", title: "Das Herz der Heide", slides: [
+      { img: "artefakt_herz_der_heide.jpg", title: "Das Herz der Heide",
+        text: "Die Heidekönigin hielt ihr Herz in einem Stein verborgen, damit es nie aufhört zu schlagen. In der Totenstatt von Oldendorf gab sie es heraus. Der Stein ist warm, und aus ihm wächst Heidekraut, wo der Lich ihn ablegt." } ] },
+    ort_undeloh: { on: "battle", at: "undeloh", title: "Undeloh", slides: [
+      { img: "ort_undeloh.jpg", title: "Undeloh",
+        text: "Undeloh ist ein Heidedorf mit einer Feldsteinkirche und einem Glockenturm aus Holz, der neben ihr steht. Es liegt so nah am Wilseder Berg, dass die Schäfer das Hügelgrab sehen. Sie haben es nie gemocht." } ] },
+    ort_egestorf: { on: "battle", at: "egestorf", title: "Egestorf", slides: [
+      { img: "ort_egestorf.jpg", title: "Egestorf",
+        text: "In Egestorf läutet die Glocke aus einem hölzernen Turm neben der Kirche, und die Bauern kommen von den Feldern. Diesmal läutet sie zu spät." } ] },
+    ort_schneverdingen: { on: "battle", at: "schneverdingen", title: "Schneverdingen", slides: [
+      { img: "ort_schneverdingen.jpg", title: "Schneverdingen",
+        text: "Um Schneverdingen blüht die Heide im Spätsommer lila bis an den Horizont. Die Imker stellen ihre Körbe hinaus. Die Bienen meiden das Feld, über das der Lich gegangen ist." } ] },
+    ort_bispingen: { on: "battle", at: "bispingen", title: "Bispingen", slides: [
+      { img: "ort_bispingen.jpg", title: "Bispingen",
+        text: "Die alte Kirche von Bispingen ist aus Feldsteinen gebaut, die die Bauern aus den Äckern gelesen haben. Unter dem Boden der Heide liegen ältere Steine. Der Lich kennt sie alle." } ] },
+    ort_hanstedt: { on: "battle", at: "hanstedt", title: "Hanstedt", slides: [
+      { img: "ort_hanstedt.jpg", title: "Hanstedt",
+        text: "Hanstedt liegt am Nordrand der Heide, wo die Wälder beginnen. Die Holzfäller kennen jeden Weg durch den Wald. Die Toten brauchen keine Wege." } ] },
+    ort_salzhausen: { on: "battle", at: "salzhausen", title: "Salzhausen", slides: [
+      { img: "ort_salzhausen.jpg", title: "Salzhausen",
+        text: "Salzhausen ist ein stiller Ort an der Luhe, mit einer Kirche und ein paar Höfen. Die Leute hier haben noch nie einen Krieg gesehen. Das ändert sich heute." } ] },
+    ort_tostedt: { on: "battle", at: "tostedt", title: "Tostedt", slides: [
+      { img: "ort_tostedt.jpg", title: "Tostedt",
+        text: "Tostedt gehört dem Erzbischof von Bremen und liegt an der alten Straße nach Hamburg. Hier rasten Pilger und Händler. Die Wirtin hat die Toten nicht kommen sehen." } ] },
+    ort_amelinghausen: { on: "battle", at: "amelinghausen", title: "Amelinghausen", slides: [
+      { img: "ort_amelinghausen.jpg", title: "Amelinghausen",
+        text: "Amelinghausen liegt an der Lopau, zwischen Heide und Hünengräbern. Die Bauern pflügen um die Grabhügel herum, weil man sie nicht stört. Der Lich stört sie." } ] },
+    ort_soltau: { on: "battle", at: "soltau", title: "Soltau", slides: [
+      { img: "ort_soltau.jpg", title: "Soltau",
+        text: "Soltau liegt an der Böhme, ein Flecken mit Mühle und Kirche mitten in der Heide. Die Schäfer treiben abends ihre Heidschnucken heim. Heute treiben die Toten mit." } ] },
+    ort_munster: { on: "battle", at: "munster", title: "Munster", slides: [
+      { img: "ort_munster.jpg", title: "Munster",
+        text: "Munster an der Örtze ist ein kleines Kirchdorf in der weiten Heide. Hier gibt es nichts als Schafe, Sand und Wind. Für den Lich ist das genug." } ] },
+    ort_oldendorf: { on: "battle", at: "oldendorf", title: "Die Oldendorfer Totenstatt", slides: [
+      { img: "ort_oldendorf.jpg", title: "Die Oldendorfer Totenstatt",
+        text: "Im Luhetal bei Oldendorf liegen Hünenbetten, lang wie Schiffe aus Stein. Hier hält die Heidekönigin Hof, unsichtbar für die Lebenden. Für den Lich ist sie sichtbar." } ] },
+    ort_visselhoevede: { on: "battle", at: "visselhoevede", title: "Visselhövede", slides: [
+      { img: "ort_visselhoevede.jpg", title: "Visselhövede",
+        text: "Visselhövede ist ein Kirchdorf zwischen Wiesen und Mooren, auf halbem Weg nach Verden. Die Bauern schneiden Torf und stapeln ihn zum Trocknen. Im Torf finden sie manchmal Hände." } ] },
+    ort_sieben_steinhaeuser: { on: "battle", at: "sieben_steinhaeuser", title: "Die Sieben Steinhäuser", slides: [
+      { img: "ort_sieben_steinhaeuser.jpg", title: "Die Sieben Steinhäuser",
+        text: "Im Wald liegen fünf große Steingräber, und die Druiden sagen, es seien einmal sieben gewesen. Die zwei anderen sind versunken. Was darunter liegt, ist größer als ein Mensch." } ] },
+    ort_ebstorf: { on: "battle", at: "ebstorf", title: "Kloster Ebstorf", slides: [
+      { img: "ort_ebstorf.jpg", title: "Kloster Ebstorf",
+        text: "In Ebstorf hängt eine Weltkarte, so groß wie eine Scheunenwand, mit Christus als Leib der Welt. Die Nonnen haben jedes Land darauf gemalt, das sie kennen. Die Heide um ihr Kloster ist darauf nur ein kleiner Fleck." } ] },
+    ort_bergen: { on: "battle", at: "bergen", title: "Bergen", slides: [
+      { img: "ort_bergen.jpg", title: "Bergen",
+        text: "Bergen ist ein Dorf am Rand der Heide, mit Kirche, Mühle und Weiden. Man kennt sich hier, jeden Namen auf dem Friedhof. Bald stehen die Namen wieder auf." } ] },
+    ort_fallingbostel: { on: "battle", at: "fallingbostel", title: "Fallingbostel", slides: [
+      { img: "ort_fallingbostel.jpg", title: "Fallingbostel",
+        text: "Bei Fallingbostel fällt die Böhme über Steine, daher der Name, sagen die Leute. Ein paar Höfe, eine Mühle, eine Kirche. Der Lich nimmt alles, auch das Kleine." } ] },
+    ort_bienenbuettel: { on: "battle", at: "bienenbuettel", title: "Bienenbüttel", slides: [
+      { img: "ort_bienenbuettel.jpg", title: "Bienenbüttel",
+        text: "Bienenbüttel liegt an der Ilmenau, auf dem Weg, den das Lüneburger Salz nach Süden nimmt. Die Fuhrleute halten hier an. Heute fährt niemand mehr weiter." } ] },
+    ort_hermannsburg: { on: "battle", at: "hermannsburg", title: "Hermannsburg", slides: [
+      { img: "ort_hermannsburg.jpg", title: "Hermannsburg",
+        text: "Hermannsburg liegt an der Örtze, wo sie schnell und klar durch die Heide fließt. Die Bauern sagen, ein Graf habe hier gegen die Heiden gekämpft. Die Heiden sind zurück." } ] },
+    ort_buxtehude: { on: "battle", at: "buxtehude", title: "Buxtehude", slides: [
+      { img: "ort_buxtehude.jpg", title: "Buxtehude",
+        text: "Buxtehude ist eine kleine Stadt an der Este, mit einem Hafen, aus dem Ewer bis nach Hamburg fahren. Die Bürger haben eine Mauer gebaut. Die Toten kommen mit der Flut." } ] },
+    ort_medingen: { on: "battle", at: "medingen", title: "Kloster Medingen", slides: [
+      { img: "ort_medingen.jpg", title: "Kloster Medingen",
+        text: "Die Nonnen von Medingen singen ihre Stundengebete, als wäre die Welt draußen still. Hinter der Klostermauer stehen die Toten und warten, bis das Lied verstummt." } ] },
+    ort_bergedorf: { on: "battle", at: "bergedorf", title: "Bergedorf", slides: [
+      { img: "ort_bergedorf.jpg", title: "Bergedorf",
+        text: "Bergedorf ist eine Burg der Herzöge von Sachsen-Lauenburg in der Marsch vor Hamburg. Die Hamburger hätten sie gern. Der Lich ist schneller." } ] },
+    ort_walsrode: { on: "battle", at: "walsrode", title: "Kloster Walsrode", slides: [
+      { img: "ort_walsrode.jpg", title: "Kloster Walsrode",
+        text: "Das Kloster Walsrode ist älter als die meisten Städte im Land, ein Damenstift der Welfen an der Böhme. Seine Glocke ist die einzige, die hier weit und breit läutet. Der Lich will, dass sie schweigt." } ] },
+    ort_lauenburg: { on: "battle", at: "lauenburg", title: "Lauenburg", slides: [
+      { img: "ort_lauenburg.jpg", title: "Lauenburg",
+        text: "Die Askanier von Sachsen-Lauenburg haben ihre Burg hoch über die Elbe gebaut, wo die Schiffe unten anlegen. Die Schiffer wohnen unten am Ufer. Die Toten kommen von unten." } ] },
+    ort_uelzen: { on: "battle", at: "uelzen", title: "Uelzen", slides: [
+      { img: "ort_uelzen.jpg", title: "Uelzen",
+        text: "Uelzen ist eine kleine Hansestadt am Rand der Heide, mit Wall, Graben und der Marienkirche. Die Kaufleute zählen Salz und Getreide. Sie werden lernen, Tote zu zählen." } ] },
+    ort_suderburg: { on: "battle", at: "suderburg", title: "Suderburg", slides: [
+      { img: "ort_suderburg.jpg", title: "Suderburg",
+        text: "Bei Suderburg entspringt die Hardau, und an ihrem Ufer steht eine kleine Kirche aus Feldsteinen. Hier endet die Heide und beginnen die Wälder. Der Lich kennt beides." } ] },
+    ort_unterluess: { on: "battle", at: "unterluess", title: "Unterlüß", slides: [
+      { img: "ort_unterluess.jpg", title: "Unterlüß",
+        text: "Unterlüß liegt mitten im Lüß, einem Wald so groß, dass sich Jäger darin verirren. Ein paar Köhler und Waldbauern leben hier. Die Toten kommen zwischen den Bäumen heraus, als wären sie aus dem Holz gewachsen." } ] },
+    ort_zeven: { on: "battle", at: "zeven", title: "Zeven", slides: [
+      { img: "ort_zeven.jpg", title: "Zeven",
+        text: "In Zeven beten die Nonnen eines Benediktinerinnenklosters zwischen Moor und Geest. Der Erzbischof schickt ihnen Pächter und Ritter. Keiner von ihnen kommt rechtzeitig." } ] },
+    ort_verden: { on: "battle", at: "verden", title: "Verden", slides: [
+      { img: "ort_verden.jpg", title: "Verden",
+        text: "In Verden ließ Karl der Große viertausend Sachsen an einem Tag hinrichten, so erzählen es die Mönche. Unter den Wiesen an der Aller liegen sie noch. Der Dom darüber hat sie nicht vergessen lassen." } ] },
+    ort_boizenburg: { on: "battle", at: "boizenburg", title: "Boizenburg", slides: [
+      { img: "ort_boizenburg.jpg", title: "Boizenburg",
+        text: "Boizenburg liegt an der Elbe, wo die Boize mündet, und erhebt Zoll von jedem Schiff. Die Schiffe kommen jetzt ohne Steuermann." } ] },
+    ort_bleckede: { on: "battle", at: "bleckede", title: "Bleckede", slides: [
+      { img: "ort_bleckede.jpg", title: "Bleckede",
+        text: "Bleckede hat eine Burg an der Elbe, von der die Welfen den Fluss bewachen. Wer über die Elbe will, zahlt hier Zoll. Die Toten zahlen nicht." } ] },
+    ort_stade: { on: "battle", at: "stade", title: "Stade", slides: [
+      { img: "ort_stade.jpg", title: "Stade",
+        text: "Stade ist eine alte Hansestadt an der Schwinge, kurz vor der Elbe. Hier erhebt der Erzbischof von Bremen den Elbzoll. Die Schiffe zahlen. Die Toten nicht." } ] },
+    ort_schwarmstedt: { on: "battle", at: "schwarmstedt", title: "Schwarmstedt", slides: [
+      { img: "ort_schwarmstedt.jpg", title: "Schwarmstedt",
+        text: "Bei Schwarmstedt fließen Leine und Aller zusammen, und im Frühjahr steht das Land unter Wasser. Die Kirche steht auf einem Sandhügel, damit sie trocken bleibt. Die Toten kommen durch das Wasser." } ] },
+    ort_celle: { on: "battle", at: "celle", title: "Celle", slides: [
+      { img: "ort_celle.jpg", title: "Celle",
+        text: "Seit die Welfen sich um das Lüneburger Erbe streiten, ist Celle ihre feste Burg an der Aller. Der Herzog hat Söldner geholt und die Wälle erhöht. Gegen die Lebenden." } ] },
+    ort_achim: { on: "battle", at: "achim", title: "Achim", slides: [
+      { img: "ort_achim.jpg", title: "Achim",
+        text: "Achim liegt auf dem Hang über der Weser, wo das Land trocken ist. Unten in den Marschen arbeiten die Bauern hinter Deichen. Der Lich weiß, wie man einen Deich bricht." } ] },
+    ort_hoya: { on: "battle", at: "hoya", title: "Hoya", slides: [
+      { img: "ort_hoya.jpg", title: "Hoya",
+        text: "Hoya ist die Burg der Grafen an der Weser, mit einer Fähre und einem Markt. Die Grafen sind mächtig im Land zwischen Weser und Moor. Ihre Macht reicht nicht unter die Erde." } ] },
+    ort_teufelsmoor: { on: "battle", at: "teufelsmoor", title: "Das Teufelsmoor", slides: [
+      { img: "ort_teufelsmoor.jpg", title: "Das Teufelsmoor",
+        text: "Im Teufelsmoor gibt der Boden unter jedem Schritt nach, und die Irrlichter führen Wanderer in die schwarzen Löcher. Die Heidegeister halten hier ihre Toten fest. Der Lich will sie haben." } ] },
+    ort_wittingen: { on: "battle", at: "wittingen", title: "Wittingen", slides: [
+      { img: "ort_wittingen.jpg", title: "Wittingen",
+        text: "Wittingen liegt im Grenzland zwischen Heide und Altmark und hat eine Mauer, weil hier oft Krieg ist. Die Bürger kennen Raubritter. Einen Lich kennen sie nicht." } ] },
+    ort_moelln: { on: "battle", at: "moelln", title: "Mölln", slides: [
+      { img: "ort_moelln.jpg", title: "Mölln",
+        text: "In Mölln liegt Till Eulenspiegel begraben, der Narr, der die Leute an der Nase herumführte. Er starb vor zwanzig Jahren. Er lacht noch immer." } ] },
+    ort_burgdorf: { on: "battle", at: "burgdorf", title: "Burgdorf", slides: [
+      { img: "ort_burgdorf.jpg", title: "Burgdorf",
+        text: "Burgdorf ist ein Städtchen mit einer kleinen Burg der Welfen, an der Straße von Celle nach Hannover. Die Boten reiten hier durch. Heute reitet keiner mehr hinaus." } ] },
+    ort_syke: { on: "battle", at: "syke", title: "Syke", slides: [
+      { img: "ort_syke.jpg", title: "Syke",
+        text: "Syke gehört den Grafen von Hoya, die hier eine Burg im Wald halten. Ihre Jäger kennen jeden Hirsch. Die Hirsche fliehen, bevor die Jäger etwas merken." } ] },
+    ort_hitzacker: { on: "battle", at: "hitzacker", title: "Hitzacker", slides: [
+      { img: "ort_hitzacker.jpg", title: "Hitzacker",
+        text: "Hitzacker liegt auf einer Insel, wo die Jeetzel in die Elbe fließt. Auf dem Weinberg darüber wachsen Reben, so weit im Norden. Diese Lese bringen die Toten ein." } ] },
+    ort_nienburg: { on: "battle", at: "nienburg", title: "Nienburg", slides: [
+      { img: "ort_nienburg.jpg", title: "Nienburg",
+        text: "Nienburg ist eine Burg der Grafen von Hoya an der Weser, wo die Schiffe anlegen. Die Grafen sind stolz und streitbar. Der Lich wird ihnen zeigen, wie man verliert." } ] },
+    ort_bremen: { on: "battle", at: "bremen", title: "Bremen", slides: [
+      { img: "ort_bremen.jpg", title: "Bremen",
+        text: "Bremen hält seinen Roland aus Holz noch für einen Wächter, und der Erzbischof sitzt im Dom. Die Kaufleute fahren bis nach Bergen und Brügge. Über die Weser kommt jetzt anderes Volk." } ] },
+    ort_oldesloe: { on: "battle", at: "oldesloe", title: "Oldesloe", slides: [
+      { img: "ort_oldesloe.jpg", title: "Oldesloe",
+        text: "In Oldesloe siedet man Salz aus der Trave, wie in Lüneburg, nur weniger. Die Siedeknechte stehen den ganzen Tag im Dampf. Der Lich nennt das Salz sein Eigen." } ] },
+    ort_dannenberg: { on: "battle", at: "dannenberg", title: "Dannenberg", slides: [
+      { img: "ort_dannenberg.jpg", title: "Dannenberg",
+        text: "Dannenberg hat eine Burg mit einem runden Turm an der Jeetzel, in der Grafen saßen, bevor die Welfen kamen. Der Turm hat schon Gefangene gesehen. Er wird mehr sehen." } ] },
+    ort_ratzeburg: { on: "battle", at: "ratzeburg", title: "Ratzeburg", slides: [
+      { img: "ort_ratzeburg.jpg", title: "Ratzeburg",
+        text: "Der Dom von Ratzeburg steht auf einer Insel im See, und nur Dämme führen hinüber. Heinrich der Löwe hat ihn bauen lassen. Die Mönche glauben, das Wasser schütze sie." } ] },
+    ort_neustadt: { on: "battle", at: "neustadt", title: "Neustadt am Rübenberge", slides: [
+      { img: "ort_neustadt.jpg", title: "Neustadt am Rübenberge",
+        text: "Neustadt hat eine Burg an der Leine, die die Grafen von Wölpe gebaut haben. Die Welfen halten sie jetzt. Wer sie hält, ist dem Lich gleich." } ] },
+    ort_hannover: { on: "battle", at: "hannover", title: "Hannover", slides: [
+      { img: "ort_hannover.jpg", title: "Hannover",
+        text: "Hannover ist eine Stadt der Kaufleute an der Leine, die den Welfen trotzt und eigene Mauern baut. Die Marktkirche wächst noch, Stein um Stein. Das Gerüst steht leer, als die Toten kommen." } ] },
+    ort_salzwedel: { on: "battle", at: "salzwedel", title: "Salzwedel", slides: [
+      { img: "ort_salzwedel.jpg", title: "Salzwedel",
+        text: "Salzwedel ist Hansestadt an der Jeetzel, reich durch Salz und Tuch. Die Kaufleute haben einen eigenen Rat. Der Lich wird ihm einen Vorschlag machen." } ] },
+    ort_hagenow: { on: "battle", at: "hagenow", title: "Hagenow", slides: [
+      { img: "ort_hagenow.jpg", title: "Hagenow",
+        text: "Hagenow ist ein Städtchen in der Heide Mecklenburgs, arm und stolz. Es hat nichts, was ein Heer will, außer seinen Leuten." } ] },
+    ort_segeberg: { on: "battle", at: "segeberg", title: "Segeberg", slides: [
+      { img: "ort_segeberg.jpg", title: "Segeberg",
+        text: "Auf dem Kalkberg über Segeberg sitzen die Schauenburger Grafen in ihrer Burg. Unter dem weißen Fels liegen Höhlen, in denen das Wasser tropft. Der Lich kommt von unten." } ] },
+    ort_gifhorn: { on: "battle", at: "gifhorn", title: "Gifhorn", slides: [
+      { img: "ort_gifhorn.jpg", title: "Gifhorn",
+        text: "Gifhorn liegt, wo Aller und Ise zusammenfließen, und die Salzstraße von Lüneburg nach Braunschweig führt hindurch. Die Welfen haben hier eine Burg. Das Salz fließt jetzt in eine andere Richtung." } ] },
+    ort_delmenhorst: { on: "battle", at: "delmenhorst", title: "Delmenhorst", slides: [
+      { img: "ort_delmenhorst.jpg", title: "Delmenhorst",
+        text: "Delmenhorst ist eine Burg der Oldenburger Grafen an der Delme, im Sumpf gebaut. Die Brücken sind schmal, und die Wachen sind wenige. Wenige Wachen sind nicht genug." } ] },
+    ort_itzehoe: { on: "battle", at: "itzehoe", title: "Itzehoe", slides: [
+      { img: "ort_itzehoe.jpg", title: "Itzehoe",
+        text: "Itzehoe liegt an der Stör, mit einem Kloster für adlige Damen und einer Burg. Die Marschbauern bringen Korn und Vieh. Heute bringen sie nichts mehr." } ] },
+    ort_neumuenster: { on: "battle", at: "neumuenster", title: "Neumünster", slides: [
+      { img: "ort_neumuenster.jpg", title: "Neumünster",
+        text: "Neumünster war ein Kloster, bevor die Mönche nach Bordesholm gezogen sind. Ihre Toten haben sie hiergelassen. Die Toten sind wach." } ] },
+    ort_gadebusch: { on: "battle", at: "gadebusch", title: "Gadebusch", slides: [
+      { img: "ort_gadebusch.jpg", title: "Gadebusch",
+        text: "Gadebusch hat eine Kirche aus Backstein und eine Burg der Mecklenburger. Die Bauern ringsum zahlen ihren Zins. Diesmal zahlen sie mit anderem." } ] },
+    ort_peine: { on: "battle", at: "peine", title: "Peine", slides: [
+      { img: "ort_peine.jpg", title: "Peine",
+        text: "Peine hat eine Burg, um die der Bischof von Hildesheim und die Welfen seit Jahren streiten. Die Burgmannen sind kampferfahren. Gegen Tote haben sie nie geübt." } ] },
+    ort_luebeck: { on: "battle", at: "luebeck", title: "Lübeck", slides: [
+      { img: "ort_luebeck.jpg", title: "Lübeck",
+        text: "Lübeck ist die Königin der Hanse. Sieben Türme stehen über der Stadt auf ihrem Hügel zwischen Trave und Wakenitz, und im Rathaus beschließen die Kaufleute, wer Krieg führt. Vor einem Jahr haben sie Dänemark besiegt. Mit dem Lich verhandeln sie nicht." } ] },
+    ort_kloetze: { on: "battle", at: "kloetze", title: "Klötze", slides: [
+      { img: "ort_kloetze.jpg", title: "Klötze",
+        text: "Klötze ist eine Burg im Wald der Altmark, abgelegen und vergessen. Die Burgmannen langweilen sich. Nicht mehr lange." } ] },
+    ort_otterndorf: { on: "battle", at: "otterndorf", title: "Otterndorf", slides: [
+      { img: "ort_otterndorf.jpg", title: "Otterndorf",
+        text: "Otterndorf liegt im Land Hadeln, wo die Elbe ins Meer übergeht. Die Marschbauern leben hinter Deichen, die sie selbst gebaut haben. Der Lich kennt einen Weg durch jeden Deich." } ] },
+    ort_schwerin: { on: "battle", at: "schwerin", title: "Schwerin", slides: [
+      { img: "ort_schwerin.jpg", title: "Schwerin",
+        text: "Die Herzöge von Mecklenburg sitzen in ihrer Burg auf der Insel im Schweriner See. Ihr Sohn ist König von Schweden. Ihr Reich wird kleiner, als sie denken." } ] },
+    ort_fallersleben: { on: "battle", at: "fallersleben", title: "Fallersleben", slides: [
+      { img: "ort_fallersleben.jpg", title: "Fallersleben",
+        text: "Fallersleben ist ein Marktflecken an der Aller, mit einer Burg und Bauern, die nichts als ihre Ruhe wollen. Die Ruhe ist vorbei." } ] },
+    ort_pestrup: { on: "battle", at: "pestrup", title: "Das Pestruper Gräberfeld", slides: [
+      { img: "ort_pestrup.jpg", title: "Das Pestruper Gräberfeld",
+        text: "Fünfhundert Grabhügel liegen in der Heide bei Pestrup, alle älter als jede Kirche. Die Heidegeister bewachen sie. Hier liegen mehr Knochen als in jeder Stadt." } ] },
+    ort_hildesheim: { on: "battle", at: "hildesheim", title: "Hildesheim", slides: [
+      { img: "ort_hildesheim.jpg", title: "Hildesheim",
+        text: "Am Dom von Hildesheim wächst ein Rosenstock, den Ludwig der Fromme gepflanzt haben soll. Solange er blüht, heißt es, wird die Stadt nicht untergehen. Der Lich legt seine Hand auf die Wurzel." } ] },
+    ort_wildeshausen: { on: "battle", at: "wildeshausen", title: "Wildeshausen", slides: [
+      { img: "ort_wildeshausen.jpg", title: "Wildeshausen",
+        text: "Wildeshausen hat die Alexanderkirche, in der die Gebeine des heiligen Alexander liegen. Rings um die Stadt liegen ältere Gebeine in Steingräbern. Sie sind wacher." } ] },
+    ort_arendsee: { on: "battle", at: "arendsee", title: "Arendsee", slides: [
+      { img: "ort_arendsee.jpg", title: "Arendsee",
+        text: "Im Arendsee versank eine Burg samt ihrer Besatzung, sagen die Leute. Manchmal steigen Blasen auf, als atme jemand. Der Lich weiß, wer da atmet." } ] },
+    ort_stadthagen: { on: "battle", at: "stadthagen", title: "Stadthagen", slides: [
+      { img: "ort_stadthagen.jpg", title: "Stadthagen",
+        text: "Stadthagen ist eine Stadt der Schauenburger Grafen, umgeben von Wäldern und Hagen. Hier jagen die Grafen das Wild. Heute jagt der Lich." } ] },
+    ort_braunschweig: { on: "battle", at: "braunschweig", title: "Braunschweig", slides: [
+      { img: "ort_braunschweig.jpg", title: "Braunschweig",
+        text: "Auf dem Burgplatz von Braunschweig steht seit zweihundert Jahren der Löwe, den Heinrich der Löwe gießen ließ. Er hat noch nie gebrüllt. Heute Nacht stehen die Toten vor ihm, und die Stadt hält den Atem an." } ] },
+    ort_diepholz: { on: "battle", at: "diepholz", title: "Diepholz", slides: [
+      { img: "ort_diepholz.jpg", title: "Diepholz",
+        text: "Diepholz ist eine Burg der Edelherren mitten im Moor. Der einzige Weg führt über Bohlenwege. Wer sie nicht kennt, versinkt." } ] },
+    ort_gardelegen: { on: "battle", at: "gardelegen", title: "Gardelegen", slides: [
+      { img: "ort_gardelegen.jpg", title: "Gardelegen",
+        text: "Gardelegen in der Altmark braut Bier und baut seine Mauern aus Backstein. Die Brauer haben große Kessel. Die Toten haben großen Durst nach anderem." } ] },
+    ort_vechta: { on: "battle", at: "vechta", title: "Vechta", slides: [
+      { img: "ort_vechta.jpg", title: "Vechta",
+        text: "Vechta ist eine kleine Burg des Bischofs von Münster im Moorland. Die Leute leben vom Torf und von der Viehzucht. Der Torf brennt, die Toten nicht." } ] },
+    ort_ploen: { on: "battle", at: "ploen", title: "Plön", slides: [
+      { img: "ort_ploen.jpg", title: "Plön",
+        text: "Plön liegt zwischen Seen, eine Burg auf einer Halbinsel. Die Fischer holen Barsch und Aal aus dem Wasser. Heute fangen sie Hände." } ] },
+    ort_oldenburg: { on: "battle", at: "oldenburg", title: "Oldenburg", slides: [
+      { img: "ort_oldenburg.jpg", title: "Oldenburg",
+        text: "Die Grafen von Oldenburg sitzen in ihrer Burg an der Hunte, zwischen Moor und Geest. Sie haben viele Feinde und vertrauen niemandem. Das ist klug." } ] },
+    ort_alfeld: { on: "battle", at: "alfeld", title: "Alfeld", slides: [
+      { img: "ort_alfeld.jpg", title: "Alfeld",
+        text: "Alfeld liegt an der Leine zwischen bewaldeten Hügeln und gehört dem Bischof von Hildesheim. Die Bauern sind fromm, die Wälder dunkel." } ] },
+    ort_duemmer: { on: "battle", at: "duemmer", title: "Das Dümmer-Moor", slides: [
+      { img: "ort_duemmer.jpg", title: "Das Dümmer-Moor",
+        text: "Am Dümmer liegt ein weites Moor, und der Torf gibt seine Toten nicht her. Es sei denn, man fragt richtig. Der Lich fragt." } ] },
+    ort_wolfenbuettel: { on: "battle", at: "wolfenbuettel", title: "Wolfenbüttel", slides: [
+      { img: "ort_wolfenbuettel.jpg", title: "Wolfenbüttel",
+        text: "Wolfenbüttel ist eine Wasserburg der Welfen in der Okeraue, umgeben von Sumpf und Gräben. Hier kommt niemand trocken an. Die Toten brauchen das nicht." } ] },
+    ort_kiel: { on: "battle", at: "kiel", title: "Kiel", slides: [
+      { img: "ort_kiel.jpg", title: "Kiel",
+        text: "Kiel ist eine junge Stadt an einer tiefen Förde, mit einer Burg der Holsteiner Grafen. Zum Umschlag kommen Kaufleute aus allen Ostseestädten. Mit ihnen kommt diesmal Nebel und etwas darin." } ] },
+    ort_koenigslutter: { on: "battle", at: "koenigslutter", title: "Königslutter", slides: [
+      { img: "ort_koenigslutter.jpg", title: "Königslutter",
+        text: "Im Kaiserdom von Königslutter liegt Kaiser Lothar begraben, der vor zweihundert Jahren über das Reich herrschte. Die Steinmetze haben Jäger und Hasen in den Fries gehauen. Heute ist der Kaiser der Gejagte." } ] },
+    ort_minden: { on: "battle", at: "minden", title: "Minden", slides: [
+      { img: "ort_minden.jpg", title: "Minden",
+        text: "Minden steht an der Weser, wo der Fluss durch die Porta zwischen zwei Bergen ins Flachland bricht. Der Bischof hält die Brücke. Wer sie hält, hält das Land." } ] },
+    ort_rendsburg: { on: "battle", at: "rendsburg", title: "Rendsburg", slides: [
+      { img: "ort_rendsburg.jpg", title: "Rendsburg",
+        text: "Rendsburg ist eine Burg auf einer Insel in der Eider, an der Grenze zwischen Holstein und Schleswig. Wer hier durchwill, braucht die Erlaubnis der Grafen. Der Lich fragt nicht." } ] },
+    ort_hameln: { on: "battle", at: "hameln", title: "Hameln", slides: [
+      { img: "ort_hameln.jpg", title: "Hameln",
+        text: "Vor bald hundert Jahren nahm ein Pfeifer in bunten Kleidern hundertdreißig Kinder aus Hameln mit, und keines kam zurück. Die Bürger sagen, er habe sie in den Berg geführt. Der Lich hört eine Flöte im Wind." } ] },
+    ort_wismar: { on: "battle", at: "wismar", title: "Wismar", slides: [
+      { img: "ort_wismar.jpg", title: "Wismar",
+        text: "Wismar ist eine Hansestadt mit großen Kirchen und einem Hafen voller Koggen. Die Brauer und Kaufleute haben Dänemark mit besiegt. Jetzt kommt ein Feind über die Ostsee." } ] },
+    ort_rinteln: { on: "battle", at: "rinteln", title: "Rinteln", slides: [
+      { img: "ort_rinteln.jpg", title: "Rinteln",
+        text: "Rinteln ist eine junge Stadt an der Weser mit Wällen und einer Brücke. Die Schauenburger haben sie gegründet, um den Fluss zu bewachen. Der Fluss bringt jetzt Gäste." } ] },
+    ort_osterburg: { on: "battle", at: "osterburg", title: "Osterburg", slides: [
+      { img: "ort_osterburg.jpg", title: "Osterburg",
+        text: "Osterburg ist eine kleine Stadt an der Biese in der Altmark. Die Bauern bringen Korn in die Mühle. Sie kommen nicht wieder heim." } ] },
+    ort_helmstedt: { on: "battle", at: "helmstedt", title: "Helmstedt", slides: [
+      { img: "ort_helmstedt.jpg", title: "Helmstedt",
+        text: "Helmstedt hat das Kloster Sankt Ludgeri, gegründet von den Mönchen aus Werden. Die Mönche sagen, der heilige Ludger schütze die Stadt. Er ist seit fünfhundert Jahren tot." } ] },
+    ort_parchim: { on: "battle", at: "parchim", title: "Parchim", slides: [
+      { img: "ort_parchim.jpg", title: "Parchim",
+        text: "Parchim liegt an der Elde, eine Stadt mit zwei Kirchen und Bürgern, die sich gern streiten. Heute sind sie sich einig." } ] },
+    ort_cloppenburg: { on: "battle", at: "cloppenburg", title: "Cloppenburg", slides: [
+      { img: "ort_cloppenburg.jpg", title: "Cloppenburg",
+        text: "Cloppenburg ist eine Burg im Oldenburger Münsterland, an der Soeste. Die Burgmannen sind wenige, der Weg ist weit. Hilfe kommt nicht rechtzeitig." } ] },
+    ort_gandersheim: { on: "battle", at: "gandersheim", title: "Stift Gandersheim", slides: [
+      { img: "ort_gandersheim.jpg", title: "Stift Gandersheim",
+        text: "In Gandersheim schrieb vor vierhundert Jahren die Nonne Roswitha Theaterstücke über Märtyrer. Die Stiftsdamen lesen sie noch. Dieses Stück endet ohne Erlösung." } ] },
+    ort_perleberg: { on: "battle", at: "perleberg", title: "Perleberg", slides: [
+      { img: "ort_perleberg.jpg", title: "Perleberg",
+        text: "Perleberg in der Prignitz hat einen Roland aus Stein auf dem Markt. Er steht dort für das Recht der Stadt. Der Lich bringt ein anderes Recht." } ] },
+    ort_einbeck: { on: "battle", at: "einbeck", title: "Einbeck", slides: [
+      { img: "ort_einbeck.jpg", title: "Einbeck",
+        text: "Sein Bier trinkt man bis nach Lübeck, und die Brauer von Einbeck sind reich. In den Kellern lagern tausend Fässer. Die Toten trinken nicht. Aber sie zerschlagen gern." } ] },
+    ort_stendal: { on: "battle", at: "stendal", title: "Stendal", slides: [
+      { img: "ort_stendal.jpg", title: "Stendal",
+        text: "Stendal ist die größte Stadt der Altmark, eine Hansestadt mit Toren aus Backstein, so hoch wie Kirchtürme. Die Kaufleute handeln mit Tuch bis nach Flandern. Der Lich handelt nicht." } ] },
+    ort_seesen: { on: "battle", at: "seesen", title: "Seesen", slides: [
+      { img: "ort_seesen.jpg", title: "Seesen",
+        text: "Seesen liegt am Westrand des Harzes, mit einer kleinen Burg und einem Markt. Händler aus Goslar ziehen hier durch. Sie ziehen jetzt schneller." } ] },
+    ort_haldensleben: { on: "battle", at: "haldensleben", title: "Haldensleben", slides: [
+      { img: "ort_haldensleben.jpg", title: "Haldensleben",
+        text: "Haldensleben ist eine Stadt an der Ohre, die der Erzbischof von Magdeburg zerstört und wieder aufgebaut hat. Die Bürger haben Mauern und Mut. Mut hilft nicht gegen Tote." } ] },
+    ort_jever: { on: "battle", at: "jever", title: "Jever", slides: [
+      { img: "ort_jever.jpg", title: "Jever",
+        text: "Jever ist eine Häuptlingsburg in Friesland, nah am Meer. Die Friesen kämpfen gegen das Wasser und gegen jeden, der ihnen etwas befehlen will." } ] },
+    ort_goslar: { on: "battle", at: "goslar", title: "Goslar", slides: [
+      { img: "ort_goslar.jpg", title: "Goslar",
+        text: "In Goslar stand die Pfalz der Kaiser, und im Rammelsberg darüber liegt Silber, das schon die Ottonen schürften. Die Bergleute fahren in Stollen ein, die älter sind als die Stadtmauer. Tief drinnen hören sie Schritte." } ] },
+    ort_tangermuende: { on: "battle", at: "tangermuende", title: "Tangermünde", slides: [
+      { img: "ort_tangermuende.jpg", title: "Tangermünde",
+        text: "Tangermünde hat eine Burg auf dem hohen Ufer, wo der Tanger in die Elbe fließt. Der Kaiser soll sie für sich wollen. Der Lich will sie vorher." } ] },
+    ort_hackelberg: { on: "battle", at: "hackelberg", title: "Hackelbergs Grab", slides: [
+      { img: "ort_hackelberg.jpg", title: "Hackelbergs Grab",
+        text: "Hackelberg, der Oberjägermeister, wollte lieber bis zum Jüngsten Tag jagen als in den Himmel kommen. Gott gab ihm seinen Wunsch. Seine Jagd zieht in Sturmnächten über den Harz." } ] },
+    ort_schleswig: { on: "battle", at: "schleswig", title: "Schleswig", slides: [
+      { img: "ort_schleswig.jpg", title: "Schleswig",
+        text: "Der Dom von Schleswig steht an der Schlei, wo vor Zeiten Haithabu lag, die Stadt der Wikinger. Ihre Toten liegen noch im Wall. Der Bischof weiß es nicht." } ] },
+    ort_northeim: { on: "battle", at: "northeim", title: "Northeim", slides: [
+      { img: "ort_northeim.jpg", title: "Northeim",
+        text: "Northeim liegt an der Rhume und hat ein Kloster, das älter ist als die Stadt. Die Mönche hüten die Gräber der Grafen von Northeim. Die Grafen sind lange tot. Nicht lange genug." } ] },
+    ort_herford: { on: "battle", at: "herford", title: "Herford", slides: [
+      { img: "ort_herford.jpg", title: "Herford",
+        text: "Herford ist ein Damenstift, so alt wie Corvey, und die Äbtissin ist Reichsfürstin. Ihre Damen sind Grafentöchter. Sie werden Gräfinnen der Toten." } ] },
+    ort_lemgo: { on: "battle", at: "lemgo", title: "Lemgo", slides: [
+      { img: "ort_lemgo.jpg", title: "Lemgo",
+        text: "Lemgo ist eine Hansestadt in Lippe, wohlhabend durch Leinen. Die Weber arbeiten bis tief in die Nacht. Ihre Spindeln drehen sich weiter, auch wenn niemand mehr dreht." } ] },
+    ort_havelberg: { on: "battle", at: "havelberg", title: "Havelberg", slides: [
+      { img: "ort_havelberg.jpg", title: "Havelberg",
+        text: "Der Dom von Havelberg steht hoch auf dem Berg über der Havel, und von dort sieht man weit ins Land. Die Domherren sehen den Lich kommen. Sie läuten, bis die Seile reißen." } ] },
+    ort_harzburg: { on: "battle", at: "harzburg", title: "Die Harzburg", slides: [
+      { img: "ort_harzburg.jpg", title: "Die Harzburg",
+        text: "Auf dem Burgberg über dem Harz stand die Harzburg Kaiser Heinrichs. Die Sachsen haben sie geschleift und seine Toten aus der Gruft geworfen. Der Lich sammelt sie wieder ein." } ] },
+    ort_iberg: { on: "battle", at: "iberg", title: "Die Zwergenlöcher", slides: [
+      { img: "ort_iberg.jpg", title: "Die Zwergenlöcher",
+        text: "In den Höhlen am Iberg hören die Bergleute nachts Hämmern, und niemand geht freiwillig hinein. Die Zwerge waren vor den Menschen da. Sie sind noch da." } ] },
+    ort_guestrow: { on: "battle", at: "guestrow", title: "Güstrow", slides: [
+      { img: "ort_guestrow.jpg", title: "Güstrow",
+        text: "Güstrow hat einen Dom, den der Fürst Heinrich Borwin gestiftet hat. Seine Gebeine liegen darin. Sie wollen heraus." } ] },
+    ort_osnabrueck: { on: "battle", at: "osnabrueck", title: "Osnabrück", slides: [
+      { img: "ort_osnabrueck.jpg", title: "Osnabrück",
+        text: "Osnabrück ist Bischofsstadt mit einem Dom und einem Rat, der dem Bischof widerspricht. Unter dem Dom liegt der heilige Crispin begraben. Er ist nicht der Einzige." } ] },
+    ort_burg: { on: "battle", at: "burg", title: "Burg", slides: [
+      { img: "ort_burg.jpg", title: "Burg",
+        text: "Burg ist eine Stadt des Erzbischofs mit Tuchmachern, die ihre Stoffe bis nach Flandern verkaufen. Auf den Rahmen trocknen lange Bahnen. Die Toten gehen zwischen ihnen hindurch." } ] },
+    ort_osterode: { on: "battle", at: "osterode", title: "Osterode", slides: [
+      { img: "ort_osterode.jpg", title: "Osterode",
+        text: "Osterode liegt am Westrand des Harzes, wo die Söse aus den Bergen kommt. Im Winter frieren die Mühlräder ein. Der Lich bringt den Winter mit." } ] },
+    ort_corvey: { on: "battle", at: "corvey", title: "Kloster Corvey", slides: [
+      { img: "ort_corvey.jpg", title: "Kloster Corvey",
+        text: "Corvey an der Weser ist eine Reichsabtei aus der Zeit der Karolinger. Seine Bibliothek ist die älteste im Land, und in ihr liegen Bücher, die niemand mehr lesen kann. Der Lich kann." } ] },
+    ort_ilsenburg: { on: "battle", at: "ilsenburg", title: "Ilsenburg", slides: [
+      { img: "ort_ilsenburg.jpg", title: "Ilsenburg",
+        text: "Im Kloster Ilsenburg an der Ilse beten die Benediktiner am Fuß des Harzes. Den Brocken sehen sie jeden Morgen. Sie wissen, was dort oben tanzt." } ] },
+    ort_genthin: { on: "battle", at: "genthin", title: "Genthin", slides: [
+      { img: "ort_genthin.jpg", title: "Genthin",
+        text: "Genthin liegt im Fiener Bruch, einem Sumpf zwischen Havel und Elbe. Die Leute fischen und schneiden Schilf. Unter dem Schilf liegt mehr, als sie denken." } ] },
+    ort_oschersleben: { on: "battle", at: "oschersleben", title: "Oschersleben", slides: [
+      { img: "ort_oschersleben.jpg", title: "Oschersleben",
+        text: "Oschersleben liegt im Bruch der Bode, einem Sumpf, durch den nur ein Damm führt. Der Bischof von Halberstadt hält hier eine Burg. Der Damm ist schmal." } ] },
+    ort_husum: { on: "battle", at: "husum", title: "Husum", slides: [
+      { img: "ort_husum.jpg", title: "Husum",
+        text: "Seit die Mandränke Rungholt verschlungen hat, ist Husum der Hafen der Marsch. Die Leute haben die Glocken der versunkenen Stadt gehört. Jetzt kommt, was dort unten gewohnt hat." } ] },
+    ort_doberan: { on: "battle", at: "doberan", title: "Kloster Doberan", slides: [
+      { img: "ort_doberan.jpg", title: "Kloster Doberan",
+        text: "In Doberan beten die Zisterzienser über den Gräbern der Mecklenburger Fürsten. Ihre Kräutergärten sind berühmt. Der Lich hat für Kräuter keine Verwendung, für Fürsten schon." } ] },
+    ort_wernigerode: { on: "battle", at: "wernigerode", title: "Wernigerode", slides: [
+      { img: "ort_wernigerode.jpg", title: "Wernigerode",
+        text: "Wernigerode liegt am Fuß des Harzes, mit einer Burg der Grafen über der Stadt. Die Fachwerkhäuser sind bunt bemalt. Bald sind sie grau." } ] },
+    ort_bielefeld: { on: "battle", at: "bielefeld", title: "Bielefeld", slides: [
+      { img: "ort_bielefeld.jpg", title: "Bielefeld",
+        text: "Über Bielefeld thront die Sparrenburg der Grafen von Ravensberg auf dem Kamm des Teutoburger Waldes. Unten bleichen die Weber ihr Leinen auf den Wiesen. Weiß wird es nicht bleiben." } ] },
+    ort_goettingen: { on: "battle", at: "goettingen", title: "Göttingen", slides: [
+      { img: "ort_goettingen.jpg", title: "Göttingen",
+        text: "Göttingen ist eine Stadt der Kaufleute an der Leine, die sich gegen ihren Herzog stellt. Die Bürger haben eine neue Mauer gebaut. Die Toten kommen trotzdem." } ] },
+    ort_externsteine: { on: "battle", at: "externsteine", title: "Die Externsteine", slides: [
+      { img: "ort_externsteine.jpg", title: "Die Externsteine",
+        text: "Die Externsteine ragen aus dem Teutoburger Wald wie Finger aus der Erde. Die Mönche haben eine Kreuzabnahme in den Fels gehauen, um das Heidnische zu übermalen. Der Fels erinnert sich trotzdem." } ] },
+    ort_halberstadt: { on: "battle", at: "halberstadt", title: "Halberstadt", slides: [
+      { img: "ort_halberstadt.jpg", title: "Halberstadt",
+        text: "Halberstadt ist Bischofsstadt am Nordrand des Harzes, mit einem Dom, der noch wächst. Der Bischof hat Reliquien aus Konstantinopel. Sie leuchten, wenn der Lich kommt." } ] },
+    ort_schierke: { on: "battle", at: "schierke", title: "Schierke", slides: [
+      { img: "ort_schierke.jpg", title: "Schierke",
+        text: "Schierke ist das letzte Dorf am Weg zum Brocken. Die Leute hängen Kräuter über die Türen und sprechen nicht über die Walpurgisnacht. Die Hexen sind ihre Nachbarn." } ] },
+    ort_aurich: { on: "battle", at: "aurich", title: "Aurich", slides: [
+      { img: "ort_aurich.jpg", title: "Aurich",
+        text: "Aurich liegt auf der Geest in Ostfriesland, wo die Häuptlinge ihre Steinhäuser bauen. Die Friesen haben keinen Fürsten über sich. Bald haben sie einen." } ] },
+    ort_rathenow: { on: "battle", at: "rathenow", title: "Rathenow", slides: [
+      { img: "ort_rathenow.jpg", title: "Rathenow",
+        text: "Rathenow liegt an der Havel, wo die Fischer ihre Reusen auslegen. Heute fangen sie etwas, das sie nicht wollen." } ] },
+    ort_rostock: { on: "battle", at: "rostock", title: "Rostock", slides: [
+      { img: "ort_rostock.jpg", title: "Rostock",
+        text: "Rostock an der Warnow ist reich durch Hering und Bier. Die Fischer räuchern ihren Fang am Ufer. Der Rauch steigt, und aus dem Rauch kommen Gestalten." } ] },
+    ort_teufelsmauer: { on: "battle", at: "teufelsmauer", title: "Die Teufelsmauer", slides: [
+      { img: "ort_teufelsmauer.jpg", title: "Die Teufelsmauer",
+        text: "Der Teufel baute die Mauer aus Sandstein, um sein Reich von dem Gottes zu trennen. Sie steht noch, in Stücken, quer durch das Land. Der Lich steht auf der richtigen Seite." } ] },
+    ort_wittstock: { on: "battle", at: "wittstock", title: "Wittstock", slides: [
+      { img: "ort_wittstock.jpg", title: "Wittstock",
+        text: "Wittstock ist die Burg der Bischöfe von Havelberg, mit dicken Mauern und einem hohen Turm. Der Bischof flieht hierher, wenn es in Havelberg brennt." } ] },
+    ort_quedlinburg: { on: "battle", at: "quedlinburg", title: "Quedlinburg", slides: [
+      { img: "ort_quedlinburg.jpg", title: "Quedlinburg",
+        text: "Über Quedlinburg thront das Damenstift auf dem Burgberg, gegründet von der Witwe des ersten Sachsenkönigs. Der Domschatz liegt in der Krypta. Die Äbtissin bewacht ihn mit ihren Gebeten." } ] },
+    ort_hexentanzplatz: { on: "battle", at: "hexentanzplatz", title: "Der Hexentanzplatz", slides: [
+      { img: "ort_hexentanzplatz.jpg", title: "Der Hexentanzplatz",
+        text: "Auf dem Felsplateau über dem Bodetal versammeln sich die Hexen, bevor sie zum Brocken fliegen. Gegenüber auf der Rosstrappe ist der Hufabdruck eines Pferdes in den Stein gedrückt. Hier tanzt heute ein anderer." } ] },
+    ort_muenden: { on: "battle", at: "muenden", title: "Münden", slides: [
+      { img: "ort_muenden.jpg", title: "Münden",
+        text: "In Münden fließen Werra und Fulda zur Weser zusammen, und jedes Schiff muss hier seine Ladung verkaufen. Die Stadt hat das Stapelrecht. Der Lich hat ein anderes Recht." } ] },
+    ort_brandenburg: { on: "battle", at: "brandenburg", title: "Brandenburg", slides: [
+      { img: "ort_brandenburg.jpg", title: "Brandenburg",
+        text: "Brandenburg an der Havel ist die alte Hauptstadt der Mark, mit dem Dom auf der Insel und zwei Städten am Ufer. Hier begann die Mark. Hier kann sie enden." } ] },
+    ort_paderborn: { on: "battle", at: "paderborn", title: "Paderborn", slides: [
+      { img: "ort_paderborn.jpg", title: "Paderborn",
+        text: "Paderborn ist auf Quellen gebaut, die unter dem Dom aus der Erde springen. Hier traf Karl der Große den Papst. Das Wasser ist klar, bis die Toten darin waten." } ] },
+    ort_waren: { on: "battle", at: "waren", title: "Waren", slides: [
+      { img: "ort_waren.jpg", title: "Waren",
+        text: "Waren liegt an der Müritz, einem See, so groß, dass man das andere Ufer nicht sieht. Die Fischer fahren weit hinaus. Diesmal kommen sie nicht zurück." } ] },
+    ort_emden: { on: "battle", at: "emden", title: "Emden", slides: [
+      { img: "ort_emden.jpg", title: "Emden",
+        text: "Emden ist ein Hafen an der Ems, wo die Friesen mit der ganzen Welt handeln, auch mit Seeräubern, die hier ihre Beute verkaufen. Was jetzt in den Hafen fährt, verkauft nichts." } ] },
+    ort_belzig: { on: "battle", at: "belzig", title: "Belzig", slides: [
+      { img: "ort_belzig.jpg", title: "Belzig",
+        text: "Über Belzig steht die Burg Eisenhardt auf einem Hügel im Fläming. Von dort sieht man weit über die Heide. Die Wache sieht die Toten kommen, Stunden bevor sie da sind." } ] },
+    ort_zerbst: { on: "battle", at: "zerbst", title: "Zerbst", slides: [
+      { img: "ort_zerbst.jpg", title: "Zerbst",
+        text: "Zerbst ist eine wohlhabende Stadt mit Mauern und einem Roland. Die Bürger feiern gern. Die Toten feiern mit." } ] },
+    ort_nordhausen: { on: "battle", at: "nordhausen", title: "Nordhausen", slides: [
+      { img: "ort_nordhausen.jpg", title: "Nordhausen",
+        text: "Nordhausen ist eine freie Reichsstadt am Südharz, mit einem Roland und Bürgern, die keinem Fürsten gehorchen. Sie werden lernen." } ] },
+    ort_kassel: { on: "battle", at: "kassel", title: "Kassel", slides: [
+      { img: "ort_kassel.jpg", title: "Kassel",
+        text: "Die Landgrafen von Hessen haben ihre Burg in Kassel an der Fulda. Ihre Ritter sind kampferprobt und stolz. Hessische Sturheit gegen einen Toten, der nichts mehr fühlt." } ] },
+    ort_bernburg: { on: "battle", at: "bernburg", title: "Bernburg", slides: [
+      { img: "ort_bernburg.jpg", title: "Bernburg",
+        text: "Bernburg hat eine Burg hoch über der Saale, wo die Anhaltiner Fürsten wohnen. Ihre Türme schauen weit über den Fluss. Was den Hang heraufkommt, sehen sie zu spät." } ] },
+    ort_lehnin: { on: "battle", at: "lehnin", title: "Kloster Lehnin", slides: [
+      { img: "ort_lehnin.jpg", title: "Kloster Lehnin",
+        text: "Lehnin ist das Hauskloster der Askanier, das erste der Zisterzienser in der Mark. Ein Mönch soll hier das Ende aller Fürstenhäuser aufgeschrieben haben. Der Lich will wissen, ob auch seines dabei ist." } ] },
+    ort_neuruppin: { on: "battle", at: "neuruppin", title: "Neuruppin", slides: [
+      { img: "ort_neuruppin.jpg", title: "Neuruppin",
+        text: "Neuruppin liegt am Ruppiner See, mit einem Kloster der Dominikaner. Die Grafen von Lindow sitzen hier. Die Mönche predigen gegen den Teufel. Sie haben den Falschen erwartet." } ] },
+    ort_muenster: { on: "battle", at: "muenster", title: "Münster", slides: [
+      { img: "ort_muenster.jpg", title: "Münster",
+        text: "Münster ist das größte Bistum im Westen, mit einem Dom, an dem Generationen gebaut haben. Der Fürstbischof ist mächtiger als die meisten Herzöge. Er hat seine Ritter gerufen." } ] },
+    ort_nauen: { on: "battle", at: "nauen", title: "Nauen", slides: [
+      { img: "ort_nauen.jpg", title: "Nauen",
+        text: "Nauen liegt am Havelländischen Luch, einem Moor, das bis zum Horizont reicht. Die Bauern haben Gräben gezogen und Felder gewonnen. Der Lich nimmt sie zurück." } ] },
+    ort_treuenbrietzen: { on: "battle", at: "treuenbrietzen", title: "Treuenbrietzen", slides: [
+      { img: "ort_treuenbrietzen.jpg", title: "Treuenbrietzen",
+        text: "Treuenbrietzen hat sich den Namen verdient, weil es seinem Herrn treu blieb. Ob es auch dem Lich treu bleibt, wird sich zeigen." } ] },
+    ort_mansfeld: { on: "battle", at: "mansfeld", title: "Mansfeld", slides: [
+      { img: "ort_mansfeld.jpg", title: "Mansfeld",
+        text: "Die Grafen von Mansfeld sitzen auf einer Burg über den Kupferschächten, und um die Stadt wachsen die Schlackenhalden. Die Bergleute sterben jung. Ihre Knochen liegen im Schutt." } ] },
+    ort_demmin: { on: "battle", at: "demmin", title: "Demmin", slides: [
+      { img: "ort_demmin.jpg", title: "Demmin",
+        text: "Demmin liegt, wo Peene, Tollense und Trebel zusammenfließen, eine alte Hansestadt. Das Wasser umschließt sie von drei Seiten. Von der vierten kommt der Lich." } ] },
+    ort_koethen: { on: "battle", at: "koethen", title: "Köthen", slides: [
+      { img: "ort_koethen.jpg", title: "Köthen",
+        text: "Köthen ist eine Burg der Anhaltiner in der Ebene, umgeben von Feldern voller Korn. Die Ernte ist gut dieses Jahr. Der Lich erntet anders." } ] },
+    ort_dessau: { on: "battle", at: "dessau", title: "Dessau", slides: [
+      { img: "ort_dessau.jpg", title: "Dessau",
+        text: "Dessau liegt in den Auen, wo die Mulde in die Elbe fließt, zwischen alten Eichen. Die Askanier von Anhalt jagen hier. Die Eichen haben schon vieles kommen sehen." } ] },
+    ort_muehlhausen: { on: "battle", at: "muehlhausen", title: "Mühlhausen", slides: [
+      { img: "ort_muehlhausen.jpg", title: "Mühlhausen",
+        text: "Mühlhausen ist eine freie Reichsstadt in Thüringen mit doppelten Mauern und vielen Kirchen. Die Bürger sind wehrhaft und fromm. Beides hilft nur wenig." } ] },
+    ort_sangerhausen: { on: "battle", at: "sangerhausen", title: "Sangerhausen", slides: [
+      { img: "ort_sangerhausen.jpg", title: "Sangerhausen",
+        text: "Sangerhausen liegt am Südrand des Harzes, an der Goldenen Aue. Die Felder sind reich und die Bauern satt. Hinter ihnen ragt der Kyffhäuser auf." } ] },
+    ort_barth: { on: "battle", at: "barth", title: "Barth", slides: [
+      { img: "ort_barth.jpg", title: "Barth",
+        text: "Barth liegt am Bodden, einem flachen Wasser voller Schilf. Die Leute fahren mit flachen Booten hinaus. Der Lich hat eigene Boote." } ] },
+    ort_eisleben: { on: "battle", at: "eisleben", title: "Eisleben", slides: [
+      { img: "ort_eisleben.jpg", title: "Eisleben",
+        text: "Eisleben lebt vom Kupfer, das die Bergleute aus dem Schiefer brechen. Sie arbeiten tief unter der Erde, im Dunkeln. Dort sind sie dem Lich näher, als sie ahnen." } ] },
+    ort_potsdam: { on: "battle", at: "potsdam", title: "Potsdam", slides: [
+      { img: "ort_potsdam.jpg", title: "Potsdam",
+        text: "Potsdam ist ein Fischerdorf an der Havel mit einer kleinen Burg. Kein Mensch erwartet, dass hier je etwas geschieht." } ] },
+    ort_wittenberg: { on: "battle", at: "wittenberg", title: "Wittenberg", slides: [
+      { img: "ort_wittenberg.jpg", title: "Wittenberg",
+        text: "Wittenberg ist der Sitz der Askanier an der Elbe, eine Burg und eine Stadt aus Lehm und Backstein. Die Herzöge von Sachsen-Wittenberg wählen den König mit. Einen Toten werden sie nicht wählen." } ] },
+    ort_jueterbog: { on: "battle", at: "jueterbog", title: "Jüterbog", slides: [
+      { img: "ort_jueterbog.jpg", title: "Jüterbog",
+        text: "Jüterbog gehört dem Erzbischof von Magdeburg, und die Mönche von Zinna wohnen nebenan. Die Bürger haben Tore gebaut, so hoch wie Türme. Sie werden nicht hoch genug sein." } ] },
+    ort_stralsund: { on: "battle", at: "stralsund", title: "Stralsund", slides: [
+      { img: "ort_stralsund.jpg", title: "Stralsund",
+        text: "Vor einem Jahr hat Stralsund Dänemark den Frieden diktiert. Die Bürger sind stolz auf ihre Mauern und Schiffe. Gegen Tote steht kein Friedensvertrag." } ] },
+    ort_neubrandenburg: { on: "battle", at: "neubrandenburg", title: "Neubrandenburg", slides: [
+      { img: "ort_neubrandenburg.jpg", title: "Neubrandenburg",
+        text: "Neubrandenburg hat eine Mauer aus Feldsteinen mit vier Toren, so schön, dass die Fürsten neidisch sind. Die Wiekhäuser in der Mauer sind voller Wachen. Der Lich kommt durch alle vier Tore zugleich." } ] },
+    ort_spandau: { on: "battle", at: "spandau", title: "Spandau", slides: [
+      { img: "ort_spandau.jpg", title: "Spandau",
+        text: "Spandau hat eine Burg mit einem dicken Turm, wo Havel und Spree zusammenfließen. Hier lagern die Askanier ihre Vorräte. Der Lich hat Hunger." } ] },
+    ort_greifswald: { on: "battle", at: "greifswald", title: "Greifswald", slides: [
+      { img: "ort_greifswald.jpg", title: "Greifswald",
+        text: "Greifswald liegt am Ryck, nahe dem Kloster Eldena, wo die Zisterzienser ihre Felder bestellen. Die Stadt gehört der Hanse. Bald gehört sie niemandem." } ] },
+    ort_halle: { on: "battle", at: "halle", title: "Halle", slides: [
+      { img: "ort_halle.jpg", title: "Halle",
+        text: "Halle lebt von der Sole, die aus der Erde kommt. Die Halloren sieden sie in Kesseln zu Salz und bewahren es wie Silber. Salz hält Fleisch frisch. Der Lich hat Pläne mit Halle." } ] },
+    ort_berlin: { on: "battle", at: "berlin", title: "Berlin und Cölln", slides: [
+      { img: "ort_berlin.jpg", title: "Berlin und Cölln",
+        text: "Berlin und Cölln sind zwei Städte an der Spree, durch einen Damm verbunden und durch Neid getrennt. Die Askanier sind lange fort, die Kaufleute regieren. Der Lich kommt über das Wasser." } ] },
+    ort_delitzsch: { on: "battle", at: "delitzsch", title: "Delitzsch", slides: [
+      { img: "ort_delitzsch.jpg", title: "Delitzsch",
+        text: "Delitzsch ist eine Burg der Wettiner in der Ebene nördlich von Leipzig. Die Bauern bringen Getreide in die Stadt. Die Stadt ist voller Vorräte." } ] },
+    ort_templin: { on: "battle", at: "templin", title: "Templin", slides: [
+      { img: "ort_templin.jpg", title: "Templin",
+        text: "Templin hat eine Mauer aus Feldsteinen rings um die Stadt, mit Wiekhäusern und drei Toren. Die Bürger halten sie für unüberwindlich. Sie haben Recht, gegen Lebende." } ] },
+    ort_bergen_ruegen: { on: "battle", at: "bergen_ruegen", title: "Bergen auf Rügen", slides: [
+      { img: "ort_bergen_ruegen.jpg", title: "Bergen auf Rügen",
+        text: "Bergen liegt auf dem höchsten Hügel Rügens, mit einem Nonnenkloster neben der alten Burg der Ranen. Die Ranen beteten einst Svantevit an. Ihre Götter sind nur eingeschlafen." } ] },
+    ort_merseburg: { on: "battle", at: "merseburg", title: "Merseburg", slides: [
+      { img: "ort_merseburg.jpg", title: "Merseburg",
+        text: "Der Dom von Merseburg steht über der Saale, und in seiner Bibliothek liegt ein Buch, in dem zwei heidnische Sprüche stehen. Die Domherren lesen nur die frommen Seiten. Der Lich liest die anderen." } ] },
+    ort_anklam: { on: "battle", at: "anklam", title: "Anklam", slides: [
+      { img: "ort_anklam.jpg", title: "Anklam",
+        text: "Anklam liegt an der Peene, eine Hansestadt mit Mauer und Toren. Hinter den Toren hält der Rat Wache. Hinter den Mauern wartet der Lich." } ] },
+    ort_bernau: { on: "battle", at: "bernau", title: "Bernau", slides: [
+      { img: "ort_bernau.jpg", title: "Bernau",
+        text: "Bernau hat eine Mauer aus Feldsteinen und braut ein Bier, das man bis Berlin trinkt. Die Bürger gießen heißes Wasser von den Toren auf jeden, der ungebeten kommt. Den Lich verbrüht es nicht." } ] },
+    ort_wolgast: { on: "battle", at: "wolgast", title: "Wolgast", slides: [
+      { img: "ort_wolgast.jpg", title: "Wolgast",
+        text: "Wolgast hat eine Burg auf einer Insel in der Peene, vor Usedom. Die Herzöge von Pommern halten hier Hof. Von Vineta her hört man Glocken." } ] },
+    ort_herzberg: { on: "battle", at: "herzberg", title: "Herzberg", slides: [
+      { img: "ort_herzberg.jpg", title: "Herzberg",
+        text: "Herzberg liegt an der Schwarzen Elster, eine kleine Stadt der Askanier zwischen Sumpf und Sand. Das Wasser ist hier dunkel wie Tinte. Was darin liegt, sieht niemand." } ] },
+    ort_koenigswusterhausen: { on: "battle", at: "koenigswusterhausen", title: "Wusterhausen", slides: [
+      { img: "ort_koenigswusterhausen.jpg", title: "Wusterhausen",
+        text: "Wusterhausen ist eine kleine Burg an der Notte, zwischen Wäldern und Seen. Hier jagen die Herren der Mark. Diesmal sind sie die Beute." } ] },
+    ort_torgau: { on: "battle", at: "torgau", title: "Torgau", slides: [
+      { img: "ort_torgau.jpg", title: "Torgau",
+        text: "Torgau hat eine Burg an der Elbe, wo die Wettiner den Fluss überqueren. Die Fähre fährt Tag und Nacht. Heute fährt sie die Toten." } ] },
+    ort_leipzig: { on: "battle", at: "leipzig", title: "Leipzig", slides: [
+      { img: "ort_leipzig.jpg", title: "Leipzig",
+        text: "Leipzig liegt an der Kreuzung zweier großer Handelsstraßen, und zweimal im Jahr ist Markt. Kaufleute aus dem ganzen Reich bringen Tuch, Pelz und Gewürze. Diesmal bringt jemand anderes etwas mit." } ] },
+    ort_naumburg: { on: "battle", at: "naumburg", title: "Naumburg", slides: [
+      { img: "ort_naumburg.jpg", title: "Naumburg",
+        text: "Im Dom von Naumburg stehen zwölf steinerne Stifter, Männer und Frauen, so lebensecht, als würden sie gleich sprechen. Die schöne Uta hält ihren Mantel hoch. Sie hat Angst." } ] },
+    ort_weissenfels: { on: "battle", at: "weissenfels", title: "Weißenfels", slides: [
+      { img: "ort_weissenfels.jpg", title: "Weißenfels",
+        text: "Weißenfels liegt an der Saale unter einem weißen Felsen, daher der Name. Die Wettiner haben hier eine Burg. Der Fels wird grau, wo der Lich ihn berührt." } ] },
+    ort_vineta: { on: "battle", at: "vineta", title: "Vineta", slides: [
+      { img: "ort_vineta.jpg", title: "Vineta",
+        text: "Vineta war reicher als jede Stadt im Norden, bis das Meer sie nahm. Wer bei ruhiger See vor Usedom fährt, hört ihre Glocken. Der Lich hört sie auch, und er antwortet." } ] },
+    ort_prenzlau: { on: "battle", at: "prenzlau", title: "Prenzlau", slides: [
+      { img: "ort_prenzlau.jpg", title: "Prenzlau",
+        text: "Prenzlau hat die Marienkirche mit dem prächtigsten Giebel der Mark, Spitzen aus Backstein wie aus Spitze. Die Bürger zeigen sie jedem Fremden. Diesmal zeigt der Fremde ihnen etwas." } ] },
+    ort_luckau: { on: "battle", at: "luckau", title: "Luckau", slides: [
+      { img: "ort_luckau.jpg", title: "Luckau",
+        text: "Luckau ist eine kleine Stadt in der Niederlausitz mit einer großen Kirche. Die Lausitzer wissen nie, wer gerade ihr Herr ist. Jetzt wissen sie es." } ] },
+    ort_eberswalde: { on: "battle", at: "eberswalde", title: "Eberswalde", slides: [
+      { img: "ort_eberswalde.jpg", title: "Eberswalde",
+        text: "Eberswalde liegt an der Finow, wo die Mühlen das Korn mahlen und die Schmiede Eisen schlagen. Das Wasser treibt alle Räder. Heute bleibt eines nach dem anderen stehen." } ] },
+    ort_arkona: { on: "battle", at: "arkona", title: "Kap Arkona", slides: [
+      { img: "ort_arkona.jpg", title: "Kap Arkona",
+        text: "Auf dem Kreidefelsen von Arkona stand der Tempel des Svantevit, bis die Dänen ihn niederbrannten. Die Ranen haben ihren Gott nie ganz vergessen. In der Nacht stehen sie wieder im Ring." } ] },
+    ort_chorin: { on: "battle", at: "chorin", title: "Kloster Chorin", slides: [
+      { img: "ort_chorin.jpg", title: "Kloster Chorin",
+        text: "Die Zisterzienser von Chorin haben eine Kirche aus rotem Backstein gebaut, so hoch, dass sie über den Wald schaut. Die Askanier liegen darin begraben. Der Lich besucht sie." } ] },
+    ort_pasewalk: { on: "battle", at: "pasewalk", title: "Pasewalk", slides: [
+      { img: "ort_pasewalk.jpg", title: "Pasewalk",
+        text: "Pasewalk liegt an der Uecker im Grenzland zwischen Pommern und der Mark. Hier wird oft gekämpft. Die Toten der letzten Fehden liegen noch auf den Feldern." } ] },
+    ort_strausberg: { on: "battle", at: "strausberg", title: "Strausberg", slides: [
+      { img: "ort_strausberg.jpg", title: "Strausberg",
+        text: "Strausberg liegt am Straussee, umgeben von Wald. Die Bürger fischen und brauen. Am Seeufer wartet etwas." } ] },
+    ort_angermuende: { on: "battle", at: "angermuende", title: "Angermünde", slides: [
+      { img: "ort_angermuende.jpg", title: "Angermünde",
+        text: "Angermünde liegt an einem See in der Uckermark, eine kleine Stadt mit Burg und Franziskanerkloster. Die Mönche sammeln Almosen. Der Lich sammelt Seelen." } ] },
+    ort_luebben: { on: "battle", at: "luebben", title: "Lübben", slides: [
+      { img: "ort_luebben.jpg", title: "Lübben",
+        text: "Lübben liegt am Rand des Spreewalds, wo die Fließe beginnen. Die Leute hier sprechen Wendisch und kennen die Geister im Wasser. Sie haben Angst vor den falschen." } ] },
+    ort_fuerstenwalde: { on: "battle", at: "fuerstenwalde", title: "Fürstenwalde", slides: [
+      { img: "ort_fuerstenwalde.jpg", title: "Fürstenwalde",
+        text: "Der Bischof von Lebus will seinen Sitz nach Fürstenwalde an der Spree verlegen, weil Lebus zu oft geplündert wird. Er hätte bleiben sollen." } ] },
+    ort_meissen: { on: "battle", at: "meissen", title: "Meißen", slides: [
+      { img: "ort_meissen.jpg", title: "Meißen",
+        text: "Auf dem Burgberg über der Elbe sitzen die Markgrafen von Meißen, und neben der Burg baut der Bischof seinen Dom. Seit vierhundert Jahren wird hier geherrscht. Der Lich ist älter." } ] },
+    ort_dresden: { on: "battle", at: "dresden", title: "Dresden", slides: [
+      { img: "ort_dresden.jpg", title: "Dresden",
+        text: "Dresden hat eine steinerne Brücke über die Elbe, eine der längsten im Reich. Die Händler zahlen Brückenzoll und ziehen nach Böhmen. Heute zieht etwas in die andere Richtung." } ] }
   },
   difficulty: {
     easy: { name: "Leicht", text: "Die Lebenden sind arglos und kämpfen ungeordnet: Sie schlagen auf den Nächstbesten, suchen weder den Lich noch Deckung und zaubern seltener. Wachen brauchen länger, bis sie sicher sind, und rufen erst in ihrem nächsten Zug. Keine Glocke, kein Hinterhalt; Doktrinen wirken halb und bringen keine Zusatztruppen. Weniger Trupps, die Bedrohung steigt langsamer, mehr Startvorräte und Beute, Rückzug kostet 15 %.",
