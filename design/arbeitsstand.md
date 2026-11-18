@@ -2,7 +2,7 @@
 
 Diese Datei hält fest, woran gerade gearbeitet wird, damit eine andere Sitzung (auch ein anderes Modell) nahtlos weitermachen kann. Sie wird nach jeder Etappe aktualisiert. Erledigtes wandert ins Design-Dokument (`design/design_notes.md`) und fliegt hier raus.
 
-Stand: 18.11.2026 · letzte veröffentlichte Version: 171 (Story-Bilder eingebaut; Versionsnummer zählt Commits)
+Stand: 18.11.2026 · letzte veröffentlichte Version: 173 (Anführer schwächer, stehen wieder auf; Versionsnummer zählt Commits)
 
 ## Auftrag (Kevin, 14.11.2026)
 
@@ -101,7 +101,7 @@ Kevin (18.11.): Bestätigung ja (mit Namen), längere Raumcodes nein, Plausibili
 - **Prüfsummen:** PeerJS (`integrity`, sha256) und Three.js (Importmap `"integrity"`, sha384 für three.module.js, CSS2DRenderer, GLTFLoader, BufferGeometryUtils). Werte am 18.11. gegen die Dateiliste von jsDelivr geprüft (sha256 identisch mit Git-Tag r160). Neue Three-Version = neue Prüfsummen, sonst startet das Spiel nicht. Die Test-Werkzeuge in `tools/test/` entfernen den Block (sie liefern Attrappen statt three.js).
 - Google Fonts (CSS) lässt sich nicht per Prüfsumme sichern (Inhalt je Browser verschieden); CSS führt keinen Code aus.
 
-## Anführer schwächer, stehen wieder auf (18.11.2026)
+## Anführer schwächer, stehen wieder auf (18.11.2026, Version 173)
 
 Kevin: „Mach den Lich und Kommandeure wieder schwächer. Wenn aber mindestens eine Einheit überlebt, steht er am Ende des Kampfes wieder auf. Alle Kommandeure und der Lich sollten dann aber gewisse Buffs bringen.“
 
