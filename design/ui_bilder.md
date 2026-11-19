@@ -6,6 +6,7 @@ Stand und Prompts für alle Bilder der Oberfläche. Kevin erzeugt die Bilder, Cl
 - **Ablage:** Kevin gibt die Bilder an Claude; Claude legt sie unter `assets/ui/<Dateiname>` ab, verkleinert sie und baut sie ein.
 - **Format:** PNG oder JPG, so groß wie möglich. Auflösung egal, das Verhältnis zählt. Claude verkleinert.
 - **Nummern** (Kevin, 18.11.2026): Jedes Bild hat eine feste Nummer (Nr. 001 bis Nr. 412), zum Wiederfinden per Suche, z. B. „Nr. 042“. Die Nummer bleibt, auch wenn ein Bild nach „Erledigt“ wandert oder umsortiert wird. Neue Bilder bekommen die nächste freie Nummer – zuletzt vergeben: **Nr. 412**.
+- **Später überarbeiten:** Bilder, die nicht ganz passen, bleiben drin und stehen in der Liste „Später überarbeiten“ (vor „Erledigt“).
 - **Seitenverhältnis nie im Prompt** (Kevin, 18.11.2026): Das Verhältnis wird im Bildprogramm vor dem Erzeugen eingestellt, der Prompt kann es nicht mehr ändern. Es steht deshalb nur in der Überschrift hinter dem Dateinamen (z. B. „· 21:9“) – dort ablesen und im Programm einstellen. Prompts beschreiben nur Motiv, Standpunkt und Stil.
 - **Symbole:** schwarze Linien auf hellem Papier. Claude legt sie im Spiel per „Multiplizieren“ über den Papiergrund, ein freigestellter Hintergrund ist nicht nötig.
 - **Texturen** (Papier): sollten sich kacheln lassen. Wenn nicht ganz, macht Claude sie nahtlos.
@@ -2474,6 +2475,27 @@ Verwendung: Seraph
 
 ```
 half-length portrait of a six-winged seraph covered in flames, dark background, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern German heathland around 1371
+```
+
+## Später überarbeiten
+
+Kevin (19.11.2026): Bilder, die nicht ganz zum Prompt passen, bleiben vorerst drin – wichtiger ist, dass überhaupt ein Bild da ist. Hier gesammelt, damit sie später neu erzeugt werden können. Die Nummer bleibt dieselbe, die Datei wird einfach ersetzt.
+
+| Nr. | Bild | Was nicht passt | Hinweis für den neuen Prompt |
+|-|-|-|-|
+| 399 | `story/sturmleitern.jpg` | Die Verteidiger auf der Mauer sind Skelette – ergibt keinen Sinn | neuer Prompt unten |
+| 033 | `story/ort_ebstorf.jpg` | Moderne Weltkarte mit Kontinenten statt der runden Ebstorfer Karte | „round medieval T-O world map, Jerusalem in the centre, Christ's head at the top, his hands left and right, his feet at the bottom“ |
+| 013 | `story/artefakt_merseburger_sprueche.jpg` | Auf der Buchseite ist ein Skelett gezeichnet statt nur Schriftzeilen | „the open pages show only two short blocks of handwriting, no pictures on the pages“ |
+| 022 | `story/ort_schneverdingen.jpg` | Der verdorrte graue Heidestreifen fehlt | Streifen an den Anfang des Prompts stellen |
+| 014 | `story/artefakt_reliquienkasten.jpg` | Schädel im Schrein statt Hand, die einen Knochen herausnimmt | Hand und Knochen an den Anfang stellen |
+| 045 | `story/ort_unterluess.jpg` | Kohlenmeiler sieht aus wie eine leuchtende Scheibe am Boden | „a tall dome-shaped charcoal kiln covered with earth, smoke rising from its top“ |
+
+**Lehre für Prompts:** Kommen Untote und Lebende im selben Bild vor, überträgt das Bildprogramm „skeleton/undead“ gern auf alle Figuren. Die Lebenden deshalb ausdrücklich als lebende Menschen mit Gesichtern beschreiben (z. B. „living human townsmen with bearded faces“), möglichst früh im Prompt.
+
+#### Neuer Prompt für Nr. 399 · `story/sturmleitern.jpg` · 21:9
+
+```
+viewpoint: outside the town on the ground, behind a crowd of attacking skeletons, looking up at a tall stone town wall with crenellations and a gate tower. On top of the wall stand living human defenders: townsmen and guards with bearded faces, kettle helmets and padded coats, aiming crossbows down and pushing a ladder away with a forked pole. Skeletons climb crude ladders made of bones; one ladder topples backward. In the left foreground skeletons crank a ballista made of bones. Of the town only roofs and a church spire rise above the wall, in the style of Albrecht Dürer, early 16th-century German Renaissance woodcut and copper engraving, dense fine cross-hatching and parallel-line shading, black ink on aged yellowed laid paper, high contrast, grim, macabre, memento mori, Danse Macabre mood, northern Germany around 1371, cinematic composition, the lower third of the picture darker and calm with little detail (room for subtitle text), no text
 ```
 
 ## Erledigt
